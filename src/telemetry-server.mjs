@@ -2,8 +2,9 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { EVENTS_PATH, ALLOWLIST_PATH, POLICY_PATH, OPENSEA_OVERRIDES_PATH, CLAWBOTS_PATH } from "./lib/paths.mjs";
+import { EVENTS_PATH, ALLOWLIST_PATH, POLICY_PATH, OPENSEA_OVERRIDES_PATH, CLAWBOTS_PATH, CHAT_PATH } from "./lib/paths.mjs";
 import { ensureDir } from "./lib/io.mjs";
+import { verifyClawbot } from "./lib/clawbots.mjs";
 
 const PORT = Number(process.env.APE_CLAW_UI_PORT || 8787);
 const ROOT = process.cwd();
@@ -15,6 +16,7 @@ let allowlistIconCache = { expiresAt: 0, data: null, inFlight: null };
 
 ensureDir(path.dirname(EVENTS_PATH));
 if (!fs.existsSync(EVENTS_PATH)) fs.writeFileSync(EVENTS_PATH, "");
+if (!fs.existsSync(CHAT_PATH)) fs.writeFileSync(CHAT_PATH, "");
 
 function sendSse(res, evt) {
   res.write(`data: ${JSON.stringify(evt)}\n\n`);
@@ -174,8 +176,60 @@ async function getAllowlistWithIcons() {
   }
 }
 
+// ── Chat helpers ────────────────────────────────────────
+
+const MAX_CHAT_MESSAGES = 200;
+const chatClients = new Set();
+
+function sendChatSse(res, msg) {
+  res.write(`data: ${JSON.stringify(msg)}\n\n`);
+}
+
+function broadcastChat(msg) {
+  for (const c of chatClients) {
+    try { sendChatSse(c, msg); } catch { chatClients.delete(c); }
+  }
+}
+
+function readChatMessages(limit = 100) {
+  if (!fs.existsSync(CHAT_PATH)) return [];
+  const raw = fs.readFileSync(CHAT_PATH, "utf8").trim();
+  if (!raw) return [];
+  const lines = raw.split("\n");
+  return lines.slice(-limit).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+}
+
+function appendChatMessage(msg) {
+  fs.appendFileSync(CHAT_PATH, JSON.stringify(msg) + "\n");
+}
+
+function readRequestBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on("data", (c) => chunks.push(c));
+    req.on("end", () => {
+      try { resolve(JSON.parse(Buffer.concat(chunks).toString("utf8"))); }
+      catch (e) { reject(e); }
+    });
+    req.on("error", reject);
+  });
+}
+
+const CORS_HEADERS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
+  "access-control-allow-headers": "content-type, x-agent-id, x-agent-token",
+};
+
 const server = http.createServer((req, res) => {
   if (!req.url) return res.end("bad request");
+
+  // ── CORS preflight
+  if (req.method === "OPTIONS") {
+    res.writeHead(204, CORS_HEADERS);
+    return res.end();
+  }
+
   if (req.url === "/events") {
     res.writeHead(200, {
       "content-type": "text/event-stream",
@@ -228,6 +282,69 @@ const server = http.createServer((req, res) => {
       return res.end(JSON.stringify({ error: err.message }));
     }
   }
+  // ── Chat SSE stream ────────────────────────────────
+  if (req.url === "/api/chat/stream") {
+    res.writeHead(200, {
+      "content-type": "text/event-stream",
+      "cache-control": "no-cache",
+      connection: "keep-alive",
+      ...CORS_HEADERS,
+    });
+    res.write("\n");
+    chatClients.add(res);
+    req.on("close", () => chatClients.delete(res));
+    return;
+  }
+
+  // ── Chat: GET recent messages ─────────────────────
+  if (req.url === "/api/chat" && req.method === "GET") {
+    const messages = readChatMessages(100);
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+    return res.end(JSON.stringify({ messages }));
+  }
+
+  // ── Chat: POST new message ────────────────────────
+  if (req.url === "/api/chat" && req.method === "POST") {
+    readRequestBody(req).then((body) => {
+      const agentId = body.agentId || req.headers["x-agent-id"] || "";
+      const agentToken = body.agentToken || req.headers["x-agent-token"] || "";
+      const text = String(body.text || "").trim();
+
+      if (!text || text.length > 500) {
+        res.writeHead(400, { "content-type": "application/json", ...CORS_HEADERS });
+        return res.end(JSON.stringify({ error: "message must be 1-500 characters" }));
+      }
+      if (!agentId || !agentToken) {
+        res.writeHead(401, { "content-type": "application/json", ...CORS_HEADERS });
+        return res.end(JSON.stringify({ error: "missing agentId or agentToken" }));
+      }
+
+      const verification = verifyClawbot({ agentId, agentToken });
+      if (!verification.verified) {
+        res.writeHead(403, { "content-type": "application/json", ...CORS_HEADERS });
+        return res.end(JSON.stringify({ error: "not verified", reason: verification.reason }));
+      }
+
+      const msg = {
+        id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        agentId,
+        agentName: verification.agent?.name || agentId,
+        text,
+        ts: new Date().toISOString(),
+      };
+
+      appendChatMessage(msg);
+      broadcastChat(msg);
+
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: true, message: msg }));
+    }).catch((err) => {
+      res.writeHead(400, { "content-type": "application/json", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ error: "invalid JSON body" }));
+    });
+    return;
+  }
+
   if (req.url === "/" || req.url === "/index.html") {
     if (!fs.existsSync(UI_PATH)) {
       res.writeHead(404);

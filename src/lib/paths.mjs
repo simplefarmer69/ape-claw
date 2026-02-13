@@ -9,4 +9,5 @@ export const EVENTS_PATH = path.join(STATE_DIR, "events.jsonl");
 export const QUOTES_PATH = path.join(STATE_DIR, "quotes.json");
 export const BRIDGE_REQUESTS_PATH = path.join(STATE_DIR, "bridge-requests.json");
 export const CLAWBOTS_PATH = path.join(ROOT, "config", "clawbots.json");
+export const CHAT_PATH = path.join(STATE_DIR, "chat.jsonl");
 

@@ -281,6 +281,73 @@ header{
 .tag.enforced{background:rgba(57,255,20,.1);color:var(--neon-green);border:1px solid rgba(57,255,20,.25)}
 .tag.warn{background:rgba(255,215,0,.1);color:var(--gold);border:1px solid rgba(255,215,0,.25)}
 
+/* ── Chat panel ──────────────────────────────────── */
+.chat-panel{grid-column:1/-1}
+.chat-messages{
+  display:flex;flex-direction:column;gap:8px;padding:16px;
+  max-height:360px;overflow-y:auto;flex:1;
+}
+.chat-messages::-webkit-scrollbar{width:4px}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.chat-msg{
+  display:flex;gap:10px;padding:10px 14px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);
+  animation:feedIn .3s ease-out;
+}
+.chat-msg.self{border-color:rgba(255,77,0,.25);background:rgba(255,77,0,.04)}
+.chat-msg-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--surface3);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;flex-shrink:0;
+}
+.chat-msg-body{flex:1;min-width:0}
+.chat-msg-header{display:flex;align-items:baseline;gap:8px;margin-bottom:3px}
+.chat-msg-name{font-size:.78rem;font-weight:700;color:var(--accent2)}
+.chat-msg-id{font-family:var(--font-mono);font-size:.6rem;color:var(--dim)}
+.chat-msg-time{font-family:var(--font-mono);font-size:.6rem;color:var(--dim);margin-left:auto}
+.chat-msg-text{font-size:.78rem;line-height:1.55;color:var(--text);word-break:break-word}
+.chat-input-bar{
+  display:flex;gap:8px;padding:12px 16px;
+  border-top:1px solid var(--border);background:var(--surface2);
+}
+.chat-input-bar input{
+  flex:1;padding:8px 14px;border-radius:20px;border:1px solid var(--border);
+  background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:.78rem;
+  outline:none;transition:border-color .2s;
+}
+.chat-input-bar input:focus{border-color:var(--accent)}
+.chat-input-bar input::placeholder{color:var(--dim)}
+.chat-send-btn{
+  padding:8px 18px;border-radius:20px;border:1px solid var(--accent);
+  background:rgba(255,77,0,.12);color:var(--accent2);font-size:.75rem;
+  font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.chat-send-btn:hover{background:var(--accent);color:#fff}
+.chat-send-btn:disabled{opacity:.4;cursor:not-allowed}
+.chat-auth-bar{
+  display:flex;gap:6px;padding:10px 16px;
+  border-top:1px solid var(--border);background:rgba(255,77,0,.03);
+  align-items:center;flex-wrap:wrap;
+}
+.chat-auth-bar label{font-size:.65rem;color:var(--dim);font-weight:600}
+.chat-auth-bar input{
+  padding:5px 10px;border-radius:14px;border:1px solid var(--border);
+  background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:.68rem;
+  outline:none;transition:border-color .2s;width:160px;
+}
+.chat-auth-bar input:focus{border-color:var(--accent)}
+.chat-auth-bar .chat-auth-status{
+  font-size:.62rem;padding:2px 8px;border-radius:10px;font-weight:700;
+  margin-left:auto;
+}
+.chat-auth-bar .chat-auth-status.ok{background:rgba(57,255,20,.1);color:var(--neon-green);border:1px solid rgba(57,255,20,.25)}
+.chat-auth-bar .chat-auth-status.none{background:rgba(120,120,160,.1);color:var(--dim);border:1px solid var(--border)}
+.chat-empty{
+  text-align:center;padding:32px 16px;color:var(--dim);font-size:.78rem;
+}
+.chat-empty .chat-empty-icon{font-size:2rem;margin-bottom:8px}
+
 /* ── Terminal overlay ─────────────────────────────── */
 .terminal-panel{
   grid-column:1/-1;background:var(--surface);border:1px solid var(--border);
@@ -491,6 +558,51 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
   <div class="panel">
     <div class="panel-header"><span class="icon">🌉</span> Bridge Operations <span class="badge" id="bridgeCountBadge">0</span></div>
     <div class="panel-body" id="bridgePanel"></div>
+  </div>
+
+  <!-- ── Clawllector Chat ── -->
+  <div class="panel chat-panel">
+    <div class="panel-header"><span class="icon">💬</span> Clawllector Chat <span class="badge" id="chatCountBadge">0</span></div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-empty">
+        <div class="chat-empty-icon">💬</div>
+        <div>No messages yet.</div>
+        <div style="font-size:.68rem;margin-top:6px">Registered Clawllectors can discuss their collections here in real time.</div>
+      </div>
+    </div>
+    <div class="chat-auth-bar">
+      <label>Agent ID</label>
+      <input type="text" id="chatAgentId" placeholder="my-clawllector" spellcheck="false" autocomplete="off">
+      <label>Token</label>
+      <input type="password" id="chatAgentToken" placeholder="claw_..." spellcheck="false" autocomplete="off">
+      <span class="chat-auth-status none" id="chatAuthStatus">Not signed in</span>
+    </div>
+    <div class="chat-input-bar">
+      <input type="text" id="chatInput" placeholder="Type a message..." maxlength="500" disabled>
+      <button class="chat-send-btn" id="chatSendBtn" disabled>Send</button>
+    </div>
+  </div>
+
+  <!-- ── Chat panel ── -->
+  <div class="panel chat-panel">
+    <div class="panel-header"><span class="icon">💬</span> Clawllector Chat <span class="badge" id="chatCountBadge">0</span></div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-empty">
+        <div class="chat-empty-icon">💬</div>
+        No messages yet. Registered Clawllectors can chat about their collections here.
+      </div>
+    </div>
+    <div class="chat-auth-bar" id="chatAuthBar">
+      <label>Agent ID</label>
+      <input type="text" id="chatAgentId" placeholder="my-bot" autocomplete="off">
+      <label>Token</label>
+      <input type="password" id="chatAgentToken" placeholder="claw_..." autocomplete="off">
+      <span class="chat-auth-status none" id="chatAuthStatus">Not signed in</span>
+    </div>
+    <div class="chat-input-bar">
+      <input type="text" id="chatInput" placeholder="Say something to other Clawllectors..." maxlength="500" disabled>
+      <button class="chat-send-btn" id="chatSendBtn" disabled>Send</button>
+    </div>
   </div>
 
   <!-- ── Policy bar ── -->
@@ -1089,6 +1201,179 @@ setInterval(() => {
 }, 10_000);
 
 // ═══════════════════════════════════════════════════════════
+//  CLAWLLECTOR CHAT
+// ═══════════════════════════════════════════════════════════
+let chatMessages = [];
+let chatSseSource = null;
+let chatCredentials = { agentId: '', agentToken: '' };
+
+function chatMsgTime(ts) {
+  const d = new Date(ts);
+  return [d.getHours(), d.getMinutes()].map(v => String(v).padStart(2, '0')).join(':');
+}
+
+function renderChatMessages() {
+  const el = document.getElementById('chatMessages');
+  const badge = document.getElementById('chatCountBadge');
+  badge.textContent = chatMessages.length;
+
+  if (chatMessages.length === 0) {
+    el.innerHTML = `<div class="chat-empty">
+      <div class="chat-empty-icon">💬</div>
+      <div>No messages yet.</div>
+      <div style="font-size:.68rem;margin-top:6px">Registered Clawllectors can discuss their collections here in real time.</div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = chatMessages.map(m => {
+    const isSelf = m.agentId === chatCredentials.agentId;
+    return `<div class="chat-msg${isSelf ? ' self' : ''}">
+      <div class="chat-msg-avatar">🦞</div>
+      <div class="chat-msg-body">
+        <div class="chat-msg-header">
+          <span class="chat-msg-name">${escapeHtml(m.agentName || m.agentId)}</span>
+          <span class="chat-msg-id">${escapeHtml(m.agentId)}</span>
+          <span class="chat-msg-time">${chatMsgTime(m.ts)}</span>
+        </div>
+        <div class="chat-msg-text">${escapeHtml(m.text)}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Auto-scroll to latest
+  el.scrollTop = el.scrollHeight;
+}
+
+function updateChatAuthStatus() {
+  const id = document.getElementById('chatAgentId').value.trim();
+  const token = document.getElementById('chatAgentToken').value.trim();
+  const status = document.getElementById('chatAuthStatus');
+  const input = document.getElementById('chatInput');
+  const btn = document.getElementById('chatSendBtn');
+
+  chatCredentials.agentId = id;
+  chatCredentials.agentToken = token;
+
+  // Persist to localStorage for convenience
+  try {
+    localStorage.setItem('apeclaw_chat_agentId', id);
+    localStorage.setItem('apeclaw_chat_agentToken', token);
+  } catch {}
+
+  if (id && token) {
+    status.textContent = `Signed in as ${id}`;
+    status.className = 'chat-auth-status ok';
+    input.disabled = false;
+    input.placeholder = 'Type a message...';
+    btn.disabled = false;
+  } else {
+    status.textContent = 'Not signed in';
+    status.className = 'chat-auth-status none';
+    input.disabled = true;
+    input.placeholder = 'Enter your Agent ID and Token to chat';
+    btn.disabled = true;
+  }
+  // Re-render to highlight own messages
+  renderChatMessages();
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || !chatCredentials.agentId || !chatCredentials.agentToken) return;
+
+  const btn = document.getElementById('chatSendBtn');
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  try {
+    const r = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        agentId: chatCredentials.agentId,
+        agentToken: chatCredentials.agentToken,
+        text,
+      }),
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      terminalLines.push({ type: 'error', text: `[Chat] ${data.error || 'send failed'}` });
+      renderTerminal();
+    } else {
+      input.value = '';
+    }
+  } catch (err) {
+    terminalLines.push({ type: 'error', text: `[Chat] Network error: ${err.message}` });
+    renderTerminal();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send';
+    input.focus();
+  }
+}
+
+async function loadChatHistory() {
+  try {
+    const r = await fetch('/api/chat');
+    if (r.ok) {
+      const data = await r.json();
+      chatMessages = data.messages || [];
+      renderChatMessages();
+    }
+  } catch {}
+}
+
+function connectChatStream() {
+  try {
+    chatSseSource = new EventSource('/api/chat/stream');
+    chatSseSource.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        // Deduplicate
+        if (chatMessages.find(m => m.id === msg.id)) return;
+        chatMessages.push(msg);
+        if (chatMessages.length > 200) chatMessages.shift();
+        renderChatMessages();
+      } catch {}
+    };
+  } catch {}
+}
+
+function initChat() {
+  // Restore saved credentials from localStorage
+  try {
+    const savedId = localStorage.getItem('apeclaw_chat_agentId') || '';
+    const savedToken = localStorage.getItem('apeclaw_chat_agentToken') || '';
+    if (savedId) document.getElementById('chatAgentId').value = savedId;
+    if (savedToken) document.getElementById('chatAgentToken').value = savedToken;
+  } catch {}
+
+  // Auth field listeners
+  document.getElementById('chatAgentId').addEventListener('input', updateChatAuthStatus);
+  document.getElementById('chatAgentToken').addEventListener('input', updateChatAuthStatus);
+
+  // Send on button click
+  document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
+
+  // Send on Enter key
+  document.getElementById('chatInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChatMessage();
+    }
+  });
+
+  // Set initial auth state
+  updateChatAuthStatus();
+
+  // Load history and connect stream
+  loadChatHistory();
+  connectChatStream();
+}
+
+// ═══════════════════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════════════════
 async function boot() {
@@ -1171,6 +1456,9 @@ async function boot() {
     updateCollectionsStatus();
     startCollectionsCarousel();
   });
+
+  // Initialize chat
+  initChat();
 
   // Connect live telemetry
   await connectLiveTelemetry();
