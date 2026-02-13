@@ -32,12 +32,15 @@ test("doctor command returns json with chainId", () => {
   const data = JSON.parse(out);
   assert.equal(data.chainId, 33139);
   assert.ok(Array.isArray(data.issues), "issues should be an array");
+  assert.ok(Array.isArray(data.warnings), "warnings should be an array");
   assert.ok("agent" in data, "should include agent identity");
   assert.ok("agentId" in data.agent, "agent should have agentId");
-  // Without env vars, ok should be false (missing OPENSEA_API_KEY and PRIVATE_KEY)
+  // Without env vars, doctor should still be OK for onboarding/read-only,
+  // but execute readiness should be false with warnings.
   if (!process.env.OPENSEA_API_KEY || !process.env.APE_CLAW_PRIVATE_KEY) {
-    assert.equal(data.ok, false);
-    assert.ok(data.issues.length > 0, "should report missing env vars");
+    assert.equal(data.ok, true);
+    assert.ok(data.warnings.length > 0, "should report missing execute prerequisites");
+    assert.equal(data.execution.executeReady, false);
   }
 });
 

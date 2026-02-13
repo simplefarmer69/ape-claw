@@ -25,7 +25,7 @@ import { getListings, enrichAllowlistWithOpenSea } from "./lib/market.mjs";
 import { quoteBridgeRelay, executeBridgeRelay, getBridgeRelayStatus } from "./lib/bridge-relay.mjs";
 import { getListingFulfillmentData, executeListingFulfillmentTx } from "./lib/nft-opensea.mjs";
 import { resolveRpcUrl } from "./lib/rpc.mjs";
-import { verifyClawbot, registerClawbot, listClawbots } from "./lib/clawbots.mjs";
+import { verifyClawbot, registerClawbot, listClawbots, loadClawbotsConfig } from "./lib/clawbots.mjs";
 
 function parseArgs(argv) {
   const out = { _: [] };
@@ -249,21 +249,34 @@ async function main() {
   if (group === "doctor") {
     const unresolvedCount = allowlist.filter((c) => !c.contractAddress).length;
     const openseaRequired = String(policy.market.dataSource || "").toLowerCase() === "opensea";
-    const openseaMissing = openseaRequired && !openseaKey;
+    const clawbotsConfig = loadClawbotsConfig() || {};
+    const registeredAgent = Boolean(clawbotsConfig?.agents?.[agentId]);
+    const sharedKeyConfigured = Boolean(clawbotsConfig?.sharedOpenseaApiKey);
+    const sharedKeyAvailable = Boolean(sharedOpenseaKey) || (registeredAgent && sharedKeyConfigured);
+    const openseaProvided = Boolean(process.env.OPENSEA_API_KEY || sharedKeyAvailable);
+    const openseaMissing = openseaRequired && !openseaProvided;
     const privateKeyMissing = !privateKey;
     const issues = [];
-    if (openseaMissing) issues.push("OPENSEA_API_KEY is missing (set env var or verify as clawbot for shared key).");
-    if (privateKeyMissing) issues.push("APE_CLAW_PRIVATE_KEY is missing (required for execute flows).");
+    const warnings = [];
+    if (openseaMissing) {
+      warnings.push("OpenSea API key is not available for this agent. Set OPENSEA_API_KEY or configure sharedOpenseaApiKey for verified clawbots.");
+    }
+    if (privateKeyMissing) {
+      warnings.push("APE_CLAW_PRIVATE_KEY is missing. Read-only commands work, but execute flows are blocked until set.");
+    }
+    const executeReady = !openseaMissing && !privateKeyMissing;
     const result = {
       ok: issues.length === 0,
       issues,
+      warnings,
       chainId: policy.apechainChainId,
       rpcConfigured: Boolean(policy.apechainRpcUrl),
       agent: {
         agentId,
         verified: Boolean(verifiedBot),
         name: verifiedBot?.name || agentId,
-        sharedKeyAvailable: Boolean(sharedOpenseaKey),
+        sharedKeyAvailable,
+        registered: registeredAgent,
       },
       bridge: {
         provider: policy.bridge.provider,
@@ -274,10 +287,11 @@ async function main() {
       market: {
         dataSource: policy.market.dataSource,
         openseaApiKeyRequired: openseaRequired,
-        openseaApiKeyProvided: Boolean(openseaKey),
+        openseaApiKeyProvided: openseaProvided,
       },
       execution: {
         privateKeyProvided: !privateKeyMissing,
+        executeReady,
         dailySpendCap: policy.execution.dailySpendCap,
         confirmPhraseRequired: policy.execution.confirmPhraseRequired,
         simulationRequired: policy.nftBuy.simulationRequired,
