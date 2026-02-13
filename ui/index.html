@@ -396,16 +396,15 @@ openclaw onboard</pre>
         <div class="setup-step">
           <div class="setup-step-num">1</div>
           <h3>Install the ape-claw skill</h3>
-          <p>Add the ApeChain NFT skill to your OpenClaw agent:</p>
-          <pre>npx --yes ape-claw skill install \
-  --scope local --json</pre>
-          <p class="note">This installs the skill + bootstraps <code>config/policy.json</code> and the allowlist.</p>
+          <p>Run the one-command installer (works without cloning repo):</p>
+          <pre>curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh | bash</pre>
+          <p class="note">Installs ApeClaw skill + OpenClaw CLI (if missing) and bootstraps config.</p>
         </div>
         <div class="setup-step">
           <div class="setup-step-num">2</div>
           <h3>Register your Clawllector</h3>
           <p>Each Clawllector gets a unique agent ID. Save the token — it's shown only once:</p>
-          <pre>ape-claw clawbot register \
+          <pre>npx --yes github:simplefarmer69/ape-claw clawbot register \
   --agent-id my-bot \
   --name "My Bot" --json</pre>
           <p class="note">Returns <code>{"token":"claw_..."}</code> — store this securely.</p>
@@ -423,16 +422,16 @@ export APE_CLAW_PRIVATE_KEY=0x...</pre>
           <div class="setup-step-num">4</div>
           <h3>Run preflight check</h3>
           <p>Verify everything is configured correctly:</p>
-          <pre>ape-claw doctor --json</pre>
-          <p class="note">Must return <code>"ok": true</code> before proceeding. Your OpenClaw agent checks this automatically.</p>
+          <pre>npx --yes github:simplefarmer69/ape-claw doctor --json</pre>
+          <p class="note">Should return <code>"ok": true</code>. If <code>"executeReady": false</code>, read-only flows still work; add private key for execute.</p>
         </div>
         <div class="setup-step">
           <div class="setup-step-num">5</div>
           <h3>Start collecting</h3>
           <p>Your OpenClaw agent can now browse, quote, simulate, and buy ApeChain NFTs:</p>
-          <pre>ape-claw market collections \
+          <pre>npx --yes github:simplefarmer69/ape-claw market collections \
   --recommended --json
-ape-claw nft quote-buy \
+npx --yes github:simplefarmer69/ape-claw nft quote-buy \
   --collection dongsocks \
   --tokenId 42 --maxPrice 100 \
   --currency APE --json</pre>
@@ -444,7 +443,7 @@ ape-claw nft quote-buy \
         <a href="https://openclaw.ai" target="_blank" rel="noopener" style="font-size:.72rem;color:var(--accent2);font-weight:700">OpenClaw</a>
         <a href="https://github.com/openclaw/openclaw" target="_blank" rel="noopener" style="font-size:.72rem">OpenClaw GitHub</a>
         <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener" style="font-size:.72rem">ApeClaw GitHub</a>
-        <a href="https://www.npmjs.com/package/ape-claw" target="_blank" rel="noopener" style="font-size:.72rem">npm Package</a>
+        <a href="https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh" target="_blank" rel="noopener" style="font-size:.72rem">Install Script</a>
         <a href="https://github.com/simplefarmer69/ape-claw#clawbot-verification-system" target="_blank" rel="noopener" style="font-size:.72rem">Clawllector Docs</a>
         <a href="https://github.com/simplefarmer69/ape-claw#commands" target="_blank" rel="noopener" style="font-size:.72rem">CLI Commands</a>
         <span style="margin-left:auto;font-size:.65rem;color:var(--dim)" id="setupClawbotCount"></span>
@@ -1093,9 +1092,26 @@ setInterval(() => {
 //  BOOT
 // ═══════════════════════════════════════════════════════════
 async function boot() {
+  // Resolve allowlist from API first, then static file for Vercel/static hosting.
+  async function fetchAllowlistWithFallback() {
+    const sources = [
+      '/api/allowlist',
+      '/allowlists/recommended.apechain.json',
+    ];
+    for (const src of sources) {
+      try {
+        const r = await fetch(src);
+        if (!r.ok) continue;
+        const data = await r.json();
+        if (Array.isArray(data) && data.length > 0) return data;
+      } catch {}
+    }
+    return null;
+  }
+
   // Fetch allowlist, policy, clawbots in parallel
   const [alRes, polRes, cbRes] = await Promise.allSettled([
-    fetch('/api/allowlist').then(r => r.ok ? r.json() : null),
+    fetchAllowlistWithFallback(),
     fetch('/api/policy').then(r => r.ok ? r.json() : null),
     fetch('/api/clawbots').then(r => r.ok ? r.json() : null),
   ]);
