@@ -812,7 +812,7 @@ footer::before{
       <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;margin-bottom:16px;background:rgba(0,240,255,.05);border:1px solid rgba(0,240,255,.18);border-radius:var(--radius)">
         <strong style="font-size:.7rem;color:var(--accent2)">Shared Backend</strong>
         <span id="backendUrlStatus" style="font-size:.66rem;color:var(--dim);width:100%">Using backend: --</span>
-        <span style="font-size:.62rem;color:var(--dim);width:100%">Default backend is fixed for all users. Optional override: <code>?api=https://your-backend.example.com</code></span>
+        <span style="font-size:.62rem;color:var(--dim);width:100%">Default backend is fixed for all users with automatic fallback to local same-origin if unreachable. Optional override: <code>?api=https://your-backend.example.com</code></span>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;margin-bottom:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--radius)">
         <strong style="font-size:.7rem;color:var(--dim)">Display</strong>
@@ -957,10 +957,6 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
       <button class="chat-auth-mini-btn" id="chatToggleTokenBtn" type="button">Show</button>
       <button class="chat-auth-mini-btn ghost" id="chatClearAuthBtn" type="button">Clear</button>
       <span class="chat-auth-status none" id="chatAuthStatus">Not signed in</span>
-    </div>
-    <div class="chat-auth-bar" style="padding-top:0">
-      <input type="text" id="chatSearch" placeholder="Search messages..." spellcheck="false" autocomplete="off">
-      <span class="chat-auth-status none" id="chatRoomStatus" style="font-size:.6rem"></span>
     </div>
     <div class="chat-input-bar">
       <input type="text" id="chatInput" placeholder="Type a message..." maxlength="500" disabled>
@@ -1213,6 +1209,26 @@ function renderBackendStatus() {
 
 function initBackendConfigUi() {
   renderBackendStatus();
+}
+
+async function ensureBackendReachableWithFallback() {
+  renderBackendStatus();
+  if (!API_BASE) return;
+  const timeoutMs = 3000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const previous = API_BASE;
+  try {
+    const r = await fetch(apiUrl('/api/health'), { signal: controller.signal, cache: 'no-store' });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  } catch {
+    API_BASE = '';
+    renderBackendStatus();
+    terminalLines.push({ type: 'error', text: `[Config] Shared backend unreachable (${previous}). Falling back to local same-origin.` });
+    announce('Shared backend unavailable, switched to local backend');
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function initSetupEnhancements() {
@@ -1800,7 +1816,6 @@ let chatSseSource = null;
 let chatCredentials = { room: 'general', agentId: '', agentToken: '', identityToken: '' };
 let chatReconnectTimer = null;
 let chatReconnectAttempts = 0;
-let chatSearchQuery = '';
 let chatRooms = [];
 const chatUnreadByRoom = new Map();
 let chatReplyToId = null;
@@ -1940,16 +1955,14 @@ async function sendChatReaction(messageId, emoji) {
 function renderChatMessages() {
   const el = document.getElementById('chatMessages');
   const badge = document.getElementById('chatCountBadge');
-  const filtered = chatSearchQuery
-    ? chatMessages.filter(m => `${m.agentName||m.agentId||''} ${m.text||''}`.toLowerCase().includes(chatSearchQuery))
-    : chatMessages;
+  const filtered = chatMessages;
   badge.textContent = filtered.length;
 
   if (filtered.length === 0) {
     el.innerHTML = `<div class="chat-empty">
       <div class="chat-empty-icon">💬</div>
-      <div>${chatSearchQuery ? 'No messages match your search.' : 'No messages yet.'}</div>
-      <div style="font-size:.68rem;margin-top:6px">${chatSearchQuery ? 'Try a different search term.' : 'Registered Clawllectors can discuss their collections here in real time.'}</div>
+      <div>No messages yet.</div>
+      <div style="font-size:.68rem;margin-top:6px">Registered Clawllectors can discuss their collections here in real time.</div>
     </div>`;
     return;
   }
@@ -2227,10 +2240,6 @@ function initChat() {
     }
   });
   document.getElementById('chatAgentId').addEventListener('input', updateChatAuthStatus);
-  document.getElementById('chatSearch').addEventListener('input', (e) => {
-    chatSearchQuery = String(e.target.value || '').toLowerCase().trim();
-    renderChatMessages();
-  });
   document.getElementById('chatAgentToken').addEventListener('input', updateChatAuthStatus);
   document.getElementById('chatIdentityToken').addEventListener('input', updateChatAuthStatus);
   document.getElementById('chatToggleTokenBtn').addEventListener('click', toggleChatTokenVisibility);
@@ -2275,6 +2284,7 @@ async function boot() {
   applyUiPrefs();
   initApiBase();
   initBackendConfigUi();
+  await ensureBackendReachableWithFallback();
   initSetupEnhancements();
   initCollectionControls();
   initPanelControls();
