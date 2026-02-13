@@ -39,7 +39,7 @@ curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/instal
 ```
 
 This installs OpenClaw (if missing) and the ApeClaw skill directly from GitHub in one command.
-Requires Node.js `>=22`.
+Requires Node.js `>=20`.
 
 ### 1. Install OpenClaw
 
@@ -257,7 +257,7 @@ The CLI auto-retries "Order not found" errors up to 3 times by fetching fresh li
 git clone https://github.com/simplefarmer69/ape-claw.git
 cd ape-claw
 npm install
-npm test          # 14 tests
+npm test          # 11 tests
 node ./src/cli.mjs doctor --json
 ```
 
