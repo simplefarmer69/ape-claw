@@ -39,7 +39,7 @@ curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/instal
 ```
 
 This installs OpenClaw (if missing) and the ApeClaw skill directly from GitHub in one command.
-Requires Node.js `>=20`.
+Requires Node.js `>=22` (OpenClaw dependency). The CLI alone needs `>=20`.
 
 ### 1. Install OpenClaw
 

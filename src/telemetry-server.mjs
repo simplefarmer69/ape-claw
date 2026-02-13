@@ -177,7 +177,6 @@ async function getAllowlistWithIcons() {
 
 // ── Chat helpers ────────────────────────────────────────
 
-const MAX_CHAT_MESSAGES = 200;
 const chatClients = new Set();
 
 function sendChatSse(res, msg) {
@@ -352,6 +351,24 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
     return fs.createReadStream(UI_PATH).pipe(res);
   }
+
+  // ── Static file serving for local dev ────────────────
+  const MIME_TYPES = {
+    ".html": "text/html", ".css": "text/css", ".js": "application/javascript",
+    ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg",
+    ".svg": "image/svg+xml", ".ico": "image/x-icon", ".webp": "image/webp",
+  };
+  const safePath = decodeURIComponent(req.url.split("?")[0]);
+  if (!safePath.includes("..") && !safePath.includes("~")) {
+    const filePath = path.join(ROOT, safePath);
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+      const ext = path.extname(filePath).toLowerCase();
+      const mime = MIME_TYPES[ext] || "application/octet-stream";
+      res.writeHead(200, { "content-type": mime });
+      return fs.createReadStream(filePath).pipe(res);
+    }
+  }
+
   res.writeHead(404);
   res.end("not found");
 });
