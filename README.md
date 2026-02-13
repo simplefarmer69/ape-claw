@@ -38,8 +38,8 @@ Discover collections, get live listings, quote/simulate/buy NFTs, and bridge fun
 curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh | bash
 ```
 
-This installs OpenClaw (if missing) and the ApeClaw skill directly from GitHub in one command.
-Requires Node.js `>=22` (OpenClaw dependency). The CLI alone needs `>=20`.
+This installs the ApeClaw skill directly from GitHub and attempts to install the global CLI.
+Requires Node.js `>=20`. OpenClaw itself requires Node `>=22`.
 
 ### 1. Install OpenClaw
 
@@ -88,6 +88,25 @@ npx --yes github:simplefarmer69/ape-claw doctor --json
 ```
 
 Must return `"ok": true` before proceeding.
+
+If you globally installed ApeClaw, this should also work:
+
+```bash
+ape-claw doctor --json
+```
+
+If `ape-claw` says `command not found`, your npm global bin is likely not in `PATH`:
+
+```bash
+echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+If `npm i -g ape-claw` returns `404 Not Found`, use GitHub install instead:
+
+```bash
+npm i -g github:simplefarmer69/ape-claw
+```
 
 ---
 
@@ -264,7 +283,7 @@ The CLI auto-retries "Order not found" errors up to 3 times by fetching fresh li
 git clone https://github.com/simplefarmer69/ape-claw.git
 cd ape-claw
 npm install
-npm test          # 11 tests
+npm test          # 16 tests
 node ./src/cli.mjs doctor --json
 ```
 

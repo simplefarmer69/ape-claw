@@ -30,6 +30,7 @@
   },
   "scripts": {
     "test": "node --test",
+    "test:install": "bash ./scripts/test-install.sh",
     "telemetry": "node ./src/telemetry-server.mjs",
     "start:ui": "node ./src/telemetry-server.mjs",
     "doctor": "node ./src/cli.mjs doctor --json",

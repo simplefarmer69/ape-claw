@@ -657,7 +657,7 @@ footer::before{
     <div class="header-links">
       <a href="https://openclaw.ai" target="_blank" rel="noopener" style="border-color:rgba(255,77,0,.4);color:var(--accent2)">OpenClaw</a>
       <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://www.npmjs.com/package/ape-claw" target="_blank" rel="noopener">npm</a>
+      <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
       <a id="connectionStatus" href="#" onclick="return false" style="cursor:default"><span class="connection-dot disconnected" id="connectionDot"></span> <span id="connectionLabel">Connecting</span></a>
     </div>
   </div>
@@ -696,7 +696,9 @@ openclaw onboard</pre>
           <h3>Install the ape-claw skill</h3>
           <p>Run the one-command installer (works without cloning repo):</p>
           <pre>curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh | bash</pre>
-          <p class="note">Installs ApeClaw skill + OpenClaw CLI (if missing) and bootstraps config.</p>
+          <p>Optional global CLI install (works now, no npm publish required):</p>
+          <pre>npm i -g github:simplefarmer69/ape-claw</pre>
+          <p class="note">Installs ApeClaw skill + bootstraps config. OpenClaw install is attempted only on Node 22+.</p>
         </div>
         <div class="setup-step">
           <div class="setup-step-num">2</div>
@@ -721,7 +723,7 @@ export APE_CLAW_PRIVATE_KEY=0x...</pre>
           <h3>Run preflight check</h3>
           <p>Verify everything is configured correctly:</p>
           <pre>npx --yes github:simplefarmer69/ape-claw doctor --json</pre>
-          <p class="note">Should return <code>"ok": true</code>. If <code>"executeReady": false</code>, read-only flows still work; add private key for execute.</p>
+          <p class="note">Should return <code>"ok": true</code>. If <code>ape-claw</code> is command-not-found, add your npm global bin to PATH. If <code>"executeReady": false</code>, read-only flows still work; add private key for execute.</p>
         </div>
         <div class="setup-step">
           <div class="setup-step-num">5</div>
@@ -850,7 +852,7 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
     <a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--accent2)">OpenClaw</a>
     <a href="https://github.com/openclaw/openclaw" target="_blank" rel="noopener">OpenClaw GitHub</a>
     <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">ApeClaw GitHub</a>
-    <a href="https://www.npmjs.com/package/ape-claw" target="_blank" rel="noopener">npm</a>
+    <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
     <a href="https://github.com/simplefarmer69/ape-claw#clawbot-verification-system" target="_blank" rel="noopener">Clawllector Docs</a>
     <a href="https://github.com/simplefarmer69/ape-claw#commands" target="_blank" rel="noopener">CLI Reference</a>
     <a href="https://apescan.io" target="_blank" rel="noopener">ApeScan Explorer</a>
