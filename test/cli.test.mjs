@@ -44,11 +44,13 @@ test("doctor command returns json with chainId", () => {
   assert.ok(Array.isArray(data.warnings), "warnings should be an array");
   assert.ok("agent" in data, "should include agent identity");
   assert.ok("agentId" in data.agent, "agent should have agentId");
+  assert.ok(Array.isArray(data.nextSteps), "should include actionable next steps");
   // Without env vars, doctor should still be OK for onboarding/read-only,
   // but execute readiness should be false with warnings.
   if (!process.env.OPENSEA_API_KEY || !process.env.APE_CLAW_PRIVATE_KEY) {
     assert.equal(data.ok, true);
     assert.ok(data.warnings.length > 0, "should report missing execute prerequisites");
+    assert.equal(data.execution.readOnlyReady, true);
     assert.equal(data.execution.executeReady, false);
   }
 });

@@ -103,6 +103,18 @@ echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
+If `doctor` returns `"executeReady": false`, read-only flows are still available. For execute flows, choose one:
+
+```bash
+# Option A: environment variable
+export APE_CLAW_PRIVATE_KEY=0x...
+
+# Option B: save once locally
+ape-claw auth set --private-key 0x... --json
+```
+
+If your OpenClaw bot already has a wallet secret, map/export that secret as `APE_CLAW_PRIVATE_KEY` before running execute commands.
+
 If `npm i -g ape-claw` returns `404 Not Found`, use GitHub install instead:
 
 ```bash

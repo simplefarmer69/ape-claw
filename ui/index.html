@@ -727,7 +727,7 @@ export APE_CLAW_PRIVATE_KEY=0x...</pre>
           <h3>Run preflight check</h3>
           <p>Verify everything is configured correctly:</p>
           <pre>npx --yes github:simplefarmer69/ape-claw doctor --json</pre>
-          <p class="note">Should return <code>"ok": true</code>. If <code>ape-claw</code> is command-not-found, add your npm global bin to PATH. If <code>"executeReady": false</code>, read-only flows still work; add private key for execute.</p>
+          <p class="note">Should return <code>"ok": true</code>. If <code>ape-claw</code> is command-not-found, add your npm global bin to PATH. If <code>"executeReady": false</code>, read-only flows still work; for execute set <code>APE_CLAW_PRIVATE_KEY</code>, run <code>ape-claw auth set --private-key 0x... --json</code>, or map your OpenClaw bot wallet secret to <code>APE_CLAW_PRIVATE_KEY</code>.</p>
         </div>
         <div class="setup-step">
           <div class="setup-step-num">5</div>

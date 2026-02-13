@@ -361,15 +361,33 @@ async function main() {
     const issues = [];
     const warnings = [];
     if (openseaMissing) {
-      warnings.push("OpenSea API key is not available for this agent. Set OPENSEA_API_KEY or configure sharedOpenseaApiKey for verified clawbots.");
+      warnings.push("OpenSea API key is not available for this agent. Set OPENSEA_API_KEY, or verify a clawbot so sharedOpenseaApiKey can be injected.");
     }
     if (registeredAgent && sharedKeyConfigured && !sharedKeyInjected) {
-      warnings.push("This agent is registered and a shared OpenSea key exists, but it is not injected yet. Verify using --agent-token (or save it once with: ape-claw auth set --agent-id <id> --agent-token <token> --json).");
+      warnings.push("This agent is registered and shared OpenSea key is configured, but not injected yet. Provide --agent-token (or save once via: ape-claw auth set --agent-id <id> --agent-token <token> --json).");
     }
     if (privateKeyMissing) {
-      warnings.push("APE_CLAW_PRIVATE_KEY is missing. Read-only commands work, but execute flows are blocked until set.");
+      warnings.push("Private key not detected for execute flows. Read-only commands are ready. For execution, provide APE_CLAW_PRIVATE_KEY, save with ape-claw auth set --private-key, or map your OpenClaw bot secret to APE_CLAW_PRIVATE_KEY.");
     }
     const executeReady = !openseaMissing && !privateKeyMissing;
+    const readOnlyReady = issues.length === 0;
+    const nextSteps = [];
+    if (registeredAgent && !verifiedBot) {
+      nextSteps.push("Verify this registered clawbot to inject shared OpenSea key: ape-claw doctor --agent-id <id> --agent-token <token> --json");
+      nextSteps.push("Or persist once: ape-claw auth set --agent-id <id> --agent-token <token> --json");
+    }
+    if (openseaMissing && !registeredAgent) {
+      nextSteps.push("Standalone mode: set OPENSEA_API_KEY (env) or save with ape-claw auth set --opensea-api-key <key> --json");
+    }
+    if (privateKeyMissing) {
+      nextSteps.push("For execute flows, set APE_CLAW_PRIVATE_KEY (env), or save with ape-claw auth set --private-key 0x... --json");
+      nextSteps.push("If your OpenClaw bot already has a wallet secret, map/export it as APE_CLAW_PRIVATE_KEY before running execute commands.");
+    }
+    if (!privateKeyMissing && !openseaMissing) {
+      nextSteps.push("Execute-ready: you can run buy/bridge commands with --execute.");
+    } else {
+      nextSteps.push("Read-only ready: use market/quote/simulate flows now, then complete missing execute prerequisites.");
+    }
     const result = {
       ok: issues.length === 0,
       issues,
@@ -398,6 +416,7 @@ async function main() {
       },
       execution: {
         privateKeyProvided: !privateKeyMissing,
+        readOnlyReady,
         executeReady,
         dailySpendCap: policy.execution.dailySpendCap,
         confirmPhraseRequired: policy.execution.confirmPhraseRequired,
@@ -408,6 +427,7 @@ async function main() {
       allowlistPath: ALLOWLIST_PATH,
       allowlistStats: { total: allowlist.length, unresolvedCount },
       recommendations: ["Use --json for agent parsing", "Use --execute for state-changing calls"],
+      nextSteps,
     };
     emit({ eventType: "doctor.ran", command, dryRun: true, result });
     return print(result, asJson);
