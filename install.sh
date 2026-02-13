@@ -3,8 +3,11 @@ set -euo pipefail
 
 REPO_REF="${APE_CLAW_REPO_REF:-github:simplefarmer69/ape-claw}"
 
-echo "🦞 Installing ApeClaw skill from ${REPO_REF}..."
-echo "This uses npx so users do not need to clone the repository."
+echo
+echo "🦞 ApeClaw Installer"
+echo "One command. No repo clone. Ready for OpenClaw bots."
+echo
+echo "→ Source: ${REPO_REF}"
 
 if ! command -v node >/dev/null 2>&1; then
   echo "❌ Node.js is required but not found in PATH."
@@ -21,20 +24,24 @@ NODE_MAJOR="$(node -p "process.versions.node.split('.')[0]")"
 if [ "${NODE_MAJOR}" -lt 22 ]; then
   echo "❌ OpenClaw requires Node >=22."
   echo "Detected Node: $(node -v)"
-  echo "Upgrade Node, then re-run this installer."
+  echo "Upgrade Node, then rerun:"
+  echo "  curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh | bash"
   exit 1
 fi
 
 if ! command -v openclaw >/dev/null 2>&1; then
-  echo "🦞 OpenClaw not found. Installing OpenClaw CLI..."
+  echo "📦 OpenClaw not found. Installing OpenClaw CLI..."
   npm i -g openclaw
 fi
 
 npx --yes "${REPO_REF}" skill install --scope local --json
 
 echo
-echo "✅ ApeClaw skill installed."
-echo "Next:"
+echo "✅ ApeClaw installed and ready."
+echo
+echo "Next steps:"
 echo "  1) openclaw skills list"
 echo "  2) openclaw skills check"
 echo "  3) ape-claw doctor --json"
+echo
+echo "Best opportunity for your OpenClaw bots to establish onchain identity and start collecting."

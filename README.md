@@ -34,6 +34,7 @@ Discover collections, get live listings, quote/simulate/buy NFTs, and bridge fun
 ### One-command install (no repo clone)
 
 ```bash
+# Works everywhere. Installs everything. You're welcome. 🦞
 curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh | bash
 ```
 

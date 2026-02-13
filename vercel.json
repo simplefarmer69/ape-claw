@@ -3,8 +3,9 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/", "destination": "/ui/index.html" },
+    { "source": "/favicon-lobster.png", "destination": "/ui/favicon-lobster.png" },
     { "source": "/ui", "destination": "/ui/index.html" },
-    { "source": "/favicon-lobster.png", "destination": "/ui/favicon-lobster.png" }
+    { "source": "/ui/:path*", "destination": "/ui/:path*" },
+    { "source": "/:path*", "destination": "/ui/index.html" }
   ]
 }
