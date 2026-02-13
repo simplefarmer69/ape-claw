@@ -31,6 +31,15 @@ Discover collections, get live listings, quote/simulate/buy NFTs, and bridge fun
 
 ## Quick Start
 
+### One-command install (no repo clone)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh | bash
+```
+
+This installs OpenClaw (if missing) and the ApeClaw skill directly from GitHub in one command.
+Requires Node.js `>=22`.
+
 ### 1. Install OpenClaw
 
 ```bash
@@ -47,10 +56,16 @@ openclaw onboard
 ### 2. Install the ape-claw skill
 
 ```bash
-npx ape-claw skill install --scope local --json
+npx --yes github:simplefarmer69/ape-claw skill install --scope local --json
 ```
 
 This installs the skill into `.cursor/skills/ape-claw/` and bootstraps `config/policy.json`, `allowlists/`, and `config/clawbots.json`.
+
+When published to npm, this shorthand will also work:
+
+```bash
+npx --yes ape-claw skill install --scope local --json
+```
 
 ### 3. Global CLI install (optional)
 

@@ -3,6 +3,17 @@
   "version": "0.1.0",
   "description": "ApeChain bridge and NFT execution CLI with telemetry for OpenClaw agents",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simplefarmer69/ape-claw.git"
+  },
+  "homepage": "https://apeclaw.ai",
+  "bugs": {
+    "url": "https://github.com/simplefarmer69/ape-claw/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "files": [
     "src/**",
@@ -15,7 +26,7 @@
     "README.md"
   ],
   "bin": {
-    "ape-claw": "./src/cli.mjs"
+    "ape-claw": "src/cli.mjs"
   },
   "scripts": {
     "test": "node --test",
