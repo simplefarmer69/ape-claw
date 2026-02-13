@@ -21,7 +21,7 @@ Thumbs.db
 
 # Internal development files
 research/
-assets/
+assets/launch/
 *.pdf
 apechain_collections.json
 ape-claw_build_plan_audited.md

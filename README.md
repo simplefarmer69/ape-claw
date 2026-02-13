@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="./assets/hero-ai-collects-nfts.png" alt="ApeClaw hero banner: Your AI collects NFTs while you sleep" width="900" />
+  <img src="assets/hero-ai-collects-nfts.png" alt="ApeClaw hero banner: Your AI collects NFTs while you sleep" width="900" />
 </p>
 
 # ape-claw
