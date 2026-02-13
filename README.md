@@ -2,6 +2,7 @@
   <img src="https://img.shields.io/badge/ApeChain-33139-ff4d00?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+PHRleHQgeD0iNCIgeT0iMTgiIGZvbnQtc2l6ZT0iMTYiPvCmng==</text></svg>" alt="ApeChain"/>
   <img src="https://img.shields.io/badge/Node.js-%3E%3D20-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js"/>
   <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License"/>
+  <a href="https://github.com/simplefarmer69/ape-claw/actions/workflows/ci.yml"><img src="https://github.com/simplefarmer69/ape-claw/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
   <img src="https://img.shields.io/badge/OpenClaw-Skill-ff4d00?style=for-the-badge" alt="OpenClaw Skill"/>
 </p>
 
