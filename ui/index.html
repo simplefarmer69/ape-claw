@@ -6,18 +6,23 @@
 <title>ApeClaw Dashboard</title>
 <link rel="icon" type="image/png" href="/favicon-lobster.png">
 <link rel="apple-touch-icon" href="/favicon-lobster.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ── Reset & base ─────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0a0a0f;--surface:#12121c;--surface2:#1a1a2e;--surface3:#222240;
-  --border:#2a2a4a;--text:#e0e0f0;--dim:#7878a0;--accent:#ff4d00;
+  --bg:#07070d;--surface:#121226;--surface2:#171731;--surface3:#232349;
+  --border:#2d2d58;--text:#edeefe;--dim:#8a8eb4;--accent:#ff5a1f;
   --accent2:#ff7033;--accent-glow:rgba(255,77,0,.35);
   --neon-cyan:#00f0ff;--neon-green:#39ff14;--neon-pink:#ff2d95;
   --neon-purple:#b026ff;--gold:#ffd700;
-  --font-mono:'Courier New',Consolas,monospace;
-  --font-sans:system-ui,-apple-system,'Segoe UI',sans-serif;
-  --radius:8px;
+  --font-display:'Syne','Avenir Next','Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono',Consolas,monospace;
+  --font-sans:'Work Sans','Avenir Next','Segoe UI',sans-serif;
+  --radius:12px;
+  --panel-shadow:0 10px 28px rgba(0,0,0,.34);
 }
 html{font-size:14px;scroll-behavior:smooth}
 body{
@@ -32,29 +37,32 @@ code{font-family:var(--font-mono);font-size:.85em;background:rgba(255,255,255,.0
 body::before{
   content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(255,77,0,.04) 60px),
-    repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(255,77,0,.04) 60px);
-  animation:gridPulse 8s ease-in-out infinite alternate;
+    repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(255,77,0,.032) 60px),
+    repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(0,240,255,.024) 60px);
+  animation:gridPulse 10s ease-in-out infinite alternate;
 }
 @keyframes gridPulse{0%{opacity:.5}100%{opacity:1}}
 
-/* ── Scanline overlay ─────────────────────────────── */
+/* ── Grain overlay ────────────────────────────────── */
 body::after{
   content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
-  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);
+  background:radial-gradient(circle, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size:3px 3px;
+  opacity:.2;
 }
 
 /* ── Layout ───────────────────────────────────────── */
 .app{position:relative;z-index:1;display:flex;flex-direction:column;min-height:100vh}
 header{
-  display:flex;align-items:center;gap:16px;padding:16px 24px;
+  display:flex;align-items:center;gap:16px;padding:14px 24px;
   border-bottom:1px solid var(--border);background:rgba(18,18,28,.92);
-  backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;
+  box-shadow:0 8px 24px rgba(0,0,0,.28);
 }
 .logo{display:flex;align-items:center;gap:10px}
 .logo-icon{font-size:2rem;filter:drop-shadow(0 0 12px var(--accent-glow))}
 .logo h1{
-  font-size:1.4rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  font-size:1.52rem;font-family:var(--font-display);font-weight:800;letter-spacing:.08em;text-transform:uppercase;
   background:linear-gradient(135deg,var(--accent),var(--accent2),var(--gold));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
@@ -62,11 +70,12 @@ header{
 .header-right{display:flex;gap:16px;margin-left:auto;align-items:center}
 .header-stats{display:flex;gap:20px;align-items:center}
 .stat{text-align:center}
-.stat-value{font-size:1.2rem;font-weight:700;font-family:var(--font-mono);color:var(--neon-cyan);text-shadow:0 0 8px rgba(0,240,255,.4)}
+.stat-value{font-size:1.2rem;font-weight:600;font-family:var(--font-mono);color:var(--neon-cyan);text-shadow:0 0 8px rgba(0,240,255,.4)}
 .stat-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;color:var(--dim)}
 .chain-badge{
   display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;
-  background:rgba(255,77,0,.12);border:1px solid rgba(255,77,0,.3);font-size:.75rem;
+  background:linear-gradient(120deg, rgba(255,90,31,.18), rgba(255,112,51,.09));
+  border:1px solid rgba(255,77,0,.28);font-size:.75rem;
   font-weight:600;color:var(--accent2);
 }
 .chain-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--neon-green);box-shadow:0 0 8px var(--neon-green);animation:pulse 2s infinite}
@@ -88,11 +97,13 @@ header{
 .panel{
   background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:var(--panel-shadow);
 }
 .panel-header{
   display:flex;align-items:center;gap:8px;padding:12px 16px;
-  border-bottom:1px solid var(--border);background:var(--surface2);
-  font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--surface2);
+  font-size:.78rem;font-family:var(--font-display);font-weight:700;text-transform:uppercase;letter-spacing:.11em;
 }
 .panel-header .icon{font-size:1rem}
 .panel-header .badge{
@@ -109,8 +120,8 @@ header{
 .setup-panel{grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
 .setup-header{
   display:flex;align-items:center;gap:8px;padding:12px 16px;cursor:pointer;
-  background:var(--surface2);border-bottom:1px solid var(--border);
-  font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  background:linear-gradient(180deg, rgba(255,255,255,.03), transparent), var(--surface2);border-bottom:1px solid var(--border);
+  font-size:.78rem;font-family:var(--font-display);font-weight:700;text-transform:uppercase;letter-spacing:.1em;
   user-select:none;transition:background .2s;
 }
 .setup-header:hover{background:var(--surface3)}
@@ -139,9 +150,9 @@ header{
 .agents-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .agent-card{
   background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);
-  padding:14px;position:relative;overflow:hidden;transition:border-color .3s,box-shadow .3s;
+  padding:14px;position:relative;overflow:hidden;transition:border-color .3s,box-shadow .3s,transform .2s;
 }
-.agent-card:hover{border-color:var(--accent);box-shadow:0 0 20px var(--accent-glow)}
+.agent-card:hover{border-color:var(--accent);box-shadow:0 0 20px var(--accent-glow);transform:translateY(-2px)}
 .agent-card::before{
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
   background:linear-gradient(90deg,var(--accent),var(--neon-cyan),var(--neon-purple));
@@ -309,11 +320,12 @@ header{
 .chat-msg-text{font-size:.78rem;line-height:1.55;color:var(--text);word-break:break-word}
 .chat-input-bar{
   display:flex;gap:8px;padding:12px 16px;
-  border-top:1px solid var(--border);background:var(--surface2);
+  border-top:1px solid var(--border);
+  background:linear-gradient(180deg, rgba(255,90,31,.05), transparent), var(--surface2);
 }
 .chat-input-bar input{
   flex:1;padding:8px 14px;border-radius:20px;border:1px solid var(--border);
-  background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:.78rem;
+  background:#0f1120;color:var(--text);font-family:var(--font-sans);font-size:.78rem;
   outline:none;transition:border-color .2s;
 }
 .chat-input-bar input:focus{border-color:var(--accent)}
@@ -327,16 +339,26 @@ header{
 .chat-send-btn:disabled{opacity:.4;cursor:not-allowed}
 .chat-auth-bar{
   display:flex;gap:6px;padding:10px 16px;
-  border-top:1px solid var(--border);background:rgba(255,77,0,.03);
+  border-top:1px solid var(--border);background:linear-gradient(180deg, rgba(0,240,255,.04), rgba(255,77,0,.03));
   align-items:center;flex-wrap:wrap;
 }
-.chat-auth-bar label{font-size:.65rem;color:var(--dim);font-weight:600}
+.chat-auth-bar label{font-size:.64rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.08em}
 .chat-auth-bar input{
   padding:5px 10px;border-radius:14px;border:1px solid var(--border);
-  background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:.68rem;
+  background:#0f1120;color:var(--text);font-family:var(--font-mono);font-size:.68rem;
   outline:none;transition:border-color .2s;width:160px;
 }
 .chat-auth-bar input:focus{border-color:var(--accent)}
+.chat-auth-mini-btn{
+  padding:5px 10px;border-radius:999px;border:1px solid rgba(0,240,255,.35);
+  background:rgba(0,240,255,.10);color:var(--neon-cyan);cursor:pointer;
+  font-size:.64rem;font-family:var(--font-mono);font-weight:600;transition:all .2s;
+}
+.chat-auth-mini-btn:hover{background:rgba(0,240,255,.2);text-decoration:none}
+.chat-auth-mini-btn.ghost{
+  border-color:rgba(255,77,0,.35);background:rgba(255,77,0,.09);color:var(--accent2);
+}
+.chat-auth-mini-btn.ghost:hover{background:rgba(255,77,0,.18)}
 .chat-auth-bar .chat-auth-status{
   font-size:.62rem;padding:2px 8px;border-radius:10px;font-weight:700;
   margin-left:auto;
@@ -352,6 +374,7 @@ header{
 .terminal-panel{
   grid-column:1/-1;background:var(--surface);border:1px solid var(--border);
   border-radius:var(--radius);overflow:hidden;
+  box-shadow:var(--panel-shadow);
 }
 .terminal-header{
   display:flex;align-items:center;gap:8px;padding:8px 16px;
@@ -382,9 +405,203 @@ header{
 footer{
   padding:16px 24px;text-align:center;font-size:.65rem;color:var(--dim);
   border-top:1px solid var(--border);letter-spacing:.06em;line-height:1.8;
+  background:linear-gradient(180deg, transparent, rgba(255,255,255,.02));
 }
 footer a{color:var(--neon-cyan);font-weight:600}
 footer .footer-links{display:flex;gap:16px;justify-content:center;margin-top:6px;flex-wrap:wrap}
+
+/* ── Page entrance animation system ──────────────── */
+@keyframes revealUp{
+  from{opacity:0;transform:translateY(18px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes revealScale{
+  from{opacity:0;transform:scale(.97)}
+  to{opacity:1;transform:scale(1)}
+}
+@keyframes headerSlide{
+  from{opacity:0;transform:translateY(-100%)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes shimmerGlow{
+  0%{background-position:200% 0}
+  100%{background-position:-200% 0}
+}
+@keyframes ambientDrift{
+  0%{transform:translate(0,0) scale(1)}
+  33%{transform:translate(2%,-1%) scale(1.02)}
+  66%{transform:translate(-1%,2%) scale(.98)}
+  100%{transform:translate(0,0) scale(1)}
+}
+@keyframes borderGlow{
+  0%,100%{opacity:.5}
+  50%{opacity:1}
+}
+header{animation:headerSlide .5s cubic-bezier(.22,1,.36,1) both}
+.reveal{opacity:0;animation:revealUp .6s cubic-bezier(.22,1,.36,1) both}
+.reveal-1{animation-delay:.08s}
+.reveal-2{animation-delay:.16s}
+.reveal-3{animation-delay:.24s}
+.reveal-4{animation-delay:.32s}
+.reveal-5{animation-delay:.40s}
+.reveal-6{animation-delay:.48s}
+.reveal-7{animation-delay:.56s}
+.reveal-8{animation-delay:.64s}
+.reveal-scale{opacity:0;animation:revealScale .5s cubic-bezier(.22,1,.36,1) both}
+
+/* ── Animated ambient background ────────────────── */
+.ambient-layer{
+  position:fixed;inset:-10%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 15% 20%, rgba(255,90,31,.16), transparent 40%),
+    radial-gradient(ellipse at 78% 15%, rgba(0,240,255,.12), transparent 38%),
+    radial-gradient(ellipse at 60% 80%, rgba(176,38,255,.11), transparent 40%),
+    radial-gradient(ellipse at 30% 70%, rgba(255,215,0,.06), transparent 35%);
+  animation:ambientDrift 25s ease-in-out infinite;
+  filter:blur(60px);
+}
+
+/* ── Header accent underline ────────────────────── */
+header::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;
+  background:linear-gradient(90deg, var(--accent), var(--neon-cyan), var(--neon-purple), var(--accent));
+  background-size:300% 100%;
+  animation:shimmerGlow 6s linear infinite;
+  opacity:.6;
+}
+
+/* ── Panel gradient border effect ────────────────── */
+.panel{position:relative}
+.panel::before{
+  content:'';position:absolute;inset:-1px;border-radius:var(--radius);z-index:-1;
+  background:linear-gradient(135deg, rgba(255,90,31,.2), rgba(0,240,255,.15), rgba(176,38,255,.15));
+  opacity:0;transition:opacity .4s;
+  animation:borderGlow 4s ease-in-out infinite;
+}
+.panel:hover::before{opacity:1}
+
+/* ── Stat counter enhancement ────────────────────── */
+.stat{position:relative}
+.stat-value{
+  position:relative;
+  padding:2px 0;
+}
+
+/* ── Agent card inner glow ───────────────────────── */
+.agent-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  background:radial-gradient(ellipse at 50% 0%, rgba(255,90,31,.08), transparent 60%);
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
+.agent-card:hover::after{opacity:1}
+.agent-card.verified-card::after{
+  background:radial-gradient(ellipse at 50% 0%, rgba(57,255,20,.08), transparent 60%);
+}
+
+/* ── NFT card shimmer effect ─────────────────────── */
+.nft-card{position:relative}
+.nft-card::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(105deg, transparent 40%, rgba(255,255,255,.06) 45%, transparent 50%);
+  background-size:200% 100%;
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
+.nft-card:hover::after{
+  opacity:1;
+  animation:shimmerGlow 1.4s ease-in-out;
+}
+
+/* ── Feed item hover highlight ───────────────────── */
+.feed-item{
+  transition:background .2s;border-radius:6px;padding:10px 6px;margin:0 -6px;
+}
+.feed-item:hover{background:rgba(255,255,255,.02)}
+
+/* ── Bridge item enhancement ─────────────────────── */
+.bridge-item{transition:border-color .2s,box-shadow .2s}
+.bridge-item:hover{border-color:rgba(0,240,255,.3);box-shadow:0 0 12px rgba(0,240,255,.08)}
+
+/* ── Collection chip enhancement ─────────────────── */
+.col-chip{transition:border-color .2s,background .2s,transform .15s,box-shadow .2s}
+.col-chip:hover,.col-chip.active{
+  border-color:var(--accent);background:rgba(255,77,0,.08);
+  transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.2);
+}
+
+/* ── Chat message hover ──────────────────────────── */
+.chat-msg{transition:border-color .2s,background .2s}
+.chat-msg:hover{border-color:rgba(255,255,255,.08);background:rgba(255,255,255,.02)}
+.chat-msg.self:hover{border-color:rgba(255,77,0,.35);background:rgba(255,77,0,.06)}
+
+/* ── Chat empty state enhancement ────────────────── */
+.chat-empty{
+  text-align:center;padding:48px 24px;color:var(--dim);font-size:.78rem;
+  background:radial-gradient(ellipse at 50% 60%, rgba(0,240,255,.04), transparent 60%);
+}
+.chat-empty .chat-empty-icon{
+  font-size:2.8rem;margin-bottom:12px;
+  filter:drop-shadow(0 0 16px rgba(0,240,255,.3));
+  animation:pulse 3s ease-in-out infinite;
+}
+
+/* ── Terminal enhancement ────────────────────────── */
+.terminal-body{
+  background:linear-gradient(180deg, rgba(0,0,0,.15), transparent);
+}
+.terminal-header{position:relative}
+.terminal-header::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg, transparent, rgba(0,240,255,.2), transparent);
+}
+
+/* ── Text selection ──────────────────────────────── */
+::selection{background:rgba(255,90,31,.35);color:#fff}
+::-moz-selection{background:rgba(255,90,31,.35);color:#fff}
+
+/* ── Global focus-visible ────────────────────────── */
+:focus-visible{
+  outline:2px solid rgba(0,240,255,.5);
+  outline-offset:2px;
+}
+
+/* ── Scrollbar global styling ────────────────────── */
+*::-webkit-scrollbar{width:5px;height:5px}
+*::-webkit-scrollbar-track{background:transparent}
+*::-webkit-scrollbar-thumb{background:rgba(45,45,88,.7);border-radius:3px}
+*::-webkit-scrollbar-thumb:hover{background:rgba(0,240,255,.3)}
+
+/* ── Policy bar enhancement ──────────────────────── */
+.policy-bar{
+  box-shadow:var(--panel-shadow);
+  background:linear-gradient(180deg, rgba(255,255,255,.015), transparent), var(--surface);
+}
+.policy-item{transition:transform .15s}
+.policy-item:hover{transform:translateY(-1px)}
+
+/* ── Setup step hover ────────────────────────────── */
+.setup-step{
+  padding:16px;border-radius:var(--radius);
+  transition:background .2s,box-shadow .2s;
+}
+.setup-step:hover{
+  background:rgba(255,255,255,.02);
+  box-shadow:0 4px 16px rgba(0,0,0,.15);
+}
+.setup-step-num{
+  box-shadow:0 0 12px var(--accent-glow);
+  transition:transform .2s,box-shadow .2s;
+}
+.setup-step:hover .setup-step-num{
+  transform:scale(1.1);
+  box-shadow:0 0 20px var(--accent-glow);
+}
+
+/* ── Footer enhancement ──────────────────────────── */
+footer{position:relative}
+footer::before{
+  content:'';position:absolute;top:0;left:10%;right:10%;height:1px;
+  background:linear-gradient(90deg, transparent, rgba(255,90,31,.25), rgba(0,240,255,.2), transparent);
+}
 
 /* ── Responsive ───────────────────────────────────── */
 @media(max-width:1100px){
@@ -394,16 +611,30 @@ footer .footer-links{display:flex;gap:16px;justify-content:center;margin-top:6px
   .main{grid-template-columns:1fr}
   .agents-grid{grid-template-columns:1fr 1fr}
   .header-stats{gap:12px}
+  .header-links{flex-wrap:wrap}
 }
 @media(max-width:600px){
   .agents-grid{grid-template-columns:1fr}
   header{flex-wrap:wrap}
   .header-right{margin-left:0;width:100%;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .chat-auth-bar{gap:8px}
+  .chat-auth-bar input{width:100%}
+  .chat-auth-bar .chat-auth-status{margin-left:0}
+}
+
+/* ── Reduced motion ──────────────────────────────── */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:0.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.001ms !important;
+  }
 }
 </style>
 </head>
 <body>
 <div class="app">
+<div class="ambient-layer" aria-hidden="true"></div>
 
 <!-- ═══════ HEADER ═══════ -->
 <header>
@@ -433,7 +664,7 @@ footer .footer-links{display:flex;gap:16px;justify-content:center;margin-top:6px
 </header>
 
 <!-- ═══════ SETUP / ONBOARDING ═══════ -->
-<div style="padding:12px 24px 0;position:relative;z-index:1">
+<div class="reveal reveal-1" style="padding:12px 24px 0;position:relative;z-index:1">
   <div class="setup-panel">
     <div class="setup-header" id="setupToggle" onclick="toggleSetup()">
       <span class="icon">🚀</span> Clawllector Setup &amp; Quick Start
@@ -520,7 +751,7 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
 </div>
 
 <!-- ═══════ COLLECTIONS BAR ═══════ -->
-<div style="padding:12px 24px 0;position:relative;z-index:1">
+<div class="reveal reveal-2" style="padding:12px 24px 0;position:relative;z-index:1">
   <div class="collections-shell">
     <button class="carousel-btn" id="collectionsPrev" title="Previous collections">◀</button>
     <div class="collections-bar" id="collectionsBar"></div>
@@ -533,7 +764,7 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
 <div class="main">
 
   <!-- ── Agents panel ── -->
-  <div class="panel">
+  <div class="panel reveal reveal-3">
     <div class="panel-header"><span class="icon">🦞</span> Clawllectors <span class="badge" id="agentCountBadge">0</span></div>
     <div class="panel-body">
       <div class="agents-grid" id="agentsGrid"></div>
@@ -541,13 +772,13 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
   </div>
 
   <!-- ── Activity feed ── -->
-  <div class="panel">
+  <div class="panel reveal reveal-3">
     <div class="panel-header"><span class="icon">📡</span> Live Activity <span class="badge" id="eventCountBadge">0</span></div>
     <div class="panel-body" id="activityFeed"></div>
   </div>
 
   <!-- ── NFT gallery ── -->
-  <div class="panel">
+  <div class="panel reveal reveal-4">
     <div class="panel-header"><span class="icon">🖼️</span> Collected NFTs <span class="badge" id="nftCountBadge">0</span></div>
     <div class="panel-body">
       <div class="nft-grid" id="nftGrid"></div>
@@ -555,13 +786,13 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
   </div>
 
   <!-- ── Bridge status ── -->
-  <div class="panel">
+  <div class="panel reveal reveal-4">
     <div class="panel-header"><span class="icon">🌉</span> Bridge Operations <span class="badge" id="bridgeCountBadge">0</span></div>
     <div class="panel-body" id="bridgePanel"></div>
   </div>
 
   <!-- ── Clawllector Chat ── -->
-  <div class="panel chat-panel">
+  <div class="panel chat-panel reveal reveal-5">
     <div class="panel-header"><span class="icon">💬</span> Clawllector Chat <span class="badge" id="chatCountBadge">0</span></div>
     <div class="chat-messages" id="chatMessages">
       <div class="chat-empty">
@@ -575,6 +806,8 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
       <input type="text" id="chatAgentId" placeholder="my-clawllector" spellcheck="false" autocomplete="off">
       <label>Token</label>
       <input type="password" id="chatAgentToken" placeholder="claw_..." spellcheck="false" autocomplete="off">
+      <button class="chat-auth-mini-btn" id="chatToggleTokenBtn" type="button">Show</button>
+      <button class="chat-auth-mini-btn ghost" id="chatClearAuthBtn" type="button">Clear</button>
       <span class="chat-auth-status none" id="chatAuthStatus">Not signed in</span>
     </div>
     <div class="chat-input-bar">
@@ -584,7 +817,7 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
   </div>
 
   <!-- ── Policy bar ── -->
-  <div class="policy-bar" id="policyBar">
+  <div class="policy-bar reveal reveal-6" id="policyBar">
     <div class="policy-item">Dry-Run Default <span class="tag enforced">Enforced</span></div>
     <div class="policy-item">Simulation Required <span class="tag enforced" id="pSimReq">Enforced</span></div>
     <div class="policy-item">Confirm Phrase <span class="tag enforced" id="pConfirm">Required</span></div>
@@ -597,7 +830,7 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
   </div>
 
   <!-- ── Terminal ── -->
-  <div class="terminal-panel">
+  <div class="terminal-panel reveal reveal-7">
     <div class="terminal-header">
       <div class="terminal-dots"><span></span><span></span><span></span></div>
       <span class="terminal-title">ape-claw CLI &mdash; live session log</span>
@@ -1184,6 +1417,8 @@ setInterval(() => {
 let chatMessages = [];
 let chatSseSource = null;
 let chatCredentials = { agentId: '', agentToken: '' };
+let chatReconnectTimer = null;
+let chatReconnectAttempts = 0;
 
 function chatMsgTime(ts) {
   const d = new Date(ts);
@@ -1256,6 +1491,32 @@ function updateChatAuthStatus() {
   renderChatMessages();
 }
 
+function toggleChatTokenVisibility() {
+  const tokenInput = document.getElementById('chatAgentToken');
+  const toggleBtn = document.getElementById('chatToggleTokenBtn');
+  const revealing = tokenInput.type === 'password';
+  tokenInput.type = revealing ? 'text' : 'password';
+  toggleBtn.textContent = revealing ? 'Hide' : 'Show';
+}
+
+function clearChatCredentials() {
+  document.getElementById('chatAgentId').value = '';
+  document.getElementById('chatAgentToken').value = '';
+  document.getElementById('chatAgentToken').type = 'password';
+  document.getElementById('chatToggleTokenBtn').textContent = 'Show';
+  updateChatAuthStatus();
+}
+
+function scheduleChatReconnect() {
+  if (chatReconnectTimer) return;
+  const waitMs = Math.min(10000, 1500 * (chatReconnectAttempts + 1));
+  chatReconnectAttempts++;
+  chatReconnectTimer = setTimeout(() => {
+    chatReconnectTimer = null;
+    connectChatStream();
+  }, waitMs);
+}
+
 async function sendChatMessage() {
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
@@ -1305,7 +1566,14 @@ async function loadChatHistory() {
 
 function connectChatStream() {
   try {
+    if (chatSseSource) {
+      chatSseSource.close();
+      chatSseSource = null;
+    }
     chatSseSource = new EventSource('/api/chat/stream');
+    chatSseSource.onopen = () => {
+      chatReconnectAttempts = 0;
+    };
     chatSseSource.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
@@ -1315,6 +1583,13 @@ function connectChatStream() {
         if (chatMessages.length > 200) chatMessages.shift();
         renderChatMessages();
       } catch {}
+    };
+    chatSseSource.onerror = () => {
+      if (chatSseSource) {
+        chatSseSource.close();
+        chatSseSource = null;
+      }
+      scheduleChatReconnect();
     };
   } catch {}
 }
@@ -1331,6 +1606,8 @@ function initChat() {
   // Auth field listeners
   document.getElementById('chatAgentId').addEventListener('input', updateChatAuthStatus);
   document.getElementById('chatAgentToken').addEventListener('input', updateChatAuthStatus);
+  document.getElementById('chatToggleTokenBtn').addEventListener('click', toggleChatTokenVisibility);
+  document.getElementById('chatClearAuthBtn').addEventListener('click', clearChatCredentials);
 
   // Send on button click
   document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
