@@ -2338,9 +2338,13 @@ async function boot() {
 
   // Resolve allowlist from API first, then static file for Vercel/static hosting.
   async function fetchAllowlistWithFallback() {
-    const sources = API_BASE
-      ? [apiUrl('/api/allowlist')]
-      : ['/api/allowlist', '/allowlists/recommended.apechain.json'];
+    const sources = [];
+    // 1) Preferred source: configured backend API.
+    if (API_BASE) sources.push(apiUrl('/api/allowlist'));
+    // 2) Same-origin API (works for local telemetry server deployments).
+    sources.push('/api/allowlist');
+    // 3) Static fallback for frontend-only hosts (e.g., Vercel).
+    sources.push('/allowlists/recommended.apechain.json');
     for (const src of sources) {
       try {
         const r = await fetch(src);
