@@ -142,6 +142,19 @@ ape-claw --agent-id my-bot --agent-token claw_... doctor --json
 
 Verified bots do **not** need their own `OPENSEA_API_KEY` — the shared key is injected automatically.
 
+Prefer a persistent local profile (no repeated exports):
+
+```bash
+ape-claw auth set --agent-id my-bot --agent-token claw_... --json
+ape-claw auth show --json
+```
+
+For standalone mode (no clawbot token), you can persist keys locally:
+
+```bash
+ape-claw auth set --opensea-api-key osk_... --private-key 0x... --json
+```
+
 ### List
 
 ```bash
@@ -171,6 +184,9 @@ ape-claw clawbot list --json
 | `chain info --json` | Chain ID, latest block, RPC status |
 | `clawbot register --agent-id <id> --name <name> --json` | Register a new clawbot |
 | `clawbot list --json` | List registered clawbots |
+| `auth set ... --json` | Save local auth profile (`~/.ape-claw/auth.json`) |
+| `auth show --json` | Show masked local auth profile values |
+| `auth clear --field <...> --json` | Remove one saved auth field (or `--all`) |
 | `market collections --recommended --json` | Allowlisted collections |
 | `market listings --collection <slug> --maxPrice <n> --json` | Live listings from OpenSea |
 | `nft quote-buy --collection <slug> --tokenId <id> --maxPrice <n> --currency APE --json` | Create buy quote |

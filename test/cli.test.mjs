@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { execSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
 function run(cmd) {
@@ -25,6 +26,14 @@ function runFailJson(cmd) {
   const match = raw.match(/\{[\s\S]*\}/);
   if (!match) return null;
   try { return JSON.parse(match[0]); } catch { return null; }
+}
+
+function runWithEnv(cmd, extraEnv = {}) {
+  return execSync(cmd, {
+    cwd: process.cwd(),
+    encoding: "utf8",
+    env: { ...process.env, ...extraEnv },
+  });
 }
 
 test("doctor command returns json with chainId", () => {
@@ -174,3 +183,36 @@ test("bridge execute --autonomous auto-confirms", () => {
   assert.ok(msg.length > 0, "execute should continue past confirm checks");
 });
 
+test("auth set/show persists local profile in HOME", () => {
+  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), "apeclaw-auth-"));
+
+  const setOut = runWithEnv(
+    'node ./src/cli.mjs auth set --agent-id test-bot --agent-token claw_test_123456 --opensea-api-key osk_test_abcdef --private-key 0xabc123 --json',
+    { HOME: fakeHome },
+  );
+  const setData = JSON.parse(setOut);
+  assert.equal(setData.ok, true);
+  assert.equal(setData.saved, true);
+
+  const showOut = runWithEnv("node ./src/cli.mjs auth show --json", { HOME: fakeHome });
+  const showData = JSON.parse(showOut);
+  assert.equal(showData.ok, true);
+  assert.equal(showData.auth.agentId, "test-bot");
+  assert.notEqual(showData.auth.agentToken, "claw_test_123456");
+  assert.notEqual(showData.auth.openseaApiKey, "osk_test_abcdef");
+  assert.notEqual(showData.auth.privateKey, "0xabc123");
+});
+
+test("doctor uses local auth profile for private key readiness", () => {
+  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), "apeclaw-doctor-"));
+
+  runWithEnv(
+    'node ./src/cli.mjs auth set --private-key 0xabc123 --opensea-api-key osk_test_abcdef --json',
+    { HOME: fakeHome },
+  );
+
+  const out = runWithEnv("node ./src/cli.mjs doctor --json", { HOME: fakeHome });
+  const data = JSON.parse(out);
+  assert.equal(data.execution.privateKeyProvided, true);
+  assert.equal(data.market.openseaApiKeyProvided, true);
+});

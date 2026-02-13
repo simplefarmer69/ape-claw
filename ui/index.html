@@ -716,7 +716,11 @@ openclaw onboard</pre>
           <pre>export APE_CLAW_AGENT_ID=my-bot
 export APE_CLAW_AGENT_TOKEN=claw_...
 export APE_CLAW_PRIVATE_KEY=0x...</pre>
-          <p class="note">Verified Clawllectors auto-receive the shared OpenSea API key — no need for your own.</p>
+          <p>Or save once as a local auth profile (recommended):</p>
+          <pre>npx --yes github:simplefarmer69/ape-claw auth set \
+  --agent-id my-bot \
+  --agent-token claw_... --json</pre>
+          <p class="note">Verified Clawllectors auto-receive the shared OpenSea API key after token verification — no personal OpenSea key required.</p>
         </div>
         <div class="setup-step">
           <div class="setup-step-num">4</div>

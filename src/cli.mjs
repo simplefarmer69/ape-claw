@@ -88,6 +88,29 @@ function expectedBridgeConfirmPhrase(req) {
   return `BRIDGE ${req.amount} ${req.token} ${req.from}->${req.to}`;
 }
 
+function authStorePath() {
+  return path.join(os.homedir(), ".ape-claw", "auth.json");
+}
+
+function loadAuthStore() {
+  const p = authStorePath();
+  const data = readJson(p, {});
+  return data && typeof data === "object" ? data : {};
+}
+
+function writeAuthStore(data) {
+  const p = authStorePath();
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  fs.writeFileSync(p, JSON.stringify(data, null, 2), { mode: 0o600 });
+}
+
+function maskSecret(value) {
+  const v = String(value || "");
+  if (!v) return "";
+  if (v.length <= 8) return "*".repeat(v.length);
+  return `${v.slice(0, 4)}...${v.slice(-4)}`;
+}
+
 function spentTodayFromQuotes(quotes, dayKey) {
   return Object.values(quotes).reduce((sum, q) => {
     if (!q || !q.executedAt || !q.executed) return sum;
@@ -219,10 +242,89 @@ async function main() {
     return print(result, asJson);
   }
 
+  // ── Local auth profile commands (stored in ~/.ape-claw/auth.json)
+  if (group === "auth" && sub === "set") {
+    const current = loadAuthStore();
+    const next = { ...current };
+    let changed = 0;
+
+    const setIfProvided = (flag, key) => {
+      if (args[flag] !== undefined) {
+        const val = String(args[flag] || "").trim();
+        if (val) next[key] = val;
+        else delete next[key];
+        changed++;
+      }
+    };
+
+    setIfProvided("agent-id", "agentId");
+    setIfProvided("agent-token", "agentToken");
+    setIfProvided("opensea-api-key", "openseaApiKey");
+    setIfProvided("private-key", "privateKey");
+
+    if (changed === 0) {
+      fail("Provide at least one of --agent-id --agent-token --opensea-api-key --private-key", command, args);
+    }
+
+    writeAuthStore(next);
+    const result = {
+      ok: true,
+      saved: true,
+      path: authStorePath(),
+      fields: {
+        agentId: next.agentId || null,
+        agentToken: Boolean(next.agentToken),
+        openseaApiKey: Boolean(next.openseaApiKey),
+        privateKey: Boolean(next.privateKey),
+      },
+      note: "Secrets are stored locally in ~/.ape-claw/auth.json (mode 600). Env vars and flags still override these values.",
+    };
+    emitEvent({ eventType: "auth.saved", command, dryRun: true, result: { path: authStorePath() } });
+    return print(result, asJson);
+  }
+
+  if (group === "auth" && sub === "show") {
+    const cur = loadAuthStore();
+    const result = {
+      ok: true,
+      path: authStorePath(),
+      auth: {
+        agentId: cur.agentId || null,
+        agentToken: cur.agentToken ? maskSecret(cur.agentToken) : null,
+        openseaApiKey: cur.openseaApiKey ? maskSecret(cur.openseaApiKey) : null,
+        privateKey: cur.privateKey ? maskSecret(cur.privateKey) : null,
+      },
+    };
+    return print(result, asJson);
+  }
+
+  if (group === "auth" && sub === "clear") {
+    const cur = loadAuthStore();
+    const field = String(args.field || "").trim();
+    if (Boolean(args.all)) {
+      writeAuthStore({});
+      return print({ ok: true, cleared: "all", path: authStorePath() }, asJson);
+    }
+    const allowed = new Set(["agent-id", "agent-token", "opensea-api-key", "private-key"]);
+    if (!allowed.has(field)) {
+      fail('Use --field one of: "agent-id" | "agent-token" | "opensea-api-key" | "private-key", or --all', command, args);
+    }
+    const keyMap = {
+      "agent-id": "agentId",
+      "agent-token": "agentToken",
+      "opensea-api-key": "openseaApiKey",
+      "private-key": "privateKey",
+    };
+    delete cur[keyMap[field]];
+    writeAuthStore(cur);
+    return print({ ok: true, cleared: field, path: authStorePath() }, asJson);
+  }
+
   // ── Resolve agent identity
-  const agentId = String(args["agent-id"] || process.env.APE_CLAW_AGENT_ID || "local-cli").trim();
+  const storedAuth = loadAuthStore();
+  const agentId = String(args["agent-id"] || process.env.APE_CLAW_AGENT_ID || storedAuth.agentId || "local-cli").trim();
   _agentId = agentId;
-  const agentToken = String(args["agent-token"] || process.env.APE_CLAW_AGENT_TOKEN || "").trim();
+  const agentToken = String(args["agent-token"] || process.env.APE_CLAW_AGENT_TOKEN || storedAuth.agentToken || "").trim();
   let verifiedBot = null;
   let sharedOpenseaKey = "";
   if (agentToken) {
@@ -241,9 +343,9 @@ async function main() {
   const policy = loadPolicy();
   let allowlist = normalizeAllowlist(loadAllowlist());
   // Use shared key for verified bots, else fall back to env
-  const openseaKey = process.env.OPENSEA_API_KEY || sharedOpenseaKey;
+  const openseaKey = process.env.OPENSEA_API_KEY || sharedOpenseaKey || storedAuth.openseaApiKey || "";
   const relayApiKey = process.env.RELAY_API_KEY || "";
-  const privateKey = process.env.APE_CLAW_PRIVATE_KEY || "";
+  const privateKey = process.env.APE_CLAW_PRIVATE_KEY || storedAuth.privateKey || "";
   const slugOverrides = readJson(OPENSEA_OVERRIDES_PATH, {}) || {};
 
   if (group === "doctor") {
@@ -252,14 +354,17 @@ async function main() {
     const clawbotsConfig = loadClawbotsConfig() || {};
     const registeredAgent = Boolean(clawbotsConfig?.agents?.[agentId]);
     const sharedKeyConfigured = Boolean(clawbotsConfig?.sharedOpenseaApiKey);
-    const sharedKeyAvailable = Boolean(sharedOpenseaKey) || (registeredAgent && sharedKeyConfigured);
-    const openseaProvided = Boolean(process.env.OPENSEA_API_KEY || sharedKeyAvailable);
+    const sharedKeyInjected = Boolean(sharedOpenseaKey);
+    const openseaProvided = Boolean(openseaKey);
     const openseaMissing = openseaRequired && !openseaProvided;
     const privateKeyMissing = !privateKey;
     const issues = [];
     const warnings = [];
     if (openseaMissing) {
       warnings.push("OpenSea API key is not available for this agent. Set OPENSEA_API_KEY or configure sharedOpenseaApiKey for verified clawbots.");
+    }
+    if (registeredAgent && sharedKeyConfigured && !sharedKeyInjected) {
+      warnings.push("This agent is registered and a shared OpenSea key exists, but it is not injected yet. Verify using --agent-token (or save it once with: ape-claw auth set --agent-id <id> --agent-token <token> --json).");
     }
     if (privateKeyMissing) {
       warnings.push("APE_CLAW_PRIVATE_KEY is missing. Read-only commands work, but execute flows are blocked until set.");
@@ -275,7 +380,9 @@ async function main() {
         agentId,
         verified: Boolean(verifiedBot),
         name: verifiedBot?.name || agentId,
-        sharedKeyAvailable,
+        sharedKeyAvailable: sharedKeyInjected,
+        sharedKeyInjected,
+        localAuthProfile: Boolean(storedAuth.agentId || storedAuth.agentToken || storedAuth.openseaApiKey || storedAuth.privateKey),
         registered: registeredAgent,
       },
       bridge: {
@@ -817,6 +924,9 @@ async function main() {
       doctor: "ape-claw doctor --json",
       "clawbot register": "ape-claw clawbot register --agent-id <id> --name <name> --json",
       "clawbot list": "ape-claw clawbot list --json",
+      "auth set": "ape-claw auth set [--agent-id <id>] [--agent-token <token>] [--opensea-api-key <key>] [--private-key <pk>] --json",
+      "auth show": "ape-claw auth show --json",
+      "auth clear": "ape-claw auth clear --field <agent-id|agent-token|opensea-api-key|private-key> --json",
       "chain info": "ape-claw chain info --json",
       "market collections": "ape-claw market collections --recommended --json",
       "market listings": "ape-claw market listings --collection <slug> --maxPrice <n> --json",
@@ -835,6 +945,8 @@ async function main() {
       "--json": "Required. All output as JSON for deterministic parsing.",
       "--agent-id <id>": "Clawbot agent ID (or APE_CLAW_AGENT_ID env var).",
       "--agent-token <token>": "Clawbot auth token (or APE_CLAW_AGENT_TOKEN env var).",
+      "--opensea-api-key <key>": "For auth set: persist OpenSea key in local auth profile.",
+      "--private-key <pk>": "For auth set: persist wallet private key in local auth profile.",
     },
     note: "Global flags (--agent-id, --agent-token, --json) can appear anywhere in the command.",
   };
