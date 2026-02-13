@@ -4,7 +4,6 @@ services:
       context: .
       dockerfile: Dockerfile
     image: apeclaw-telemetry:latest
-    container_name: apeclaw-telemetry
     restart: unless-stopped
     ports:
       - "${APE_CLAW_UI_PORT:-8787}:8787"

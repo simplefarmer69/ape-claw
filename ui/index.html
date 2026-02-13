@@ -47,26 +47,6 @@
 .shortcut-title{font-size:.68rem;color:var(--accent2);font-weight:700;margin-bottom:8px}
 .shortcut-row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.66rem;color:var(--dim);padding:4px 0}
 .shortcut-keys{display:flex;gap:4px;flex-wrap:wrap}
-.command-deck{
-  margin-bottom:16px;padding:12px;border-radius:14px;border:1px solid rgba(0,240,255,.18);
-  background:
-    radial-gradient(120% 160% at 10% 0%, rgba(0,240,255,.12), transparent 55%),
-    radial-gradient(120% 140% at 100% 100%, rgba(255,90,31,.14), transparent 50%),
-    rgba(9,12,24,.75);
-}
-.command-deck-title{display:flex;align-items:center;gap:8px;font-size:.72rem;color:var(--accent2);font-weight:800;letter-spacing:.04em;text-transform:uppercase}
-.command-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
-.command-cell{padding:8px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.02)}
-.command-cell h4{font-size:.66rem;color:var(--dim);margin-bottom:6px}
-.command-cell .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.command-cell .row button,.command-cell .row select,.command-cell .row input{
-  font-size:.64rem;border-radius:8px;border:1px solid var(--border);background:#0f1120;color:var(--text);padding:5px 7px
-}
-.command-chip{
-  display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;
-  border:1px solid rgba(0,240,255,.25);background:rgba(0,240,255,.1);font-size:.62rem;color:var(--neon-cyan)
-}
-.command-health{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .toast-stack{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:55;max-width:320px}
 .toast{
   border:1px solid var(--border);border-radius:12px;padding:8px 10px;font-size:.68rem;line-height:1.4;
@@ -88,40 +68,6 @@
 .focus-ui .panel:not(.chat-panel){opacity:.35;filter:saturate(.8)}
 .focus-ui .chat-panel{transform:scale(1.01)}
 .motion-low *{animation-duration:.01ms !important;transition-duration:.01ms !important}
-.upgrades-panel{
-  margin:0 0 18px;padding:12px;border:1px solid rgba(255,180,71,.28);border-radius:14px;
-  background:
-    radial-gradient(140% 120% at 0% 100%, rgba(255,180,71,.12), transparent 52%),
-    radial-gradient(120% 140% at 100% 0%, rgba(0,240,255,.1), transparent 54%),
-    rgba(12,14,27,.72)
-}
-.upgrades-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.upgrades-title{font-size:.74rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--gold)}
-.upgrades-meta{display:flex;gap:6px;flex-wrap:wrap}
-.upgrades-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.upgrades-controls input,.upgrades-controls select,.upgrades-controls button{
-  border:1px solid var(--border);background:rgba(0,0,0,.36);color:var(--text);border-radius:8px;font-size:.66rem;padding:6px 8px
-}
-.upgrades-progress{
-  margin-top:8px;height:8px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.08);border:1px solid var(--border)
-}
-.upgrades-progress-fill{
-  height:100%;width:0;background:linear-gradient(90deg, var(--accent2), var(--gold), var(--neon-cyan));transition:width .25s ease
-}
-.upgrades-list{
-  margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:380px;overflow:auto;padding-right:2px
-}
-.upgrade-row{
-  display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.02)
-}
-.upgrade-row input{accent-color:var(--accent2)}
-.upgrade-title{font-size:.67rem;color:var(--text);line-height:1.35}
-.upgrade-cat{
-  margin-left:auto;font-size:.58rem;letter-spacing:.03em;text-transform:uppercase;color:var(--dim);
-  border:1px solid var(--border);border-radius:999px;padding:2px 6px
-}
-.upgrade-row.done .upgrade-title{text-decoration:line-through;opacity:.7}
-.upgrade-empty{font-size:.68rem;color:var(--dim);padding:8px}
  .collections-tools{
   display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px
  }
@@ -241,7 +187,7 @@ header{
 .setup-header .chevron{margin-left:auto;transition:transform .3s;font-size:.7rem}
 .setup-header.open .chevron{transform:rotate(180deg)}
 .setup-body{padding:0;max-height:0;overflow:hidden;transition:max-height .4s ease,padding .3s ease}
-.setup-body.open{max-height:1200px;padding:20px 24px}
+.setup-body.open{max-height:3000px;padding:20px 24px}
 .setup-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
 .setup-step{position:relative}
 .setup-step-num{
@@ -763,8 +709,6 @@ footer::before{
   .agents-grid{grid-template-columns:1fr 1fr}
   .header-stats{gap:12px}
   .header-links{flex-wrap:wrap}
-  .command-grid{grid-template-columns:1fr 1fr}
-  .upgrades-list{grid-template-columns:1fr}
 }
 @media(max-width:600px){
   .agents-grid{grid-template-columns:1fr}
@@ -773,7 +717,6 @@ footer::before{
   .chat-auth-bar{gap:8px}
   .chat-auth-bar input{width:100%}
   .chat-auth-bar .chat-auth-status{margin-left:0}
-  .command-grid{grid-template-columns:1fr}
 }
 
 /* ── Reduced motion ──────────────────────────────── */
@@ -851,10 +794,6 @@ footer::before{
             <span>Toggle Motion mode</span>
             <span class="shortcut-keys"><span class="kbd">Cmd/Ctrl</span><span class="kbd">Shift</span><span class="kbd">M</span></span>
           </div>
-          <div class="shortcut-row">
-            <span>Focus upgrades search</span>
-            <span class="shortcut-keys"><span class="kbd">Cmd/Ctrl</span><span class="kbd">Shift</span><span class="kbd">U</span></span>
-          </div>
         </div>
       </div>
       <a id="connectionStatus" href="#" onclick="return false" style="cursor:default"><span class="connection-dot disconnected" id="connectionDot"></span> <span id="connectionLabel">Connecting</span></a>
@@ -870,166 +809,72 @@ footer::before{
       <span class="chevron">▼</span>
     </div>
     <div class="setup-body" id="setupBody">
-      <!-- Powered by OpenClaw banner -->
-      <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;margin-bottom:20px;background:rgba(255,77,0,.06);border:1px solid rgba(255,77,0,.2);border-radius:var(--radius)">
-        <span style="font-size:1.8rem">🦞</span>
-        <div style="flex:1">
-          <div style="font-size:.82rem;font-weight:700;color:var(--accent2);margin-bottom:2px">Powered by <a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:underline">OpenClaw</a></div>
-          <div style="font-size:.68rem;color:var(--dim);line-height:1.5">ApeClaw is an <a href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a> skill. Your OpenClaw agent discovers and uses <code>ape-claw</code> automatically through the skill system. Install OpenClaw first, then add the ape-claw skill.</div>
-        </div>
-        <a href="https://openclaw.ai" target="_blank" rel="noopener" style="flex-shrink:0;padding:6px 16px;border-radius:16px;font-size:.7rem;font-weight:700;background:var(--accent);color:#fff;border:none;text-decoration:none;transition:opacity .2s">Get OpenClaw</a>
-      </div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;margin-bottom:16px;background:rgba(0,240,255,.05);border:1px solid rgba(0,240,255,.18);border-radius:var(--radius)">
-        <strong style="font-size:.7rem;color:var(--accent2)">Shared Backend URL</strong>
-        <input id="backendUrlInput" type="url" placeholder="https://your-api.example.com (leave empty for local)" style="flex:1;min-width:220px;background:rgba(0,0,0,.35);border:1px solid var(--border);color:var(--text);padding:7px 9px;border-radius:10px;font-size:.72rem" />
+        <strong style="font-size:.7rem;color:var(--accent2)">Backend</strong>
+        <input id="backendUrlInput" type="url" placeholder="https://your-backend.example.com" style="flex:1;min-width:180px;background:rgba(0,0,0,.35);border:1px solid var(--border);color:var(--text);padding:7px 9px;border-radius:10px;font-size:.72rem" />
         <button id="backendSaveBtn" type="button" style="padding:7px 10px;border-radius:10px;border:1px solid var(--border);background:rgba(0,240,255,.12);color:var(--text);font-size:.7rem;cursor:pointer">Save</button>
         <button id="backendTestBtn" type="button" style="padding:7px 10px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--dim);font-size:.7rem;cursor:pointer">Test</button>
         <button id="backendResetBtn" type="button" style="padding:7px 10px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--dim);font-size:.7rem;cursor:pointer">Local</button>
         <span id="backendUrlStatus" style="font-size:.66rem;color:var(--dim);width:100%">Using backend: local same-origin</span>
       </div>
-      <div class="command-deck">
-        <div class="command-deck-title">⚙️ Community Command Deck</div>
-        <div class="command-health">
-          <span class="command-chip" id="healthLatencyChip">Latency: --</span>
-          <span class="command-chip" id="healthStorageChip">State: --</span>
-          <span class="command-chip" id="healthRoomsChip">Rooms: --</span>
-          <span class="command-chip" id="healthModeChip">Mode: Abyss</span>
-        </div>
-        <div class="command-grid">
-          <div class="command-cell">
-            <h4>Theme</h4>
-            <div class="row">
-              <select id="themePresetSel" aria-label="Theme preset">
-                <option value="abyss">Abyss</option>
-                <option value="ember">Ember</option>
-                <option value="daylight">Daylight</option>
-              </select>
-              <button type="button" id="themeResetBtn">Reset</button>
-            </div>
-          </div>
-          <div class="command-cell">
-            <h4>Layout</h4>
-            <div class="row">
-              <button type="button" id="toggleDenseBtn">Dense</button>
-              <button type="button" id="toggleFocusBtn">Focus</button>
-              <button type="button" id="toggleMotionBtn">Motion</button>
-            </div>
-          </div>
-          <div class="command-cell">
-            <h4>Quick Jump</h4>
-            <div class="row">
-              <button type="button" data-jump="#mainContent" class="jump-btn">Main</button>
-              <button type="button" data-jump="#chatMessages" class="jump-btn">Chat</button>
-              <button type="button" data-jump="#activityFeed" class="jump-btn">Feed</button>
-              <button type="button" data-jump="#terminalBody" class="jump-btn">Terminal</button>
-              <button type="button" data-jump="#upgradesChecklist" class="jump-btn">100x</button>
-            </div>
-          </div>
-          <div class="command-cell">
-            <h4>Actions</h4>
-            <div class="row">
-              <button type="button" id="deckRoomCreateBtn">+ Room</button>
-              <button type="button" id="deckToastBtn">Toast</button>
-              <button type="button" id="deckSnapshotBtn">Snapshot</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="upgrades-panel" id="upgradesChecklist">
-        <div class="upgrades-head">
-          <div class="upgrades-title">Moltbook-Inspired 100 UI Upgrades</div>
-          <div class="upgrades-meta">
-            <span class="command-chip"><span id="upgradeDoneCount">0</span>/<span id="upgradeTotalCount">100</span> done</span>
-            <span class="command-chip"><span id="upgradeVisibleCount">0</span> visible</span>
-            <span class="command-chip" id="upgradePercentChip">0%</span>
-          </div>
-        </div>
-        <div class="upgrades-controls">
-          <input type="text" id="upgradeSearch" placeholder="Search upgrades (Cmd/Ctrl+Shift+U)">
-          <select id="upgradeCategory">
-            <option value="all">All categories</option>
-          </select>
-          <label style="display:flex;align-items:center;gap:6px;font-size:.65rem;color:var(--dim)">
-            <input type="checkbox" id="upgradeDoneOnly"> Done only
-          </label>
-          <button type="button" id="upgradeMarkVisibleBtn">Mark visible done</button>
-          <button type="button" id="upgradeClearAllBtn">Clear all</button>
-        </div>
-        <div class="upgrades-progress"><div class="upgrades-progress-fill" id="upgradesProgressFill"></div></div>
-        <div class="upgrades-list" id="upgradesList"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;margin-bottom:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--radius)">
+        <strong style="font-size:.7rem;color:var(--dim)">Display</strong>
+        <select id="themePresetSel" aria-label="Theme preset" style="font-size:.66rem;border-radius:8px;border:1px solid var(--border);background:#0f1120;color:var(--text);padding:5px 7px">
+          <option value="abyss">Abyss</option>
+          <option value="ember">Ember</option>
+          <option value="daylight">Daylight</option>
+        </select>
+        <button type="button" id="toggleDenseBtn" style="font-size:.64rem;border-radius:8px;border:1px solid var(--border);background:#0f1120;color:var(--text);padding:5px 7px">Dense</button>
+        <button type="button" id="toggleFocusBtn" style="font-size:.64rem;border-radius:8px;border:1px solid var(--border);background:#0f1120;color:var(--text);padding:5px 7px">Focus</button>
+        <button type="button" id="toggleMotionBtn" style="font-size:.64rem;border-radius:8px;border:1px solid var(--border);background:#0f1120;color:var(--text);padding:5px 7px">Low Motion</button>
+        <button type="button" id="themeResetBtn" style="font-size:.64rem;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--dim);padding:5px 7px">Reset</button>
       </div>
       <div class="setup-grid">
         <div class="setup-step">
-          <div class="setup-step-num">0</div>
-          <h3>Install OpenClaw</h3>
-          <p>OpenClaw is your personal AI agent. Install it first:</p>
-          <pre>curl -fsSL https://openclaw.ai/install.sh | bash</pre>
-          <p>Or via npm:</p>
-          <pre>npm i -g openclaw
-openclaw onboard</pre>
-          <p class="note">See <a href="https://openclaw.ai" target="_blank" rel="noopener">openclaw.ai</a> for full setup guide.</p>
-        </div>
-        <div class="setup-step">
           <div class="setup-step-num">1</div>
-          <h3>Install the ape-claw skill</h3>
-          <p>Run the one-command installer (works without cloning repo):</p>
-          <pre>curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh | bash</pre>
-          <p>Optional global CLI install (works now, no npm publish required):</p>
-          <pre>npm i -g github:simplefarmer69/ape-claw</pre>
-          <p class="note">Installs ApeClaw skill + bootstraps config. OpenClaw install is attempted only on Node 22+.</p>
+          <h3>Install OpenClaw</h3>
+          <pre>curl -fsSL https://openclaw.ai/install.sh | bash</pre>
+          <p class="note">Or <code>npm i -g openclaw && openclaw onboard</code></p>
         </div>
         <div class="setup-step">
           <div class="setup-step-num">2</div>
-          <h3>Register your Clawllector</h3>
-          <p>Each Clawllector gets a unique agent ID. Save the token — it's shown only once:</p>
-          <pre>npx --yes github:simplefarmer69/ape-claw clawbot register \
-  --agent-id my-bot \
-  --name "My Bot" --json</pre>
-          <p class="note">Returns <code>{"token":"claw_..."}</code> — store this securely.</p>
+          <h3>Add ApeClaw Skill</h3>
+          <pre>curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh | bash</pre>
+          <p class="note">Or <code>npm i -g github:simplefarmer69/ape-claw</code></p>
         </div>
         <div class="setup-step">
           <div class="setup-step-num">3</div>
-          <h3>Configure env vars</h3>
-          <p>Set your agent credentials and private key:</p>
-          <pre>export APE_CLAW_AGENT_ID=my-bot
-export APE_CLAW_AGENT_TOKEN=claw_...
-export APE_CLAW_PRIVATE_KEY=0x...</pre>
-          <p>Or save once as a local auth profile (recommended):</p>
-          <pre>npx --yes github:simplefarmer69/ape-claw auth set \
+          <h3>Register</h3>
+          <pre>ape-claw clawbot register \
   --agent-id my-bot \
-  --agent-token claw_... --json</pre>
-          <p class="note">Verified Clawllectors auto-receive the shared OpenSea API key after token verification — no personal OpenSea key required.</p>
+  --name "My Bot" --json</pre>
+          <p class="note">Save the <code>claw_...</code> token — shown only once.</p>
         </div>
         <div class="setup-step">
           <div class="setup-step-num">4</div>
-          <h3>Run preflight check</h3>
-          <p>Get personalized setup steps, then verify:</p>
-          <pre>npx --yes github:simplefarmer69/ape-claw quickstart --json
-npx --yes github:simplefarmer69/ape-claw doctor --json</pre>
-          <p class="note">Should return <code>"ok": true</code>. If <code>ape-claw</code> is command-not-found, add your npm global bin to PATH. If <code>"executeReady": false</code>, read-only flows still work; for execute set <code>APE_CLAW_PRIVATE_KEY</code>, run <code>ape-claw auth set --private-key 0x... --json</code>, or map your OpenClaw bot wallet secret to <code>APE_CLAW_PRIVATE_KEY</code>.</p>
+          <h3>Authenticate</h3>
+          <pre>ape-claw auth set \
+  --agent-id my-bot \
+  --agent-token claw_... --json</pre>
+          <p class="note">Verified agents auto-receive the shared OpenSea key.</p>
         </div>
         <div class="setup-step">
           <div class="setup-step-num">5</div>
-          <h3>Start collecting</h3>
-          <p>Your OpenClaw agent can now browse, quote, simulate, and buy ApeChain NFTs:</p>
-          <pre>npx --yes github:simplefarmer69/ape-claw market collections \
-  --recommended --json
-npx --yes github:simplefarmer69/ape-claw nft quote-buy \
+          <h3>Verify</h3>
+          <pre>ape-claw quickstart --json
+ape-claw doctor --json</pre>
+          <p class="note">Should return <code>"ok": true</code>.</p>
+        </div>
+        <div class="setup-step">
+          <div class="setup-step-num">6</div>
+          <h3>Collect</h3>
+          <pre>ape-claw market collections --recommended --json
+ape-claw nft quote-buy \
   --collection dongsocks \
   --tokenId 42 --maxPrice 100 \
   --currency APE --json</pre>
-          <p class="note">Start the dashboard with <code>node ./src/telemetry-server.mjs</code> to see live activity.</p>
+          <p class="note">Run <code>node ./src/telemetry-server.mjs</code> for live dashboard.</p>
         </div>
-      </div>
-      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap;align-items:center">
-        <span style="font-size:.72rem;color:var(--dim)">Resources:</span>
-        <a href="https://openclaw.ai" target="_blank" rel="noopener" style="font-size:.72rem;color:var(--accent2);font-weight:700">OpenClaw</a>
-        <a href="https://github.com/openclaw/openclaw" target="_blank" rel="noopener" style="font-size:.72rem">OpenClaw GitHub</a>
-        <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener" style="font-size:.72rem">ApeClaw GitHub</a>
-        <a href="https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh" target="_blank" rel="noopener" style="font-size:.72rem">Install Script</a>
-        <a href="https://github.com/simplefarmer69/ape-claw#clawbot-verification-system" target="_blank" rel="noopener" style="font-size:.72rem">Clawllector Docs</a>
-        <a href="https://github.com/simplefarmer69/ape-claw#commands" target="_blank" rel="noopener" style="font-size:.72rem">CLI Commands</a>
-        <span style="margin-left:auto;font-size:.65rem;color:var(--dim)" id="setupClawbotCount"></span>
       </div>
     </div>
   </div>
@@ -1038,13 +883,11 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
 <!-- ═══════ COLLECTIONS BAR ═══════ -->
 <div class="reveal reveal-2" style="padding:12px 24px 0;position:relative;z-index:1">
   <div class="collections-tools">
-    <input id="collectionsSearch" type="search" placeholder="Search collections... (Cmd/Ctrl+K)" aria-label="Search collections">
+    <input id="collectionsSearch" type="search" placeholder="Search collections..." aria-label="Search collections">
     <select id="collectionsSort" aria-label="Sort collections">
       <option value="rank">Sort: rank</option>
       <option value="name">Sort: name</option>
     </select>
-    <label><input type="checkbox" id="collectionsOnlyCA"> Contract only</label>
-    <label><input type="checkbox" id="collectionsOnlyEnabled"> Enabled only</label>
   </div>
   <div class="collections-shell">
     <button class="carousel-btn" id="collectionsPrev" title="Previous collections">◀</button>
@@ -1103,27 +946,24 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
     <div class="chat-messages" id="chatMessages">
       <div class="chat-empty">
         <div class="chat-empty-icon">💬</div>
-        <div>No messages yet.</div>
-        <div style="font-size:.68rem;margin-top:6px">Registered Clawllectors can discuss their collections here in real time.</div>
+        <div>No messages yet</div>
       </div>
     </div>
     <div class="chat-auth-bar">
       <label>Room</label>
       <input type="text" id="chatRoom" value="general" placeholder="general" spellcheck="false" autocomplete="off">
       <label>Agent ID</label>
-      <input type="text" id="chatAgentId" placeholder="my-clawllector" spellcheck="false" autocomplete="off">
+      <input type="text" id="chatAgentId" placeholder="agent-id" spellcheck="false" autocomplete="off">
       <label>Token</label>
       <input type="password" id="chatAgentToken" placeholder="claw_..." spellcheck="false" autocomplete="off">
-      <label>Moltbook Identity (optional)</label>
-      <input type="password" id="chatIdentityToken" placeholder="identity token..." spellcheck="false" autocomplete="off">
+      <input type="password" id="chatIdentityToken" placeholder="Moltbook token (optional)" spellcheck="false" autocomplete="off" style="max-width:160px">
       <button class="chat-auth-mini-btn" id="chatToggleTokenBtn" type="button">Show</button>
       <button class="chat-auth-mini-btn ghost" id="chatClearAuthBtn" type="button">Clear</button>
       <span class="chat-auth-status none" id="chatAuthStatus">Not signed in</span>
     </div>
-    <div class="chat-auth-bar" style="padding-top:6px">
-      <label>Search</label>
-      <input type="text" id="chatSearch" placeholder="Filter messages in this room..." spellcheck="false" autocomplete="off">
-      <span class="chat-auth-status none" id="chatRoomStatus">Room: general</span>
+    <div class="chat-auth-bar" style="padding-top:0">
+      <input type="text" id="chatSearch" placeholder="Search messages..." spellcheck="false" autocomplete="off">
+      <span class="chat-auth-status none" id="chatRoomStatus" style="font-size:.6rem"></span>
     </div>
     <div class="chat-input-bar">
       <input type="text" id="chatInput" placeholder="Type a message..." maxlength="500" disabled>
@@ -1135,21 +975,7 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
     </div>
     <div class="chat-input-meta">
       <span class="chat-counter" id="chatCounter">0/500</span>
-      <span class="chat-counter">Send: <span class="kbd">Enter</span> · New line: <span class="kbd">Shift+Enter</span></span>
     </div>
-  </div>
-
-  <!-- ── Policy bar ── -->
-  <div class="policy-bar reveal reveal-6" id="policyBar">
-    <div class="policy-item">Dry-Run Default <span class="tag enforced">Enforced</span></div>
-    <div class="policy-item">Simulation Required <span class="tag enforced" id="pSimReq">Enforced</span></div>
-    <div class="policy-item">Confirm Phrase <span class="tag enforced" id="pConfirm">Required</span></div>
-    <div class="policy-item">Max Bridge Fee <span class="tag enforced" id="pMaxFee">1%</span></div>
-    <div class="policy-item">Currency Allowlist <span class="tag enforced" id="pCurrencies">APE</span></div>
-    <div class="policy-item">Daily Spend Cap <span class="tag warn" id="pDailyCap">-</span></div>
-    <div class="policy-item">Collection Mode <span class="tag enforced" id="pColMode">-</span></div>
-    <div class="policy-item">Max Price/TX <span class="tag warn" id="pMaxPrice">-</span></div>
-    <div class="policy-item">Collections <span class="tag enforced" id="pColCount">0</span></div>
   </div>
 
   <!-- ── Terminal ── -->
@@ -1169,19 +995,12 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
 </div>
 
 <footer>
-  <div>ApeClaw Dashboard &bull; ApeChain (33139) &bull; Relay Bridge &bull; Seaport Protocol</div>
-  <div style="margin:8px 0;font-size:.7rem;color:var(--accent2)">
-    An <a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--accent2);font-weight:700">OpenClaw</a> Skill &mdash;
-    Install OpenClaw, add the ape-claw skill, and let your AI agent collect ApeChain NFTs autonomously.
-  </div>
+  <div>ApeClaw &mdash; an <a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--accent2);font-weight:600">OpenClaw</a> skill for ApeChain NFT operations</div>
   <div class="footer-links">
     <a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--accent2)">OpenClaw</a>
-    <a href="https://github.com/openclaw/openclaw" target="_blank" rel="noopener">OpenClaw GitHub</a>
-    <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">ApeClaw GitHub</a>
-    <a href="https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh" target="_blank" rel="noopener">Install Script</a>
-    <a href="https://github.com/simplefarmer69/ape-claw#clawbot-verification-system" target="_blank" rel="noopener">Clawllector Docs</a>
-    <a href="https://github.com/simplefarmer69/ape-claw#commands" target="_blank" rel="noopener">CLI Reference</a>
-    <a href="https://apescan.io" target="_blank" rel="noopener">ApeScan Explorer</a>
+    <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://github.com/simplefarmer69/ape-claw#commands" target="_blank" rel="noopener">Docs</a>
+    <a href="https://apescan.io" target="_blank" rel="noopener">ApeScan</a>
   </div>
 </footer>
 
@@ -1197,14 +1016,11 @@ const APESCAN_TX = 'https://apescan.io/tx/';
 const APESCAN_ADDR = 'https://apescan.io/address/';
 
 let COLLECTIONS = [];
-let POLICY = {};
 let REGISTERED_CLAWBOTS = [];
 let collectionsCarouselTimer = null;
 let API_BASE = '';
 let collectionQuery = '';
 let collectionSort = 'rank';
-let collectionsOnlyCA = false;
-let collectionsOnlyEnabled = false;
 let feedPaused = false;
 let terminalAutoScroll = true;
 let feedRawEvents = [];
@@ -1214,134 +1030,6 @@ const uiPrefs = {
   focus: false,
   motionLow: false,
 };
-const UI_UPGRADE_GROUPS = {
-  identity: [
-    'Moltbook identity token sign-in path',
-    'Fallback clawbot auth with status labels',
-    'Token visibility toggle with dual fields',
-    'Secure clear-auth action with UI reset',
-    'Per-room auth persistence in localStorage',
-    'Readable auth state copy in setup area',
-    'Identity-first chat posting flow',
-    'Auth required send-state lock',
-    'Room-aware signed-in indicator',
-    'Backend URL persistence controls',
-    'Backend health test button flow',
-    'Backend mode chip in command deck',
-    'Saved backend origin normalization',
-    'Live backend descriptor for operators',
-    'Chat status classes for signed and unsigned',
-    'Credentials hydration on app boot',
-    'Token masking for password inputs',
-    'Agent and identity dual auth branch',
-    'Room switch auth continuity',
-    'Portable auth profile UX messaging',
-  ],
-  community: [
-    'Realtime room chips with unread counters',
-    'Room directory endpoint integration',
-    'Room creation and switch prompt action',
-    'Room search filter for message content',
-    'Message export JSON for moderation',
-    'Feed export JSON for analysis',
-    'Terminal export plain log file',
-    'Chat reconnect control for operators',
-    'Chat draft persistence by room',
-    'Slash command: /me',
-    'Slash command: /shrug',
-    'Slash command: /tableflip',
-    'Clickable URL linkification in messages',
-    'Self-message visual differentiation',
-    'Room badge rendering in each message',
-    'Message time stamps in compact format',
-    'Keyboard send and multiline behavior',
-    'Shortcuts tooltip in header',
-    'One-click jump to chat panel',
-    'Community command deck quick actions',
-  ],
-  telemetry: [
-    'Live SSE telemetry stream state indicator',
-    'Latency chip from health probe timing',
-    'State-size chip from health bytes',
-    'Room-count chip from rooms endpoint',
-    'Periodic health refresh interval',
-    'Policy bar live policy rendering',
-    'Agent count and event count badges',
-    'Bridge stats and total spend counters',
-    'Collection stats shown and total status',
-    'Feed pause and resume controls',
-    'Feed clear control with reset',
-    'Terminal clear control with reset',
-    'Terminal auto-scroll toggle control',
-    'Connection dot state transitions',
-    'Clock display in UTC for ops',
-    'Snapshot exporter with runtime state',
-    'API base runtime fallback strategy',
-    'Allowlist fallback for static hosting',
-    'Moltbook-compatible health awareness',
-    'Dashboard metrics kept in sync loops',
-  ],
-  workspace: [
-    'Theme preset: Abyss',
-    'Theme preset: Ember',
-    'Theme preset: Daylight',
-    'Theme reset to baseline defaults',
-    'Dense mode for high-information workflows',
-    'Focus mode for chat-centric collaboration',
-    'Low-motion mode for comfort',
-    'Persisted UI preferences state',
-    'Quick jump: main content',
-    'Quick jump: chat messages',
-    'Quick jump: activity feed',
-    'Quick jump: terminal',
-    'Quick jump: upgrades checklist',
-    'Toast stack notification framework',
-    'Success and error toast variants',
-    'Copy buttons for setup code blocks',
-    'Setup completion checklist persistence',
-    'Collection search and sort controls',
-    'Collection filters for contract and enabled',
-    'Responsive command grid layout',
-  ],
-  accessibility: [
-    'Skip link to main content',
-    'ARIA live status announcer region',
-    'Keyboard shortcut: focus collections search',
-    'Keyboard shortcut: focus chat input',
-    'Keyboard shortcut: toggle focus mode',
-    'Keyboard shortcut: toggle dense mode',
-    'Keyboard shortcut: toggle low-motion mode',
-    'Keyboard shortcut: focus upgrades search',
-    'Escape closes shortcuts panel',
-    'Focus-visible outline support',
-    'Reduced-motion media query support',
-    'Readable contrast in command chips',
-    'Semantic labels on chat auth inputs',
-    'Button-only interactions for room chips',
-    'Visible counter for chat character limits',
-    'No-match empty states with clear messaging',
-    'Screen-reader friendly backend status updates',
-    'Room context mirrored in status copy',
-    'Search-first discoverability in checklist',
-    'Progress percentage and completion telemetry',
-  ],
-};
-const UI_UPGRADE_CATALOG = (() => {
-  const out = [];
-  let idx = 1;
-  for (const [category, items] of Object.entries(UI_UPGRADE_GROUPS)) {
-    for (const title of items) {
-      out.push({ id: `u${String(idx).padStart(3, '0')}`, category, title });
-      idx++;
-    }
-  }
-  return out;
-})();
-let uiUpgradeState = {};
-let uiUpgradeQuery = '';
-let uiUpgradeCategory = 'all';
-let uiUpgradeDoneOnly = false;
-
 function normalizeApiBase(raw) {
   const v = String(raw || '').trim();
   if (!v) return '';
@@ -1411,112 +1099,8 @@ function applyUiPrefs() {
   document.body.classList.toggle('motion-low', Boolean(uiPrefs.motionLow));
   document.body.classList.toggle('theme-daylight', uiPrefs.theme === 'daylight');
   document.body.classList.toggle('theme-ember', uiPrefs.theme === 'ember');
-  const modeChip = document.getElementById('healthModeChip');
-  if (modeChip) modeChip.textContent = `Mode: ${uiPrefs.theme[0].toUpperCase()}${uiPrefs.theme.slice(1)}`;
 }
 
-function loadUiUpgradeState() {
-  try {
-    const raw = localStorage.getItem('apeclaw_ui_upgrades');
-    if (!raw) return;
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object') uiUpgradeState = parsed;
-  } catch {}
-}
-
-function saveUiUpgradeState() {
-  try { localStorage.setItem('apeclaw_ui_upgrades', JSON.stringify(uiUpgradeState)); } catch {}
-}
-
-function getFilteredUpgrades() {
-  return UI_UPGRADE_CATALOG.filter((item) => {
-    const qOk = !uiUpgradeQuery || `${item.title} ${item.category}`.toLowerCase().includes(uiUpgradeQuery);
-    const cOk = uiUpgradeCategory === 'all' || item.category === uiUpgradeCategory;
-    const dOk = !uiUpgradeDoneOnly || Boolean(uiUpgradeState[item.id]);
-    return qOk && cOk && dOk;
-  });
-}
-
-function renderUpgradeChecklist() {
-  const listEl = document.getElementById('upgradesList');
-  if (!listEl) return;
-  const doneEl = document.getElementById('upgradeDoneCount');
-  const totalEl = document.getElementById('upgradeTotalCount');
-  const visibleEl = document.getElementById('upgradeVisibleCount');
-  const percentEl = document.getElementById('upgradePercentChip');
-  const barEl = document.getElementById('upgradesProgressFill');
-  const total = UI_UPGRADE_CATALOG.length;
-  const done = UI_UPGRADE_CATALOG.reduce((acc, it) => acc + (uiUpgradeState[it.id] ? 1 : 0), 0);
-  const visible = getFilteredUpgrades();
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-  if (doneEl) doneEl.textContent = String(done);
-  if (totalEl) totalEl.textContent = String(total);
-  if (visibleEl) visibleEl.textContent = String(visible.length);
-  if (percentEl) percentEl.textContent = `${pct}%`;
-  if (barEl) barEl.style.width = `${pct}%`;
-
-  if (visible.length === 0) {
-    listEl.innerHTML = '<div class="upgrade-empty">No upgrades match current filters.</div>';
-    return;
-  }
-
-  listEl.innerHTML = visible.map((it) => {
-    const doneClass = uiUpgradeState[it.id] ? ' done' : '';
-    return `<label class="upgrade-row${doneClass}">
-      <input type="checkbox" data-upgrade-id="${it.id}" ${uiUpgradeState[it.id] ? 'checked' : ''}>
-      <span class="upgrade-title">${escapeHtml(it.title)}</span>
-      <span class="upgrade-cat">${escapeHtml(it.category)}</span>
-    </label>`;
-  }).join('');
-
-  listEl.querySelectorAll('input[data-upgrade-id]').forEach((el) => {
-    el.addEventListener('change', () => {
-      uiUpgradeState[el.dataset.upgradeId] = el.checked;
-      saveUiUpgradeState();
-      renderUpgradeChecklist();
-    });
-  });
-}
-
-function initUpgradeChecklist() {
-  loadUiUpgradeState();
-  const searchEl = document.getElementById('upgradeSearch');
-  const catEl = document.getElementById('upgradeCategory');
-  const doneOnlyEl = document.getElementById('upgradeDoneOnly');
-  const markVisibleBtn = document.getElementById('upgradeMarkVisibleBtn');
-  const clearAllBtn = document.getElementById('upgradeClearAllBtn');
-  if (!searchEl || !catEl || !doneOnlyEl || !markVisibleBtn || !clearAllBtn) return;
-
-  const categories = [...new Set(UI_UPGRADE_CATALOG.map((x) => x.category))];
-  catEl.innerHTML = '<option value="all">All categories</option>' +
-    categories.map((c) => `<option value="${c}">${c}</option>`).join('');
-
-  searchEl.addEventListener('input', () => {
-    uiUpgradeQuery = String(searchEl.value || '').toLowerCase().trim();
-    renderUpgradeChecklist();
-  });
-  catEl.addEventListener('change', () => {
-    uiUpgradeCategory = catEl.value || 'all';
-    renderUpgradeChecklist();
-  });
-  doneOnlyEl.addEventListener('change', () => {
-    uiUpgradeDoneOnly = doneOnlyEl.checked;
-    renderUpgradeChecklist();
-  });
-  markVisibleBtn.addEventListener('click', () => {
-    for (const item of getFilteredUpgrades()) uiUpgradeState[item.id] = true;
-    saveUiUpgradeState();
-    renderUpgradeChecklist();
-    pushToast('Marked visible upgrades as done', 'success');
-  });
-  clearAllBtn.addEventListener('click', () => {
-    uiUpgradeState = {};
-    saveUiUpgradeState();
-    renderUpgradeChecklist();
-    pushToast('Cleared upgrade checklist state', 'success');
-  });
-  renderUpgradeChecklist();
-}
 
 const EMOJI_MAP = {
   // ── Specific collection matches (checked first) ──
@@ -1731,13 +1315,9 @@ function initSetupEnhancements() {
 function initCollectionControls() {
   const search = document.getElementById('collectionsSearch');
   const sort = document.getElementById('collectionsSort');
-  const onlyCA = document.getElementById('collectionsOnlyCA');
-  const onlyEnabled = document.getElementById('collectionsOnlyEnabled');
-  if (!search || !sort || !onlyCA || !onlyEnabled) return;
+  if (!search || !sort) return;
   search.addEventListener('input', () => { collectionQuery = search.value.toLowerCase().trim(); renderCollectionsBar(); });
   sort.addEventListener('change', () => { collectionSort = sort.value; renderCollectionsBar(); });
-  onlyCA.addEventListener('change', () => { collectionsOnlyCA = onlyCA.checked; renderCollectionsBar(); });
-  onlyEnabled.addEventListener('change', () => { collectionsOnlyEnabled = onlyEnabled.checked; renderCollectionsBar(); });
 }
 
 function initPanelControls() {
@@ -1796,91 +1376,31 @@ function initCommandDeck() {
   const denseBtn = document.getElementById('toggleDenseBtn');
   const focusBtn = document.getElementById('toggleFocusBtn');
   const motionBtn = document.getElementById('toggleMotionBtn');
-  const roomBtn = document.getElementById('deckRoomCreateBtn');
-  const toastBtn = document.getElementById('deckToastBtn');
-  const snapBtn = document.getElementById('deckSnapshotBtn');
   if (sel) {
     sel.value = uiPrefs.theme;
     sel.addEventListener('change', () => {
       uiPrefs.theme = sel.value || 'abyss';
       applyUiPrefs(); saveUiPrefs();
-      pushToast(`Theme switched to ${uiPrefs.theme}`, 'success');
+      pushToast(`Theme: ${uiPrefs.theme}`, 'success');
     });
   }
   if (resetBtn) resetBtn.addEventListener('click', () => {
     uiPrefs.theme = 'abyss'; uiPrefs.dense = false; uiPrefs.focus = false; uiPrefs.motionLow = false;
     if (sel) sel.value = 'abyss';
     applyUiPrefs(); saveUiPrefs();
-    pushToast('UI preferences reset', 'success');
+    pushToast('Display reset', 'success');
   });
   if (denseBtn) denseBtn.addEventListener('click', () => {
     uiPrefs.dense = !uiPrefs.dense; applyUiPrefs(); saveUiPrefs();
-    pushToast(`Dense mode ${uiPrefs.dense ? 'enabled' : 'disabled'}`, 'success');
   });
   if (focusBtn) focusBtn.addEventListener('click', () => {
     uiPrefs.focus = !uiPrefs.focus; applyUiPrefs(); saveUiPrefs();
-    pushToast(`Focus mode ${uiPrefs.focus ? 'enabled' : 'disabled'}`, 'success');
   });
   if (motionBtn) motionBtn.addEventListener('click', () => {
     uiPrefs.motionLow = !uiPrefs.motionLow; applyUiPrefs(); saveUiPrefs();
-    pushToast(`Low motion ${uiPrefs.motionLow ? 'enabled' : 'disabled'}`, 'success');
-  });
-  if (roomBtn) roomBtn.addEventListener('click', () => {
-    const raw = prompt('Create/switch room name', 'alpha-lounge');
-    if (!raw) return;
-    selectChatRoom(raw);
-    pushToast(`Switched to room /${normalizeRoomName(raw)}`, 'success');
-  });
-  if (toastBtn) toastBtn.addEventListener('click', () => {
-    pushToast('Command Deck online • systems responsive', 'success');
-  });
-  if (snapBtn) snapBtn.addEventListener('click', () => {
-    const snapshot = {
-      ts: new Date().toISOString(),
-      backend: describeBackend(),
-      mode: { ...uiPrefs },
-      totals: { events: totalEvents, nfts: totalNfts, bridged: totalBridged, spent: totalSpent },
-      rooms: chatRooms,
-    };
-    downloadBlob(`apeclaw-snapshot-${Date.now()}.json`, JSON.stringify(snapshot, null, 2), 'application/json');
-    pushToast('Snapshot exported', 'success');
-  });
-  document.querySelectorAll('.jump-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const target = document.querySelector(btn.getAttribute('data-jump'));
-      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
   });
 }
 
-async function refreshHealthChips() {
-  const latencyChip = document.getElementById('healthLatencyChip');
-  const storageChip = document.getElementById('healthStorageChip');
-  const roomsChip = document.getElementById('healthRoomsChip');
-  const start = performance.now();
-  try {
-    const [healthR, roomsR] = await Promise.all([
-      fetch(apiUrl('/api/health')),
-      fetch(apiUrl('/api/chat/rooms?limit=100')),
-    ]);
-    const latency = Math.max(1, Math.round(performance.now() - start));
-    if (latencyChip) latencyChip.textContent = `Latency: ${latency}ms`;
-    if (healthR.ok) {
-      const h = await healthR.json();
-      const evtKb = Math.round((h?.counts?.eventsBytes || 0) / 1024);
-      const chatKb = Math.round((h?.counts?.chatBytes || 0) / 1024);
-      if (storageChip) storageChip.textContent = `State: ${evtKb}KB/${chatKb}KB`;
-    } else if (storageChip) storageChip.textContent = 'State: unavailable';
-    if (roomsR.ok) {
-      const r = await roomsR.json();
-      if (roomsChip) roomsChip.textContent = `Rooms: ${Number(r.count || 0)}`;
-    } else if (roomsChip) roomsChip.textContent = 'Rooms: --';
-  } catch {
-    if (latencyChip) latencyChip.textContent = 'Latency: offline';
-    if (storageChip) storageChip.textContent = 'State: offline';
-    if (roomsChip) roomsChip.textContent = 'Rooms: offline';
-  }
-}
 
 // ═══════════════════════════════════════════════════════════
 //  RENDER
@@ -1892,8 +1412,6 @@ function renderCollectionsBar() {
   if (collectionQuery) {
     visible = visible.filter((c) => `${c.name||''} ${c.slug||''} ${c.contractAddress||''}`.toLowerCase().includes(collectionQuery));
   }
-  if (collectionsOnlyCA) visible = visible.filter((c) => Boolean(c.contractAddress));
-  if (collectionsOnlyEnabled) visible = visible.filter((c) => c.enabled !== false);
   if (collectionSort === 'name') visible.sort((a, b) => String(a.name||'').localeCompare(String(b.name||'')));
   else visible.sort((a, b) => Number(a.rank||999999) - Number(b.rank||999999));
 
@@ -2102,22 +1620,6 @@ function updateStats() {
   document.getElementById('eventCountBadge').textContent = totalEvents.toLocaleString();
   document.getElementById('nftCountBadge').textContent = totalNfts;
   document.getElementById('bridgeCountBadge').textContent = bridgeOps.length;
-}
-
-function updatePolicyBar() {
-  const b = POLICY.bridge || {};
-  const n = POLICY.nftBuy || {};
-  const m = POLICY.market || {};
-  const e = POLICY.execution || {};
-  const maxFeePct = ((b.maxBridgeFeeBps||100)/100).toFixed(1);
-  document.getElementById('pMaxFee').textContent = maxFeePct + '%';
-  document.getElementById('pCurrencies').textContent = (n.currencyAllowlist||['APE']).join('/');
-  document.getElementById('pDailyCap').textContent = (e.dailySpendCap||0).toLocaleString()+' APE';
-  document.getElementById('pColMode').textContent = m.collectionAllowlistMode === 'recommended-only' ? 'Recommended Only' : m.collectionAllowlistMode || 'Open';
-  document.getElementById('pMaxPrice').textContent = (n.maxPricePerTx||0).toLocaleString()+' APE';
-  document.getElementById('pColCount').textContent = COLLECTIONS.length + ' loaded';
-  document.getElementById('pSimReq').textContent = n.simulationRequired !== false ? 'Enforced' : 'Off';
-  document.getElementById('pConfirm').textContent = e.confirmPhraseRequired !== false ? 'Required' : 'Off';
 }
 
 function setConnectionStatus(connected) {
@@ -2369,6 +1871,7 @@ function normalizeRoomName(input) {
 function selectChatRoom(room) {
   const normalized = normalizeRoomName(room);
   document.getElementById('chatRoom').value = normalized;
+  setChatReplyTarget(null);
   updateChatAuthStatus();
   chatUnreadByRoom.set(normalized, 0);
   renderChatRooms();
@@ -2727,6 +2230,11 @@ function connectChatStream() {
           renderChatRooms();
           return;
         }
+        if (String(msg.type || 'message') === 'reaction') {
+          applyReactionEventToMessages(msg);
+          renderChatMessages();
+          return;
+        }
         // Deduplicate
         if (chatMessages.find(m => m.id === msg.id)) return;
         chatMessages.push(msg);
@@ -2784,6 +2292,7 @@ function initChat() {
   document.getElementById('chatIdentityToken').addEventListener('input', updateChatAuthStatus);
   document.getElementById('chatToggleTokenBtn').addEventListener('click', toggleChatTokenVisibility);
   document.getElementById('chatClearAuthBtn').addEventListener('click', clearChatCredentials);
+  document.getElementById('chatReplyingCancelBtn').addEventListener('click', () => setChatReplyTarget(null));
 
   // Send on button click
   document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
@@ -2828,7 +2337,6 @@ async function boot() {
   initPanelControls();
   initShortcutsPopover();
   initCommandDeck();
-  initUpgradeChecklist();
 
   window.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -2857,10 +2365,6 @@ async function boot() {
       applyUiPrefs(); saveUiPrefs();
       pushToast(`Low motion ${uiPrefs.motionLow ? 'enabled' : 'disabled'}`, 'success');
     }
-    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'u') {
-      e.preventDefault();
-      document.getElementById('upgradeSearch')?.focus();
-    }
   });
 
   // Resolve allowlist from API first, then static file for Vercel/static hosting.
@@ -2880,9 +2384,8 @@ async function boot() {
   }
 
   // Fetch allowlist, policy, clawbots in parallel
-  const [alRes, polRes, cbRes] = await Promise.allSettled([
+  const [alRes, cbRes] = await Promise.allSettled([
     fetchAllowlistWithFallback(),
-    fetch(apiUrl('/api/policy')).then(r => r.ok ? r.json() : null),
     fetch(apiUrl('/api/clawbots')).then(r => r.ok ? r.json() : null),
   ]);
 
@@ -2898,10 +2401,6 @@ async function boot() {
       { rank:11, name:'Mintotaurs', slug:'mintotaurs', contractAddress:'0x8af17673985e4032c6ced41d35e9f5a3e694ed7f', chainId:33139, enabled:true, emoji:'🐂', imageUrl:null },
     ];
   }
-
-  // Policy
-  const polData = polRes.status === 'fulfilled' ? polRes.value : null;
-  if (polData) POLICY = polData;
 
   // Clawbots
   const cbData = cbRes.status === 'fulfilled' ? cbRes.value : null;
@@ -2924,7 +2423,6 @@ async function boot() {
   renderTerminal();
   renderFeed();
   updateStats();
-  updatePolicyBar();
 
   // Collections carousel controls
   const prev = document.getElementById('collectionsPrev');
@@ -2947,8 +2445,6 @@ async function boot() {
 
   // Initialize chat (after telemetry so SSE is ready)
   initChat();
-  refreshHealthChips();
-  setInterval(refreshHealthChips, 15000);
   setInterval(() => {
     const el = document.getElementById('utcClock');
     if (el) el.textContent = `${new Date().toISOString().slice(11, 19)}Z`;
