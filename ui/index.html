@@ -812,7 +812,7 @@ footer::before{
       <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;margin-bottom:16px;background:rgba(0,240,255,.05);border:1px solid rgba(0,240,255,.18);border-radius:var(--radius)">
         <strong style="font-size:.7rem;color:var(--accent2)">Shared Backend</strong>
         <span id="backendUrlStatus" style="font-size:.66rem;color:var(--dim);width:100%">Using backend: --</span>
-        <span style="font-size:.62rem;color:var(--dim);width:100%">Default backend is fixed for all users with automatic fallback to local same-origin if unreachable. Optional override: <code>?api=https://your-backend.example.com</code></span>
+        <span style="font-size:.62rem;color:var(--dim);width:100%">Default backend is fixed for all users. Local fallback is used only when local telemetry is reachable. Optional override: <code>?api=https://your-backend.example.com</code></span>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;margin-bottom:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--radius)">
         <strong style="font-size:.7rem;color:var(--dim)">Display</strong>
@@ -1214,21 +1214,37 @@ function initBackendConfigUi() {
 async function ensureBackendReachableWithFallback() {
   renderBackendStatus();
   if (!API_BASE) return;
-  const timeoutMs = 3000;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  async function probe(url) {
+    const timeoutMs = 3000;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const r = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+      return r.ok;
+    } catch {
+      return false;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
   const previous = API_BASE;
-  try {
-    const r = await fetch(apiUrl('/api/health'), { signal: controller.signal, cache: 'no-store' });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  } catch {
+  const sharedOk = await probe(apiUrl('/api/health'));
+  if (sharedOk) return;
+
+  const localOk = await probe('/api/health');
+  if (localOk) {
     API_BASE = '';
     renderBackendStatus();
     terminalLines.push({ type: 'error', text: `[Config] Shared backend unreachable (${previous}). Falling back to local same-origin.` });
     announce('Shared backend unavailable, switched to local backend');
-  } finally {
-    clearTimeout(timer);
+    return;
   }
+
+  // Keep configured backend when neither shared nor local is reachable.
+  // This avoids switching to a known-broken same-origin on static hosts.
+  terminalLines.push({ type: 'error', text: `[Config] Backend unreachable: ${previous}. Local same-origin is also unavailable.` });
+  terminalLines.push({ type: 'output', text: '[Config] Start telemetry server or deploy api.apeclaw.ai to a VPS backend.' });
+  announce('No reachable backend detected');
 }
 
 function initSetupEnhancements() {
