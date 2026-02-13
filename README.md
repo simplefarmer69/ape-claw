@@ -62,7 +62,7 @@ npx --yes github:simplefarmer69/ape-claw skill install --scope local --json
 
 This installs the skill into `.cursor/skills/ape-claw/` and bootstraps `config/policy.json`, `allowlists/`, and `config/clawbots.json`.
 
-When published to npm, this shorthand will also work:
+After npm publish, this shorthand will also work:
 
 ```bash
 npx --yes ape-claw skill install --scope local --json
@@ -77,7 +77,7 @@ npm i -g ape-claw
 ### 4. Verify
 
 ```bash
-ape-claw doctor --json
+npx --yes github:simplefarmer69/ape-claw doctor --json
 ```
 
 Must return `"ok": true` before proceeding.

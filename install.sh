@@ -36,12 +36,30 @@ fi
 
 npx --yes "${REPO_REF}" skill install --scope local --json
 
+CLI_READY=true
+if ! command -v ape-claw >/dev/null 2>&1; then
+  CLI_READY=false
+  echo
+  echo "ℹ️  Global ape-claw binary not found on PATH. Attempting global install..."
+  if npm i -g "https://codeload.github.com/simplefarmer69/ape-claw/tar.gz/main"; then
+    CLI_READY=true
+  else
+    echo "⚠️  Global install not available on this machine (usually npm permissions)."
+    echo "    You can still run ApeClaw immediately via npx:"
+    echo "    npx --yes github:simplefarmer69/ape-claw doctor --json"
+  fi
+fi
+
 echo
 echo "✅ ApeClaw installed and ready."
 echo
 echo "Next steps:"
 echo "  1) openclaw skills list"
 echo "  2) openclaw skills check"
-echo "  3) ape-claw doctor --json"
+if [ "${CLI_READY}" = true ]; then
+  echo "  3) ape-claw doctor --json"
+else
+  echo "  3) npx --yes github:simplefarmer69/ape-claw doctor --json"
+fi
 echo
 echo "Best opportunity for your OpenClaw bots to establish onchain identity and start collecting."

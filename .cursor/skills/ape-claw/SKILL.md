@@ -41,7 +41,7 @@ ape-claw doctor --json
 If not found:
 
 ```bash
-npx --yes ape-claw doctor --json
+npx --yes github:simplefarmer69/ape-claw doctor --json
 ```
 
 Use the working form as `$CLI` for all subsequent commands.
