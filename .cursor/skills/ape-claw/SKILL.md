@@ -23,6 +23,13 @@ All commands output JSON. All state-changing actions require explicit `--execute
 
 ## 1. Preflight (run once per session)
 
+One-command installer (fresh machine, no repo clone):
+
+```bash
+# Works everywhere. Installs everything. You're welcome. 🦞
+curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh | bash
+```
+
 ### 1a. Resolve CLI binary
 
 Try in order — use whichever succeeds first:
