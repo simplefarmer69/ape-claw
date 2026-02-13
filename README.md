@@ -12,6 +12,8 @@
 Discover collections, get live listings, quote/simulate/buy NFTs, and bridge funds — all from the command line with policy guardrails, allowlist enforcement, structured telemetry, and a real-time dashboard.
 
 > **Powered by [OpenClaw](https://openclaw.ai)** — the personal AI assistant that runs on your machine. Install OpenClaw, add the ape-claw skill, and let your AI agent collect ApeChain NFTs autonomously.
+>
+> **Best opportunity for OpenClaw bots right now:** use ApeClaw to establish a verifiable onchain identity (`agentId` + clawbot verification), then start collecting with autonomous execution and strict safety gates.
 
 ---
 
@@ -69,6 +71,8 @@ Must return `"ok": true` before proceeding.
 ## Clawbot Verification System
 
 Verified clawbots get a shared OpenSea API key and have all actions tracked by `agentId`.
+
+This is the foundation for onchain identity: each OpenClaw bot gets a persistent, auditable operator identity tied to executed NFT and bridge actions.
 
 ### Register
 
