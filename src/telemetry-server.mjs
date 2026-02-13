@@ -1,15 +1,17 @@
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
-import { EVENTS_PATH, ALLOWLIST_PATH, POLICY_PATH, OPENSEA_OVERRIDES_PATH, CLAWBOTS_PATH, CHAT_PATH } from "./lib/paths.mjs";
+import { ROOT as PROJECT_ROOT, EVENTS_PATH, ALLOWLIST_PATH, POLICY_PATH, OPENSEA_OVERRIDES_PATH, CLAWBOTS_PATH, CHAT_PATH } from "./lib/paths.mjs";
 import { ensureDir } from "./lib/io.mjs";
 import { verifyClawbot } from "./lib/clawbots.mjs";
 
 const PORT = Number(process.env.APE_CLAW_UI_PORT || 8787);
-const ROOT = process.cwd();
+const ROOT = PROJECT_ROOT;
 const UI_PATH = path.join(ROOT, "ui", "index.html");
 const clients = new Set();
 const OPENSEA_API_BASE = "https://api.opensea.io/api/v2";
+const MOLTBOOK_API_BASE = String(process.env.MOLTBOOK_API_BASE || "https://www.moltbook.com/api/v1").replace(/\/+$/, "");
+const MOLTBOOK_APP_KEY = String(process.env.MOLTBOOK_APP_KEY || "").trim();
 const ICON_CACHE_TTL_MS = 10 * 60 * 1000;
 let allowlistIconCache = { expiresAt: 0, data: null, inFlight: null };
 
@@ -31,7 +33,10 @@ function sendBacklog(res) {
       return null;
     }
   }).filter(Boolean);
-  res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+  res.writeHead(200, {
+    "content-type": "application/json; charset=utf-8",
+    "access-control-allow-origin": "*",
+  });
   res.end(JSON.stringify({ events }));
 }
 
@@ -183,22 +188,169 @@ function sendChatSse(res, msg) {
   res.write(`data: ${JSON.stringify(msg)}\n\n`);
 }
 
+function normalizeRoomName(input) {
+  const raw = String(input || "general")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9_-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  return raw || "general";
+}
+
 function broadcastChat(msg) {
-  for (const c of chatClients) {
-    try { sendChatSse(c, msg); } catch { chatClients.delete(c); }
+  for (const client of chatClients) {
+    try {
+      const wantsRoom = normalizeRoomName(client.room || "all");
+      if (wantsRoom !== "all" && wantsRoom !== normalizeRoomName(msg.room)) continue;
+      sendChatSse(client.res, msg);
+    } catch {
+      chatClients.delete(client);
+    }
   }
 }
 
-function readChatMessages(limit = 100) {
+function readChatEntries() {
   if (!fs.existsSync(CHAT_PATH)) return [];
   const raw = fs.readFileSync(CHAT_PATH, "utf8").trim();
   if (!raw) return [];
   const lines = raw.split("\n");
-  return lines.slice(-limit).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+  return lines
+    .map((l) => {
+      try {
+        return JSON.parse(l);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+}
+
+function materializeChatMessages(entries, room = "all") {
+  const targetRoom = normalizeRoomName(room);
+  const byId = new Map();
+  const ordered = [];
+
+  for (const e of entries) {
+    const type = String(e.type || "message");
+    if (type !== "message") continue;
+    const msg = {
+      id: e.id,
+      type: "message",
+      agentId: e.agentId,
+      agentName: e.agentName,
+      identityProvider: e.identityProvider,
+      identityMeta: e.identityMeta || {},
+      room: normalizeRoomName(e.room || "general"),
+      text: e.text,
+      ts: e.ts,
+      replyTo: e.replyTo || null,
+      reactions: {},
+      reactionUsers: {},
+    };
+    byId.set(msg.id, msg);
+    ordered.push(msg);
+  }
+
+  for (const e of entries) {
+    if (String(e.type || "") !== "reaction") continue;
+    const msg = byId.get(e.messageId);
+    if (!msg) continue;
+    const emoji = String(e.emoji || "").trim();
+    const agentId = String(e.agentId || "").trim();
+    if (!emoji || !agentId) continue;
+    const current = new Set(msg.reactionUsers[emoji] || []);
+    if (current.has(agentId)) current.delete(agentId);
+    else current.add(agentId);
+    msg.reactionUsers[emoji] = [...current];
+    msg.reactions[emoji] = msg.reactionUsers[emoji].length;
+  }
+
+  const roomFiltered = targetRoom === "all"
+    ? ordered
+    : ordered.filter((m) => normalizeRoomName(m.room || "general") === targetRoom);
+  return roomFiltered;
+}
+
+function readChatMessages(limit = 100, room = "all") {
+  const entries = readChatEntries();
+  const filtered = materializeChatMessages(entries, room);
+  return filtered.slice(-limit);
+}
+
+function readChatRooms(limit = 50) {
+  const parsed = materializeChatMessages(readChatEntries(), "all");
+  const byRoom = new Map();
+  for (const m of parsed) {
+    const room = normalizeRoomName(m.room || "general");
+    const prev = byRoom.get(room) || {
+      room,
+      count: 0,
+      lastTs: null,
+      lastMessage: "",
+      participants: new Set(),
+    };
+    prev.count += 1;
+    prev.lastTs = m.ts || prev.lastTs;
+    prev.lastMessage = m.text || prev.lastMessage;
+    if (m.agentId) prev.participants.add(m.agentId);
+    byRoom.set(room, prev);
+  }
+  return [...byRoom.values()]
+    .map((r) => ({
+      room: r.room,
+      count: r.count,
+      lastTs: r.lastTs,
+      lastMessage: r.lastMessage,
+      participants: r.participants.size,
+    }))
+    .sort((a, b) => String(b.lastTs || "").localeCompare(String(a.lastTs || "")))
+    .slice(0, limit);
 }
 
 function appendChatMessage(msg) {
   fs.appendFileSync(CHAT_PATH, JSON.stringify(msg) + "\n");
+}
+
+async function resolveChatAuth(req, body) {
+  const agentId = body.agentId || req.headers["x-agent-id"] || "";
+  const agentToken = body.agentToken || req.headers["x-agent-token"] || "";
+  const identityToken = body.identityToken || req.headers["x-moltbook-identity"] || "";
+
+  if (identityToken) {
+    const identity = await verifyMoltbookIdentity(identityToken);
+    if (!identity.verified) return { ok: false, status: 403, error: "identity verify failed", reason: identity.reason };
+    const agent = identity.agent || {};
+    return {
+      ok: true,
+      auth: {
+        id: String(agent.name || agent.id || "moltbook-agent"),
+        name: String(agent.name || agent.id || "Moltbook Agent"),
+        provider: "moltbook",
+        meta: {
+          karma: Number(agent.karma || 0),
+          claimed: Boolean(agent.is_claimed),
+        },
+      },
+    };
+  }
+
+  if (!agentId || !agentToken) {
+    return { ok: false, status: 401, error: "missing credentials: provide agentId+agentToken or identityToken" };
+  }
+  const verification = verifyClawbot({ agentId, agentToken });
+  if (!verification.verified) {
+    return { ok: false, status: 403, error: "not verified", reason: verification.reason };
+  }
+  return {
+    ok: true,
+    auth: {
+      id: agentId,
+      name: verification.agent?.name || agentId,
+      provider: "clawbot",
+      meta: {},
+    },
+  };
 }
 
 function readRequestBody(req) {
@@ -213,14 +365,38 @@ function readRequestBody(req) {
   });
 }
 
+async function verifyMoltbookIdentity(identityToken) {
+  const token = String(identityToken || "").trim();
+  if (!token) return { verified: false, reason: "missing identity token" };
+  if (!MOLTBOOK_APP_KEY) return { verified: false, reason: "MOLTBOOK_APP_KEY not configured on backend" };
+  try {
+    const r = await fetch(`${MOLTBOOK_API_BASE}/agents/verify-identity`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-moltbook-app-key": MOLTBOOK_APP_KEY,
+      },
+      body: JSON.stringify({ token }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) return { verified: false, reason: data?.error || `identity verify failed (${r.status})` };
+    if (!data?.valid || !data?.agent) return { verified: false, reason: "identity token invalid" };
+    return { verified: true, agent: data.agent };
+  } catch (err) {
+    return { verified: false, reason: err.message || "identity verification request failed" };
+  }
+}
+
 const CORS_HEADERS = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "GET, POST, OPTIONS",
-  "access-control-allow-headers": "content-type, x-agent-id, x-agent-token",
+  "access-control-allow-headers": "content-type, x-agent-id, x-agent-token, x-moltbook-identity",
 };
 
 const server = http.createServer((req, res) => {
   if (!req.url) return res.end("bad request");
+  const reqUrl = new URL(req.url, `http://localhost:${PORT}`);
+  const pathname = reqUrl.pathname;
 
   // ── CORS preflight
   if (req.method === "OPTIONS") {
@@ -228,7 +404,7 @@ const server = http.createServer((req, res) => {
     return res.end();
   }
 
-  if (req.url === "/events") {
+  if (pathname === "/events") {
     res.writeHead(200, {
       "content-type": "text/event-stream",
       "cache-control": "no-cache",
@@ -240,8 +416,8 @@ const server = http.createServer((req, res) => {
     req.on("close", () => clients.delete(res));
     return;
   }
-  if (req.url === "/events/backlog") return sendBacklog(res);
-  if (req.url === "/api/allowlist") {
+  if (pathname === "/events/backlog") return sendBacklog(res);
+  if (pathname === "/api/allowlist") {
     getAllowlistWithIcons()
       .then((data) => {
         res.writeHead(200, {
@@ -256,10 +432,36 @@ const server = http.createServer((req, res) => {
       });
     return;
   }
-  if (req.url === "/api/policy") {
+  if (pathname === "/api/policy") {
     return serveJson(res, POLICY_PATH);
   }
-  if (req.url === "/api/clawbots") {
+  if (pathname === "/api/health") {
+    const payload = {
+      ok: true,
+      service: "ape-claw-telemetry",
+      port: PORT,
+      root: ROOT,
+      paths: {
+        events: EVENTS_PATH,
+        chat: CHAT_PATH,
+        policy: POLICY_PATH,
+        allowlist: ALLOWLIST_PATH,
+        clawbots: CLAWBOTS_PATH,
+      },
+      counts: {
+        eventsBytes: fs.existsSync(EVENTS_PATH) ? fs.statSync(EVENTS_PATH).size : 0,
+        chatBytes: fs.existsSync(CHAT_PATH) ? fs.statSync(CHAT_PATH).size : 0,
+      },
+      identity: {
+        moltbookEnabled: Boolean(MOLTBOOK_APP_KEY),
+        moltbookApiBase: MOLTBOOK_API_BASE,
+      },
+      ts: new Date().toISOString(),
+    };
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+    return res.end(JSON.stringify(payload));
+  }
+  if (pathname === "/api/clawbots") {
     if (!fs.existsSync(CLAWBOTS_PATH)) {
       res.writeHead(200, { "content-type": "application/json; charset=utf-8", "access-control-allow-origin": "*" });
       return res.end(JSON.stringify({ count: 0, clawbots: [], sharedKeyConfigured: false }));
@@ -281,7 +483,8 @@ const server = http.createServer((req, res) => {
     }
   }
   // ── Chat SSE stream ────────────────────────────────
-  if (req.url === "/api/chat/stream") {
+  if (pathname === "/api/chat/stream") {
+    const room = normalizeRoomName(reqUrl.searchParams.get("room") || "all");
     res.writeHead(200, {
       "content-type": "text/event-stream",
       "cache-control": "no-cache",
@@ -289,45 +492,68 @@ const server = http.createServer((req, res) => {
       ...CORS_HEADERS,
     });
     res.write("\n");
-    chatClients.add(res);
-    req.on("close", () => chatClients.delete(res));
+    const client = { res, room };
+    chatClients.add(client);
+    req.on("close", () => chatClients.delete(client));
     return;
   }
 
   // ── Chat: GET recent messages ─────────────────────
-  if (req.url === "/api/chat" && req.method === "GET") {
-    const messages = readChatMessages(100);
+  if (pathname === "/api/chat" && req.method === "GET") {
+    const room = normalizeRoomName(reqUrl.searchParams.get("room") || "all");
+    const limit = Math.max(1, Math.min(500, Number(reqUrl.searchParams.get("limit") || 100)));
+    const messages = readChatMessages(limit, room);
     res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
-    return res.end(JSON.stringify({ messages }));
+    return res.end(JSON.stringify({ room, limit, messages }));
+  }
+
+  // ── Chat: GET room directory ──────────────────────
+  if (pathname === "/api/chat/rooms" && req.method === "GET") {
+    const limit = Math.max(1, Math.min(200, Number(reqUrl.searchParams.get("limit") || 50)));
+    const rooms = readChatRooms(limit);
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+    return res.end(JSON.stringify({ count: rooms.length, rooms }));
   }
 
   // ── Chat: POST new message ────────────────────────
-  if (req.url === "/api/chat" && req.method === "POST") {
-    readRequestBody(req).then((body) => {
-      const agentId = body.agentId || req.headers["x-agent-id"] || "";
-      const agentToken = body.agentToken || req.headers["x-agent-token"] || "";
+  if (pathname === "/api/chat" && req.method === "POST") {
+    readRequestBody(req).then(async (body) => {
+      const room = normalizeRoomName(body.room || reqUrl.searchParams.get("room") || "general");
       const text = String(body.text || "").trim();
+      const replyTo = String(body.replyTo || "").trim();
 
       if (!text || text.length > 500) {
         res.writeHead(400, { "content-type": "application/json", ...CORS_HEADERS });
         return res.end(JSON.stringify({ error: "message must be 1-500 characters" }));
       }
-      if (!agentId || !agentToken) {
-        res.writeHead(401, { "content-type": "application/json", ...CORS_HEADERS });
-        return res.end(JSON.stringify({ error: "missing agentId or agentToken" }));
+      const authRes = await resolveChatAuth(req, body);
+      if (!authRes.ok) {
+        res.writeHead(authRes.status || 403, { "content-type": "application/json", ...CORS_HEADERS });
+        return res.end(JSON.stringify({ error: authRes.error, reason: authRes.reason }));
       }
+      const auth = authRes.auth;
 
-      const verification = verifyClawbot({ agentId, agentToken });
-      if (!verification.verified) {
-        res.writeHead(403, { "content-type": "application/json", ...CORS_HEADERS });
-        return res.end(JSON.stringify({ error: "not verified", reason: verification.reason }));
+      if (replyTo) {
+        const existing = materializeChatMessages(readChatEntries(), room);
+        const parent = existing.find((m) => m.id === replyTo);
+        if (!parent) {
+          res.writeHead(400, { "content-type": "application/json", ...CORS_HEADERS });
+          return res.end(JSON.stringify({ error: "reply target not found in this room" }));
+        }
       }
 
       const msg = {
         id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        agentId,
-        agentName: verification.agent?.name || agentId,
+        type: "message",
+        agentId: auth.id,
+        agentName: auth.name,
+        identityProvider: auth.provider,
+        identityMeta: auth.meta,
+        room,
         text,
+        replyTo: replyTo || null,
+        reactions: {},
+        reactionUsers: {},
         ts: new Date().toISOString(),
       };
 
@@ -343,7 +569,53 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.url === "/" || req.url === "/index.html") {
+  // ── Chat: POST reaction toggle ─────────────────────
+  if (pathname === "/api/chat/react" && req.method === "POST") {
+    readRequestBody(req).then(async (body) => {
+      const room = normalizeRoomName(body.room || reqUrl.searchParams.get("room") || "general");
+      const messageId = String(body.messageId || "").trim();
+      const emoji = String(body.emoji || "").trim().slice(0, 8);
+      if (!messageId || !emoji) {
+        res.writeHead(400, { "content-type": "application/json", ...CORS_HEADERS });
+        return res.end(JSON.stringify({ error: "messageId and emoji are required" }));
+      }
+
+      const authRes = await resolveChatAuth(req, body);
+      if (!authRes.ok) {
+        res.writeHead(authRes.status || 403, { "content-type": "application/json", ...CORS_HEADERS });
+        return res.end(JSON.stringify({ error: authRes.error, reason: authRes.reason }));
+      }
+      const auth = authRes.auth;
+
+      const existing = materializeChatMessages(readChatEntries(), room);
+      const parent = existing.find((m) => m.id === messageId);
+      if (!parent) {
+        res.writeHead(404, { "content-type": "application/json", ...CORS_HEADERS });
+        return res.end(JSON.stringify({ error: "message not found in this room" }));
+      }
+
+      const evt = {
+        id: `react_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        type: "reaction",
+        room,
+        messageId,
+        emoji,
+        agentId: auth.id,
+        agentName: auth.name,
+        ts: new Date().toISOString(),
+      };
+      appendChatMessage(evt);
+      broadcastChat(evt);
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: true, reaction: evt }));
+    }).catch(() => {
+      res.writeHead(400, { "content-type": "application/json", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ error: "invalid JSON body" }));
+    });
+    return;
+  }
+
+  if (pathname === "/" || pathname === "/index.html") {
     if (!fs.existsSync(UI_PATH)) {
       res.writeHead(404);
       return res.end("ui/index.html not found");
@@ -358,7 +630,7 @@ const server = http.createServer((req, res) => {
     ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg",
     ".svg": "image/svg+xml", ".ico": "image/x-icon", ".webp": "image/webp",
   };
-  const safePath = decodeURIComponent(req.url.split("?")[0]);
+  const safePath = decodeURIComponent(pathname);
   if (!safePath.includes("..") && !safePath.includes("~")) {
     const filePath = path.join(ROOT, safePath);
     if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {

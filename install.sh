@@ -4,6 +4,7 @@ set -euo pipefail
 REPO_REF="${APE_CLAW_REPO_REF:-github:simplefarmer69/ape-claw}"
 GLOBAL_SPEC="${APE_CLAW_GLOBAL_SPEC:-github:simplefarmer69/ape-claw}"
 SKIP_GLOBAL_INSTALL="${APE_CLAW_SKIP_GLOBAL_INSTALL:-0}"
+CLI_CMD="npx --yes ${REPO_REF}"
 
 echo
 echo "🦞 ApeClaw Installer"
@@ -65,14 +66,19 @@ if ! command -v ape-claw >/dev/null 2>&1; then
     if npm i -g "${GLOBAL_SPEC}"; then
       if command -v ape-claw >/dev/null 2>&1; then
         CLI_READY=true
+        CLI_CMD="ape-claw"
       else
         NPM_PREFIX="$(npm config get prefix)"
         CANDIDATE_BIN="${NPM_PREFIX}/bin"
         if [ -x "${CANDIDATE_BIN}/ape-claw" ]; then
-          echo "⚠️  ApeClaw installed at ${CANDIDATE_BIN}/ape-claw but that folder is not in PATH."
-          echo "    Add this to your shell profile (~/.zshrc, ~/.bashrc, etc):"
-          echo "    export PATH=\"${CANDIDATE_BIN}:\$PATH\""
-          echo "    Then restart your shell and run: ape-claw doctor --json"
+          CLI_READY=true
+          CLI_CMD="${CANDIDATE_BIN}/ape-claw"
+          echo "ℹ️  ApeClaw installed at ${CANDIDATE_BIN}/ape-claw (not yet on PATH)."
+          echo "   You can use it immediately with:"
+          echo "   ${CLI_CMD} doctor --json"
+          echo
+          echo "   To make 'ape-claw' available everywhere, add this once:"
+          echo "   export PATH=\"${CANDIDATE_BIN}:\$PATH\""
         fi
       fi
     else
@@ -81,6 +87,9 @@ if ! command -v ape-claw >/dev/null 2>&1; then
       echo "    npx --yes github:simplefarmer69/ape-claw doctor --json"
     fi
   fi
+fi
+if command -v ape-claw >/dev/null 2>&1; then
+  CLI_CMD="ape-claw"
 fi
 
 OPENCLAW_READY=false
@@ -96,24 +105,34 @@ fi
 echo
 echo "✅ ApeClaw installed and ready."
 echo
-echo "Next steps:"
-if [ "${OPENCLAW_READY}" = true ]; then
-  echo "  1) openclaw skills list"
-  echo "  2) openclaw skills check"
+echo "Running preflight check..."
+if ${CLI_CMD} doctor --json; then
+  echo "✅ Preflight complete."
 else
-  echo "  1) Verify install now: npx --yes github:simplefarmer69/ape-claw doctor --json"
+  echo "⚠️  Preflight command returned a non-zero exit status."
+  echo "   Retry manually: ${CLI_CMD} doctor --json"
+fi
+echo
+echo "Next steps:"
+echo "  - Personalized setup help: ${CLI_CMD} quickstart --json"
+echo "  - Verify install now: ${CLI_CMD} doctor --json"
+if [ "${OPENCLAW_READY}" = true ]; then
+  echo "  - openclaw skills list"
+  echo "  - openclaw skills check"
+else
   if [ "${OPENCLAW_SUPPORTED}" = false ]; then
-    echo "  2) Upgrade Node to >=22 and install OpenClaw: npm i -g openclaw"
+    echo "  - Upgrade Node to >=22 and install OpenClaw: npm i -g openclaw"
   fi
 fi
 if [ "${CLI_READY}" = true ]; then
-  echo "  3) ape-claw doctor --json"
+  echo "  - Register your bot: ${CLI_CMD} clawbot register --agent-id my-bot --name \"My Bot\" --json"
+  echo "  - Save auth once: ${CLI_CMD} auth set --agent-id my-bot --agent-token claw_... --json"
 else
-  echo "  3) Optional: add npm global bin to PATH, then run ape-claw doctor --json"
+  echo "  - Optional: add npm global bin to PATH, then run: ape-claw doctor --json"
 fi
-echo "  4) If execute is blocked by missing private key:"
+echo "  - If execute is blocked by missing private key:"
 echo "     - export APE_CLAW_PRIVATE_KEY=0x..."
-echo "     - or ape-claw auth set --private-key 0x... --json"
+echo "     - or ${CLI_CMD} auth set --private-key 0x... --json"
 echo "     - or map your OpenClaw bot wallet secret to APE_CLAW_PRIVATE_KEY"
 echo
 echo "Best opportunity for your OpenClaw bots to establish onchain identity and start collecting."

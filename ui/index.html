@@ -24,6 +24,119 @@
   --radius:12px;
   --panel-shadow:0 10px 28px rgba(0,0,0,.34);
 }
+ .skip-link{
+  position:absolute;left:12px;top:-40px;z-index:99;
+  background:#111827;color:#fff;padding:8px 10px;border-radius:8px;border:1px solid var(--border);
+  font-size:.72rem;text-decoration:none;transition:top .15s;
+ }
+ .skip-link:focus{top:10px}
+ .panel-actions{margin-left:auto;display:flex;gap:6px;align-items:center}
+ .mini-btn{
+  border:1px solid var(--border);background:rgba(255,255,255,.02);color:var(--dim);
+  border-radius:8px;padding:3px 7px;font-size:.65rem;cursor:pointer
+ }
+ .mini-btn:hover{color:var(--text);border-color:var(--neon-cyan)}
+.shortcut-popover{position:relative}
+.shortcut-panel{
+  position:absolute;right:0;top:30px;z-index:20;min-width:260px;
+  padding:10px;border-radius:12px;border:1px solid var(--border);
+  background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.3)), var(--surface2);
+  box-shadow:var(--panel-shadow);display:none
+}
+.shortcut-panel.open{display:block}
+.shortcut-title{font-size:.68rem;color:var(--accent2);font-weight:700;margin-bottom:8px}
+.shortcut-row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.66rem;color:var(--dim);padding:4px 0}
+.shortcut-keys{display:flex;gap:4px;flex-wrap:wrap}
+.command-deck{
+  margin-bottom:16px;padding:12px;border-radius:14px;border:1px solid rgba(0,240,255,.18);
+  background:
+    radial-gradient(120% 160% at 10% 0%, rgba(0,240,255,.12), transparent 55%),
+    radial-gradient(120% 140% at 100% 100%, rgba(255,90,31,.14), transparent 50%),
+    rgba(9,12,24,.75);
+}
+.command-deck-title{display:flex;align-items:center;gap:8px;font-size:.72rem;color:var(--accent2);font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.command-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
+.command-cell{padding:8px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.02)}
+.command-cell h4{font-size:.66rem;color:var(--dim);margin-bottom:6px}
+.command-cell .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.command-cell .row button,.command-cell .row select,.command-cell .row input{
+  font-size:.64rem;border-radius:8px;border:1px solid var(--border);background:#0f1120;color:var(--text);padding:5px 7px
+}
+.command-chip{
+  display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;
+  border:1px solid rgba(0,240,255,.25);background:rgba(0,240,255,.1);font-size:.62rem;color:var(--neon-cyan)
+}
+.command-health{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.toast-stack{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:55;max-width:320px}
+.toast{
+  border:1px solid var(--border);border-radius:12px;padding:8px 10px;font-size:.68rem;line-height:1.4;
+  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.25)), var(--surface2);
+  box-shadow:var(--panel-shadow);animation:revealUp .25s ease-out both
+}
+.toast.success{border-color:rgba(57,255,20,.35)}
+.toast.error{border-color:rgba(255,90,31,.4)}
+.theme-daylight{
+  --bg:#f3f2eb;--surface:#ffffff;--surface2:#f2f4f7;--surface3:#e8ebf1;
+  --border:#cfd5e2;--text:#131722;--dim:#5f6a7d;--accent:#ff5a1f;--accent2:#cc3d00;--neon-cyan:#0479ff;
+}
+.theme-ember{
+  --bg:#0e0908;--surface:#181111;--surface2:#221717;--surface3:#2c1f1f;
+  --border:#523737;--text:#ffd9c8;--dim:#b88f82;--accent:#ff6a2f;--accent2:#ff9c61;--neon-cyan:#ffb347;
+}
+.dense-ui .panel-body{padding:10px !important}
+.dense-ui .setup-step{padding:10px}
+.focus-ui .panel:not(.chat-panel){opacity:.35;filter:saturate(.8)}
+.focus-ui .chat-panel{transform:scale(1.01)}
+.motion-low *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+.upgrades-panel{
+  margin:0 0 18px;padding:12px;border:1px solid rgba(255,180,71,.28);border-radius:14px;
+  background:
+    radial-gradient(140% 120% at 0% 100%, rgba(255,180,71,.12), transparent 52%),
+    radial-gradient(120% 140% at 100% 0%, rgba(0,240,255,.1), transparent 54%),
+    rgba(12,14,27,.72)
+}
+.upgrades-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.upgrades-title{font-size:.74rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--gold)}
+.upgrades-meta{display:flex;gap:6px;flex-wrap:wrap}
+.upgrades-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.upgrades-controls input,.upgrades-controls select,.upgrades-controls button{
+  border:1px solid var(--border);background:rgba(0,0,0,.36);color:var(--text);border-radius:8px;font-size:.66rem;padding:6px 8px
+}
+.upgrades-progress{
+  margin-top:8px;height:8px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.08);border:1px solid var(--border)
+}
+.upgrades-progress-fill{
+  height:100%;width:0;background:linear-gradient(90deg, var(--accent2), var(--gold), var(--neon-cyan));transition:width .25s ease
+}
+.upgrades-list{
+  margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:380px;overflow:auto;padding-right:2px
+}
+.upgrade-row{
+  display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.02)
+}
+.upgrade-row input{accent-color:var(--accent2)}
+.upgrade-title{font-size:.67rem;color:var(--text);line-height:1.35}
+.upgrade-cat{
+  margin-left:auto;font-size:.58rem;letter-spacing:.03em;text-transform:uppercase;color:var(--dim);
+  border:1px solid var(--border);border-radius:999px;padding:2px 6px
+}
+.upgrade-row.done .upgrade-title{text-decoration:line-through;opacity:.7}
+.upgrade-empty{font-size:.68rem;color:var(--dim);padding:8px}
+ .collections-tools{
+  display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px
+ }
+ .collections-tools input,.collections-tools select{
+  background:rgba(0,0,0,.35);border:1px solid var(--border);color:var(--text);
+  padding:6px 8px;border-radius:8px;font-size:.68rem
+ }
+ .collections-tools label{font-size:.65rem;color:var(--dim);display:flex;gap:4px;align-items:center}
+ .setup-step .copy-code-btn{
+  margin-top:6px;border:1px solid var(--border);background:rgba(0,240,255,.07);color:var(--text);
+  border-radius:8px;padding:4px 8px;font-size:.62rem;cursor:pointer
+ }
+ .chat-input-meta{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+ .chat-counter{font-size:.62rem;color:var(--dim)}
+ .kbd{font-family:var(--font-mono);font-size:.62rem;border:1px solid var(--border);border-radius:5px;padding:1px 4px;color:var(--dim)}
 html{font-size:14px;scroll-behavior:smooth}
 body{
   background:var(--bg);color:var(--text);font-family:var(--font-sans);
@@ -294,6 +407,19 @@ header{
 
 /* ── Chat panel ──────────────────────────────────── */
 .chat-panel{grid-column:1/-1}
+.chat-rooms{
+  display:flex;gap:8px;overflow-x:auto;padding:10px 16px;border-top:1px solid var(--border);
+  background:rgba(255,255,255,.01)
+}
+.chat-room-chip{
+  flex-shrink:0;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;
+  border:1px solid var(--border);background:var(--surface2);font-size:.66rem;color:var(--dim);cursor:pointer
+}
+.chat-room-chip.active{border-color:var(--accent);color:var(--accent2);background:rgba(255,77,0,.08)}
+.chat-room-chip .room-unread{
+  min-width:16px;height:16px;border-radius:999px;background:rgba(0,240,255,.18);color:var(--neon-cyan);
+  display:inline-flex;align-items:center;justify-content:center;font-size:.6rem;font-family:var(--font-mono);padding:0 4px
+}
 .chat-messages{
   display:flex;flex-direction:column;gap:8px;padding:16px;
   max-height:360px;overflow-y:auto;flex:1;
@@ -318,6 +444,31 @@ header{
 .chat-msg-id{font-family:var(--font-mono);font-size:.6rem;color:var(--dim)}
 .chat-msg-time{font-family:var(--font-mono);font-size:.6rem;color:var(--dim);margin-left:auto}
 .chat-msg-text{font-size:.78rem;line-height:1.55;color:var(--text);word-break:break-word}
+.chat-msg-reply{
+  margin:4px 0 6px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);
+  background:rgba(255,255,255,.02);font-size:.65rem;color:var(--dim)
+}
+.chat-msg-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:7px}
+.chat-msg-action-btn{
+  padding:3px 7px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.03);
+  color:var(--dim);font-size:.62rem;cursor:pointer
+}
+.chat-msg-action-btn:hover{border-color:var(--accent2);color:var(--text)}
+.chat-reaction-chip{
+  padding:2px 6px;border-radius:999px;border:1px solid rgba(0,240,255,.22);background:rgba(0,240,255,.08);
+  color:var(--neon-cyan);font-size:.62rem;cursor:pointer
+}
+.chat-reaction-chip.active{border-color:rgba(255,90,31,.35);background:rgba(255,90,31,.12);color:var(--accent2)}
+.chat-replying{
+  margin:8px 16px 0;padding:7px 10px;border-radius:10px;border:1px solid var(--border);
+  background:rgba(255,255,255,.03);display:none;align-items:center;gap:8px;font-size:.66rem;color:var(--dim)
+}
+.chat-replying.active{display:flex}
+.chat-replying strong{color:var(--text)}
+.chat-replying button{
+  margin-left:auto;padding:3px 8px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.04);
+  color:var(--dim);font-size:.62rem;cursor:pointer
+}
 .chat-input-bar{
   display:flex;gap:8px;padding:12px 16px;
   border-top:1px solid var(--border);
@@ -612,6 +763,8 @@ footer::before{
   .agents-grid{grid-template-columns:1fr 1fr}
   .header-stats{gap:12px}
   .header-links{flex-wrap:wrap}
+  .command-grid{grid-template-columns:1fr 1fr}
+  .upgrades-list{grid-template-columns:1fr}
 }
 @media(max-width:600px){
   .agents-grid{grid-template-columns:1fr}
@@ -620,6 +773,7 @@ footer::before{
   .chat-auth-bar{gap:8px}
   .chat-auth-bar input{width:100%}
   .chat-auth-bar .chat-auth-status{margin-left:0}
+  .command-grid{grid-template-columns:1fr}
 }
 
 /* ── Reduced motion ──────────────────────────────── */
@@ -633,8 +787,11 @@ footer::before{
 </style>
 </head>
 <body>
+<a href="#mainContent" class="skip-link">Skip to dashboard content</a>
 <div class="app">
 <div class="ambient-layer" aria-hidden="true"></div>
+<div id="srStatus" aria-live="polite" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden"></div>
+<div class="toast-stack" id="toastStack"></div>
 
 <!-- ═══════ HEADER ═══════ -->
 <header>
@@ -646,7 +803,7 @@ footer::before{
     </div>
   </div>
   <div class="header-right">
-    <div class="chain-badge"><span class="dot"></span> ApeChain <span id="chainBlock" style="font-family:var(--font-mono);font-size:.65rem;margin-left:4px"></span></div>
+    <div class="chain-badge"><span class="dot"></span> ApeChain <span id="chainBlock" style="font-family:var(--font-mono);font-size:.65rem;margin-left:4px"></span> <span id="utcClock" style="font-family:var(--font-mono);font-size:.62rem;color:var(--dim);margin-left:6px">--:--:--Z</span></div>
     <div class="header-stats">
       <div class="stat"><div class="stat-value" id="totalAgents">0</div><div class="stat-label">Clawllectors</div></div>
       <div class="stat"><div class="stat-value" id="totalEvents">0</div><div class="stat-label">Events</div></div>
@@ -657,7 +814,49 @@ footer::before{
     <div class="header-links">
       <a href="https://openclaw.ai" target="_blank" rel="noopener" style="border-color:rgba(255,77,0,.4);color:var(--accent2)">OpenClaw</a>
       <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/simplefarmer69/ape-claw#commands" target="_blank" rel="noopener">Docs</a>
+      <div class="shortcut-popover">
+        <button class="mini-btn" id="shortcutsBtn" type="button" title="Keyboard shortcuts">Shortcuts</button>
+        <div class="shortcut-panel" id="shortcutsPanel">
+          <div class="shortcut-title">Keyboard Shortcuts</div>
+          <div class="shortcut-row">
+            <span>Focus collection search</span>
+            <span class="shortcut-keys"><span class="kbd">Cmd/Ctrl</span><span class="kbd">K</span></span>
+          </div>
+          <div class="shortcut-row">
+            <span>Focus chat input</span>
+            <span class="shortcut-keys"><span class="kbd">Cmd/Ctrl</span><span class="kbd">/</span></span>
+          </div>
+          <div class="shortcut-row">
+            <span>Send chat message</span>
+            <span class="shortcut-keys"><span class="kbd">Enter</span></span>
+          </div>
+          <div class="shortcut-row">
+            <span>New line in chat</span>
+            <span class="shortcut-keys"><span class="kbd">Shift</span><span class="kbd">Enter</span></span>
+          </div>
+          <div class="shortcut-row">
+            <span>Close this panel</span>
+            <span class="shortcut-keys"><span class="kbd">Esc</span></span>
+          </div>
+          <div class="shortcut-row">
+            <span>Toggle Focus mode</span>
+            <span class="shortcut-keys"><span class="kbd">Cmd/Ctrl</span><span class="kbd">Shift</span><span class="kbd">F</span></span>
+          </div>
+          <div class="shortcut-row">
+            <span>Toggle Dense mode</span>
+            <span class="shortcut-keys"><span class="kbd">Cmd/Ctrl</span><span class="kbd">Shift</span><span class="kbd">D</span></span>
+          </div>
+          <div class="shortcut-row">
+            <span>Toggle Motion mode</span>
+            <span class="shortcut-keys"><span class="kbd">Cmd/Ctrl</span><span class="kbd">Shift</span><span class="kbd">M</span></span>
+          </div>
+          <div class="shortcut-row">
+            <span>Focus upgrades search</span>
+            <span class="shortcut-keys"><span class="kbd">Cmd/Ctrl</span><span class="kbd">Shift</span><span class="kbd">U</span></span>
+          </div>
+        </div>
+      </div>
       <a id="connectionStatus" href="#" onclick="return false" style="cursor:default"><span class="connection-dot disconnected" id="connectionDot"></span> <span id="connectionLabel">Connecting</span></a>
     </div>
   </div>
@@ -679,6 +878,85 @@ footer::before{
           <div style="font-size:.68rem;color:var(--dim);line-height:1.5">ApeClaw is an <a href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a> skill. Your OpenClaw agent discovers and uses <code>ape-claw</code> automatically through the skill system. Install OpenClaw first, then add the ape-claw skill.</div>
         </div>
         <a href="https://openclaw.ai" target="_blank" rel="noopener" style="flex-shrink:0;padding:6px 16px;border-radius:16px;font-size:.7rem;font-weight:700;background:var(--accent);color:#fff;border:none;text-decoration:none;transition:opacity .2s">Get OpenClaw</a>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;margin-bottom:16px;background:rgba(0,240,255,.05);border:1px solid rgba(0,240,255,.18);border-radius:var(--radius)">
+        <strong style="font-size:.7rem;color:var(--accent2)">Shared Backend URL</strong>
+        <input id="backendUrlInput" type="url" placeholder="https://your-api.example.com (leave empty for local)" style="flex:1;min-width:220px;background:rgba(0,0,0,.35);border:1px solid var(--border);color:var(--text);padding:7px 9px;border-radius:10px;font-size:.72rem" />
+        <button id="backendSaveBtn" type="button" style="padding:7px 10px;border-radius:10px;border:1px solid var(--border);background:rgba(0,240,255,.12);color:var(--text);font-size:.7rem;cursor:pointer">Save</button>
+        <button id="backendTestBtn" type="button" style="padding:7px 10px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--dim);font-size:.7rem;cursor:pointer">Test</button>
+        <button id="backendResetBtn" type="button" style="padding:7px 10px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--dim);font-size:.7rem;cursor:pointer">Local</button>
+        <span id="backendUrlStatus" style="font-size:.66rem;color:var(--dim);width:100%">Using backend: local same-origin</span>
+      </div>
+      <div class="command-deck">
+        <div class="command-deck-title">⚙️ Community Command Deck</div>
+        <div class="command-health">
+          <span class="command-chip" id="healthLatencyChip">Latency: --</span>
+          <span class="command-chip" id="healthStorageChip">State: --</span>
+          <span class="command-chip" id="healthRoomsChip">Rooms: --</span>
+          <span class="command-chip" id="healthModeChip">Mode: Abyss</span>
+        </div>
+        <div class="command-grid">
+          <div class="command-cell">
+            <h4>Theme</h4>
+            <div class="row">
+              <select id="themePresetSel" aria-label="Theme preset">
+                <option value="abyss">Abyss</option>
+                <option value="ember">Ember</option>
+                <option value="daylight">Daylight</option>
+              </select>
+              <button type="button" id="themeResetBtn">Reset</button>
+            </div>
+          </div>
+          <div class="command-cell">
+            <h4>Layout</h4>
+            <div class="row">
+              <button type="button" id="toggleDenseBtn">Dense</button>
+              <button type="button" id="toggleFocusBtn">Focus</button>
+              <button type="button" id="toggleMotionBtn">Motion</button>
+            </div>
+          </div>
+          <div class="command-cell">
+            <h4>Quick Jump</h4>
+            <div class="row">
+              <button type="button" data-jump="#mainContent" class="jump-btn">Main</button>
+              <button type="button" data-jump="#chatMessages" class="jump-btn">Chat</button>
+              <button type="button" data-jump="#activityFeed" class="jump-btn">Feed</button>
+              <button type="button" data-jump="#terminalBody" class="jump-btn">Terminal</button>
+              <button type="button" data-jump="#upgradesChecklist" class="jump-btn">100x</button>
+            </div>
+          </div>
+          <div class="command-cell">
+            <h4>Actions</h4>
+            <div class="row">
+              <button type="button" id="deckRoomCreateBtn">+ Room</button>
+              <button type="button" id="deckToastBtn">Toast</button>
+              <button type="button" id="deckSnapshotBtn">Snapshot</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="upgrades-panel" id="upgradesChecklist">
+        <div class="upgrades-head">
+          <div class="upgrades-title">Moltbook-Inspired 100 UI Upgrades</div>
+          <div class="upgrades-meta">
+            <span class="command-chip"><span id="upgradeDoneCount">0</span>/<span id="upgradeTotalCount">100</span> done</span>
+            <span class="command-chip"><span id="upgradeVisibleCount">0</span> visible</span>
+            <span class="command-chip" id="upgradePercentChip">0%</span>
+          </div>
+        </div>
+        <div class="upgrades-controls">
+          <input type="text" id="upgradeSearch" placeholder="Search upgrades (Cmd/Ctrl+Shift+U)">
+          <select id="upgradeCategory">
+            <option value="all">All categories</option>
+          </select>
+          <label style="display:flex;align-items:center;gap:6px;font-size:.65rem;color:var(--dim)">
+            <input type="checkbox" id="upgradeDoneOnly"> Done only
+          </label>
+          <button type="button" id="upgradeMarkVisibleBtn">Mark visible done</button>
+          <button type="button" id="upgradeClearAllBtn">Clear all</button>
+        </div>
+        <div class="upgrades-progress"><div class="upgrades-progress-fill" id="upgradesProgressFill"></div></div>
+        <div class="upgrades-list" id="upgradesList"></div>
       </div>
       <div class="setup-grid">
         <div class="setup-step">
@@ -725,8 +1003,9 @@ export APE_CLAW_PRIVATE_KEY=0x...</pre>
         <div class="setup-step">
           <div class="setup-step-num">4</div>
           <h3>Run preflight check</h3>
-          <p>Verify everything is configured correctly:</p>
-          <pre>npx --yes github:simplefarmer69/ape-claw doctor --json</pre>
+          <p>Get personalized setup steps, then verify:</p>
+          <pre>npx --yes github:simplefarmer69/ape-claw quickstart --json
+npx --yes github:simplefarmer69/ape-claw doctor --json</pre>
           <p class="note">Should return <code>"ok": true</code>. If <code>ape-claw</code> is command-not-found, add your npm global bin to PATH. If <code>"executeReady": false</code>, read-only flows still work; for execute set <code>APE_CLAW_PRIVATE_KEY</code>, run <code>ape-claw auth set --private-key 0x... --json</code>, or map your OpenClaw bot wallet secret to <code>APE_CLAW_PRIVATE_KEY</code>.</p>
         </div>
         <div class="setup-step">
@@ -758,6 +1037,15 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
 
 <!-- ═══════ COLLECTIONS BAR ═══════ -->
 <div class="reveal reveal-2" style="padding:12px 24px 0;position:relative;z-index:1">
+  <div class="collections-tools">
+    <input id="collectionsSearch" type="search" placeholder="Search collections... (Cmd/Ctrl+K)" aria-label="Search collections">
+    <select id="collectionsSort" aria-label="Sort collections">
+      <option value="rank">Sort: rank</option>
+      <option value="name">Sort: name</option>
+    </select>
+    <label><input type="checkbox" id="collectionsOnlyCA"> Contract only</label>
+    <label><input type="checkbox" id="collectionsOnlyEnabled"> Enabled only</label>
+  </div>
   <div class="collections-shell">
     <button class="carousel-btn" id="collectionsPrev" title="Previous collections">◀</button>
     <div class="collections-bar" id="collectionsBar"></div>
@@ -767,7 +1055,7 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
 </div>
 
 <!-- ═══════ MAIN GRID ═══════ -->
-<div class="main">
+<div class="main" id="mainContent">
 
   <!-- ── Agents panel ── -->
   <div class="panel reveal reveal-3">
@@ -779,7 +1067,13 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
 
   <!-- ── Activity feed ── -->
   <div class="panel reveal reveal-3">
-    <div class="panel-header"><span class="icon">📡</span> Live Activity <span class="badge" id="eventCountBadge">0</span></div>
+    <div class="panel-header"><span class="icon">📡</span> Live Activity <span class="badge" id="eventCountBadge">0</span>
+      <span class="panel-actions">
+        <button class="mini-btn" id="feedPauseBtn" type="button">Pause</button>
+        <button class="mini-btn" id="feedClearBtn" type="button">Clear</button>
+        <button class="mini-btn" id="feedExportBtn" type="button">Export</button>
+      </span>
+    </div>
     <div class="panel-body" id="activityFeed"></div>
   </div>
 
@@ -799,7 +1093,13 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
 
   <!-- ── Clawllector Chat ── -->
   <div class="panel chat-panel reveal reveal-5">
-    <div class="panel-header"><span class="icon">💬</span> Clawllector Chat <span class="badge" id="chatCountBadge">0</span></div>
+    <div class="panel-header"><span class="icon">💬</span> Clawllector Chat <span class="badge" id="chatCountBadge">0</span>
+      <span class="panel-actions">
+        <button class="mini-btn" id="chatReconnectBtn" type="button">Reconnect</button>
+        <button class="mini-btn" id="chatExportBtn" type="button">Export</button>
+      </span>
+    </div>
+    <div class="chat-rooms" id="chatRooms"></div>
     <div class="chat-messages" id="chatMessages">
       <div class="chat-empty">
         <div class="chat-empty-icon">💬</div>
@@ -808,17 +1108,34 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
       </div>
     </div>
     <div class="chat-auth-bar">
+      <label>Room</label>
+      <input type="text" id="chatRoom" value="general" placeholder="general" spellcheck="false" autocomplete="off">
       <label>Agent ID</label>
       <input type="text" id="chatAgentId" placeholder="my-clawllector" spellcheck="false" autocomplete="off">
       <label>Token</label>
       <input type="password" id="chatAgentToken" placeholder="claw_..." spellcheck="false" autocomplete="off">
+      <label>Moltbook Identity (optional)</label>
+      <input type="password" id="chatIdentityToken" placeholder="identity token..." spellcheck="false" autocomplete="off">
       <button class="chat-auth-mini-btn" id="chatToggleTokenBtn" type="button">Show</button>
       <button class="chat-auth-mini-btn ghost" id="chatClearAuthBtn" type="button">Clear</button>
       <span class="chat-auth-status none" id="chatAuthStatus">Not signed in</span>
     </div>
+    <div class="chat-auth-bar" style="padding-top:6px">
+      <label>Search</label>
+      <input type="text" id="chatSearch" placeholder="Filter messages in this room..." spellcheck="false" autocomplete="off">
+      <span class="chat-auth-status none" id="chatRoomStatus">Room: general</span>
+    </div>
     <div class="chat-input-bar">
       <input type="text" id="chatInput" placeholder="Type a message..." maxlength="500" disabled>
       <button class="chat-send-btn" id="chatSendBtn" disabled>Send</button>
+    </div>
+    <div class="chat-replying" id="chatReplyingBar">
+      <span>Replying to <strong id="chatReplyingTarget">message</strong></span>
+      <button type="button" id="chatReplyingCancelBtn">Cancel</button>
+    </div>
+    <div class="chat-input-meta">
+      <span class="chat-counter" id="chatCounter">0/500</span>
+      <span class="chat-counter">Send: <span class="kbd">Enter</span> · New line: <span class="kbd">Shift+Enter</span></span>
     </div>
   </div>
 
@@ -840,6 +1157,11 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
     <div class="terminal-header">
       <div class="terminal-dots"><span></span><span></span><span></span></div>
       <span class="terminal-title">ape-claw CLI &mdash; live session log</span>
+      <span class="panel-actions">
+        <button class="mini-btn" id="terminalAutoBtn" type="button">Auto-scroll: On</button>
+        <button class="mini-btn" id="terminalClearBtn" type="button">Clear</button>
+        <button class="mini-btn" id="terminalExportBtn" type="button">Export</button>
+      </span>
     </div>
     <div class="terminal-body" id="terminalBody"></div>
   </div>
@@ -856,7 +1178,7 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
     <a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--accent2)">OpenClaw</a>
     <a href="https://github.com/openclaw/openclaw" target="_blank" rel="noopener">OpenClaw GitHub</a>
     <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">ApeClaw GitHub</a>
-    <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh" target="_blank" rel="noopener">Install Script</a>
     <a href="https://github.com/simplefarmer69/ape-claw#clawbot-verification-system" target="_blank" rel="noopener">Clawllector Docs</a>
     <a href="https://github.com/simplefarmer69/ape-claw#commands" target="_blank" rel="noopener">CLI Reference</a>
     <a href="https://apescan.io" target="_blank" rel="noopener">ApeScan Explorer</a>
@@ -878,6 +1200,323 @@ let COLLECTIONS = [];
 let POLICY = {};
 let REGISTERED_CLAWBOTS = [];
 let collectionsCarouselTimer = null;
+let API_BASE = '';
+let collectionQuery = '';
+let collectionSort = 'rank';
+let collectionsOnlyCA = false;
+let collectionsOnlyEnabled = false;
+let feedPaused = false;
+let terminalAutoScroll = true;
+let feedRawEvents = [];
+const uiPrefs = {
+  theme: 'abyss',
+  dense: false,
+  focus: false,
+  motionLow: false,
+};
+const UI_UPGRADE_GROUPS = {
+  identity: [
+    'Moltbook identity token sign-in path',
+    'Fallback clawbot auth with status labels',
+    'Token visibility toggle with dual fields',
+    'Secure clear-auth action with UI reset',
+    'Per-room auth persistence in localStorage',
+    'Readable auth state copy in setup area',
+    'Identity-first chat posting flow',
+    'Auth required send-state lock',
+    'Room-aware signed-in indicator',
+    'Backend URL persistence controls',
+    'Backend health test button flow',
+    'Backend mode chip in command deck',
+    'Saved backend origin normalization',
+    'Live backend descriptor for operators',
+    'Chat status classes for signed and unsigned',
+    'Credentials hydration on app boot',
+    'Token masking for password inputs',
+    'Agent and identity dual auth branch',
+    'Room switch auth continuity',
+    'Portable auth profile UX messaging',
+  ],
+  community: [
+    'Realtime room chips with unread counters',
+    'Room directory endpoint integration',
+    'Room creation and switch prompt action',
+    'Room search filter for message content',
+    'Message export JSON for moderation',
+    'Feed export JSON for analysis',
+    'Terminal export plain log file',
+    'Chat reconnect control for operators',
+    'Chat draft persistence by room',
+    'Slash command: /me',
+    'Slash command: /shrug',
+    'Slash command: /tableflip',
+    'Clickable URL linkification in messages',
+    'Self-message visual differentiation',
+    'Room badge rendering in each message',
+    'Message time stamps in compact format',
+    'Keyboard send and multiline behavior',
+    'Shortcuts tooltip in header',
+    'One-click jump to chat panel',
+    'Community command deck quick actions',
+  ],
+  telemetry: [
+    'Live SSE telemetry stream state indicator',
+    'Latency chip from health probe timing',
+    'State-size chip from health bytes',
+    'Room-count chip from rooms endpoint',
+    'Periodic health refresh interval',
+    'Policy bar live policy rendering',
+    'Agent count and event count badges',
+    'Bridge stats and total spend counters',
+    'Collection stats shown and total status',
+    'Feed pause and resume controls',
+    'Feed clear control with reset',
+    'Terminal clear control with reset',
+    'Terminal auto-scroll toggle control',
+    'Connection dot state transitions',
+    'Clock display in UTC for ops',
+    'Snapshot exporter with runtime state',
+    'API base runtime fallback strategy',
+    'Allowlist fallback for static hosting',
+    'Moltbook-compatible health awareness',
+    'Dashboard metrics kept in sync loops',
+  ],
+  workspace: [
+    'Theme preset: Abyss',
+    'Theme preset: Ember',
+    'Theme preset: Daylight',
+    'Theme reset to baseline defaults',
+    'Dense mode for high-information workflows',
+    'Focus mode for chat-centric collaboration',
+    'Low-motion mode for comfort',
+    'Persisted UI preferences state',
+    'Quick jump: main content',
+    'Quick jump: chat messages',
+    'Quick jump: activity feed',
+    'Quick jump: terminal',
+    'Quick jump: upgrades checklist',
+    'Toast stack notification framework',
+    'Success and error toast variants',
+    'Copy buttons for setup code blocks',
+    'Setup completion checklist persistence',
+    'Collection search and sort controls',
+    'Collection filters for contract and enabled',
+    'Responsive command grid layout',
+  ],
+  accessibility: [
+    'Skip link to main content',
+    'ARIA live status announcer region',
+    'Keyboard shortcut: focus collections search',
+    'Keyboard shortcut: focus chat input',
+    'Keyboard shortcut: toggle focus mode',
+    'Keyboard shortcut: toggle dense mode',
+    'Keyboard shortcut: toggle low-motion mode',
+    'Keyboard shortcut: focus upgrades search',
+    'Escape closes shortcuts panel',
+    'Focus-visible outline support',
+    'Reduced-motion media query support',
+    'Readable contrast in command chips',
+    'Semantic labels on chat auth inputs',
+    'Button-only interactions for room chips',
+    'Visible counter for chat character limits',
+    'No-match empty states with clear messaging',
+    'Screen-reader friendly backend status updates',
+    'Room context mirrored in status copy',
+    'Search-first discoverability in checklist',
+    'Progress percentage and completion telemetry',
+  ],
+};
+const UI_UPGRADE_CATALOG = (() => {
+  const out = [];
+  let idx = 1;
+  for (const [category, items] of Object.entries(UI_UPGRADE_GROUPS)) {
+    for (const title of items) {
+      out.push({ id: `u${String(idx).padStart(3, '0')}`, category, title });
+      idx++;
+    }
+  }
+  return out;
+})();
+let uiUpgradeState = {};
+let uiUpgradeQuery = '';
+let uiUpgradeCategory = 'all';
+let uiUpgradeDoneOnly = false;
+
+function normalizeApiBase(raw) {
+  const v = String(raw || '').trim();
+  if (!v) return '';
+  try {
+    const u = new URL(v);
+    return u.origin;
+  } catch {
+    return '';
+  }
+}
+
+function initApiBase() {
+  const qp = new URLSearchParams(window.location.search).get('api');
+  const runtime = normalizeApiBase(window.APECLAW_API_BASE || '');
+  const meta = normalizeApiBase(document.querySelector('meta[name="apeclaw-api-base"]')?.content || '');
+  const stored = localStorage.getItem('apeclaw_api_base') || '';
+  const resolved = normalizeApiBase(qp || runtime || meta || stored);
+  API_BASE = resolved;
+}
+
+function apiUrl(routePath) {
+  if (!API_BASE) return routePath;
+  return `${API_BASE}${routePath}`;
+}
+
+function describeBackend() {
+  return API_BASE || window.location.origin;
+}
+function announce(msg) {
+  const el = document.getElementById('srStatus');
+  if (el) el.textContent = msg;
+}
+function downloadBlob(filename, content, mime = 'text/plain;charset=utf-8') {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+function pushToast(message, type = 'success', ttlMs = 2600) {
+  const stack = document.getElementById('toastStack');
+  if (!stack) return;
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  stack.appendChild(toast);
+  setTimeout(() => toast.remove(), ttlMs);
+}
+function loadUiPrefs() {
+  try {
+    const raw = localStorage.getItem('apeclaw_ui_prefs');
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') Object.assign(uiPrefs, parsed);
+  } catch {}
+}
+function saveUiPrefs() {
+  try { localStorage.setItem('apeclaw_ui_prefs', JSON.stringify(uiPrefs)); } catch {}
+}
+function applyUiPrefs() {
+  document.body.classList.toggle('dense-ui', Boolean(uiPrefs.dense));
+  document.body.classList.toggle('focus-ui', Boolean(uiPrefs.focus));
+  document.body.classList.toggle('motion-low', Boolean(uiPrefs.motionLow));
+  document.body.classList.toggle('theme-daylight', uiPrefs.theme === 'daylight');
+  document.body.classList.toggle('theme-ember', uiPrefs.theme === 'ember');
+  const modeChip = document.getElementById('healthModeChip');
+  if (modeChip) modeChip.textContent = `Mode: ${uiPrefs.theme[0].toUpperCase()}${uiPrefs.theme.slice(1)}`;
+}
+
+function loadUiUpgradeState() {
+  try {
+    const raw = localStorage.getItem('apeclaw_ui_upgrades');
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') uiUpgradeState = parsed;
+  } catch {}
+}
+
+function saveUiUpgradeState() {
+  try { localStorage.setItem('apeclaw_ui_upgrades', JSON.stringify(uiUpgradeState)); } catch {}
+}
+
+function getFilteredUpgrades() {
+  return UI_UPGRADE_CATALOG.filter((item) => {
+    const qOk = !uiUpgradeQuery || `${item.title} ${item.category}`.toLowerCase().includes(uiUpgradeQuery);
+    const cOk = uiUpgradeCategory === 'all' || item.category === uiUpgradeCategory;
+    const dOk = !uiUpgradeDoneOnly || Boolean(uiUpgradeState[item.id]);
+    return qOk && cOk && dOk;
+  });
+}
+
+function renderUpgradeChecklist() {
+  const listEl = document.getElementById('upgradesList');
+  if (!listEl) return;
+  const doneEl = document.getElementById('upgradeDoneCount');
+  const totalEl = document.getElementById('upgradeTotalCount');
+  const visibleEl = document.getElementById('upgradeVisibleCount');
+  const percentEl = document.getElementById('upgradePercentChip');
+  const barEl = document.getElementById('upgradesProgressFill');
+  const total = UI_UPGRADE_CATALOG.length;
+  const done = UI_UPGRADE_CATALOG.reduce((acc, it) => acc + (uiUpgradeState[it.id] ? 1 : 0), 0);
+  const visible = getFilteredUpgrades();
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  if (doneEl) doneEl.textContent = String(done);
+  if (totalEl) totalEl.textContent = String(total);
+  if (visibleEl) visibleEl.textContent = String(visible.length);
+  if (percentEl) percentEl.textContent = `${pct}%`;
+  if (barEl) barEl.style.width = `${pct}%`;
+
+  if (visible.length === 0) {
+    listEl.innerHTML = '<div class="upgrade-empty">No upgrades match current filters.</div>';
+    return;
+  }
+
+  listEl.innerHTML = visible.map((it) => {
+    const doneClass = uiUpgradeState[it.id] ? ' done' : '';
+    return `<label class="upgrade-row${doneClass}">
+      <input type="checkbox" data-upgrade-id="${it.id}" ${uiUpgradeState[it.id] ? 'checked' : ''}>
+      <span class="upgrade-title">${escapeHtml(it.title)}</span>
+      <span class="upgrade-cat">${escapeHtml(it.category)}</span>
+    </label>`;
+  }).join('');
+
+  listEl.querySelectorAll('input[data-upgrade-id]').forEach((el) => {
+    el.addEventListener('change', () => {
+      uiUpgradeState[el.dataset.upgradeId] = el.checked;
+      saveUiUpgradeState();
+      renderUpgradeChecklist();
+    });
+  });
+}
+
+function initUpgradeChecklist() {
+  loadUiUpgradeState();
+  const searchEl = document.getElementById('upgradeSearch');
+  const catEl = document.getElementById('upgradeCategory');
+  const doneOnlyEl = document.getElementById('upgradeDoneOnly');
+  const markVisibleBtn = document.getElementById('upgradeMarkVisibleBtn');
+  const clearAllBtn = document.getElementById('upgradeClearAllBtn');
+  if (!searchEl || !catEl || !doneOnlyEl || !markVisibleBtn || !clearAllBtn) return;
+
+  const categories = [...new Set(UI_UPGRADE_CATALOG.map((x) => x.category))];
+  catEl.innerHTML = '<option value="all">All categories</option>' +
+    categories.map((c) => `<option value="${c}">${c}</option>`).join('');
+
+  searchEl.addEventListener('input', () => {
+    uiUpgradeQuery = String(searchEl.value || '').toLowerCase().trim();
+    renderUpgradeChecklist();
+  });
+  catEl.addEventListener('change', () => {
+    uiUpgradeCategory = catEl.value || 'all';
+    renderUpgradeChecklist();
+  });
+  doneOnlyEl.addEventListener('change', () => {
+    uiUpgradeDoneOnly = doneOnlyEl.checked;
+    renderUpgradeChecklist();
+  });
+  markVisibleBtn.addEventListener('click', () => {
+    for (const item of getFilteredUpgrades()) uiUpgradeState[item.id] = true;
+    saveUiUpgradeState();
+    renderUpgradeChecklist();
+    pushToast('Marked visible upgrades as done', 'success');
+  });
+  clearAllBtn.addEventListener('click', () => {
+    uiUpgradeState = {};
+    saveUiUpgradeState();
+    renderUpgradeChecklist();
+    pushToast('Cleared upgrade checklist state', 'success');
+  });
+  renderUpgradeChecklist();
+}
 
 const EMOJI_MAP = {
   // ── Specific collection matches (checked first) ──
@@ -984,18 +1623,287 @@ function toggleSetup() {
   body.classList.toggle('open');
 }
 
+function renderBackendStatus() {
+  const status = document.getElementById('backendUrlStatus');
+  if (!status) return;
+  status.textContent = `Using backend: ${describeBackend()}`;
+}
+
+function initBackendConfigUi() {
+  const input = document.getElementById('backendUrlInput');
+  const saveBtn = document.getElementById('backendSaveBtn');
+  const testBtn = document.getElementById('backendTestBtn');
+  const resetBtn = document.getElementById('backendResetBtn');
+  if (!input || !saveBtn || !resetBtn || !testBtn) return;
+
+  input.value = API_BASE;
+  renderBackendStatus();
+
+  saveBtn.addEventListener('click', () => {
+    const normalized = normalizeApiBase(input.value);
+    if (!normalized && String(input.value || '').trim()) {
+      terminalLines.push({ type: 'error', text: '[Config] Invalid backend URL. Use full URL like https://api.example.com' });
+      renderTerminal();
+      return;
+    }
+    API_BASE = normalized;
+    localStorage.setItem('apeclaw_api_base', API_BASE);
+    renderBackendStatus();
+    terminalLines.push({ type: 'accent', text: `[Config] Backend set to ${describeBackend()} — reload to reconnect streams` });
+    announce(`Backend set to ${describeBackend()}`);
+    renderTerminal();
+  });
+
+  testBtn.addEventListener('click', async () => {
+    testBtn.disabled = true;
+    testBtn.textContent = 'Testing...';
+    try {
+      const r = await fetch(apiUrl('/api/health'));
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const h = await r.json();
+      const evtMb = ((h?.counts?.eventsBytes || 0) / (1024 * 1024)).toFixed(2);
+      const chatMb = ((h?.counts?.chatBytes || 0) / (1024 * 1024)).toFixed(2);
+      terminalLines.push({ type: 'success', text: `[Config] Backend reachable: ${describeBackend()}` });
+      terminalLines.push({ type: 'output', text: `[Config] Storage events=${evtMb}MB chat=${chatMb}MB` });
+      announce('Backend connection successful');
+      renderTerminal();
+    } catch (err) {
+      terminalLines.push({ type: 'error', text: `[Config] Backend test failed: ${err.message}` });
+      announce('Backend connection failed');
+      renderTerminal();
+    } finally {
+      testBtn.disabled = false;
+      testBtn.textContent = 'Test';
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    API_BASE = '';
+    localStorage.removeItem('apeclaw_api_base');
+    input.value = '';
+    renderBackendStatus();
+    terminalLines.push({ type: 'accent', text: '[Config] Backend reset to local same-origin — reload to reconnect streams' });
+    announce('Backend reset to local');
+    renderTerminal();
+  });
+}
+
+function initSetupEnhancements() {
+  document.querySelectorAll('.setup-step').forEach((step, idx) => {
+    const title = step.querySelector('h3');
+    if (title && !step.querySelector('.setup-check')) {
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'setup-check';
+      cb.style.marginRight = '6px';
+      const key = `apeclaw_setup_step_${idx}`;
+      try { cb.checked = localStorage.getItem(key) === '1'; } catch {}
+      cb.addEventListener('change', () => {
+        try { localStorage.setItem(key, cb.checked ? '1' : '0'); } catch {}
+        announce(`Setup step ${idx + 1} ${cb.checked ? 'completed' : 'unchecked'}`);
+      });
+      title.prepend(cb);
+    }
+  });
+
+  document.querySelectorAll('.setup-step pre').forEach((pre) => {
+    if (pre.nextElementSibling && pre.nextElementSibling.classList?.contains('copy-code-btn')) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy-code-btn';
+    btn.textContent = 'Copy command';
+    btn.addEventListener('click', async () => {
+      const txt = pre.textContent || '';
+      try {
+        await navigator.clipboard.writeText(txt);
+        btn.textContent = 'Copied';
+        announce('Command copied');
+        setTimeout(() => { btn.textContent = 'Copy command'; }, 1200);
+      } catch {
+        btn.textContent = 'Copy failed';
+        setTimeout(() => { btn.textContent = 'Copy command'; }, 1200);
+      }
+    });
+    pre.insertAdjacentElement('afterend', btn);
+  });
+}
+
+function initCollectionControls() {
+  const search = document.getElementById('collectionsSearch');
+  const sort = document.getElementById('collectionsSort');
+  const onlyCA = document.getElementById('collectionsOnlyCA');
+  const onlyEnabled = document.getElementById('collectionsOnlyEnabled');
+  if (!search || !sort || !onlyCA || !onlyEnabled) return;
+  search.addEventListener('input', () => { collectionQuery = search.value.toLowerCase().trim(); renderCollectionsBar(); });
+  sort.addEventListener('change', () => { collectionSort = sort.value; renderCollectionsBar(); });
+  onlyCA.addEventListener('change', () => { collectionsOnlyCA = onlyCA.checked; renderCollectionsBar(); });
+  onlyEnabled.addEventListener('change', () => { collectionsOnlyEnabled = onlyEnabled.checked; renderCollectionsBar(); });
+}
+
+function initPanelControls() {
+  const feedPauseBtn = document.getElementById('feedPauseBtn');
+  const feedClearBtn = document.getElementById('feedClearBtn');
+  const feedExportBtn = document.getElementById('feedExportBtn');
+  const terminalClearBtn = document.getElementById('terminalClearBtn');
+  const terminalExportBtn = document.getElementById('terminalExportBtn');
+  const terminalAutoBtn = document.getElementById('terminalAutoBtn');
+  const chatReconnectBtn = document.getElementById('chatReconnectBtn');
+  const chatExportBtn = document.getElementById('chatExportBtn');
+
+  if (feedPauseBtn) feedPauseBtn.addEventListener('click', () => {
+    feedPaused = !feedPaused;
+    feedPauseBtn.textContent = feedPaused ? 'Resume' : 'Pause';
+    if (!feedPaused) renderFeed();
+  });
+  if (feedClearBtn) feedClearBtn.addEventListener('click', () => { feedItems = []; feedRawEvents = []; renderFeed(); });
+  if (feedExportBtn) feedExportBtn.addEventListener('click', () => {
+    downloadBlob(`apeclaw-feed-${Date.now()}.json`, JSON.stringify(feedRawEvents.slice(-1000), null, 2), 'application/json');
+  });
+  if (terminalClearBtn) terminalClearBtn.addEventListener('click', () => { terminalLines = []; renderTerminal(); });
+  if (terminalExportBtn) terminalExportBtn.addEventListener('click', () => {
+    const text = terminalLines.map((l) => l.text).join('\n');
+    downloadBlob(`apeclaw-terminal-${Date.now()}.log`, text);
+  });
+  if (terminalAutoBtn) terminalAutoBtn.addEventListener('click', () => {
+    terminalAutoScroll = !terminalAutoScroll;
+    terminalAutoBtn.textContent = `Auto-scroll: ${terminalAutoScroll ? 'On' : 'Off'}`;
+  });
+  if (chatReconnectBtn) chatReconnectBtn.addEventListener('click', () => connectChatStream());
+  if (chatExportBtn) chatExportBtn.addEventListener('click', () => {
+    downloadBlob(`apeclaw-chat-${Date.now()}.json`, JSON.stringify(chatMessages, null, 2), 'application/json');
+  });
+}
+
+function initShortcutsPopover() {
+  const btn = document.getElementById('shortcutsBtn');
+  const panel = document.getElementById('shortcutsPanel');
+  if (!btn || !panel) return;
+  const close = () => panel.classList.remove('open');
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    panel.classList.toggle('open');
+  });
+  panel.addEventListener('click', (e) => e.stopPropagation());
+  document.addEventListener('click', close);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') close();
+  });
+}
+
+function initCommandDeck() {
+  const sel = document.getElementById('themePresetSel');
+  const resetBtn = document.getElementById('themeResetBtn');
+  const denseBtn = document.getElementById('toggleDenseBtn');
+  const focusBtn = document.getElementById('toggleFocusBtn');
+  const motionBtn = document.getElementById('toggleMotionBtn');
+  const roomBtn = document.getElementById('deckRoomCreateBtn');
+  const toastBtn = document.getElementById('deckToastBtn');
+  const snapBtn = document.getElementById('deckSnapshotBtn');
+  if (sel) {
+    sel.value = uiPrefs.theme;
+    sel.addEventListener('change', () => {
+      uiPrefs.theme = sel.value || 'abyss';
+      applyUiPrefs(); saveUiPrefs();
+      pushToast(`Theme switched to ${uiPrefs.theme}`, 'success');
+    });
+  }
+  if (resetBtn) resetBtn.addEventListener('click', () => {
+    uiPrefs.theme = 'abyss'; uiPrefs.dense = false; uiPrefs.focus = false; uiPrefs.motionLow = false;
+    if (sel) sel.value = 'abyss';
+    applyUiPrefs(); saveUiPrefs();
+    pushToast('UI preferences reset', 'success');
+  });
+  if (denseBtn) denseBtn.addEventListener('click', () => {
+    uiPrefs.dense = !uiPrefs.dense; applyUiPrefs(); saveUiPrefs();
+    pushToast(`Dense mode ${uiPrefs.dense ? 'enabled' : 'disabled'}`, 'success');
+  });
+  if (focusBtn) focusBtn.addEventListener('click', () => {
+    uiPrefs.focus = !uiPrefs.focus; applyUiPrefs(); saveUiPrefs();
+    pushToast(`Focus mode ${uiPrefs.focus ? 'enabled' : 'disabled'}`, 'success');
+  });
+  if (motionBtn) motionBtn.addEventListener('click', () => {
+    uiPrefs.motionLow = !uiPrefs.motionLow; applyUiPrefs(); saveUiPrefs();
+    pushToast(`Low motion ${uiPrefs.motionLow ? 'enabled' : 'disabled'}`, 'success');
+  });
+  if (roomBtn) roomBtn.addEventListener('click', () => {
+    const raw = prompt('Create/switch room name', 'alpha-lounge');
+    if (!raw) return;
+    selectChatRoom(raw);
+    pushToast(`Switched to room /${normalizeRoomName(raw)}`, 'success');
+  });
+  if (toastBtn) toastBtn.addEventListener('click', () => {
+    pushToast('Command Deck online • systems responsive', 'success');
+  });
+  if (snapBtn) snapBtn.addEventListener('click', () => {
+    const snapshot = {
+      ts: new Date().toISOString(),
+      backend: describeBackend(),
+      mode: { ...uiPrefs },
+      totals: { events: totalEvents, nfts: totalNfts, bridged: totalBridged, spent: totalSpent },
+      rooms: chatRooms,
+    };
+    downloadBlob(`apeclaw-snapshot-${Date.now()}.json`, JSON.stringify(snapshot, null, 2), 'application/json');
+    pushToast('Snapshot exported', 'success');
+  });
+  document.querySelectorAll('.jump-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = document.querySelector(btn.getAttribute('data-jump'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+}
+
+async function refreshHealthChips() {
+  const latencyChip = document.getElementById('healthLatencyChip');
+  const storageChip = document.getElementById('healthStorageChip');
+  const roomsChip = document.getElementById('healthRoomsChip');
+  const start = performance.now();
+  try {
+    const [healthR, roomsR] = await Promise.all([
+      fetch(apiUrl('/api/health')),
+      fetch(apiUrl('/api/chat/rooms?limit=100')),
+    ]);
+    const latency = Math.max(1, Math.round(performance.now() - start));
+    if (latencyChip) latencyChip.textContent = `Latency: ${latency}ms`;
+    if (healthR.ok) {
+      const h = await healthR.json();
+      const evtKb = Math.round((h?.counts?.eventsBytes || 0) / 1024);
+      const chatKb = Math.round((h?.counts?.chatBytes || 0) / 1024);
+      if (storageChip) storageChip.textContent = `State: ${evtKb}KB/${chatKb}KB`;
+    } else if (storageChip) storageChip.textContent = 'State: unavailable';
+    if (roomsR.ok) {
+      const r = await roomsR.json();
+      if (roomsChip) roomsChip.textContent = `Rooms: ${Number(r.count || 0)}`;
+    } else if (roomsChip) roomsChip.textContent = 'Rooms: --';
+  } catch {
+    if (latencyChip) latencyChip.textContent = 'Latency: offline';
+    if (storageChip) storageChip.textContent = 'State: offline';
+    if (roomsChip) roomsChip.textContent = 'Rooms: offline';
+  }
+}
+
 // ═══════════════════════════════════════════════════════════
 //  RENDER
 // ═══════════════════════════════════════════════════════════
 function renderCollectionsBar() {
   const el = document.getElementById('collectionsBar');
   const status = document.getElementById('collectionsStatus');
-  if (COLLECTIONS.length === 0) {
-    el.innerHTML = '<div style="color:var(--dim);font-size:.72rem;padding:8px">Loading collections...</div>';
-    if (status) status.textContent = '0 loaded';
+  let visible = [...COLLECTIONS];
+  if (collectionQuery) {
+    visible = visible.filter((c) => `${c.name||''} ${c.slug||''} ${c.contractAddress||''}`.toLowerCase().includes(collectionQuery));
+  }
+  if (collectionsOnlyCA) visible = visible.filter((c) => Boolean(c.contractAddress));
+  if (collectionsOnlyEnabled) visible = visible.filter((c) => c.enabled !== false);
+  if (collectionSort === 'name') visible.sort((a, b) => String(a.name||'').localeCompare(String(b.name||'')));
+  else visible.sort((a, b) => Number(a.rank||999999) - Number(b.rank||999999));
+
+  if (visible.length === 0) {
+    const msg = COLLECTIONS.length === 0 ? 'Loading collections...' : 'No collections match current filters.';
+    el.innerHTML = `<div style="color:var(--dim);font-size:.72rem;padding:8px">${msg}</div>`;
+    if (status) status.textContent = COLLECTIONS.length === 0 ? '0 loaded' : 'No matches';
     return;
   }
-  el.innerHTML = COLLECTIONS.map(c =>
+  el.innerHTML = visible.map(c =>
     `<div class="col-chip" title="${c.contractAddress ? shortAddr(c.contractAddress) : 'no CA'}">
       ${collectionVisual(c,'chip')}
       <div>
@@ -1004,6 +1912,7 @@ function renderCollectionsBar() {
       <div class="col-chip-vol">${c.contractAddress ? '✓ CA' : '⚠ No CA'}</div>
     </div>`
   ).join('');
+  if (status) status.textContent = `${visible.length}/${COLLECTIONS.length} shown`;
   updateCollectionsStatus();
   startCollectionsCarousel();
 }
@@ -1020,17 +1929,17 @@ function updateCollectionsStatus() {
   const el = document.getElementById('collectionsBar');
   const status = document.getElementById('collectionsStatus');
   if (!el || !status) return;
-  const total = COLLECTIONS.length;
+  const total = el.querySelectorAll('.col-chip').length;
   if (total === 0) {
-    status.textContent = '0 loaded';
+    status.textContent = COLLECTIONS.length === 0 ? '0 loaded' : 'No matches';
     return;
   }
   if (el.scrollWidth <= el.clientWidth + 4) {
-    status.textContent = `${total} loaded`;
+    status.textContent = `${total}/${COLLECTIONS.length} shown`;
     return;
   }
   const progress = Math.min(100, Math.max(0, Math.round((el.scrollLeft / (el.scrollWidth - el.clientWidth)) * 100)));
-  status.textContent = `${total} loaded • ${progress}% viewed`;
+  status.textContent = `${total}/${COLLECTIONS.length} shown • ${progress}% viewed`;
 }
 
 function startCollectionsCarousel() {
@@ -1152,14 +2061,17 @@ function renderBridge() {
 
 function renderFeed() {
   const el = document.getElementById('activityFeed');
+  const pausedBanner = feedPaused
+    ? `<div style="font-size:.66rem;color:var(--gold);margin-bottom:8px">Feed paused — live events continue in background.</div>`
+    : '';
   if (feedItems.length === 0) {
-    el.innerHTML = `<div style="color:var(--dim);font-size:.78rem;text-align:center;padding:24px">
+    el.innerHTML = `${pausedBanner}<div style="color:var(--dim);font-size:.78rem;text-align:center;padding:24px">
       <div style="font-size:2rem;margin-bottom:6px">📡</div>
       Listening for events&hellip;<br>Run any <code>ape-claw</code> command to see live activity.
     </div>`;
     return;
   }
-  el.innerHTML = feedItems.slice(-50).reverse().map(f => f.html).join('');
+  el.innerHTML = pausedBanner + feedItems.slice(-50).reverse().map(f => f.html).join('');
 }
 
 function renderTerminal() {
@@ -1175,7 +2087,7 @@ function renderTerminal() {
     if (l.type==='error') return `<div class="t-error">${l.text}</div>`;
     return `<div class="t-output">${l.text}</div>`;
   }).join('');
-  el.scrollTop = el.scrollHeight;
+  if (terminalAutoScroll) el.scrollTop = el.scrollHeight;
 }
 
 function updateStats() {
@@ -1368,12 +2280,13 @@ let sseConnected = false;
 async function connectLiveTelemetry() {
   // 1) Fetch backlog
   try {
-    const r = await fetch('/events/backlog');
+    const r = await fetch(apiUrl('/events/backlog'));
     if (r.ok) {
       const data = await r.json();
       (data.events||[]).forEach(evt => {
         const html = processEvent(evt);
         feedItems.push({ html });
+        feedRawEvents.push(evt);
       });
       renderFeed(); renderAgents(); updateStats();
     }
@@ -1381,11 +2294,11 @@ async function connectLiveTelemetry() {
 
   // 2) SSE stream
   try {
-    const es = new EventSource('/events');
+    const es = new EventSource(apiUrl('/events'));
     es.onopen = () => {
       sseConnected = true;
       setConnectionStatus(true);
-      terminalLines.push({ type:'success', text:'[SSE] Connected to telemetry stream' });
+      terminalLines.push({ type:'success', text:`[SSE] Connected to telemetry stream (${describeBackend()})` });
       renderTerminal();
     };
     es.onmessage = (msg) => {
@@ -1393,8 +2306,11 @@ async function connectLiveTelemetry() {
         const evt = JSON.parse(msg.data);
         const html = processEvent(evt);
         feedItems.push({ html });
+        feedRawEvents.push(evt);
         if (feedItems.length > 100) feedItems.shift();
-        renderFeed(); renderAgents(); updateStats();
+        if (feedRawEvents.length > 1000) feedRawEvents.shift();
+        if (!feedPaused) renderFeed();
+        renderAgents(); updateStats();
 
         // Mirror to terminal
         const termType = evt.ok === false ? 'error' : (
@@ -1436,66 +2352,256 @@ setInterval(() => {
 // ═══════════════════════════════════════════════════════════
 let chatMessages = [];
 let chatSseSource = null;
-let chatCredentials = { agentId: '', agentToken: '' };
+let chatCredentials = { room: 'general', agentId: '', agentToken: '', identityToken: '' };
 let chatReconnectTimer = null;
 let chatReconnectAttempts = 0;
+let chatSearchQuery = '';
+let chatRooms = [];
+const chatUnreadByRoom = new Map();
+let chatReplyToId = null;
+const CHAT_REACTION_EMOJIS = ['👍', '🔥', '😂', '🫡', '👀'];
+
+function normalizeRoomName(input) {
+  const raw = String(input || 'general').toLowerCase().trim().replace(/[^a-z0-9_-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  return raw || 'general';
+}
+
+function selectChatRoom(room) {
+  const normalized = normalizeRoomName(room);
+  document.getElementById('chatRoom').value = normalized;
+  updateChatAuthStatus();
+  chatUnreadByRoom.set(normalized, 0);
+  renderChatRooms();
+  loadChatHistory();
+  connectChatStream();
+}
+
+function renderChatRooms() {
+  const el = document.getElementById('chatRooms');
+  if (!el) return;
+  const current = normalizeRoomName(chatCredentials.room || 'general');
+  const combined = new Map();
+  for (const r of chatRooms) combined.set(normalizeRoomName(r.room), r);
+  combined.set(current, combined.get(current) || { room: current, count: 0, participants: 0 });
+  const ordered = [...combined.values()].sort((a, b) => String(b.lastTs || '').localeCompare(String(a.lastTs || '')));
+  el.innerHTML = ordered.map((r) => {
+    const room = normalizeRoomName(r.room);
+    const unread = Number(chatUnreadByRoom.get(room) || 0);
+    return `<button type="button" class="chat-room-chip${room===current?' active':''}" data-room="${escapeAttr(room)}">
+      <span>/${escapeHtml(room)}</span>
+      ${unread > 0 ? `<span class="room-unread">${unread}</span>` : ''}
+    </button>`;
+  }).join('');
+  el.querySelectorAll('.chat-room-chip').forEach((btn) => {
+    btn.addEventListener('click', () => selectChatRoom(btn.dataset.room || 'general'));
+  });
+}
+
+async function loadChatRooms() {
+  try {
+    const r = await fetch(apiUrl('/api/chat/rooms?limit=60'));
+    if (r.ok) {
+      const data = await r.json();
+      chatRooms = Array.isArray(data.rooms) ? data.rooms : [];
+      renderChatRooms();
+    }
+  } catch {}
+}
 
 function chatMsgTime(ts) {
   const d = new Date(ts);
   return [d.getHours(), d.getMinutes()].map(v => String(v).padStart(2, '0')).join(':');
 }
 
+function formatChatText(text) {
+  const safe = escapeHtml(String(text || ''));
+  return safe.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+}
+
+function chatDraftKey(room) {
+  return `apeclaw_chat_draft_${normalizeRoomName(room || 'general')}`;
+}
+
+function applyChatSlash(text) {
+  const t = String(text || '').trim();
+  if (t.startsWith('/shrug ')) return `${t.slice(7)} ¯\\_(ツ)_/¯`;
+  if (t.startsWith('/tableflip ')) return `(╯°□°)╯︵ ┻━┻ ${t.slice(11)}`;
+  if (t.startsWith('/me ')) return `* ${chatCredentials.agentId || 'agent'} ${t.slice(4)}`;
+  return t;
+}
+
+function findChatMessageById(id) {
+  return chatMessages.find((m) => String(m.id) === String(id)) || null;
+}
+
+function setChatReplyTarget(messageId) {
+  chatReplyToId = messageId ? String(messageId) : null;
+  const bar = document.getElementById('chatReplyingBar');
+  const target = document.getElementById('chatReplyingTarget');
+  if (!bar || !target) return;
+  if (!chatReplyToId) {
+    bar.classList.remove('active');
+    target.textContent = 'message';
+    return;
+  }
+  const msg = findChatMessageById(chatReplyToId);
+  const label = msg ? `${msg.agentName || msg.agentId}: ${String(msg.text || '').slice(0, 40)}` : `#${chatReplyToId.slice(-6)}`;
+  target.textContent = label;
+  bar.classList.add('active');
+}
+
+function applyReactionEventToMessages(evt) {
+  const msg = findChatMessageById(evt.messageId);
+  if (!msg) return;
+  if (!msg.reactions || typeof msg.reactions !== 'object') msg.reactions = {};
+  if (!msg.reactionUsers || typeof msg.reactionUsers !== 'object') msg.reactionUsers = {};
+  const emoji = String(evt.emoji || '').trim();
+  const actor = String(evt.agentId || '').trim();
+  if (!emoji || !actor) return;
+  const users = new Set(msg.reactionUsers[emoji] || []);
+  if (users.has(actor)) users.delete(actor);
+  else users.add(actor);
+  msg.reactionUsers[emoji] = [...users];
+  msg.reactions[emoji] = msg.reactionUsers[emoji].length;
+}
+
+async function sendChatReaction(messageId, emoji) {
+  const hasClawbotCreds = Boolean(chatCredentials.agentId && chatCredentials.agentToken);
+  const hasIdentityToken = Boolean(chatCredentials.identityToken);
+  if (!messageId || !emoji || (!hasClawbotCreds && !hasIdentityToken)) return;
+  try {
+    const r = await fetch(apiUrl('/api/chat/react'), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        room: chatCredentials.room,
+        messageId,
+        emoji,
+        agentId: chatCredentials.agentId,
+        agentToken: chatCredentials.agentToken,
+        identityToken: chatCredentials.identityToken,
+      }),
+    });
+    if (!r.ok) {
+      const data = await r.json().catch(() => ({}));
+      pushToast(`Reaction failed: ${data.error || 'unknown error'}`, 'error', 2800);
+    }
+  } catch (err) {
+    pushToast(`Reaction network error: ${err.message}`, 'error', 2800);
+  }
+}
+
 function renderChatMessages() {
   const el = document.getElementById('chatMessages');
   const badge = document.getElementById('chatCountBadge');
-  badge.textContent = chatMessages.length;
+  const filtered = chatSearchQuery
+    ? chatMessages.filter(m => `${m.agentName||m.agentId||''} ${m.text||''}`.toLowerCase().includes(chatSearchQuery))
+    : chatMessages;
+  badge.textContent = filtered.length;
 
-  if (chatMessages.length === 0) {
+  if (filtered.length === 0) {
     el.innerHTML = `<div class="chat-empty">
       <div class="chat-empty-icon">💬</div>
-      <div>No messages yet.</div>
-      <div style="font-size:.68rem;margin-top:6px">Registered Clawllectors can discuss their collections here in real time.</div>
+      <div>${chatSearchQuery ? 'No messages match your search.' : 'No messages yet.'}</div>
+      <div style="font-size:.68rem;margin-top:6px">${chatSearchQuery ? 'Try a different search term.' : 'Registered Clawllectors can discuss their collections here in real time.'}</div>
     </div>`;
     return;
   }
 
-  el.innerHTML = chatMessages.map(m => {
+  const byId = new Map(chatMessages.map((m) => [m.id, m]));
+  el.innerHTML = filtered.map(m => {
     const isSelf = m.agentId === chatCredentials.agentId;
+    const room = normalizeRoomName(m.room || 'general');
+    const parent = m.replyTo ? byId.get(m.replyTo) : null;
+    const parentPreview = parent ? `${parent.agentName || parent.agentId}: ${String(parent.text || '').slice(0, 80)}` : `Reply to ${m.replyTo || 'message'}`;
+    const reactions = m.reactions && typeof m.reactions === 'object' ? m.reactions : {};
+    const reactionUsers = m.reactionUsers && typeof m.reactionUsers === 'object' ? m.reactionUsers : {};
     return `<div class="chat-msg${isSelf ? ' self' : ''}">
       <div class="chat-msg-avatar">🦞</div>
       <div class="chat-msg-body">
         <div class="chat-msg-header">
           <span class="chat-msg-name">${escapeHtml(m.agentName || m.agentId)}</span>
           <span class="chat-msg-id">${escapeHtml(m.agentId)}</span>
+          <span class="chat-msg-id">/${escapeHtml(room)}</span>
           <span class="chat-msg-time">${chatMsgTime(m.ts)}</span>
         </div>
-        <div class="chat-msg-text">${escapeHtml(m.text)}</div>
+        ${m.replyTo ? `<div class="chat-msg-reply">${escapeHtml(parentPreview)}</div>` : ''}
+        <div class="chat-msg-text">${formatChatText(m.text)}</div>
+        <div class="chat-msg-actions">
+          <button type="button" class="chat-msg-action-btn" data-reply-id="${escapeAttr(m.id)}">Reply</button>
+          ${CHAT_REACTION_EMOJIS.map((emoji) => {
+            const count = Number(reactions[emoji] || 0);
+            const mine = (reactionUsers[emoji] || []).includes(chatCredentials.agentId);
+            return `<button type="button" class="chat-reaction-chip${mine ? ' active' : ''}" data-react-id="${escapeAttr(m.id)}" data-emoji="${escapeAttr(emoji)}">${emoji} ${count || ''}</button>`;
+          }).join('')}
+        </div>
       </div>
     </div>`;
   }).join('');
+
+  el.querySelectorAll('[data-reply-id]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      setChatReplyTarget(btn.getAttribute('data-reply-id'));
+      document.getElementById('chatInput')?.focus();
+    });
+  });
+  el.querySelectorAll('[data-react-id]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-react-id');
+      const emoji = btn.getAttribute('data-emoji');
+      sendChatReaction(id, emoji);
+    });
+  });
 
   // Auto-scroll to latest
   el.scrollTop = el.scrollHeight;
 }
 
+function updateChatInputState() {
+  const input = document.getElementById('chatInput');
+  const btn = document.getElementById('chatSendBtn');
+  const counter = document.getElementById('chatCounter');
+  if (!input || !btn || !counter) return;
+  const len = (input.value || '').length;
+  counter.textContent = `${len}/500`;
+  const hasAuth = Boolean((chatCredentials.agentId && chatCredentials.agentToken) || chatCredentials.identityToken);
+  const canSend = hasAuth && len > 0 && len <= 500;
+  btn.disabled = !canSend;
+}
+
 function updateChatAuthStatus() {
+  const room = normalizeRoomName(document.getElementById('chatRoom').value.trim() || 'general');
   const id = document.getElementById('chatAgentId').value.trim();
   const token = document.getElementById('chatAgentToken').value.trim();
+  const identityToken = document.getElementById('chatIdentityToken').value.trim();
   const status = document.getElementById('chatAuthStatus');
+  const roomStatus = document.getElementById('chatRoomStatus');
   const input = document.getElementById('chatInput');
   const btn = document.getElementById('chatSendBtn');
 
+  chatCredentials.room = room;
   chatCredentials.agentId = id;
   chatCredentials.agentToken = token;
+  chatCredentials.identityToken = identityToken;
 
   // Persist to localStorage for convenience
   try {
+    localStorage.setItem('apeclaw_chat_room', room);
     localStorage.setItem('apeclaw_chat_agentId', id);
     localStorage.setItem('apeclaw_chat_agentToken', token);
+    localStorage.setItem('apeclaw_chat_identityToken', identityToken);
   } catch {}
+  if (roomStatus) roomStatus.textContent = `Room: ${room}`;
+  renderChatRooms();
 
-  if (id && token) {
-    status.textContent = `Signed in as ${id}`;
+  if (identityToken) {
+    status.textContent = `Moltbook identity ready in /${room}`;
+    status.className = 'chat-auth-status ok';
+    input.disabled = false;
+    input.placeholder = 'Type a message...';
+    btn.disabled = false;
+  } else if (id && token) {
+    status.textContent = `Signed in as ${id} in /${room}`;
     status.className = 'chat-auth-status ok';
     input.disabled = false;
     input.placeholder = 'Type a message...';
@@ -1507,22 +2613,28 @@ function updateChatAuthStatus() {
     input.placeholder = 'Enter your Agent ID and Token to chat';
     btn.disabled = true;
   }
+  updateChatInputState();
   // Re-render to highlight own messages
   renderChatMessages();
 }
 
 function toggleChatTokenVisibility() {
   const tokenInput = document.getElementById('chatAgentToken');
+  const identityInput = document.getElementById('chatIdentityToken');
   const toggleBtn = document.getElementById('chatToggleTokenBtn');
   const revealing = tokenInput.type === 'password';
   tokenInput.type = revealing ? 'text' : 'password';
+  if (identityInput) identityInput.type = revealing ? 'text' : 'password';
   toggleBtn.textContent = revealing ? 'Hide' : 'Show';
 }
 
 function clearChatCredentials() {
+  document.getElementById('chatRoom').value = 'general';
   document.getElementById('chatAgentId').value = '';
   document.getElementById('chatAgentToken').value = '';
+  document.getElementById('chatIdentityToken').value = '';
   document.getElementById('chatAgentToken').type = 'password';
+  document.getElementById('chatIdentityToken').type = 'password';
   document.getElementById('chatToggleTokenBtn').textContent = 'Show';
   updateChatAuthStatus();
 }
@@ -1539,35 +2651,44 @@ function scheduleChatReconnect() {
 
 async function sendChatMessage() {
   const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if (!text || !chatCredentials.agentId || !chatCredentials.agentToken) return;
+  const text = applyChatSlash(input.value);
+  const hasClawbotCreds = Boolean(chatCredentials.agentId && chatCredentials.agentToken);
+  const hasIdentityToken = Boolean(chatCredentials.identityToken);
+  if (!text || (!hasClawbotCreds && !hasIdentityToken)) return;
 
   const btn = document.getElementById('chatSendBtn');
   btn.disabled = true;
   btn.textContent = '...';
 
   try {
-    const r = await fetch('/api/chat', {
+    const r = await fetch(apiUrl('/api/chat'), {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
+        room: chatCredentials.room,
         agentId: chatCredentials.agentId,
         agentToken: chatCredentials.agentToken,
+        identityToken: chatCredentials.identityToken,
         text,
+        replyTo: chatReplyToId || undefined,
       }),
     });
     const data = await r.json();
     if (!r.ok) {
       terminalLines.push({ type: 'error', text: `[Chat] ${data.error || 'send failed'}` });
       renderTerminal();
+      pushToast(`Chat send failed: ${data.error || 'unknown error'}`, 'error', 3400);
     } else {
       input.value = '';
+      setChatReplyTarget(null);
+      try { localStorage.removeItem(chatDraftKey(chatCredentials.room)); } catch {}
     }
   } catch (err) {
     terminalLines.push({ type: 'error', text: `[Chat] Network error: ${err.message}` });
     renderTerminal();
+    pushToast(`Network error: ${err.message}`, 'error', 3400);
   } finally {
-    btn.disabled = false;
+    updateChatInputState();
     btn.textContent = 'Send';
     input.focus();
   }
@@ -1575,11 +2696,13 @@ async function sendChatMessage() {
 
 async function loadChatHistory() {
   try {
-    const r = await fetch('/api/chat');
+    const r = await fetch(apiUrl(`/api/chat?room=${encodeURIComponent(chatCredentials.room || 'general')}&limit=200`));
     if (r.ok) {
       const data = await r.json();
       chatMessages = data.messages || [];
+      chatUnreadByRoom.set(normalizeRoomName(chatCredentials.room || 'general'), 0);
       renderChatMessages();
+      renderChatRooms();
     }
   } catch {}
 }
@@ -1590,13 +2713,20 @@ function connectChatStream() {
       chatSseSource.close();
       chatSseSource = null;
     }
-    chatSseSource = new EventSource('/api/chat/stream');
+    chatSseSource = new EventSource(apiUrl(`/api/chat/stream?room=${encodeURIComponent(chatCredentials.room || 'general')}`));
     chatSseSource.onopen = () => {
       chatReconnectAttempts = 0;
     };
     chatSseSource.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
+        const msgRoom = normalizeRoomName(msg.room || 'general');
+        const current = normalizeRoomName(chatCredentials.room || 'general');
+        if (msgRoom !== current) {
+          chatUnreadByRoom.set(msgRoom, Number(chatUnreadByRoom.get(msgRoom) || 0) + 1);
+          renderChatRooms();
+          return;
+        }
         // Deduplicate
         if (chatMessages.find(m => m.id === msg.id)) return;
         chatMessages.push(msg);
@@ -1617,15 +2747,41 @@ function connectChatStream() {
 function initChat() {
   // Restore saved credentials from localStorage
   try {
+    const savedRoom = localStorage.getItem('apeclaw_chat_room') || 'general';
     const savedId = localStorage.getItem('apeclaw_chat_agentId') || '';
     const savedToken = localStorage.getItem('apeclaw_chat_agentToken') || '';
+    const savedIdentity = localStorage.getItem('apeclaw_chat_identityToken') || '';
+    if (savedRoom) document.getElementById('chatRoom').value = savedRoom;
     if (savedId) document.getElementById('chatAgentId').value = savedId;
     if (savedToken) document.getElementById('chatAgentToken').value = savedToken;
+    if (savedIdentity) document.getElementById('chatIdentityToken').value = savedIdentity;
   } catch {}
 
   // Auth field listeners
+  document.getElementById('chatRoom').addEventListener('change', () => {
+    updateChatAuthStatus();
+    chatUnreadByRoom.set(normalizeRoomName(document.getElementById('chatRoom').value), 0);
+    renderChatRooms();
+    loadChatHistory();
+    connectChatStream();
+    const draft = localStorage.getItem(chatDraftKey(chatCredentials.room)) || '';
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) chatInput.value = draft;
+    updateChatInputState();
+  });
+  document.getElementById('chatRoom').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.currentTarget.blur(); // triggers change flow for room switch
+    }
+  });
   document.getElementById('chatAgentId').addEventListener('input', updateChatAuthStatus);
+  document.getElementById('chatSearch').addEventListener('input', (e) => {
+    chatSearchQuery = String(e.target.value || '').toLowerCase().trim();
+    renderChatMessages();
+  });
   document.getElementById('chatAgentToken').addEventListener('input', updateChatAuthStatus);
+  document.getElementById('chatIdentityToken').addEventListener('input', updateChatAuthStatus);
   document.getElementById('chatToggleTokenBtn').addEventListener('click', toggleChatTokenVisibility);
   document.getElementById('chatClearAuthBtn').addEventListener('click', clearChatCredentials);
 
@@ -1633,6 +2789,10 @@ function initChat() {
   document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
 
   // Send on Enter key
+  document.getElementById('chatInput').addEventListener('input', () => {
+    updateChatInputState();
+    try { localStorage.setItem(chatDraftKey(chatCredentials.room), document.getElementById('chatInput').value || ''); } catch {}
+  });
   document.getElementById('chatInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -1642,22 +2802,72 @@ function initChat() {
 
   // Set initial auth state
   updateChatAuthStatus();
+  updateChatInputState();
+  try {
+    const draft = localStorage.getItem(chatDraftKey(chatCredentials.room)) || '';
+    document.getElementById('chatInput').value = draft;
+  } catch {}
 
   // Load history and connect stream
+  loadChatRooms();
   loadChatHistory();
   connectChatStream();
+  setInterval(loadChatRooms, 15000);
 }
 
 // ═══════════════════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════════════════
 async function boot() {
+  loadUiPrefs();
+  applyUiPrefs();
+  initApiBase();
+  initBackendConfigUi();
+  initSetupEnhancements();
+  initCollectionControls();
+  initPanelControls();
+  initShortcutsPopover();
+  initCommandDeck();
+  initUpgradeChecklist();
+
+  window.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      document.getElementById('collectionsSearch')?.focus();
+    }
+    if ((e.metaKey || e.ctrlKey) && e.key === '/') {
+      e.preventDefault();
+      document.getElementById('chatInput')?.focus();
+    }
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'f') {
+      e.preventDefault();
+      uiPrefs.focus = !uiPrefs.focus;
+      applyUiPrefs(); saveUiPrefs();
+      pushToast(`Focus mode ${uiPrefs.focus ? 'enabled' : 'disabled'}`, 'success');
+    }
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'd') {
+      e.preventDefault();
+      uiPrefs.dense = !uiPrefs.dense;
+      applyUiPrefs(); saveUiPrefs();
+      pushToast(`Dense mode ${uiPrefs.dense ? 'enabled' : 'disabled'}`, 'success');
+    }
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'm') {
+      e.preventDefault();
+      uiPrefs.motionLow = !uiPrefs.motionLow;
+      applyUiPrefs(); saveUiPrefs();
+      pushToast(`Low motion ${uiPrefs.motionLow ? 'enabled' : 'disabled'}`, 'success');
+    }
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'u') {
+      e.preventDefault();
+      document.getElementById('upgradeSearch')?.focus();
+    }
+  });
+
   // Resolve allowlist from API first, then static file for Vercel/static hosting.
   async function fetchAllowlistWithFallback() {
-    const sources = [
-      '/api/allowlist',
-      '/allowlists/recommended.apechain.json',
-    ];
+    const sources = API_BASE
+      ? [apiUrl('/api/allowlist')]
+      : ['/api/allowlist', '/allowlists/recommended.apechain.json'];
     for (const src of sources) {
       try {
         const r = await fetch(src);
@@ -1672,8 +2882,8 @@ async function boot() {
   // Fetch allowlist, policy, clawbots in parallel
   const [alRes, polRes, cbRes] = await Promise.allSettled([
     fetchAllowlistWithFallback(),
-    fetch('/api/policy').then(r => r.ok ? r.json() : null),
-    fetch('/api/clawbots').then(r => r.ok ? r.json() : null),
+    fetch(apiUrl('/api/policy')).then(r => r.ok ? r.json() : null),
+    fetch(apiUrl('/api/clawbots')).then(r => r.ok ? r.json() : null),
   ]);
 
   // Allowlist
@@ -1737,6 +2947,12 @@ async function boot() {
 
   // Initialize chat (after telemetry so SSE is ready)
   initChat();
+  refreshHealthChips();
+  setInterval(refreshHealthChips, 15000);
+  setInterval(() => {
+    const el = document.getElementById('utcClock');
+    if (el) el.textContent = `${new Date().toISOString().slice(11, 19)}Z`;
+  }, 1000);
 }
 
 boot();

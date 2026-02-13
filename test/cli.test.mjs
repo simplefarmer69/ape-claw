@@ -55,6 +55,17 @@ test("doctor command returns json with chainId", () => {
   }
 });
 
+test("quickstart returns personalized onboarding payload", () => {
+  const out = run("node ./src/cli.mjs quickstart --json");
+  const data = JSON.parse(out);
+  assert.equal(data.ok, true);
+  assert.equal(typeof data.message, "string");
+  assert.ok(data.status && typeof data.status === "object");
+  assert.ok(Array.isArray(data.recommendedCommands));
+  assert.ok(Array.isArray(data.nextSteps));
+  assert.ok(data.recommendedCommands.length >= 3);
+});
+
 test("chain info returns json with latestBlock field", async () => {
   const out = run("node ./src/cli.mjs chain info --json");
   const data = JSON.parse(out);

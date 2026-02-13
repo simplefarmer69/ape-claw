@@ -437,6 +437,81 @@ async function main() {
     return print(result, asJson);
   }
 
+  if (group === "quickstart") {
+    const unresolvedCount = allowlist.filter((c) => !c.contractAddress).length;
+    const openseaRequired = String(policy.market.dataSource || "").toLowerCase() === "opensea";
+    const clawbotsConfig = loadClawbotsConfig() || {};
+    const registeredAgent = Boolean(clawbotsConfig?.agents?.[agentId]);
+    const sharedKeyInjected = Boolean(sharedOpenseaKey);
+    const openseaProvided = Boolean(openseaKey);
+    const openseaMissing = openseaRequired && !openseaProvided;
+    const privateKeyMissing = !privateKey;
+    const executeReady = !openseaMissing && !privateKeyMissing;
+    const readOnlyReady = true;
+
+    const runner = "npx --yes github:simplefarmer69/ape-claw";
+    const suggested = [
+      `${runner} doctor --json`,
+      `${runner} clawbot register --agent-id my-bot --name "My Bot" --json`,
+      `${runner} auth set --agent-id my-bot --agent-token claw_... --json`,
+      `${runner} market collections --recommended --json`,
+    ];
+    if (privateKeyMissing) {
+      suggested.push(`${runner} auth set --private-key 0x... --json`);
+    }
+
+    const summary = [];
+    summary.push(readOnlyReady ? "Read-only flows are ready." : "Read-only flows need configuration.");
+    summary.push(
+      executeReady
+        ? "Execute flows are ready."
+        : "Execute flows need missing secrets (private key and/or OpenSea key path).",
+    );
+    if (registeredAgent && !sharedKeyInjected) {
+      summary.push("Registered bot detected: provide agent token to inject shared OpenSea key.");
+    }
+    if (openseaMissing && !registeredAgent) {
+      summary.push("Standalone mode: set OPENSEA_API_KEY or save one with auth set.");
+    }
+
+    const nextSteps = [];
+    if (!registeredAgent) {
+      nextSteps.push('Register a bot first: ape-claw clawbot register --agent-id my-bot --name "My Bot" --json');
+    } else if (!sharedKeyInjected) {
+      nextSteps.push("Save your bot token once: ape-claw auth set --agent-id <id> --agent-token <token> --json");
+    }
+    if (privateKeyMissing) {
+      nextSteps.push("Set private key for execute flows: ape-claw auth set --private-key 0x... --json");
+    }
+    if (!openseaMissing && !privateKeyMissing) {
+      nextSteps.push("Run execute flows now: ape-claw nft buy --quote <quoteId> --execute --autonomous --json");
+    } else {
+      nextSteps.push("Use read-only flows now: ape-claw market collections --recommended --json");
+    }
+
+    const result = {
+      ok: true,
+      message: "Personalized onboarding steps for this machine.",
+      status: {
+        agentId,
+        registered: registeredAgent,
+        verified: Boolean(verifiedBot),
+        sharedKeyInjected,
+        readOnlyReady,
+        executeReady,
+        privateKeyProvided: !privateKeyMissing,
+        openseaApiKeyProvided: openseaProvided,
+        allowlistUnresolvedCount: unresolvedCount,
+      },
+      summary,
+      recommendedCommands: suggested,
+      nextSteps,
+      note: "Use npx commands if global ape-claw is not on PATH yet.",
+    };
+    emit({ eventType: "quickstart.ran", command, dryRun: true, result });
+    return print(result, asJson);
+  }
+
   if (group === "chain" && sub === "info") {
     const chainId = Number(policy.apechainChainId || 33139);
     let latestBlock = null;
@@ -954,6 +1029,7 @@ async function main() {
     error: `Unknown command: ${args._.join(" ")}`,
     commands: {
       doctor: "ape-claw doctor --json",
+      quickstart: "ape-claw quickstart --json",
       "clawbot register": "ape-claw clawbot register --agent-id <id> --name <name> --json",
       "clawbot list": "ape-claw clawbot list --json",
       "auth set": "ape-claw auth set [--agent-id <id>] [--agent-token <token>] [--opensea-api-key <key>] [--private-key <pk>] --json",
