@@ -6,6 +6,10 @@
   <img src="https://img.shields.io/badge/OpenClaw-Skill-ff4d00?style=for-the-badge" alt="OpenClaw Skill"/>
 </p>
 
+<p align="center">
+  <img src="./assets/hero-ai-collects-nfts.png" alt="ApeClaw hero banner: Your AI collects NFTs while you sleep" width="900" />
+</p>
+
 # ape-claw
 
 **Safety-first CLI + [OpenClaw](https://openclaw.ai) skill for ApeChain NFT operations.**
