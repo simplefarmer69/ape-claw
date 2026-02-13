@@ -874,12 +874,22 @@ let REGISTERED_CLAWBOTS = [];
 let collectionsCarouselTimer = null;
 
 const EMOJI_MAP = {
-  ape:'🦍',dog:'🐕',tiger:'🐯',duck:'🦆',frog:'🐸',fox:'🦊',cat:'🐱',egg:'🥚',
+  // ── Specific collection matches (checked first) ──
+  taur:'🐂',gator:'🐊',zard:'🦎',pupp:'🐶',chump:'🐵',
+  sloo:'🦥',boggy:'🐸',deng:'👾',mono:'🐒',undead:'🧟',
+  nekit:'🐱',doru:'🪆',pape:'🦍',jnky:'🗑️',dsnr:'🎨',
+  trench:'🍖',mull:'💈',box:'📦',bush:'🐒',
+  // ── Generic animal / theme matches ───────────────
+  tiger:'🐯',dog:'🐕',duck:'🦆',frog:'🐸',fox:'🦊',cat:'🐱',egg:'🥚',
   punk:'💀',zombie:'🧟',gob:'👹',dragon:'🐉',robot:'🤖',bear:'🐻',monkey:'🐒',
   skull:'💀',owl:'🦉',bat:'🦇',bull:'🐂',otter:'🦦',lobster:'🦞',star:'⭐',
   kid:'👶',baby:'👶',doll:'🪆',bird:'🐦',cube:'🧊',dice:'🎲',sword:'⚔️',
+  stk:'🎭',
   pixel:'🟩',pix:'🟩',glyph:'✨',night:'🌙',frost:'❄️',fire:'🔥',ice:'🧊',
-  balloon:'🎈',clown:'🤡',sock:'🧦',rilla:'🦍',default:'🖼️',
+  balloon:'🎈',clown:'🤡',sock:'🧦',rilla:'🦍',
+  // ── "ape" last so it doesn't override tiger/trench/etc. via "on Ape" suffix ──
+  ape:'🦍',
+  default:'🖼️',
 };
 function emojiFor(name) {
   const n = name.toLowerCase();
@@ -984,7 +994,6 @@ function renderCollectionsBar() {
       ${collectionVisual(c,'chip')}
       <div>
         <div class="col-chip-name">${escapeHtml(c.name)}</div>
-        <div class="col-chip-floor">#${c.rank||'?'}</div>
       </div>
       <div class="col-chip-vol">${c.contractAddress ? '✓ CA' : '⚠ No CA'}</div>
     </div>`
