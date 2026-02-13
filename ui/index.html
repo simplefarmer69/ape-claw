@@ -1326,7 +1326,12 @@ function processEvent(evt) {
     const stats = result.allowlistStats || {};
     const ok = result.ok !== false ? '✓' : '✗';
     const verifiedNote = result.agent?.verified ? ' (verified)' : '';
-    return feedItem(t,'🩺',`<strong>${escapeHtml(agentDisplayName(rawId))}</strong> doctor ${ok}${verifiedNote} &mdash; ${stats.total||'?'} collections, ${stats.unresolvedCount||0} unresolved`);
+    const executeReady = result.execution?.executeReady;
+    const execState = executeReady ? 'execute ready' : 'read-only ready';
+    const pkHint = !executeReady && !result.execution?.privateKeyProvided
+      ? ' &middot; set APE_CLAW_PRIVATE_KEY or run <code>ape-claw auth set --private-key 0x... --json</code>'
+      : '';
+    return feedItem(t,'🩺',`<strong>${escapeHtml(agentDisplayName(rawId))}</strong> doctor ${ok}${verifiedNote} &mdash; ${stats.total||'?'} collections, ${stats.unresolvedCount||0} unresolved &middot; ${escapeHtml(execState)}${pkHint}`);
   }
   // ── Allowlist audit
   if (et === 'allowlist.audit.ran') {

@@ -111,5 +111,9 @@ if [ "${CLI_READY}" = true ]; then
 else
   echo "  3) Optional: add npm global bin to PATH, then run ape-claw doctor --json"
 fi
+echo "  4) If execute is blocked by missing private key:"
+echo "     - export APE_CLAW_PRIVATE_KEY=0x..."
+echo "     - or ape-claw auth set --private-key 0x... --json"
+echo "     - or map your OpenClaw bot wallet secret to APE_CLAW_PRIVATE_KEY"
 echo
 echo "Best opportunity for your OpenClaw bots to establish onchain identity and start collecting."

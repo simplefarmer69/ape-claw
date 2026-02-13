@@ -345,7 +345,10 @@ async function main() {
   // Use shared key for verified bots, else fall back to env
   const openseaKey = process.env.OPENSEA_API_KEY || sharedOpenseaKey || storedAuth.openseaApiKey || "";
   const relayApiKey = process.env.RELAY_API_KEY || "";
-  const privateKey = process.env.APE_CLAW_PRIVATE_KEY || storedAuth.privateKey || "";
+  const privateKeyFromEnv = String(process.env.APE_CLAW_PRIVATE_KEY || "").trim();
+  const privateKeyFromProfile = String(storedAuth.privateKey || "").trim();
+  const privateKey = privateKeyFromEnv || privateKeyFromProfile || "";
+  const privateKeySource = privateKeyFromEnv ? "env" : (privateKeyFromProfile ? "local-auth" : "missing");
   const slugOverrides = readJson(OPENSEA_OVERRIDES_PATH, {}) || {};
 
   if (group === "doctor") {
@@ -416,6 +419,7 @@ async function main() {
       },
       execution: {
         privateKeyProvided: !privateKeyMissing,
+        privateKeySource,
         readOnlyReady,
         executeReady,
         dailySpendCap: policy.execution.dailySpendCap,
@@ -690,7 +694,11 @@ async function main() {
       fail("OPENSEA_API_KEY is required for live nft execute (fulfillment data).", command, { quoteId });
     }
     if (!privateKey) {
-      fail("APE_CLAW_PRIVATE_KEY is required for live nft execute.", command, { quoteId });
+      fail(
+        "APE_CLAW_PRIVATE_KEY is required for live nft execute. Set env var, save once with `ape-claw auth set --private-key 0x... --json`, or map your OpenClaw bot wallet secret to APE_CLAW_PRIVATE_KEY.",
+        command,
+        { quoteId },
+      );
     }
 
     const chainId = Number(quote.chainId || policy.apechainChainId || 33139);
@@ -855,7 +863,11 @@ async function main() {
       }
     }
     if (!privateKey) {
-      fail("APE_CLAW_PRIVATE_KEY is required for live bridge execute.", command, { requestId });
+      fail(
+        "APE_CLAW_PRIVATE_KEY is required for live bridge execute. Set env var, save once with `ape-claw auth set --private-key 0x... --json`, or map your OpenClaw bot wallet secret to APE_CLAW_PRIVATE_KEY.",
+        command,
+        { requestId },
+      );
     }
     const today = isoDay();
     const quotes = loadState(QUOTES_PATH);
