@@ -4,8 +4,6 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/favicon-lobster.png", "destination": "/ui/favicon-lobster.png" },
-    { "source": "/", "destination": "/ui/index.html" },
-    { "source": "/ui", "destination": "/ui/index.html" },
-    { "source": "/ui/:path*", "destination": "/ui/:path*" }
+    { "source": "/ui", "destination": "/ui/index.html" }
   ]
 }
