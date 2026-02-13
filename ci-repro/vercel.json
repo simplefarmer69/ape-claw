@@ -1,9 +1,0 @@
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "rewrites": [
-    { "source": "/favicon-lobster.png", "destination": "/ui/favicon-lobster.png" },
-    { "source": "/ui", "destination": "/ui/index.html" }
-  ]
-}

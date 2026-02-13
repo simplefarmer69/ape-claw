@@ -5,6 +5,17 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+function ensureTestConfig() {
+  const policyPath = path.join(process.cwd(), "config", "policy.json");
+  const policyExamplePath = path.join(process.cwd(), "config", "policy.example.json");
+  if (!fs.existsSync(policyPath) && fs.existsSync(policyExamplePath)) {
+    fs.mkdirSync(path.dirname(policyPath), { recursive: true });
+    fs.copyFileSync(policyExamplePath, policyPath);
+  }
+}
+
+ensureTestConfig();
+
 function run(cmd) {
   return execSync(cmd, { cwd: process.cwd(), encoding: "utf8" });
 }
