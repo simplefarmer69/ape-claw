@@ -1,0 +1,27 @@
+{
+  "apechainChainId": 33139,
+  "apechainRpcUrl": "https://your-apechain-rpc",
+  "nativeGasToken": "APE",
+  "bridge": {
+    "provider": "relay",
+    "maxBridgeFeeBps": 100,
+    "requireMinAmountOut": true,
+    "defaultTo": "apechain",
+    "defaultToken": "APE"
+  },
+  "market": {
+    "dataSource": "opensea",
+    "collectionAllowlistMode": "recommended-only"
+  },
+  "nftBuy": {
+    "maxPricePerTx": 10000,
+    "currencyAllowlist": ["APE", "WAPE", "WETH"],
+    "denyUnlimitedApprovals": true,
+    "simulationRequired": true
+  },
+  "execution": {
+    "dailySpendCap": 10000,
+    "confirmPhraseRequired": true,
+    "autonomousMode": false
+  }
+}

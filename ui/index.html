@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Clawllector - ApeClaw Dashboard</title>
+<style>
+/* ── Reset & base ─────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;--surface:#12121c;--surface2:#1a1a2e;--surface3:#222240;
+  --border:#2a2a4a;--text:#e0e0f0;--dim:#7878a0;--accent:#ff4d00;
+  --accent2:#ff7033;--accent-glow:rgba(255,77,0,.35);
+  --neon-cyan:#00f0ff;--neon-green:#39ff14;--neon-pink:#ff2d95;
+  --neon-purple:#b026ff;--gold:#ffd700;
+  --font-mono:'Courier New',Consolas,monospace;
+  --font-sans:system-ui,-apple-system,'Segoe UI',sans-serif;
+  --radius:8px;
+}
+html{font-size:14px;scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--font-sans);
+  min-height:100vh;overflow-x:hidden;
+}
+a{color:var(--neon-cyan);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--font-mono);font-size:.85em;background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px}
+
+/* ── Animated background grid ─────────────────────── */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(255,77,0,.04) 60px),
+    repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(255,77,0,.04) 60px);
+  animation:gridPulse 8s ease-in-out infinite alternate;
+}
+@keyframes gridPulse{0%{opacity:.5}100%{opacity:1}}
+
+/* ── Scanline overlay ─────────────────────────────── */
+body::after{
+  content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);
+}
+
+/* ── Layout ───────────────────────────────────────── */
+.app{position:relative;z-index:1;display:flex;flex-direction:column;min-height:100vh}
+header{
+  display:flex;align-items:center;gap:16px;padding:16px 24px;
+  border-bottom:1px solid var(--border);background:rgba(18,18,28,.92);
+  backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{font-size:2rem;filter:drop-shadow(0 0 12px var(--accent-glow))}
+.logo h1{
+  font-size:1.4rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  background:linear-gradient(135deg,var(--accent),var(--accent2),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.logo sub{font-size:.65rem;color:var(--dim);letter-spacing:.15em;text-transform:uppercase;display:block;margin-top:-2px}
+.header-right{display:flex;gap:16px;margin-left:auto;align-items:center}
+.header-stats{display:flex;gap:20px;align-items:center}
+.stat{text-align:center}
+.stat-value{font-size:1.2rem;font-weight:700;font-family:var(--font-mono);color:var(--neon-cyan);text-shadow:0 0 8px rgba(0,240,255,.4)}
+.stat-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;color:var(--dim)}
+.chain-badge{
+  display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;
+  background:rgba(255,77,0,.12);border:1px solid rgba(255,77,0,.3);font-size:.75rem;
+  font-weight:600;color:var(--accent2);
+}
+.chain-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--neon-green);box-shadow:0 0 8px var(--neon-green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.header-links{display:flex;gap:10px;align-items:center}
+.header-links a{
+  display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:16px;
+  font-size:.7rem;font-weight:600;border:1px solid var(--border);
+  color:var(--dim);transition:all .2s;
+}
+.header-links a:hover{border-color:var(--neon-cyan);color:var(--neon-cyan);text-decoration:none;background:rgba(0,240,255,.06)}
+.connection-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
+.connection-dot.connected{background:var(--neon-green);box-shadow:0 0 6px var(--neon-green)}
+.connection-dot.disconnected{background:var(--neon-pink);box-shadow:0 0 6px var(--neon-pink);animation:pulse 1s infinite}
+
+.main{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto 1fr;gap:16px;padding:16px 24px;flex:1}
+
+/* ── Panels ───────────────────────────────────────── */
+.panel{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;display:flex;flex-direction:column;
+}
+.panel-header{
+  display:flex;align-items:center;gap:8px;padding:12px 16px;
+  border-bottom:1px solid var(--border);background:var(--surface2);
+  font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+}
+.panel-header .icon{font-size:1rem}
+.panel-header .badge{
+  margin-left:auto;font-size:.6rem;padding:2px 8px;border-radius:10px;
+  background:rgba(0,240,255,.1);border:1px solid rgba(0,240,255,.3);color:var(--neon-cyan);
+  font-weight:700;font-family:var(--font-mono);
+}
+.panel-body{padding:16px;flex:1;overflow-y:auto;max-height:480px}
+.panel-body::-webkit-scrollbar{width:4px}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.full-width{grid-column:1/-1}
+
+/* ── Setup instructions panel ────────────────────── */
+.setup-panel{grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.setup-header{
+  display:flex;align-items:center;gap:8px;padding:12px 16px;cursor:pointer;
+  background:var(--surface2);border-bottom:1px solid var(--border);
+  font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  user-select:none;transition:background .2s;
+}
+.setup-header:hover{background:var(--surface3)}
+.setup-header .chevron{margin-left:auto;transition:transform .3s;font-size:.7rem}
+.setup-header.open .chevron{transform:rotate(180deg)}
+.setup-body{padding:0;max-height:0;overflow:hidden;transition:max-height .4s ease,padding .3s ease}
+.setup-body.open{max-height:1200px;padding:20px 24px}
+.setup-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.setup-step{position:relative}
+.setup-step-num{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;border-radius:50%;font-size:.7rem;font-weight:800;
+  background:var(--accent);color:#fff;margin-bottom:8px;
+}
+.setup-step h3{font-size:.85rem;font-weight:700;margin-bottom:6px;color:var(--text)}
+.setup-step p{font-size:.72rem;color:var(--dim);line-height:1.6;margin-bottom:8px}
+.setup-step pre{
+  background:var(--bg);border:1px solid var(--border);border-radius:6px;
+  padding:10px 14px;font-family:var(--font-mono);font-size:.68rem;
+  color:var(--neon-green);line-height:1.7;overflow-x:auto;margin-bottom:6px;
+  white-space:pre-wrap;word-break:break-all;
+}
+.setup-step .note{font-size:.62rem;color:var(--dim);font-style:italic}
+
+/* ── Agent cards ──────────────────────────────────── */
+.agents-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.agent-card{
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px;position:relative;overflow:hidden;transition:border-color .3s,box-shadow .3s;
+}
+.agent-card:hover{border-color:var(--accent);box-shadow:0 0 20px var(--accent-glow)}
+.agent-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--neon-cyan),var(--neon-purple));
+}
+.agent-card.verified-card::before{background:linear-gradient(90deg,var(--neon-green),var(--neon-cyan),var(--neon-green))}
+.agent-name{font-weight:700;font-size:.85rem;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.verified-badge{
+  font-size:.55rem;padding:1px 6px;border-radius:8px;font-weight:700;
+  background:rgba(57,255,20,.12);color:var(--neon-green);border:1px solid rgba(57,255,20,.3);
+  text-transform:uppercase;letter-spacing:.06em;
+}
+.agent-id{font-family:var(--font-mono);font-size:.65rem;color:var(--dim);margin-bottom:8px}
+.agent-status{display:flex;align-items:center;gap:5px;font-size:.7rem;margin-bottom:8px}
+.agent-status .dot{width:6px;height:6px;border-radius:50%}
+.agent-status .dot.active{background:var(--neon-green);box-shadow:0 0 6px var(--neon-green)}
+.agent-status .dot.idle{background:var(--gold);box-shadow:0 0 6px var(--gold)}
+.agent-status .dot.offline{background:#555}
+.agent-stat-row{display:flex;justify-content:space-between;font-size:.7rem;color:var(--dim);margin-top:4px}
+.agent-stat-row span:last-child{color:var(--text);font-family:var(--font-mono)}
+
+/* ── Activity feed ────────────────────────────────── */
+.feed-item{
+  display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(42,42,74,.4);
+  animation:feedIn .4s ease-out;
+}
+@keyframes feedIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+.feed-time{
+  font-family:var(--font-mono);font-size:.65rem;color:var(--dim);
+  min-width:60px;padding-top:2px;
+}
+.feed-icon{font-size:1rem;min-width:24px;text-align:center}
+.feed-content{flex:1}
+.feed-action{font-size:.78rem;line-height:1.5}
+.feed-action strong{color:var(--accent2)}
+.feed-action .hash{font-family:var(--font-mono);color:var(--neon-cyan);font-size:.7rem}
+.feed-action .collection-tag{
+  display:inline-block;padding:1px 6px;border-radius:3px;font-size:.65rem;
+  background:rgba(176,38,255,.15);border:1px solid rgba(176,38,255,.3);color:var(--neon-purple);
+  font-weight:600;
+}
+.feed-action .price{color:var(--gold);font-weight:700;font-family:var(--font-mono)}
+.feed-action .tx-link{font-family:var(--font-mono);font-size:.65rem;color:var(--neon-cyan)}
+.feed-action .tx-link:hover{text-decoration:underline}
+
+/* ── NFT gallery ──────────────────────────────────── */
+.nft-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.nft-card{
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;transition:transform .2s,box-shadow .3s;cursor:pointer;
+}
+.nft-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.5),0 0 16px var(--accent-glow)}
+.nft-img{
+  width:100%;aspect-ratio:1;
+  display:flex;align-items:center;justify-content:center;font-size:2.5rem;
+  position:relative;
+}
+.nft-img .nft-bg{
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--surface3),var(--surface));
+}
+.nft-img span{position:relative;z-index:1}
+.nft-img img{
+  position:relative;z-index:1;width:72%;height:72%;border-radius:10px;object-fit:cover;
+  border:1px solid rgba(255,255,255,.12);
+}
+.nft-info{padding:10px}
+.nft-collection{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--neon-purple);font-weight:600;margin-bottom:2px}
+.nft-name{font-size:.78rem;font-weight:700;margin-bottom:4px}
+.nft-price{font-family:var(--font-mono);font-size:.75rem;color:var(--gold)}
+.nft-agent{font-size:.6rem;color:var(--dim);margin-top:3px}
+.nft-tx{font-size:.58rem;margin-top:3px}
+.nft-tx a{font-family:var(--font-mono);color:var(--neon-cyan);font-size:.58rem}
+
+/* ── Bridge panel ─────────────────────────────────── */
+.bridge-item{
+  display:flex;align-items:center;gap:12px;padding:10px 12px;
+  background:var(--surface2);border-radius:var(--radius);margin-bottom:8px;
+  border:1px solid var(--border);
+}
+.bridge-route{display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600}
+.bridge-arrow{color:var(--neon-cyan);font-size:1rem}
+.bridge-amount{font-family:var(--font-mono);font-size:.85rem;font-weight:700;color:var(--text);margin-left:auto}
+.bridge-status-tag{
+  font-size:.6rem;padding:2px 8px;border-radius:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;
+}
+.bridge-status-tag.completed{background:rgba(57,255,20,.12);color:var(--neon-green);border:1px solid rgba(57,255,20,.3)}
+.bridge-status-tag.pending{background:rgba(255,215,0,.12);color:var(--gold);border:1px solid rgba(255,215,0,.3)}
+.bridge-status-tag.failed{background:rgba(255,45,149,.12);color:var(--neon-pink);border:1px solid rgba(255,45,149,.3)}
+
+/* ── Collections bar ──────────────────────────────── */
+.collections-bar{
+  grid-column:1/-1;display:flex;gap:10px;overflow-x:auto;padding:4px 0;
+}
+.collections-bar::-webkit-scrollbar{height:3px}
+.collections-bar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.col-chip{
+  flex-shrink:0;display:flex;align-items:center;gap:8px;padding:8px 14px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  cursor:pointer;transition:border-color .2s,background .2s;
+}
+.col-chip:hover,.col-chip.active{border-color:var(--accent);background:rgba(255,77,0,.08)}
+.col-chip-name{font-size:.75rem;font-weight:700;white-space:nowrap}
+.col-chip-floor{font-family:var(--font-mono);font-size:.65rem;color:var(--gold)}
+.col-chip-vol{font-size:.6rem;color:var(--dim)}
+.col-chip-icon{
+  width:22px;height:22px;border-radius:50%;object-fit:cover;display:block;
+  border:1px solid rgba(255,255,255,.12);background:var(--surface2);
+}
+.col-chip-emoji{font-size:1rem;line-height:1}
+
+/* ── Policy status bar ────────────────────────────── */
+.policy-bar{
+  grid-column:1/-1;display:flex;gap:12px;flex-wrap:wrap;
+  padding:10px 16px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);
+}
+.policy-item{display:flex;align-items:center;gap:6px;font-size:.7rem}
+.policy-item .tag{
+  padding:2px 8px;border-radius:4px;font-weight:700;text-transform:uppercase;
+  font-size:.6rem;letter-spacing:.06em;
+}
+.tag.enforced{background:rgba(57,255,20,.1);color:var(--neon-green);border:1px solid rgba(57,255,20,.25)}
+.tag.warn{background:rgba(255,215,0,.1);color:var(--gold);border:1px solid rgba(255,215,0,.25)}
+
+/* ── Terminal overlay ─────────────────────────────── */
+.terminal-panel{
+  grid-column:1/-1;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;
+}
+.terminal-header{
+  display:flex;align-items:center;gap:8px;padding:8px 16px;
+  background:var(--surface2);border-bottom:1px solid var(--border);
+}
+.terminal-dots{display:flex;gap:5px}
+.terminal-dots span{width:10px;height:10px;border-radius:50%}
+.terminal-dots span:nth-child(1){background:#ff5f56}
+.terminal-dots span:nth-child(2){background:#ffbd2e}
+.terminal-dots span:nth-child(3){background:#27c93f}
+.terminal-title{font-size:.7rem;font-family:var(--font-mono);color:var(--dim);margin-left:8px}
+.terminal-body{
+  padding:14px 16px;font-family:var(--font-mono);font-size:.72rem;
+  line-height:1.7;max-height:200px;overflow-y:auto;color:var(--dim);
+}
+.terminal-body::-webkit-scrollbar{width:4px}
+.terminal-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.t-prompt{color:var(--neon-green)}
+.t-cmd{color:var(--text)}
+.t-output{color:var(--dim)}
+.t-accent{color:var(--accent2)}
+.t-cyan{color:var(--neon-cyan)}
+.t-gold{color:var(--gold)}
+.t-success{color:var(--neon-green)}
+.t-error{color:var(--neon-pink)}
+
+/* ── Footer ───────────────────────────────────────── */
+footer{
+  padding:16px 24px;text-align:center;font-size:.65rem;color:var(--dim);
+  border-top:1px solid var(--border);letter-spacing:.06em;line-height:1.8;
+}
+footer a{color:var(--neon-cyan);font-weight:600}
+footer .footer-links{display:flex;gap:16px;justify-content:center;margin-top:6px;flex-wrap:wrap}
+
+/* ── Responsive ───────────────────────────────────── */
+@media(max-width:1100px){
+  .setup-grid{grid-template-columns:1fr}
+}
+@media(max-width:900px){
+  .main{grid-template-columns:1fr}
+  .agents-grid{grid-template-columns:1fr 1fr}
+  .header-stats{gap:12px}
+}
+@media(max-width:600px){
+  .agents-grid{grid-template-columns:1fr}
+  header{flex-wrap:wrap}
+  .header-right{margin-left:0;width:100%;justify-content:space-between;flex-wrap:wrap;gap:8px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ═══════ HEADER ═══════ -->
+<header>
+  <div class="logo">
+    <span class="logo-icon">🦞</span>
+    <div>
+      <h1>The Clawllector</h1>
+      <sub>ApeClaw &bull; ApeChain NFT Operations</sub>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="chain-badge"><span class="dot"></span> ApeChain <span id="chainBlock" style="font-family:var(--font-mono);font-size:.65rem;margin-left:4px"></span></div>
+    <div class="header-stats">
+      <div class="stat"><div class="stat-value" id="totalAgents">0</div><div class="stat-label">Clawllectors</div></div>
+      <div class="stat"><div class="stat-value" id="totalEvents">0</div><div class="stat-label">Events</div></div>
+      <div class="stat"><div class="stat-value" id="totalNfts">0</div><div class="stat-label">NFTs</div></div>
+      <div class="stat"><div class="stat-value" id="totalBridged">0</div><div class="stat-label">Bridged</div></div>
+      <div class="stat"><div class="stat-value" id="totalSpent">0</div><div class="stat-label">Spent</div></div>
+    </div>
+    <div class="header-links">
+      <a href="https://openclaw.ai" target="_blank" rel="noopener" style="border-color:rgba(255,77,0,.4);color:var(--accent2)">OpenClaw</a>
+      <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://www.npmjs.com/package/ape-claw" target="_blank" rel="noopener">npm</a>
+      <a id="connectionStatus" href="#" onclick="return false" style="cursor:default"><span class="connection-dot disconnected" id="connectionDot"></span> <span id="connectionLabel">Connecting</span></a>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════ SETUP / ONBOARDING ═══════ -->
+<div style="padding:12px 24px 0;position:relative;z-index:1">
+  <div class="setup-panel">
+    <div class="setup-header" id="setupToggle" onclick="toggleSetup()">
+      <span class="icon">🚀</span> Clawllector Setup &amp; Quick Start
+      <span class="chevron">▼</span>
+    </div>
+    <div class="setup-body" id="setupBody">
+      <!-- Powered by OpenClaw banner -->
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;margin-bottom:20px;background:rgba(255,77,0,.06);border:1px solid rgba(255,77,0,.2);border-radius:var(--radius)">
+        <span style="font-size:1.8rem">🦞</span>
+        <div style="flex:1">
+          <div style="font-size:.82rem;font-weight:700;color:var(--accent2);margin-bottom:2px">Powered by <a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:underline">OpenClaw</a></div>
+          <div style="font-size:.68rem;color:var(--dim);line-height:1.5">ApeClaw is an <a href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a> skill. Your OpenClaw agent discovers and uses <code>ape-claw</code> automatically through the skill system. Install OpenClaw first, then add the ape-claw skill.</div>
+        </div>
+        <a href="https://openclaw.ai" target="_blank" rel="noopener" style="flex-shrink:0;padding:6px 16px;border-radius:16px;font-size:.7rem;font-weight:700;background:var(--accent);color:#fff;border:none;text-decoration:none;transition:opacity .2s">Get OpenClaw</a>
+      </div>
+      <div class="setup-grid">
+        <div class="setup-step">
+          <div class="setup-step-num">0</div>
+          <h3>Install OpenClaw</h3>
+          <p>OpenClaw is your personal AI agent. Install it first:</p>
+          <pre>curl -fsSL https://openclaw.ai/install.sh | bash</pre>
+          <p>Or via npm:</p>
+          <pre>npm i -g openclaw
+openclaw onboard</pre>
+          <p class="note">See <a href="https://openclaw.ai" target="_blank" rel="noopener">openclaw.ai</a> for full setup guide.</p>
+        </div>
+        <div class="setup-step">
+          <div class="setup-step-num">1</div>
+          <h3>Install the ape-claw skill</h3>
+          <p>Add the ApeChain NFT skill to your OpenClaw agent:</p>
+          <pre>npx --yes ape-claw skill install \
+  --scope local --json</pre>
+          <p class="note">This installs the skill + bootstraps <code>config/policy.json</code> and the allowlist.</p>
+        </div>
+        <div class="setup-step">
+          <div class="setup-step-num">2</div>
+          <h3>Register your Clawllector</h3>
+          <p>Each Clawllector gets a unique agent ID. Save the token — it's shown only once:</p>
+          <pre>ape-claw clawbot register \
+  --agent-id my-bot \
+  --name "My Bot" --json</pre>
+          <p class="note">Returns <code>{"token":"claw_..."}</code> — store this securely.</p>
+        </div>
+        <div class="setup-step">
+          <div class="setup-step-num">3</div>
+          <h3>Configure env vars</h3>
+          <p>Set your agent credentials and private key:</p>
+          <pre>export APE_CLAW_AGENT_ID=my-bot
+export APE_CLAW_AGENT_TOKEN=claw_...
+export APE_CLAW_PRIVATE_KEY=0x...</pre>
+          <p class="note">Verified Clawllectors auto-receive the shared OpenSea API key — no need for your own.</p>
+        </div>
+        <div class="setup-step">
+          <div class="setup-step-num">4</div>
+          <h3>Run preflight check</h3>
+          <p>Verify everything is configured correctly:</p>
+          <pre>ape-claw doctor --json</pre>
+          <p class="note">Must return <code>"ok": true</code> before proceeding. Your OpenClaw agent checks this automatically.</p>
+        </div>
+        <div class="setup-step">
+          <div class="setup-step-num">5</div>
+          <h3>Start collecting</h3>
+          <p>Your OpenClaw agent can now browse, quote, simulate, and buy ApeChain NFTs:</p>
+          <pre>ape-claw market collections \
+  --recommended --json
+ape-claw nft quote-buy \
+  --collection dongsocks \
+  --tokenId 42 --maxPrice 100 \
+  --currency APE --json</pre>
+          <p class="note">Start the dashboard with <code>node ./src/telemetry-server.mjs</code> to see live activity.</p>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+        <span style="font-size:.72rem;color:var(--dim)">Resources:</span>
+        <a href="https://openclaw.ai" target="_blank" rel="noopener" style="font-size:.72rem;color:var(--accent2);font-weight:700">OpenClaw</a>
+        <a href="https://github.com/openclaw/openclaw" target="_blank" rel="noopener" style="font-size:.72rem">OpenClaw GitHub</a>
+        <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener" style="font-size:.72rem">ApeClaw GitHub</a>
+        <a href="https://www.npmjs.com/package/ape-claw" target="_blank" rel="noopener" style="font-size:.72rem">npm Package</a>
+        <a href="https://github.com/simplefarmer69/ape-claw#clawbot-verification-system" target="_blank" rel="noopener" style="font-size:.72rem">Clawllector Docs</a>
+        <a href="https://github.com/simplefarmer69/ape-claw#commands" target="_blank" rel="noopener" style="font-size:.72rem">CLI Commands</a>
+        <span style="margin-left:auto;font-size:.65rem;color:var(--dim)" id="setupClawbotCount"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ COLLECTIONS BAR ═══════ -->
+<div style="padding:12px 24px 0;position:relative;z-index:1">
+  <div class="collections-bar" id="collectionsBar"></div>
+</div>
+
+<!-- ═══════ MAIN GRID ═══════ -->
+<div class="main">
+
+  <!-- ── Agents panel ── -->
+  <div class="panel">
+    <div class="panel-header"><span class="icon">🦞</span> Clawllectors <span class="badge" id="agentCountBadge">0</span></div>
+    <div class="panel-body">
+      <div class="agents-grid" id="agentsGrid"></div>
+    </div>
+  </div>
+
+  <!-- ── Activity feed ── -->
+  <div class="panel">
+    <div class="panel-header"><span class="icon">📡</span> Live Activity <span class="badge" id="eventCountBadge">0</span></div>
+    <div class="panel-body" id="activityFeed"></div>
+  </div>
+
+  <!-- ── NFT gallery ── -->
+  <div class="panel">
+    <div class="panel-header"><span class="icon">🖼️</span> Collected NFTs <span class="badge" id="nftCountBadge">0</span></div>
+    <div class="panel-body">
+      <div class="nft-grid" id="nftGrid"></div>
+    </div>
+  </div>
+
+  <!-- ── Bridge status ── -->
+  <div class="panel">
+    <div class="panel-header"><span class="icon">🌉</span> Bridge Operations <span class="badge" id="bridgeCountBadge">0</span></div>
+    <div class="panel-body" id="bridgePanel"></div>
+  </div>
+
+  <!-- ── Policy bar ── -->
+  <div class="policy-bar" id="policyBar">
+    <div class="policy-item">Dry-Run Default <span class="tag enforced">Enforced</span></div>
+    <div class="policy-item">Simulation Required <span class="tag enforced" id="pSimReq">Enforced</span></div>
+    <div class="policy-item">Confirm Phrase <span class="tag enforced" id="pConfirm">Required</span></div>
+    <div class="policy-item">Max Bridge Fee <span class="tag enforced" id="pMaxFee">1%</span></div>
+    <div class="policy-item">Currency Allowlist <span class="tag enforced" id="pCurrencies">APE</span></div>
+    <div class="policy-item">Daily Spend Cap <span class="tag warn" id="pDailyCap">-</span></div>
+    <div class="policy-item">Collection Mode <span class="tag enforced" id="pColMode">-</span></div>
+    <div class="policy-item">Max Price/TX <span class="tag warn" id="pMaxPrice">-</span></div>
+    <div class="policy-item">Collections <span class="tag enforced" id="pColCount">0</span></div>
+  </div>
+
+  <!-- ── Terminal ── -->
+  <div class="terminal-panel">
+    <div class="terminal-header">
+      <div class="terminal-dots"><span></span><span></span><span></span></div>
+      <span class="terminal-title">ape-claw CLI &mdash; live session log</span>
+    </div>
+    <div class="terminal-body" id="terminalBody"></div>
+  </div>
+
+</div>
+
+<footer>
+  <div>The Clawllector &bull; ApeClaw Dashboard &bull; ApeChain (33139) &bull; Relay Bridge &bull; Seaport Protocol</div>
+  <div style="margin:8px 0;font-size:.7rem;color:var(--accent2)">
+    An <a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--accent2);font-weight:700">OpenClaw</a> Skill &mdash;
+    Install OpenClaw, add the ape-claw skill, and let your AI agent collect ApeChain NFTs autonomously.
+  </div>
+  <div class="footer-links">
+    <a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--accent2)">OpenClaw</a>
+    <a href="https://github.com/openclaw/openclaw" target="_blank" rel="noopener">OpenClaw GitHub</a>
+    <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">ApeClaw GitHub</a>
+    <a href="https://www.npmjs.com/package/ape-claw" target="_blank" rel="noopener">npm</a>
+    <a href="https://github.com/simplefarmer69/ape-claw#clawbot-verification-system" target="_blank" rel="noopener">Clawllector Docs</a>
+    <a href="https://github.com/simplefarmer69/ape-claw#commands" target="_blank" rel="noopener">CLI Reference</a>
+    <a href="https://apescan.io" target="_blank" rel="noopener">ApeScan Explorer</a>
+  </div>
+</footer>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  THE CLAWLLECTOR — Full Dashboard
+//  Real-time event stream from ape-claw CLI telemetry.
+// ═══════════════════════════════════════════════════════════
+
+const APESCAN_TX = 'https://apescan.io/tx/';
+const APESCAN_ADDR = 'https://apescan.io/address/';
+
+let COLLECTIONS = [];
+let POLICY = {};
+let REGISTERED_CLAWBOTS = [];
+
+const EMOJI_MAP = {
+  ape:'🦍',dog:'🐕',tiger:'🐯',duck:'🦆',frog:'🐸',fox:'🦊',cat:'🐱',egg:'🥚',
+  punk:'💀',zombie:'🧟',gob:'👹',dragon:'🐉',robot:'🤖',bear:'🐻',monkey:'🐒',
+  skull:'💀',owl:'🦉',bat:'🦇',bull:'🐂',otter:'🦦',lobster:'🦞',star:'⭐',
+  kid:'👶',baby:'👶',doll:'🪆',bird:'🐦',cube:'🧊',dice:'🎲',sword:'⚔️',
+  pixel:'🟩',pix:'🟩',glyph:'✨',night:'🌙',frost:'❄️',fire:'🔥',ice:'🧊',
+  balloon:'🎈',clown:'🤡',sock:'🧦',rilla:'🦍',default:'🖼️',
+};
+function emojiFor(name) {
+  const n = name.toLowerCase();
+  for (const [k,v] of Object.entries(EMOJI_MAP)) { if (n.includes(k)) return v; }
+  return EMOJI_MAP.default;
+}
+
+// ── Agent name registry
+const AGENT_DISPLAY_NAMES = { 'local-cli': 'The Clawllector' };
+function agentDisplayName(agentId) { return AGENT_DISPLAY_NAMES[agentId] || agentId; }
+
+// ── Dynamic agent tracking from real events
+const agentMap = new Map();
+function ensureAgent(agentId) {
+  if (!agentMap.has(agentId)) {
+    // Check if this is a registered clawbot
+    const reg = REGISTERED_CLAWBOTS.find(b => b.agentId === agentId);
+    agentMap.set(agentId, {
+      name: reg?.name || agentDisplayName(agentId),
+      id: agentId,
+      status: 'active',
+      nfts: 0, bridged: 0, spent: 0, events: 0,
+      lastSeen: Date.now(),
+      verified: Boolean(reg),
+      registered: Boolean(reg),
+    });
+    if (reg) AGENT_DISPLAY_NAMES[agentId] = reg.name;
+  }
+  const a = agentMap.get(agentId);
+  a.lastSeen = Date.now();
+  a.events++;
+  a.status = 'active';
+  return a;
+}
+
+let totalNfts = 0, totalBridged = 0, totalSpent = 0, totalEvents = 0;
+let collectedNfts = [], bridgeOps = [], feedItems = [], terminalLines = [];
+
+// ═══════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════
+function nowTime() {
+  const d = new Date();
+  return [d.getHours(),d.getMinutes(),d.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+}
+function evtTime(evt) {
+  if (!evt.ts) return nowTime();
+  const d = new Date(evt.ts);
+  return [d.getHours(),d.getMinutes(),d.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+}
+function shortAddr(addr) { return addr ? addr.slice(0,6)+'..'+addr.slice(-4) : ''; }
+function txLink(hash) {
+  if (!hash) return '';
+  return `<a class="tx-link" href="${APESCAN_TX}${encodeURIComponent(hash)}" target="_blank" rel="noopener" title="View on ApeScan">${shortAddr(hash)}</a>`;
+}
+function feedItem(time, icon, content) {
+  return `<div class="feed-item"><div class="feed-time">${time}</div><div class="feed-icon">${icon}</div><div class="feed-content"><div class="feed-action">${content}</div></div></div>`;
+}
+function escapeHtml(v) {
+  return String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escapeAttr(v) {
+  return String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+function collectionVisual(collection, size='chip') {
+  const img = collection?.imageUrl ? escapeAttr(collection.imageUrl) : '';
+  if (img) {
+    if (size==='nft') return `<img src="${img}" alt="${escapeAttr(collection?.name||'')}" loading="lazy" />`;
+    return `<img class="col-chip-icon" src="${img}" alt="${escapeAttr(collection?.name||'')}" loading="lazy" />`;
+  }
+  return `<span class="${size==='nft'?'':'col-chip-emoji'}">${collection?.emoji||'🖼️'}</span>`;
+}
+function timeSince(ts) {
+  const sec = Math.floor((Date.now()-ts)/1000);
+  if (sec<60) return 'just now';
+  if (sec<3600) return Math.floor(sec/60)+'m ago';
+  if (sec<86400) return Math.floor(sec/3600)+'h ago';
+  return Math.floor(sec/86400)+'d ago';
+}
+
+// ── Setup toggle
+function toggleSetup() {
+  const header = document.getElementById('setupToggle');
+  const body = document.getElementById('setupBody');
+  header.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════════
+function renderCollectionsBar() {
+  const el = document.getElementById('collectionsBar');
+  if (COLLECTIONS.length === 0) {
+    el.innerHTML = '<div style="color:var(--dim);font-size:.72rem;padding:8px">Loading collections...</div>';
+    return;
+  }
+  el.innerHTML = COLLECTIONS.map(c =>
+    `<div class="col-chip" title="${c.contractAddress ? shortAddr(c.contractAddress) : 'no CA'}">
+      ${collectionVisual(c,'chip')}
+      <div>
+        <div class="col-chip-name">${escapeHtml(c.name)}</div>
+        <div class="col-chip-floor">#${c.rank||'?'}</div>
+      </div>
+      <div class="col-chip-vol">${c.contractAddress ? '✓ CA' : '⚠ No CA'}</div>
+    </div>`
+  ).join('');
+}
+
+function renderAgents() {
+  const el = document.getElementById('agentsGrid');
+
+  // Merge registered clawbots that haven't sent events yet
+  for (const reg of REGISTERED_CLAWBOTS) {
+    if (!agentMap.has(reg.agentId)) {
+      agentMap.set(reg.agentId, {
+        name: reg.name || reg.agentId,
+        id: reg.agentId,
+        status: 'offline',
+        nfts: 0, bridged: 0, spent: 0, events: 0,
+        lastSeen: reg.createdAt ? new Date(reg.createdAt).getTime() : 0,
+        verified: true,
+        registered: true,
+      });
+    }
+  }
+
+  if (agentMap.size === 0) {
+    el.innerHTML = `<div style="grid-column:1/-1;color:var(--dim);font-size:.78rem;text-align:center;padding:24px">
+      <div style="font-size:2.5rem;margin-bottom:8px">🦞</div>
+      <div>No Clawllectors registered yet</div>
+      <div style="font-size:.68rem;margin-top:6px">Set up your <a href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a> agent, then register a Clawllector:</div>
+      <div style="margin-top:8px"><code>ape-claw clawbot register --agent-id my-clawllector --json</code></div>
+    </div>`;
+    return;
+  }
+  const now = Date.now();
+  for (const a of agentMap.values()) {
+    if (a.events === 0) a.status = 'offline';
+    else if (now - a.lastSeen > 300_000) a.status = 'offline';
+    else if (now - a.lastSeen > 60_000) a.status = 'idle';
+    else a.status = 'active';
+  }
+  const sorted = [...agentMap.values()].sort((a,b) => {
+    const statusOrder = {active:0,idle:1,offline:2};
+    const diff = (statusOrder[a.status]||9) - (statusOrder[b.status]||9);
+    if (diff !== 0) return diff;
+    return b.lastSeen - a.lastSeen;
+  });
+  el.innerHTML = sorted.map(a => {
+    const badge = a.verified ? '<span class="verified-badge">Clawllector</span>' : '';
+    const cardClass = a.verified ? 'agent-card verified-card' : 'agent-card';
+    return `<div class="${cardClass}">
+      <div class="agent-name">🦞 ${escapeHtml(a.name)} ${badge}</div>
+      <div class="agent-id">${escapeHtml(a.id)}</div>
+      <div class="agent-status"><span class="dot ${a.status}"></span> ${a.status} ${a.lastSeen > 0 ? '&bull; '+timeSince(a.lastSeen) : ''}</div>
+      <div class="agent-stat-row"><span>Events</span><span>${a.events.toLocaleString()}</span></div>
+      <div class="agent-stat-row"><span>NFTs</span><span>${a.nfts}</span></div>
+      <div class="agent-stat-row"><span>Bridged</span><span>${a.bridged.toLocaleString()} APE</span></div>
+      <div class="agent-stat-row"><span>Spent</span><span>${a.spent.toLocaleString()} APE</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderNftGrid() {
+  const el = document.getElementById('nftGrid');
+  if (collectedNfts.length === 0) {
+    el.innerHTML = `<div style="grid-column:1/-1;color:var(--dim);font-size:.78rem;text-align:center;padding:24px">
+      <div style="font-size:2rem;margin-bottom:6px">🖼️</div>
+      No NFTs collected yet.<br>Purchases from <code>ape-claw nft buy --execute</code> appear here in real time.
+    </div>`;
+    return;
+  }
+  el.innerHTML = collectedNfts.map(n => {
+    const txHtml = n.txHash
+      ? `<div class="nft-tx"><a href="${APESCAN_TX}${encodeURIComponent(n.txHash)}" target="_blank" rel="noopener">${shortAddr(n.txHash)}</a></div>`
+      : '';
+    return `<div class="nft-card">
+      <div class="nft-img"><div class="nft-bg"></div>${collectionVisual(n.collection,'nft')}</div>
+      <div class="nft-info">
+        <div class="nft-collection">${escapeHtml(n.collection.name)}</div>
+        <div class="nft-name">#${escapeHtml(n.tokenId)}</div>
+        <div class="nft-price">${escapeHtml(n.price)} APE</div>
+        <div class="nft-agent">by ${escapeHtml(n.agent)} &bull; ${n.time}</div>
+        ${txHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderBridge() {
+  const el = document.getElementById('bridgePanel');
+  if (bridgeOps.length === 0) {
+    el.innerHTML = `<div style="color:var(--dim);font-size:.75rem;padding:12px">
+      <div style="font-size:1.5rem;margin-bottom:4px">🌉</div>
+      No bridge operations yet.<br>Real bridge data from <code>ape-claw bridge execute</code> will appear here.
+    </div>`;
+    return;
+  }
+  el.innerHTML = bridgeOps.map(b => {
+    const txHtml = b.txHash ? ` <a class="tx-link" href="${APESCAN_TX}${encodeURIComponent(b.txHash)}" target="_blank" rel="noopener">${shortAddr(b.txHash)}</a>` : '';
+    return `<div class="bridge-item">
+      <div class="bridge-route">${escapeHtml(b.from)} <span class="bridge-arrow">→</span> ${escapeHtml(b.to)}</div>
+      <div style="font-size:.65rem;color:var(--dim)">${b.fee ? `fee ${b.fee} APE &bull; ` : ''}${escapeHtml(b.agent)}${txHtml}</div>
+      <div class="bridge-amount">${escapeHtml(b.amount)}</div>
+      <span class="bridge-status-tag ${b.status}">${b.status}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderFeed() {
+  const el = document.getElementById('activityFeed');
+  if (feedItems.length === 0) {
+    el.innerHTML = `<div style="color:var(--dim);font-size:.78rem;text-align:center;padding:24px">
+      <div style="font-size:2rem;margin-bottom:6px">📡</div>
+      Listening for events&hellip;<br>Run any <code>ape-claw</code> command to see live activity.
+    </div>`;
+    return;
+  }
+  el.innerHTML = feedItems.slice(-50).reverse().map(f => f.html).join('');
+}
+
+function renderTerminal() {
+  const el = document.getElementById('terminalBody');
+  if (terminalLines.length === 0) {
+    el.innerHTML = '<div class="t-output">Waiting for CLI events...</div>';
+    return;
+  }
+  el.innerHTML = terminalLines.map(l => {
+    if (l.type==='prompt') return `<div><span class="t-prompt">❯</span> <span class="t-cmd">${l.text}</span></div>`;
+    if (l.type==='accent') return `<div class="t-accent">${l.text}</div>`;
+    if (l.type==='success') return `<div class="t-success">${l.text}</div>`;
+    if (l.type==='error') return `<div class="t-error">${l.text}</div>`;
+    return `<div class="t-output">${l.text}</div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function updateStats() {
+  const activeCount = [...agentMap.values()].filter(a => a.status==='active').length;
+  const totalCount = agentMap.size;
+  document.getElementById('totalAgents').textContent = activeCount + '/' + totalCount;
+  document.getElementById('totalEvents').textContent = totalEvents.toLocaleString();
+  document.getElementById('totalNfts').textContent = totalNfts;
+  document.getElementById('totalBridged').textContent = Math.round(totalBridged).toLocaleString();
+  document.getElementById('totalSpent').textContent = Math.round(totalSpent).toLocaleString();
+  document.getElementById('agentCountBadge').textContent = totalCount;
+  document.getElementById('eventCountBadge').textContent = totalEvents.toLocaleString();
+  document.getElementById('nftCountBadge').textContent = totalNfts;
+  document.getElementById('bridgeCountBadge').textContent = bridgeOps.length;
+}
+
+function updatePolicyBar() {
+  const b = POLICY.bridge || {};
+  const n = POLICY.nftBuy || {};
+  const m = POLICY.market || {};
+  const e = POLICY.execution || {};
+  const maxFeePct = ((b.maxBridgeFeeBps||100)/100).toFixed(1);
+  document.getElementById('pMaxFee').textContent = maxFeePct + '%';
+  document.getElementById('pCurrencies').textContent = (n.currencyAllowlist||['APE']).join('/');
+  document.getElementById('pDailyCap').textContent = (e.dailySpendCap||0).toLocaleString()+' APE';
+  document.getElementById('pColMode').textContent = m.collectionAllowlistMode === 'recommended-only' ? 'Recommended Only' : m.collectionAllowlistMode || 'Open';
+  document.getElementById('pMaxPrice').textContent = (n.maxPricePerTx||0).toLocaleString()+' APE';
+  document.getElementById('pColCount').textContent = COLLECTIONS.length + ' loaded';
+  document.getElementById('pSimReq').textContent = n.simulationRequired !== false ? 'Enforced' : 'Off';
+  document.getElementById('pConfirm').textContent = e.confirmPhraseRequired !== false ? 'Required' : 'Off';
+}
+
+function setConnectionStatus(connected) {
+  const dot = document.getElementById('connectionDot');
+  const label = document.getElementById('connectionLabel');
+  if (connected) {
+    dot.className = 'connection-dot connected';
+    label.textContent = 'Live';
+  } else {
+    dot.className = 'connection-dot disconnected';
+    label.textContent = 'Offline';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EVENT-TO-UI MAPPER
+// ═══════════════════════════════════════════════════════════
+function findCollection(input) {
+  const s = String(input||'').toLowerCase();
+  return COLLECTIONS.find(c =>
+    c.name.toLowerCase()===s || c.slug===s || (c.contractAddress && c.contractAddress.toLowerCase()===s)
+  ) || { name:input||'unknown', emoji:'🖼️', slug:'', imageUrl:null };
+}
+
+function processEvent(evt) {
+  const t = evtTime(evt);
+  const et = evt.eventType || 'unknown';
+  const cmd = evt.command || 'ape-claw';
+  const rawId = evt.agentId || 'local-cli';
+  const ag = agentDisplayName(rawId);
+  const payload = evt.payload || {};
+  const result = evt.result || {};
+
+  const agent = ensureAgent(rawId);
+  totalEvents++;
+
+  // ── NFT buy confirmed
+  if (et === 'nft.buy.executed' || et === 'nft.buy.confirmed') {
+    const q = result.quote || {};
+    const col = findCollection(q.collection || payload.collection);
+    const tid = q.tokenId || payload.tokenId || '?';
+    const price = q.priceApe ?? payload.priceApe ?? payload.maxPrice ?? 0;
+    const tx = result.txHash || '';
+    collectedNfts.unshift({ collection:col, tokenId:String(tid), price:String(price), agent:ag, time:t, txHash:tx });
+    if (collectedNfts.length>50) collectedNfts.pop();
+    totalNfts++; totalSpent += Number(price)||0;
+    agent.nfts++; agent.spent += Number(price)||0;
+    renderNftGrid();
+    return feedItem(t,'🦞',`<strong>${escapeHtml(ag)}</strong> purchased <span class="collection-tag">${escapeHtml(col.name)}</span> #${escapeHtml(tid)} for <span class="price">${price} APE</span> ${txLink(tx)}`);
+  }
+  // ── NFT buy dry-run
+  if (et === 'nft.buy.dry_run') {
+    return feedItem(t,'🔒',`<strong>${escapeHtml(ag)}</strong> dry-run buy &mdash; no broadcast (pass --execute to send)`);
+  }
+  // ── NFT quote created
+  if (et === 'nft.quote.created') {
+    const col = findCollection(result.collection || payload.collection);
+    const tid = result.tokenId || payload.tokenId || '?';
+    const price = result.priceApe ?? payload.maxPrice ?? '?';
+    const qid = result.quoteId || '';
+    return feedItem(t,'💰',`<strong>${escapeHtml(ag)}</strong> quoted <span class="collection-tag">${escapeHtml(col.name)}</span> #${escapeHtml(tid)} at <span class="price">${price} APE</span> <span class="hash">${escapeHtml(qid)}</span>`);
+  }
+  // ── NFT simulation
+  if (et === 'nft.simulation.passed') {
+    return feedItem(t,'✅',`<strong>${escapeHtml(ag)}</strong> simulation passed <span class="hash">${escapeHtml(result.quoteId||'')}</span>`);
+  }
+  if (et === 'nft.simulation.failed') {
+    return feedItem(t,'❌',`<strong>${escapeHtml(ag)}</strong> simulation failed: ${escapeHtml(result.reason||'unknown')}`);
+  }
+  // ── Market
+  if (et === 'market.collections.read') {
+    return feedItem(t,'📋',`<strong>${escapeHtml(ag)}</strong> loaded ${result.count??COLLECTIONS.length} collections (${escapeHtml(result.source||'allowlist')})`);
+  }
+  if (et === 'market.listings.read') {
+    return feedItem(t,'🔍',`<strong>${escapeHtml(ag)}</strong> found ${result.count??0} listings for <code>${escapeHtml(cmd)}</code>`);
+  }
+  if (et === 'market.listings.failed') {
+    return feedItem(t,'⚠️',`<strong>${escapeHtml(ag)}</strong> listings failed: ${escapeHtml(evt.error||'error')}`);
+  }
+  // ── Bridge
+  if (et === 'bridge.quote.created') {
+    const from = result.from || payload.from || '?';
+    const amt = result.amount ?? payload.amount ?? '?';
+    return feedItem(t,'🌉',`<strong>${escapeHtml(ag)}</strong> bridge quote: <span class="price">${amt} APE</span> from ${escapeHtml(from)} → ApeChain`);
+  }
+  if (et === 'bridge.execute.confirmed') {
+    const amt = result.amount ?? 0;
+    const from = result.from ?? payload.from ?? 'unknown';
+    const fee = result.feeBps ? (Number(amt)*(result.feeBps/10000)).toFixed(2) : null;
+    const tx = result.txHash || result.sourceTxHash || '';
+    bridgeOps.unshift({ from, to:'ApeChain', amount:`${amt} APE`, status:'completed', agent:ag, fee, txHash:tx });
+    if (bridgeOps.length>20) bridgeOps.pop();
+    totalBridged += Number(amt)||0;
+    agent.bridged += Number(amt)||0;
+    renderBridge();
+    return feedItem(t,'✅',`<strong>${escapeHtml(ag)}</strong> bridged <span class="price">${amt} APE</span> from ${escapeHtml(from)} → ApeChain ${txLink(tx)}`);
+  }
+  if (et === 'bridge.execute.dry_run') {
+    return feedItem(t,'🔒',`<strong>${escapeHtml(ag)}</strong> bridge dry-run &mdash; no broadcast`);
+  }
+  if (et === 'bridge.status.read') {
+    return feedItem(t,'📊',`<strong>${escapeHtml(ag)}</strong> bridge status: <span class="collection-tag">${escapeHtml(result.status||'unknown')}</span>`);
+  }
+  // ── Chain info
+  if (et === 'chain.info.read') {
+    const block = result.latestBlock ? `block ${Number(result.latestBlock).toLocaleString()}` : 'block unknown';
+    const rpcStatus = result.rpcOk ? 'RPC ✓' : 'RPC ✗';
+    if (result.latestBlock) document.getElementById('chainBlock').textContent = `#${Number(result.latestBlock).toLocaleString()}`;
+    return feedItem(t,'⛓️',`<strong>${escapeHtml(ag)}</strong> chain info: ${block}, ${rpcStatus}`);
+  }
+  // ── Doctor
+  if (et === 'doctor.ran') {
+    if (result.agent?.verified) {
+      agent.verified = true;
+      agent.name = result.agent.name || agent.name;
+      AGENT_DISPLAY_NAMES[rawId] = agent.name;
+    }
+    const stats = result.allowlistStats || {};
+    const ok = result.ok !== false ? '✓' : '✗';
+    const verifiedNote = result.agent?.verified ? ' (verified)' : '';
+    return feedItem(t,'🩺',`<strong>${escapeHtml(agentDisplayName(rawId))}</strong> doctor ${ok}${verifiedNote} &mdash; ${stats.total||'?'} collections, ${stats.unresolvedCount||0} unresolved`);
+  }
+  // ── Allowlist audit
+  if (et === 'allowlist.audit.ran') {
+    return feedItem(t,'📝',`<strong>${escapeHtml(ag)}</strong> allowlist audit: ${result.total||0} total, ${result.unresolvedCount||0} unresolved`);
+  }
+  // ── Policy blocked
+  if (et === 'policy.blocked') {
+    return feedItem(t,'⛔',`<strong>${escapeHtml(ag)}</strong> blocked: ${escapeHtml(evt.error||'validation failed')}`);
+  }
+  // ── Skill install
+  if (et === 'skill.install.ran') {
+    return feedItem(t,'📦',`<strong>${escapeHtml(ag)}</strong> installed skill at <code>${escapeHtml(result.skillPath||'?')}</code>`);
+  }
+  // ── Clawbot registered
+  if (et === 'clawbot.registered') {
+    return feedItem(t,'🦞',`New Clawllector registered: <strong>${escapeHtml(result.name||result.agentId||ag)}</strong>`);
+  }
+  if (et === 'clawbot.list.read') {
+    return feedItem(t,'📋',`<strong>${escapeHtml(ag)}</strong> listed ${result.count??0} registered Clawllectors`);
+  }
+  // ── NFT buy retry
+  if (et === 'nft.buy.retry') {
+    return feedItem(t,'🔄',`<strong>${escapeHtml(ag)}</strong> listing sniped &mdash; retrying with fresh order (attempt ${payload.attempt||'?'})`);
+  }
+  // ── Fallback
+  return feedItem(t,'📡',`<strong>${escapeHtml(ag)}</strong> <code>${escapeHtml(et)}</code>`);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LIVE TELEMETRY — SSE + backlog
+// ═══════════════════════════════════════════════════════════
+let sseConnected = false;
+
+async function connectLiveTelemetry() {
+  // 1) Fetch backlog
+  try {
+    const r = await fetch('/events/backlog');
+    if (r.ok) {
+      const data = await r.json();
+      (data.events||[]).forEach(evt => {
+        const html = processEvent(evt);
+        feedItems.push({ html });
+      });
+      renderFeed(); renderAgents(); updateStats();
+    }
+  } catch {}
+
+  // 2) SSE stream
+  try {
+    const es = new EventSource('/events');
+    es.onopen = () => {
+      sseConnected = true;
+      setConnectionStatus(true);
+      terminalLines.push({ type:'success', text:'[SSE] Connected to telemetry stream' });
+      renderTerminal();
+    };
+    es.onmessage = (msg) => {
+      try {
+        const evt = JSON.parse(msg.data);
+        const html = processEvent(evt);
+        feedItems.push({ html });
+        if (feedItems.length > 100) feedItems.shift();
+        renderFeed(); renderAgents(); updateStats();
+
+        // Mirror to terminal
+        const termType = evt.ok === false ? 'error' : (
+          evt.eventType.includes('confirmed') || evt.eventType.includes('passed') ? 'success' :
+          evt.eventType.includes('created') ? 'accent' : 'output'
+        );
+        const agName = agentDisplayName(evt.agentId || 'local-cli');
+        terminalLines.push({ type:'prompt', text: evt.command || `ape-claw ${evt.eventType}` });
+        terminalLines.push({ type: termType, text: `[${agName}] ${evt.eventType} ${evt.ok===false ? '✗ '+escapeHtml(evt.error||'') : '✓'}` });
+        if (terminalLines.length > 80) terminalLines.shift();
+        renderTerminal();
+      } catch {}
+    };
+    es.onerror = () => {
+      if (sseConnected) {
+        sseConnected = false;
+        setConnectionStatus(false);
+        terminalLines.push({ type:'error', text:'[SSE] Connection lost — reconnecting...' });
+        renderTerminal();
+      }
+    };
+  } catch {
+    setConnectionStatus(false);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  STATUS HEARTBEAT
+// ═══════════════════════════════════════════════════════════
+setInterval(() => {
+  if (agentMap.size > 0) {
+    renderAgents();
+    updateStats();
+  }
+}, 10_000);
+
+// ═══════════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════════
+async function boot() {
+  // Fetch allowlist, policy, clawbots in parallel
+  const [alRes, polRes, cbRes] = await Promise.allSettled([
+    fetch('/api/allowlist').then(r => r.ok ? r.json() : null),
+    fetch('/api/policy').then(r => r.ok ? r.json() : null),
+    fetch('/api/clawbots').then(r => r.ok ? r.json() : null),
+  ]);
+
+  // Allowlist
+  const alData = alRes.status === 'fulfilled' ? alRes.value : null;
+  if (Array.isArray(alData) && alData.length > 0) {
+    COLLECTIONS = alData.map(c => ({ ...c, emoji: emojiFor(c.name||''), imageUrl: c.imageUrl || null }));
+  }
+  if (COLLECTIONS.length === 0) {
+    COLLECTIONS = [
+      { rank:1, name:'Gs on Ape', slug:'gs-on-ape', contractAddress:'0xb3443b6bd585ba4118cae2bedb61c7ec4a8281df', chainId:33139, enabled:true, emoji:'🦍', imageUrl:null },
+      { rank:6, name:'Zards', slug:'zards', contractAddress:'0x91417bd88af5071ccea8d3bf3af410660e356b06', chainId:33139, enabled:true, emoji:'🦎', imageUrl:null },
+      { rank:11, name:'Mintotaurs', slug:'mintotaurs', contractAddress:'0x8af17673985e4032c6ced41d35e9f5a3e694ed7f', chainId:33139, enabled:true, emoji:'🐂', imageUrl:null },
+    ];
+  }
+
+  // Policy
+  const polData = polRes.status === 'fulfilled' ? polRes.value : null;
+  if (polData) POLICY = polData;
+
+  // Clawbots
+  const cbData = cbRes.status === 'fulfilled' ? cbRes.value : null;
+  if (cbData?.clawbots) {
+    REGISTERED_CLAWBOTS = cbData.clawbots;
+    for (const b of REGISTERED_CLAWBOTS) {
+      AGENT_DISPLAY_NAMES[b.agentId] = b.name || b.agentId;
+    }
+    const setupNote = document.getElementById('setupClawbotCount');
+    if (setupNote) {
+      setupNote.textContent = `${cbData.count} registered Clawllector${cbData.count!==1?'s':''}${cbData.sharedKeyConfigured ? ' • shared key ✓' : ' • shared key not set'}`;
+    }
+  }
+
+  // Render everything
+  renderCollectionsBar();
+  renderAgents();
+  renderNftGrid();
+  renderBridge();
+  renderTerminal();
+  renderFeed();
+  updateStats();
+  updatePolicyBar();
+
+  // Connect live telemetry
+  await connectLiveTelemetry();
+}
+
+boot();
+</script>
+</body>
+</html>
