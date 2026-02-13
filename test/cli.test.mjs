@@ -115,6 +115,11 @@ test("quote-buy creates quote", () => {
   assert.match(msg, /Live listing lookup failed|OpenSea data source selected but OPENSEA_API_KEY is missing/);
 });
 
+test("nft autobuy requires OpenSea key when using OpenSea data source", () => {
+  const msg = runFail("node ./src/cli.mjs nft autobuy --count 1 --maxPrice 40 --json");
+  assert.match(msg, /OPENSEA_API_KEY is required for nft autobuy/);
+});
+
 test("nft buy execute requires simulation first", () => {
   const quote = {
     quoteId: "q_test_no_sim",

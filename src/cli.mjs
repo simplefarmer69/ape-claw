@@ -591,6 +591,214 @@ async function main() {
     return print(result, asJson);
   }
 
+  if (group === "nft" && sub === "autobuy") {
+    const execute = Boolean(args.execute);
+    const autonomous = Boolean(args.autonomous);
+    const count = Math.max(1, Number(args.count || 1));
+    const scanLimit = Math.max(count, Number(args.scan || Math.max(10, count * 4)));
+    const maxPrice = Number(args.maxPrice || policy.nftBuy.maxPricePerTx);
+    const budget = Number(args.budget || 0);
+    const currency = String(args.currency || "APE").toUpperCase();
+    const dataSource = String(args.dataSource || policy.market.dataSource || "opensea");
+    const includeDisabled = Boolean(args.all);
+    const collectionsArg = String(args.collections || "").trim();
+    const collectionFilters = collectionsArg
+      ? collectionsArg
+          .split(",")
+          .map((x) => x.trim().toLowerCase())
+          .filter(Boolean)
+      : [];
+
+    if (!Number.isFinite(maxPrice) || maxPrice <= 0) fail("--maxPrice must be > 0", command, args);
+    if (currency !== "APE") fail("nft autobuy currently supports --currency APE only", command, args);
+    if (String(dataSource).toLowerCase() === "opensea" && !openseaKey) {
+      fail("OPENSEA_API_KEY is required for nft autobuy with OpenSea data source.", command, args);
+    }
+    if (execute && !privateKey) {
+      fail(
+        "APE_CLAW_PRIVATE_KEY is required for live nft autobuy execute. Set env var, save once with `ape-claw auth set --private-key 0x... --json`, or map your OpenClaw bot wallet secret to APE_CLAW_PRIVATE_KEY.",
+        command,
+        args,
+      );
+    }
+
+    let universe = includeDisabled ? [...allowlist] : allowlist.filter((c) => c.enabled !== false);
+    if (collectionFilters.length > 0) {
+      universe = universe.filter((c) => {
+        const hay = `${String(c.name || "").toLowerCase()} ${String(c.slug || "").toLowerCase()}`;
+        return collectionFilters.some((needle) => hay.includes(needle));
+      });
+    }
+    universe = universe.slice(0, scanLimit);
+    if (universe.length === 0) fail("No collections matched autobuy selection.", command, args);
+
+    const candidates = [];
+    const skipped = [];
+    for (const c of universe) {
+      const collectionRef = c.slug || c.name;
+      if (!collectionRef) {
+        skipped.push({ collection: c.name || "unknown", reason: "missing collection reference" });
+        continue;
+      }
+      try {
+        const policyCheck = enforceBuyPolicy({
+          policy,
+          collection: collectionRef,
+          maxPrice,
+          currency,
+          allowUnsafe: Boolean(args["allow-unsafe"]),
+          allowlist,
+        });
+        if (!policyCheck.ok) {
+          skipped.push({ collection: collectionRef, reason: policyCheck.errors.join(" ") });
+          continue;
+        }
+        const listingsOut = await getListings({
+          collection: c.slug || collectionRef,
+          maxPrice,
+          dataSource,
+          apiKey: openseaKey,
+          slugOverrides,
+        });
+        const live = (listingsOut.listings || [])
+          .filter((l) => Number.isFinite(Number(l.priceApe)) && Number(l.priceApe) > 0 && Number(l.priceApe) <= maxPrice)
+          .sort((a, b) => Number(a.priceApe) - Number(b.priceApe))[0];
+        if (!live) {
+          skipped.push({ collection: collectionRef, reason: "no listing within max price" });
+          continue;
+        }
+        candidates.push({
+          collection: collectionRef,
+          collectionName: c.name || collectionRef,
+          listing: live,
+          priceApe: Number(live.priceApe),
+          target: policyCheck.target || resolveCollectionTarget(collectionRef, allowlist).exact,
+        });
+      } catch (err) {
+        skipped.push({ collection: collectionRef, reason: err.message });
+      }
+    }
+
+    const sorted = candidates.sort((a, b) => a.priceApe - b.priceApe);
+    const selected = [];
+    let remaining = Number.isFinite(budget) && budget > 0 ? budget : Number.POSITIVE_INFINITY;
+    for (const c of sorted) {
+      if (selected.length >= count) break;
+      if (c.priceApe > remaining) continue;
+      selected.push(c);
+      remaining -= c.priceApe;
+    }
+    if (selected.length === 0) {
+      const result = {
+        ok: true,
+        message: "No autobuy candidates selected under current constraints.",
+        constraints: { count, scanLimit, maxPrice, budget: budget > 0 ? budget : null, currency, dataSource, includeDisabled },
+        scannedCollections: universe.length,
+        candidateCount: candidates.length,
+        selectedCount: 0,
+        skipped,
+      };
+      emit({ eventType: "nft.autobuy.planned", command, dryRun: !execute, payload: args, result });
+      return print(result, asJson);
+    }
+
+    const quotes = loadState(QUOTES_PATH);
+    const planned = [];
+    for (const s of selected) {
+      const quoteId = randomId("q");
+      const quote = {
+        quoteId,
+        collection: s.collection,
+        collectionTarget: s.target?.contractAddress || s.target?.slug || s.collection,
+        tokenId: String(s.listing.tokenId),
+        currency,
+        priceApe: s.priceApe,
+        maxPrice,
+        expiresAt: new Date(Date.now() + 10 * 60_000).toISOString(),
+        listingId: s.listing.listingId,
+        orderHash: s.listing.orderHash || randomId("order"),
+        routeHash: s.listing.source || "opensea",
+        source: s.listing.source || "opensea",
+        protocolAddress: s.listing.protocolAddress || "0x0000000000000068f116a894984e2db1123eb395",
+        assetContractAddress: s.listing.assetContractAddress || s.target?.contractAddress || null,
+        chainId: Number(policy.apechainChainId || 33139),
+        dryRunDefault: true,
+      };
+      quotes[quoteId] = quote;
+      planned.push({ quoteId, collection: quote.collection, tokenId: quote.tokenId, priceApe: quote.priceApe });
+    }
+    writeJson(QUOTES_PATH, quotes);
+
+    if (!execute) {
+      const result = {
+        ok: true,
+        dryRun: true,
+        message: "Autobuy planned quotes generated. Re-run with --execute --autonomous to send.",
+        constraints: { count, scanLimit, maxPrice, budget: budget > 0 ? budget : null, currency, dataSource, includeDisabled },
+        scannedCollections: universe.length,
+        candidateCount: candidates.length,
+        selectedCount: selected.length,
+        planned,
+        skipped,
+      };
+      emit({ eventType: "nft.autobuy.planned", command, dryRun: true, payload: args, result });
+      return print(result, asJson);
+    }
+
+    if (!autonomous) {
+      fail("nft autobuy execute requires --autonomous to enforce generated confirms/simulations.", command, args);
+    }
+
+    const here = fileURLToPath(import.meta.url);
+    const executions = [];
+    for (const p of planned) {
+      const childArgs = [here, "nft", "buy", "--quote", p.quoteId, "--execute", "--autonomous", "--json"];
+      if (agentId) childArgs.push("--agent-id", agentId);
+      if (agentToken) childArgs.push("--agent-token", agentToken);
+      const child = spawnSync(process.execPath, childArgs, {
+        cwd: process.cwd(),
+        encoding: "utf8",
+        env: process.env,
+      });
+      let parsed = null;
+      try {
+        parsed = JSON.parse(String(child.stdout || "").trim() || "{}");
+      } catch {}
+      executions.push({
+        quoteId: p.quoteId,
+        collection: p.collection,
+        tokenId: p.tokenId,
+        ok: child.status === 0 && Boolean(parsed?.ok !== false),
+        txHash: parsed?.txHash || null,
+        error: child.status === 0 ? null : (parsed?.error || String(child.stderr || "execute failed").trim()),
+      });
+    }
+    const failed = executions.filter((x) => !x.ok);
+    const result = {
+      ok: failed.length === 0,
+      execute: true,
+      autonomous: true,
+      constraints: { count, scanLimit, maxPrice, budget: budget > 0 ? budget : null, currency, dataSource, includeDisabled },
+      scannedCollections: universe.length,
+      candidateCount: candidates.length,
+      selectedCount: selected.length,
+      executedCount: executions.length - failed.length,
+      failedCount: failed.length,
+      executions,
+      skipped,
+    };
+    emit({
+      eventType: failed.length === 0 ? "nft.autobuy.executed" : "nft.autobuy.partial",
+      command,
+      dryRun: false,
+      payload: args,
+      result,
+      ok: failed.length === 0,
+      error: failed.length === 0 ? null : "one or more autobuy executions failed",
+    });
+    return print(result, asJson);
+  }
+
   if (group === "nft" && sub === "quote-buy") {
     const collection = args.collection;
     const tokenId = args.tokenId;
@@ -1038,6 +1246,8 @@ async function main() {
       "chain info": "ape-claw chain info --json",
       "market collections": "ape-claw market collections --recommended --json",
       "market listings": "ape-claw market listings --collection <slug> --maxPrice <n> --json",
+      "nft autobuy": "ape-claw nft autobuy --count <n> --maxPrice <n> [--budget <n>] [--scan <n>] [--all] --json",
+      "nft autobuy (execute)": "ape-claw nft autobuy --count <n> --maxPrice <n> --execute --autonomous --json",
       "nft quote-buy": "ape-claw nft quote-buy --collection <slug> --tokenId <id> --maxPrice <n> --currency APE --json",
       "nft simulate": "ape-claw nft simulate --quote <quoteId> --json",
       "nft buy": 'ape-claw nft buy --quote <quoteId> --execute --confirm "BUY <collection> #<tokenId> <priceApe> APE" --json',

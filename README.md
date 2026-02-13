@@ -222,6 +222,8 @@ ape-claw clawbot list --json
 | `auth clear --field <...> --json` | Remove one saved auth field (or `--all`) |
 | `market collections --recommended --json` | Allowlisted collections |
 | `market listings --collection <slug> --maxPrice <n> --json` | Live listings from OpenSea |
+| `nft autobuy --count <n> --maxPrice <n> --json` | Plan buys across many allowlisted collections (creates quotes) |
+| `nft autobuy --count <n> --maxPrice <n> --execute --autonomous --json` | Execute multi-collection autonomous buy loop |
 | `nft quote-buy --collection <slug> --tokenId <id> --maxPrice <n> --currency APE --json` | Create buy quote |
 | `nft simulate --quote <quoteId> --json` | Simulate before execute |
 | `nft buy --quote <quoteId> --execute --confirm "..." --json` | Execute buy on-chain (manual confirm flow) |
@@ -269,6 +271,24 @@ In `--autonomous` mode, the CLI internally:
 - runs simulation checks before execute (when policy requires simulation),
 - generates the required confirm phrase from quote/request fields,
 - still enforces all policy gates (allowlists, spend caps, replay protection, private key checks).
+
+### Multi-collection autonomous buying
+
+Use `nft autobuy` when you want the bot to choose buys across many allowlisted collections:
+
+```bash
+# Plan candidates only (no tx broadcast)
+ape-claw nft autobuy --count 3 --maxPrice 50 --budget 120 --json
+
+# Execute autonomously for selected candidates
+ape-claw nft autobuy --count 3 --maxPrice 50 --budget 120 --execute --autonomous --json
+```
+
+Notes:
+- `--count` controls how many buys to attempt.
+- `--scan` controls how many collections are scanned (default auto-calculated).
+- `--budget` applies a total spend ceiling for this autobuy run.
+- This still executes one quote per transaction and enforces policy gates for each execute.
 
 ---
 
@@ -439,7 +459,7 @@ The CLI auto-retries "Order not found" errors up to 3 times by fetching fresh li
 git clone https://github.com/simplefarmer69/ape-claw.git
 cd ape-claw
 npm install
-npm test          # 19 tests
+npm test          # 20 tests
 node ./src/cli.mjs doctor --json
 ```
 
