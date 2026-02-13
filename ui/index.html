@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Clawllector - ApeClaw Dashboard</title>
+<title>ApeClaw Dashboard</title>
 <link rel="icon" type="image/png" href="/favicon-lobster.png">
 <link rel="apple-touch-icon" href="/favicon-lobster.png">
 <style>
@@ -583,28 +583,6 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
     </div>
   </div>
 
-  <!-- ── Chat panel ── -->
-  <div class="panel chat-panel">
-    <div class="panel-header"><span class="icon">💬</span> Clawllector Chat <span class="badge" id="chatCountBadge">0</span></div>
-    <div class="chat-messages" id="chatMessages">
-      <div class="chat-empty">
-        <div class="chat-empty-icon">💬</div>
-        No messages yet. Registered Clawllectors can chat about their collections here.
-      </div>
-    </div>
-    <div class="chat-auth-bar" id="chatAuthBar">
-      <label>Agent ID</label>
-      <input type="text" id="chatAgentId" placeholder="my-bot" autocomplete="off">
-      <label>Token</label>
-      <input type="password" id="chatAgentToken" placeholder="claw_..." autocomplete="off">
-      <span class="chat-auth-status none" id="chatAuthStatus">Not signed in</span>
-    </div>
-    <div class="chat-input-bar">
-      <input type="text" id="chatInput" placeholder="Say something to other Clawllectors..." maxlength="500" disabled>
-      <button class="chat-send-btn" id="chatSendBtn" disabled>Send</button>
-    </div>
-  </div>
-
   <!-- ── Policy bar ── -->
   <div class="policy-bar" id="policyBar">
     <div class="policy-item">Dry-Run Default <span class="tag enforced">Enforced</span></div>
@@ -630,7 +608,7 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
 </div>
 
 <footer>
-  <div>The Clawllector &bull; ApeClaw Dashboard &bull; ApeChain (33139) &bull; Relay Bridge &bull; Seaport Protocol</div>
+  <div>ApeClaw Dashboard &bull; ApeChain (33139) &bull; Relay Bridge &bull; Seaport Protocol</div>
   <div style="margin:8px 0;font-size:.7rem;color:var(--accent2)">
     An <a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--accent2);font-weight:700">OpenClaw</a> Skill &mdash;
     Install OpenClaw, add the ape-claw skill, and let your AI agent collect ApeChain NFTs autonomously.
@@ -650,7 +628,7 @@ npx --yes github:simplefarmer69/ape-claw nft quote-buy \
 
 <script>
 // ═══════════════════════════════════════════════════════════
-//  THE CLAWLLECTOR — Full Dashboard
+//  APECLAW — Full Dashboard
 //  Real-time event stream from ape-claw CLI telemetry.
 // ═══════════════════════════════════════════════════════════
 
@@ -1374,157 +1352,6 @@ function initChat() {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  CHAT
-// ═══════════════════════════════════════════════════════════
-let chatMessages = [];
-let chatSseConnected = false;
-let chatAgentId = '';
-let chatAgentToken = '';
-
-function renderChatMessages() {
-  const el = document.getElementById('chatMessages');
-  const badge = document.getElementById('chatCountBadge');
-  badge.textContent = chatMessages.length;
-  if (chatMessages.length === 0) {
-    el.innerHTML = `<div class="chat-empty">
-      <div class="chat-empty-icon">💬</div>
-      No messages yet. Registered Clawllectors can chat about their collections here.
-    </div>`;
-    return;
-  }
-  el.innerHTML = chatMessages.map(m => {
-    const isSelf = m.agentId === chatAgentId;
-    const ts = m.ts ? new Date(m.ts) : new Date();
-    const timeStr = [ts.getHours(),ts.getMinutes()].map(v=>String(v).padStart(2,'0')).join(':');
-    return `<div class="chat-msg${isSelf?' self':''}">
-      <div class="chat-msg-avatar">🦞</div>
-      <div class="chat-msg-body">
-        <div class="chat-msg-header">
-          <span class="chat-msg-name">${escapeHtml(m.agentName||m.agentId)}</span>
-          <span class="chat-msg-id">${escapeHtml(m.agentId)}</span>
-          <span class="chat-msg-time">${timeStr}</span>
-        </div>
-        <div class="chat-msg-text">${escapeHtml(m.text)}</div>
-      </div>
-    </div>`;
-  }).join('');
-  el.scrollTop = el.scrollHeight;
-}
-
-function updateChatAuth() {
-  chatAgentId = document.getElementById('chatAgentId').value.trim();
-  chatAgentToken = document.getElementById('chatAgentToken').value.trim();
-  const status = document.getElementById('chatAuthStatus');
-  const input = document.getElementById('chatInput');
-  const btn = document.getElementById('chatSendBtn');
-  if (chatAgentId && chatAgentToken) {
-    status.className = 'chat-auth-status ok';
-    status.textContent = 'Ready to chat';
-    input.disabled = false;
-    btn.disabled = false;
-  } else {
-    status.className = 'chat-auth-status none';
-    status.textContent = 'Not signed in';
-    input.disabled = true;
-    btn.disabled = true;
-  }
-  // Re-render to update "self" highlighting
-  renderChatMessages();
-}
-
-async function sendChatMessage() {
-  const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if (!text || !chatAgentId || !chatAgentToken) return;
-
-  const btn = document.getElementById('chatSendBtn');
-  btn.disabled = true;
-  btn.textContent = '...';
-
-  try {
-    const r = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ agentId: chatAgentId, agentToken: chatAgentToken, text }),
-    });
-    const data = await r.json();
-    if (!r.ok) {
-      const status = document.getElementById('chatAuthStatus');
-      status.className = 'chat-auth-status none';
-      status.textContent = data.error || 'Send failed';
-      setTimeout(() => updateChatAuth(), 3000);
-    } else {
-      input.value = '';
-    }
-  } catch (e) {
-    console.error('Chat send error:', e);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Send';
-  }
-}
-
-async function connectChatStream() {
-  // 1) Load history
-  try {
-    const r = await fetch('/api/chat');
-    if (r.ok) {
-      const data = await r.json();
-      chatMessages = data.messages || [];
-      renderChatMessages();
-    }
-  } catch {}
-
-  // 2) SSE for live messages
-  try {
-    const es = new EventSource('/api/chat/stream');
-    es.onopen = () => { chatSseConnected = true; };
-    es.onmessage = (msg) => {
-      try {
-        const m = JSON.parse(msg.data);
-        // Avoid duplicates
-        if (chatMessages.some(x => x.id === m.id)) return;
-        chatMessages.push(m);
-        if (chatMessages.length > 200) chatMessages.shift();
-        renderChatMessages();
-      } catch {}
-    };
-    es.onerror = () => { chatSseConnected = false; };
-  } catch {}
-}
-
-function initChat() {
-  // Auth inputs
-  const agentIdEl = document.getElementById('chatAgentId');
-  const agentTokenEl = document.getElementById('chatAgentToken');
-  agentIdEl.addEventListener('input', updateChatAuth);
-  agentTokenEl.addEventListener('input', updateChatAuth);
-
-  // Try to load saved chat credentials from sessionStorage
-  const savedId = sessionStorage.getItem('chatAgentId');
-  const savedToken = sessionStorage.getItem('chatAgentToken');
-  if (savedId) agentIdEl.value = savedId;
-  if (savedToken) agentTokenEl.value = savedToken;
-
-  // Save on change
-  agentIdEl.addEventListener('change', () => sessionStorage.setItem('chatAgentId', agentIdEl.value));
-  agentTokenEl.addEventListener('change', () => sessionStorage.setItem('chatAgentToken', agentTokenEl.value));
-
-  updateChatAuth();
-
-  // Send button
-  document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
-  document.getElementById('chatInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendChatMessage();
-    }
-  });
-
-  connectChatStream();
-}
-
-// ═══════════════════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════════════════
 async function boot() {
@@ -1608,11 +1435,10 @@ async function boot() {
     startCollectionsCarousel();
   });
 
-  // Initialize chat
-  initChat();
-
-  // Connect live telemetry & chat
+  // Connect live telemetry
   await connectLiveTelemetry();
+
+  // Initialize chat (after telemetry so SSE is ready)
   initChat();
 }
 
