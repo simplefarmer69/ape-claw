@@ -810,12 +810,9 @@ footer::before{
     </div>
     <div class="setup-body" id="setupBody">
       <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;margin-bottom:16px;background:rgba(0,240,255,.05);border:1px solid rgba(0,240,255,.18);border-radius:var(--radius)">
-        <strong style="font-size:.7rem;color:var(--accent2)">Backend</strong>
-        <input id="backendUrlInput" type="url" placeholder="https://your-backend.example.com" style="flex:1;min-width:180px;background:rgba(0,0,0,.35);border:1px solid var(--border);color:var(--text);padding:7px 9px;border-radius:10px;font-size:.72rem" />
-        <button id="backendSaveBtn" type="button" style="padding:7px 10px;border-radius:10px;border:1px solid var(--border);background:rgba(0,240,255,.12);color:var(--text);font-size:.7rem;cursor:pointer">Save</button>
-        <button id="backendTestBtn" type="button" style="padding:7px 10px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--dim);font-size:.7rem;cursor:pointer">Test</button>
-        <button id="backendResetBtn" type="button" style="padding:7px 10px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--dim);font-size:.7rem;cursor:pointer">Local</button>
-        <span id="backendUrlStatus" style="font-size:.66rem;color:var(--dim);width:100%">Using backend: local same-origin</span>
+        <strong style="font-size:.7rem;color:var(--accent2)">Shared Backend</strong>
+        <span id="backendUrlStatus" style="font-size:.66rem;color:var(--dim);width:100%">Using backend: --</span>
+        <span style="font-size:.62rem;color:var(--dim);width:100%">Default backend is fixed for all users. Optional override: <code>?api=https://your-backend.example.com</code></span>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;margin-bottom:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--radius)">
         <strong style="font-size:.7rem;color:var(--dim)">Display</strong>
@@ -845,7 +842,7 @@ footer::before{
         <div class="setup-step">
           <div class="setup-step-num">3</div>
           <h3>Register</h3>
-          <pre>ape-claw clawbot register \
+          <pre>npx --yes github:simplefarmer69/ape-claw clawbot register \
   --agent-id my-bot \
   --name "My Bot" --json</pre>
           <p class="note">Save the <code>claw_...</code> token — shown only once.</p>
@@ -853,7 +850,7 @@ footer::before{
         <div class="setup-step">
           <div class="setup-step-num">4</div>
           <h3>Authenticate</h3>
-          <pre>ape-claw auth set \
+          <pre>npx --yes github:simplefarmer69/ape-claw auth set \
   --agent-id my-bot \
   --agent-token claw_... --json</pre>
           <p class="note">Verified agents auto-receive the shared OpenSea key.</p>
@@ -861,19 +858,19 @@ footer::before{
         <div class="setup-step">
           <div class="setup-step-num">5</div>
           <h3>Verify</h3>
-          <pre>ape-claw quickstart --json
-ape-claw doctor --json</pre>
+          <pre>npx --yes github:simplefarmer69/ape-claw quickstart --json
+npx --yes github:simplefarmer69/ape-claw doctor --json</pre>
           <p class="note">Should return <code>"ok": true</code>.</p>
         </div>
         <div class="setup-step">
           <div class="setup-step-num">6</div>
           <h3>Collect</h3>
-          <pre>ape-claw market collections --recommended --json
-ape-claw nft quote-buy \
+          <pre>npx --yes github:simplefarmer69/ape-claw market collections --recommended --json
+npx --yes github:simplefarmer69/ape-claw nft quote-buy \
   --collection dongsocks \
   --tokenId 42 --maxPrice 100 \
   --currency APE --json</pre>
-          <p class="note">Run <code>node ./src/telemetry-server.mjs</code> for live dashboard.</p>
+          <p class="note">If global install is available, replace these with <code>ape-claw ...</code>.</p>
         </div>
       </div>
     </div>
@@ -1019,6 +1016,7 @@ let COLLECTIONS = [];
 let REGISTERED_CLAWBOTS = [];
 let collectionsCarouselTimer = null;
 let API_BASE = '';
+const DEFAULT_SHARED_BACKEND = 'https://api.apeclaw.ai';
 let collectionQuery = '';
 let collectionSort = 'rank';
 let feedPaused = false;
@@ -1045,9 +1043,9 @@ function initApiBase() {
   const qp = new URLSearchParams(window.location.search).get('api');
   const runtime = normalizeApiBase(window.APECLAW_API_BASE || '');
   const meta = normalizeApiBase(document.querySelector('meta[name="apeclaw-api-base"]')?.content || '');
-  const stored = localStorage.getItem('apeclaw_api_base') || '';
-  const resolved = normalizeApiBase(qp || runtime || meta || stored);
-  API_BASE = resolved;
+  const fallback = normalizeApiBase(runtime || meta || DEFAULT_SHARED_BACKEND);
+  API_BASE = normalizeApiBase(qp || fallback);
+  try { localStorage.removeItem('apeclaw_api_base'); } catch {}
 }
 
 function apiUrl(routePath) {
@@ -1214,62 +1212,7 @@ function renderBackendStatus() {
 }
 
 function initBackendConfigUi() {
-  const input = document.getElementById('backendUrlInput');
-  const saveBtn = document.getElementById('backendSaveBtn');
-  const testBtn = document.getElementById('backendTestBtn');
-  const resetBtn = document.getElementById('backendResetBtn');
-  if (!input || !saveBtn || !resetBtn || !testBtn) return;
-
-  input.value = API_BASE;
   renderBackendStatus();
-
-  saveBtn.addEventListener('click', () => {
-    const normalized = normalizeApiBase(input.value);
-    if (!normalized && String(input.value || '').trim()) {
-      terminalLines.push({ type: 'error', text: '[Config] Invalid backend URL. Use full URL like https://api.example.com' });
-      renderTerminal();
-      return;
-    }
-    API_BASE = normalized;
-    localStorage.setItem('apeclaw_api_base', API_BASE);
-    renderBackendStatus();
-    terminalLines.push({ type: 'accent', text: `[Config] Backend set to ${describeBackend()} — reload to reconnect streams` });
-    announce(`Backend set to ${describeBackend()}`);
-    renderTerminal();
-  });
-
-  testBtn.addEventListener('click', async () => {
-    testBtn.disabled = true;
-    testBtn.textContent = 'Testing...';
-    try {
-      const r = await fetch(apiUrl('/api/health'));
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const h = await r.json();
-      const evtMb = ((h?.counts?.eventsBytes || 0) / (1024 * 1024)).toFixed(2);
-      const chatMb = ((h?.counts?.chatBytes || 0) / (1024 * 1024)).toFixed(2);
-      terminalLines.push({ type: 'success', text: `[Config] Backend reachable: ${describeBackend()}` });
-      terminalLines.push({ type: 'output', text: `[Config] Storage events=${evtMb}MB chat=${chatMb}MB` });
-      announce('Backend connection successful');
-      renderTerminal();
-    } catch (err) {
-      terminalLines.push({ type: 'error', text: `[Config] Backend test failed: ${err.message}` });
-      announce('Backend connection failed');
-      renderTerminal();
-    } finally {
-      testBtn.disabled = false;
-      testBtn.textContent = 'Test';
-    }
-  });
-
-  resetBtn.addEventListener('click', () => {
-    API_BASE = '';
-    localStorage.removeItem('apeclaw_api_base');
-    input.value = '';
-    renderBackendStatus();
-    terminalLines.push({ type: 'accent', text: '[Config] Backend reset to local same-origin — reload to reconnect streams' });
-    announce('Backend reset to local');
-    renderTerminal();
-  });
 }
 
 function initSetupEnhancements() {
@@ -1499,7 +1442,7 @@ function renderAgents() {
       <div style="font-size:2.5rem;margin-bottom:8px">🦞</div>
       <div>No Clawllectors registered yet</div>
       <div style="font-size:.68rem;margin-top:6px">Set up your <a href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a> agent, then register a Clawllector:</div>
-      <div style="margin-top:8px"><code>ape-claw clawbot register --agent-id my-clawllector --json</code></div>
+      <div style="margin-top:8px"><code>npx --yes github:simplefarmer69/ape-claw clawbot register --agent-id my-clawllector --json</code></div>
     </div>`;
     return;
   }
@@ -1536,7 +1479,7 @@ function renderNftGrid() {
   if (collectedNfts.length === 0) {
     el.innerHTML = `<div style="grid-column:1/-1;color:var(--dim);font-size:.78rem;text-align:center;padding:24px">
       <div style="font-size:2rem;margin-bottom:6px">🖼️</div>
-      No NFTs collected yet.<br>Purchases from <code>ape-claw nft buy --execute</code> appear here in real time.
+      No NFTs collected yet.<br>Purchases from <code>npx --yes github:simplefarmer69/ape-claw nft buy --execute</code> appear here in real time.
     </div>`;
     return;
   }
@@ -1562,7 +1505,7 @@ function renderBridge() {
   if (bridgeOps.length === 0) {
     el.innerHTML = `<div style="color:var(--dim);font-size:.75rem;padding:12px">
       <div style="font-size:1.5rem;margin-bottom:4px">🌉</div>
-      No bridge operations yet.<br>Real bridge data from <code>ape-claw bridge execute</code> will appear here.
+      No bridge operations yet.<br>Bridge executions from <code>npx --yes github:simplefarmer69/ape-claw bridge execute</code> appear here.
     </div>`;
     return;
   }
@@ -1743,7 +1686,7 @@ function processEvent(evt) {
     const executeReady = result.execution?.executeReady;
     const execState = executeReady ? 'execute ready' : 'read-only ready';
     const pkHint = !executeReady && !result.execution?.privateKeyProvided
-      ? ' &middot; set APE_CLAW_PRIVATE_KEY or run <code>ape-claw auth set --private-key 0x... --json</code>'
+      ? ' &middot; set APE_CLAW_PRIVATE_KEY or save one with <code>auth set --private-key 0x... --json</code>'
       : '';
     return feedItem(t,'🩺',`<strong>${escapeHtml(agentDisplayName(rawId))}</strong> doctor ${ok}${verifiedNote} &mdash; ${stats.total||'?'} collections, ${stats.unresolvedCount||0} unresolved &middot; ${escapeHtml(execState)}${pkHint}`);
   }

@@ -465,7 +465,7 @@ async function main() {
     summary.push(
       executeReady
         ? "Execute flows are ready."
-        : "Execute flows need missing secrets (private key and/or OpenSea key path).",
+        : "Execute flows need missing secrets (private key and/or OpenSea API key).",
     );
     if (registeredAgent && !sharedKeyInjected) {
       summary.push("Registered bot detected: provide agent token to inject shared OpenSea key.");
@@ -1050,7 +1050,7 @@ async function main() {
       "skill install": "ape-claw skill install --scope local --json",
     },
     globalFlags: {
-      "--json": "Required. All output as JSON for deterministic parsing.",
+      "--json": "Recommended for deterministic parsing (all output as JSON).",
       "--agent-id <id>": "Clawbot agent ID (or APE_CLAW_AGENT_ID env var).",
       "--agent-token <token>": "Clawbot auth token (or APE_CLAW_AGENT_TOKEN env var).",
       "--opensea-api-key <key>": "For auth set: persist OpenSea key in local auth profile.",

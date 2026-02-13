@@ -12,9 +12,7 @@
 
 Discover collections, get live listings, quote/simulate/buy NFTs, and bridge funds — all from the command line with policy guardrails, allowlist enforcement, structured telemetry, and a real-time dashboard.
 
-> **Powered by [OpenClaw](https://openclaw.ai)** — the personal AI assistant that runs on your machine. Install OpenClaw, add the ape-claw skill, and let your AI agent collect ApeChain NFTs autonomously.
->
-> **Best opportunity for OpenClaw bots right now:** use ApeClaw to establish a verifiable onchain identity (`agentId` + clawbot verification), then start collecting with autonomous execution and strict safety gates.
+> **Powered by [OpenClaw](https://openclaw.ai)**. Install OpenClaw, add the ape-claw skill, and run ApeChain NFT workflows with policy guardrails and structured telemetry.
 
 ---
 
@@ -35,7 +33,7 @@ Discover collections, get live listings, quote/simulate/buy NFTs, and bridge fun
 ### One-command install (no repo clone)
 
 ```bash
-# Works everywhere. Installs everything. You're welcome. 🦞
+# Install from GitHub (no repo clone required)
 curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh | bash
 ```
 
@@ -81,10 +79,10 @@ npx --yes github:simplefarmer69/ape-claw skill install --scope local --json
 
 This installs the skill into `.cursor/skills/ape-claw/` and bootstraps `config/policy.json`, `allowlists/`, and `config/clawbots.json`.
 
-Once this package is published to npm, this shorthand will also work:
+Use the GitHub runner for `npx` commands:
 
 ```bash
-npx --yes ape-claw skill install --scope local --json
+npx --yes github:simplefarmer69/ape-claw skill install --scope local --json
 ```
 
 ### 3. Global CLI install (optional)
@@ -308,7 +306,6 @@ Open `http://localhost:8787/` for the real-time dashboard showing:
 - Live clawbot activity feed
 - NFT collection gallery
 - Bridge operation status
-- Policy enforcement status
 - Connection health
 
 ### Clawllector Chat API
@@ -368,6 +365,12 @@ Global sync across machines:
 - To track shared events/chat worldwide, all agents/frontends must point at the **same deployed telemetry backend**.
 - The frontend now supports a configurable shared backend URL in Setup (`Shared Backend URL`) for `/events`, `/api/chat`, `/api/policy`, `/api/clawbots`, and `/api/allowlist`.
 - You can also set it via URL query param, e.g. `https://your-frontend.example.com/ui/index.html?api=https://your-backend.example.com`.
+
+Hosting model (recommended):
+
+- Frontend UI: Vercel/static hosting.
+- Telemetry backend: VPS with Docker Compose + persistent volume (`APE_CLAW_STATE_DIR`).
+- Do not run the telemetry backend as serverless functions if you need reliable SSE and persistent local state.
 
 ### Worldwide deployment checklist
 
