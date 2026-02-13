@@ -116,6 +116,26 @@ test("nft buy execute requires confirm phrase", () => {
   assert.match(msg, /Confirmation phrase mismatch/);
 });
 
+test("nft buy --autonomous auto-simulates and auto-confirms", () => {
+  const quote = {
+    quoteId: "q_test_autonomous",
+    collection: "Mintotaurs",
+    tokenId: "779",
+    priceApe: 40,
+    maxPrice: 40,
+    expiresAt: new Date(Date.now() + 60_000).toISOString(),
+    orderHash: "order_test3",
+    listingId: "listing_test3",
+  };
+  const statePath = path.join(process.cwd(), "state", "quotes.json");
+  fs.mkdirSync(path.dirname(statePath), { recursive: true });
+  fs.writeFileSync(statePath, JSON.stringify({ [quote.quoteId]: quote }, null, 2));
+  const msg = runFail(`node ./src/cli.mjs nft buy --quote ${quote.quoteId} --execute --autonomous --json`);
+  assert.doesNotMatch(msg, /Simulation required before execute/);
+  assert.doesNotMatch(msg, /Confirmation phrase mismatch/);
+  assert.ok(msg.length > 0, "execute should continue past simulation/confirm checks");
+});
+
 test("bridge execute requires confirm phrase", () => {
   const req = {
     requestId: "br_test_confirm_phrase",
@@ -131,5 +151,23 @@ test("bridge execute requires confirm phrase", () => {
   fs.writeFileSync(statePath, JSON.stringify({ [req.requestId]: req }, null, 2));
   const msg = runFail(`node ./src/cli.mjs bridge execute --request ${req.requestId} --execute --json`);
   assert.match(msg, /Confirmation phrase mismatch/);
+});
+
+test("bridge execute --autonomous auto-confirms", () => {
+  const req = {
+    requestId: "br_test_autonomous",
+    from: "ethereum",
+    to: "apechain",
+    token: "APE",
+    amount: 20,
+    status: "quoted",
+    expiresAt: new Date(Date.now() + 60_000).toISOString(),
+  };
+  const statePath = path.join(process.cwd(), "state", "bridge-requests.json");
+  fs.mkdirSync(path.dirname(statePath), { recursive: true });
+  fs.writeFileSync(statePath, JSON.stringify({ [req.requestId]: req }, null, 2));
+  const msg = runFail(`node ./src/cli.mjs bridge execute --request ${req.requestId} --execute --autonomous --json`);
+  assert.doesNotMatch(msg, /Confirmation phrase mismatch/);
+  assert.ok(msg.length > 0, "execute should continue past confirm checks");
 });
 

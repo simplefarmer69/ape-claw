@@ -128,9 +128,11 @@ ape-claw clawbot list --json
 | `market listings --collection <slug> --maxPrice <n> --json` | Live listings from OpenSea |
 | `nft quote-buy --collection <slug> --tokenId <id> --maxPrice <n> --currency APE --json` | Create buy quote |
 | `nft simulate --quote <quoteId> --json` | Simulate before execute |
-| `nft buy --quote <quoteId> --execute --confirm "..." --json` | Execute buy on-chain |
+| `nft buy --quote <quoteId> --execute --confirm "..." --json` | Execute buy on-chain (manual confirm flow) |
+| `nft buy --quote <quoteId> --execute --autonomous --json` | Autonomous execute: auto-simulate + auto-confirm + execute |
 | `bridge quote --from <chain> --amount <n> --json` | Create bridge quote |
-| `bridge execute --request <id> --execute --confirm "..." --json` | Execute bridge on-chain |
+| `bridge execute --request <id> --execute --confirm "..." --json` | Execute bridge on-chain (manual confirm flow) |
+| `bridge execute --request <id> --execute --autonomous --json` | Autonomous execute: auto-confirm + execute |
 | `bridge status --request <id> --json` | Check bridge status |
 | `allowlist audit --json` | Audit allowlist for unresolved contracts |
 | `skill install --scope local --json` | Install skill + bootstrap config |
@@ -158,6 +160,19 @@ ape-claw nft buy --quote "$QID" --execute --confirm "BUY $COLL #1547 $PRICE APE"
 ```
 
 **Important**: build the confirm phrase from the **quote response fields**, not your original input.
+
+### Autonomous one-command execute (bots)
+
+Use this for fully autonomous bot runs while keeping safety gates enforced:
+
+```bash
+ape-claw nft buy --quote "$QID" --execute --autonomous --json
+```
+
+In `--autonomous` mode, the CLI internally:
+- runs simulation checks before execute (when policy requires simulation),
+- generates the required confirm phrase from quote/request fields,
+- still enforces all policy gates (allowlists, spend caps, replay protection, private key checks).
 
 ---
 

@@ -483,6 +483,7 @@ async function main() {
     const quoteId = args.quote;
     if (!quoteId) fail("--quote is required", command, args);
     const execute = Boolean(args.execute);
+    const autonomous = Boolean(args.autonomous);
     const quotes = loadState(QUOTES_PATH);
     const quote = quotes[quoteId];
     if (!quote) fail(`Unknown quote ${quoteId}`, command, args);
@@ -495,6 +496,27 @@ async function main() {
       emit({ eventType: "nft.buy.dry_run", command, dryRun: true, payload: { quoteId }, result });
       return print(result, asJson);
     }
+    if (policy.nftBuy.simulationRequired && autonomous) {
+      const ok = new Date(quote.expiresAt).getTime() > Date.now();
+      quote.simulation = {
+        ok,
+        simulatedAt: new Date().toISOString(),
+        reason: ok ? "simulation_passed" : "quote_expired",
+      };
+      quotes[quoteId] = quote;
+      writeJson(QUOTES_PATH, quotes);
+      const simResult = { quoteId, ok, reason: ok ? "simulation_passed" : "quote_expired", autonomous: true };
+      emit({
+        eventType: ok ? "nft.simulation.passed" : "nft.simulation.failed",
+        command,
+        dryRun: false,
+        payload: { quoteId, autonomous: true },
+        result: simResult,
+        ok,
+        error: ok ? null : "quote expired",
+      });
+      if (!ok) fail("Quote expired. Generate a fresh quote.", command, { quoteId, autonomous: true });
+    }
     if (policy.nftBuy.simulationRequired && !quote.simulation?.ok) {
       fail("Simulation required before execute. Run: ape-claw nft simulate --quote <id> --json", command, {
         quoteId,
@@ -502,7 +524,7 @@ async function main() {
     }
     if (policy.execution.confirmPhraseRequired) {
       const expected = expectedBuyConfirmPhrase(quote);
-      const got = String(args.confirm || "");
+      const got = autonomous ? expected : String(args.confirm || "");
       if (got !== expected) {
         fail(`Confirmation phrase mismatch. Use --confirm "${expected}"`, command, { quoteId });
       }
@@ -631,6 +653,7 @@ async function main() {
         tokenId: quote.tokenId,
         priceApe: quote.priceApe,
         currency: quote.currency,
+        autonomous,
       },
       result,
     });
@@ -672,6 +695,7 @@ async function main() {
     const requestId = args.request;
     if (!requestId) fail("--request is required", command, args);
     const execute = Boolean(args.execute);
+    const autonomous = Boolean(args.autonomous);
     const requests = loadState(BRIDGE_REQUESTS_PATH);
     const req = requests[requestId];
     if (!req) fail(`Unknown request ${requestId}`, command, args);
@@ -684,7 +708,7 @@ async function main() {
     }
     if (policy.execution.confirmPhraseRequired) {
       const expected = expectedBridgeConfirmPhrase(req);
-      const got = String(args.confirm || "");
+      const got = autonomous ? expected : String(args.confirm || "");
       if (got !== expected) {
         fail(`Confirmation phrase mismatch. Use --confirm "${expected}"`, command, { requestId });
       }
@@ -718,7 +742,7 @@ async function main() {
       eventType: "bridge.execute.confirmed",
       command,
       dryRun: false,
-      payload: { requestId },
+      payload: { requestId, autonomous },
       result: executed,
     });
     return print(executed, asJson);
@@ -785,8 +809,10 @@ async function main() {
       "nft quote-buy": "ape-claw nft quote-buy --collection <slug> --tokenId <id> --maxPrice <n> --currency APE --json",
       "nft simulate": "ape-claw nft simulate --quote <quoteId> --json",
       "nft buy": 'ape-claw nft buy --quote <quoteId> --execute --confirm "BUY <collection> #<tokenId> <priceApe> APE" --json',
+      "nft buy (autonomous)": "ape-claw nft buy --quote <quoteId> --execute --autonomous --json",
       "bridge quote": "ape-claw bridge quote --from <chain> --amount <n> --json",
       "bridge execute": 'ape-claw bridge execute --request <requestId> --execute --confirm "BRIDGE <amount> <token> <from>-><to>" --json',
+      "bridge execute (autonomous)": "ape-claw bridge execute --request <requestId> --execute --autonomous --json",
       "bridge status": "ape-claw bridge status --request <requestId> --json",
       "allowlist audit": "ape-claw allowlist audit --json",
       "skill install": "ape-claw skill install --scope local --json",

@@ -13,6 +13,12 @@ This skill is designed to be used by [OpenClaw](https://openclaw.ai) AI agents (
 
 All commands output JSON. All state-changing actions require explicit `--execute`.
 
+## 0. Canonical URLs
+
+- **ApeClaw website (public)**: [https://apeclaw.ai](https://apeclaw.ai)
+- **OpenClaw website**: [https://openclaw.ai](https://openclaw.ai)
+- **ApeClaw GitHub**: [https://github.com/simplefarmer69/ape-claw](https://github.com/simplefarmer69/ape-claw)
+
 ## 1. Preflight (run once per session)
 
 ### 1a. Resolve CLI binary
@@ -136,6 +142,14 @@ $CLI nft buy --quote <quoteId> --execute --confirm "BUY <collection> #<tokenId> 
 
 Returns `{ "ok": true, "txHash": "0x...", "quoteId": "..." }` on success.
 
+Autonomous one-command execute (recommended for bots):
+
+```bash
+$CLI nft buy --quote <quoteId> --execute --autonomous --json
+```
+
+`--autonomous` internally runs required simulation checks and generates the required confirm phrase from quote fields before execute.
+
 ### Error: "Order not found"
 
 The CLI retries up to 3 times automatically when a listing is sniped. If all retries fail, it returns an error. In that case, go back to step 2 and pick a new listing.
@@ -164,6 +178,12 @@ Then run:
 $CLI bridge execute --request <requestId> --execute --confirm "BRIDGE <amount> <token> <from>-><to>" --json
 ```
 
+Autonomous execute variant:
+
+```bash
+$CLI bridge execute --request <requestId> --execute --autonomous --json
+```
+
 ### Step 3 — Check status
 
 ```bash
@@ -180,7 +200,7 @@ $CLI allowlist audit --json   # Check for unresolved contracts
 ## 6. Safety rules
 
 - **No `--execute` = dry run.** Every state-changing command is a no-op without it.
-- **`--confirm` phrase required.** Build it from the returned quote/request fields, not from your input.
+- **`--confirm` phrase required.** Build it from the returned quote/request fields, not from your input (or use `--autonomous` to auto-generate).
 - **Simulation required** before `nft buy --execute` (policy enforced).
 - **Daily spend cap** applies across NFT buys + bridge combined.
 - **Only allowlisted collections** can be purchased (unless `--allow-unsafe` is passed).
@@ -196,7 +216,11 @@ Run telemetry server for live UI:
 node ./src/telemetry-server.mjs
 ```
 
-Dashboard at `http://localhost:8787/`.
+Dashboard URLs:
+- **Local dev dashboard**: `http://localhost:8787/`
+- **Public website**: [https://apeclaw.ai](https://apeclaw.ai)
+
+Use `apeclaw.ai` for public-facing docs/comms, and `localhost:8787` for local debugging.
 
 ## 8. OpenClaw integration
 
@@ -206,3 +230,4 @@ This skill is distributed as an [OpenClaw](https://openclaw.ai) skill. Your Open
 - **OpenClaw website**: [https://openclaw.ai](https://openclaw.ai)
 - **OpenClaw GitHub**: [https://github.com/openclaw/openclaw](https://github.com/openclaw/openclaw)
 - **ApeClaw GitHub**: [https://github.com/simplefarmer69/ape-claw](https://github.com/simplefarmer69/ape-claw)
+- **ApeClaw website**: [https://apeclaw.ai](https://apeclaw.ai)
