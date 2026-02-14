@@ -1018,6 +1018,9 @@ let collectionSort = 'rank';
 let feedPaused = false;
 let terminalAutoScroll = true;
 let feedRawEvents = [];
+// De-dupe telemetry events: backlog + SSE can overlap.
+let feedKeys = [];
+const seenFeedKeys = new Set();
 const uiPrefs = {
   theme: 'abyss',
   dense: false,
@@ -1177,6 +1180,37 @@ function escapeHtml(v) {
 function escapeAttr(v) {
   return String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 }
+function eventDedupeKey(evt) {
+  if (!evt || typeof evt !== 'object') return '';
+  // traceId is generated per event and is stable across backlog/SSE.
+  if (evt.traceId) return `trace:${evt.traceId}`;
+  // txHash is stable for confirmed on-chain events.
+  const tx = evt.result?.txHash || evt.result?.hash || evt.result?.transactionHash || null;
+  if (tx) return `tx:${String(tx)}|${String(evt.eventType||'')}|${String(evt.agentId||'')}`;
+  // Fallback: stable-ish composite (avoid heavy stringify unless needed).
+  return `ts:${String(evt.ts||'')}|${String(evt.eventType||'')}|${String(evt.agentId||'')}`;
+}
+function pushFeedEvent(evt, { trim = true } = {}) {
+  const k = eventDedupeKey(evt);
+  if (k && seenFeedKeys.has(k)) return false;
+
+  const html = processEvent(evt);
+  feedItems.push({ html });
+  feedRawEvents.push(evt);
+  feedKeys.push(k || '');
+  if (k) seenFeedKeys.add(k);
+
+  if (trim) {
+    while (feedItems.length > 100) feedItems.shift();
+    while (feedRawEvents.length > 1000) {
+      feedRawEvents.shift();
+      const oldKey = feedKeys.shift();
+      if (oldKey) seenFeedKeys.delete(oldKey);
+    }
+    while (feedKeys.length > feedRawEvents.length) feedKeys.shift();
+  }
+  return true;
+}
 function collectionVisual(collection, size='chip') {
   const img = collection?.imageUrl ? escapeAttr(collection.imageUrl) : '';
   if (img) {
@@ -1310,7 +1344,13 @@ function initPanelControls() {
     feedPauseBtn.textContent = feedPaused ? 'Resume' : 'Pause';
     if (!feedPaused) renderFeed();
   });
-  if (feedClearBtn) feedClearBtn.addEventListener('click', () => { feedItems = []; feedRawEvents = []; renderFeed(); });
+  if (feedClearBtn) feedClearBtn.addEventListener('click', () => {
+    feedItems = [];
+    feedRawEvents = [];
+    feedKeys = [];
+    seenFeedKeys.clear();
+    renderFeed();
+  });
   if (feedExportBtn) feedExportBtn.addEventListener('click', () => {
     downloadBlob(`apeclaw-feed-${Date.now()}.json`, JSON.stringify(feedRawEvents.slice(-1000), null, 2), 'application/json');
   });
@@ -1764,10 +1804,16 @@ async function connectLiveTelemetry() {
     if (r.ok) {
       const data = await r.json();
       (data.events||[]).forEach(evt => {
-        const html = processEvent(evt);
-        feedItems.push({ html });
-        feedRawEvents.push(evt);
+        pushFeedEvent(evt, { trim: false });
       });
+      // Trim once after bulk push.
+      while (feedItems.length > 100) feedItems.shift();
+      while (feedRawEvents.length > 1000) {
+        feedRawEvents.shift();
+        const oldKey = feedKeys.shift();
+        if (oldKey) seenFeedKeys.delete(oldKey);
+      }
+      while (feedKeys.length > feedRawEvents.length) feedKeys.shift();
       renderFeed(); renderAgents(); updateStats();
     }
   } catch {}
@@ -1784,24 +1830,22 @@ async function connectLiveTelemetry() {
     es.onmessage = (msg) => {
       try {
         const evt = JSON.parse(msg.data);
-        const html = processEvent(evt);
-        feedItems.push({ html });
-        feedRawEvents.push(evt);
-        if (feedItems.length > 100) feedItems.shift();
-        if (feedRawEvents.length > 1000) feedRawEvents.shift();
-        if (!feedPaused) renderFeed();
-        renderAgents(); updateStats();
+        const added = pushFeedEvent(evt);
+        if (added) {
+          if (!feedPaused) renderFeed();
+          renderAgents(); updateStats();
 
-        // Mirror to terminal
-        const termType = evt.ok === false ? 'error' : (
-          evt.eventType.includes('confirmed') || evt.eventType.includes('passed') ? 'success' :
-          evt.eventType.includes('created') ? 'accent' : 'output'
-        );
-        const agName = agentDisplayName(evt.agentId || 'local-cli');
-        terminalLines.push({ type:'prompt', text: evt.command || `ape-claw ${evt.eventType}` });
-        terminalLines.push({ type: termType, text: `[${agName}] ${evt.eventType} ${evt.ok===false ? '✗ '+escapeHtml(evt.error||'') : '✓'}` });
-        if (terminalLines.length > 80) terminalLines.shift();
-        renderTerminal();
+          // Mirror to terminal
+          const termType = evt.ok === false ? 'error' : (
+            evt.eventType.includes('confirmed') || evt.eventType.includes('passed') ? 'success' :
+            evt.eventType.includes('created') ? 'accent' : 'output'
+          );
+          const agName = agentDisplayName(evt.agentId || 'local-cli');
+          terminalLines.push({ type:'prompt', text: evt.command || `ape-claw ${evt.eventType}` });
+          terminalLines.push({ type: termType, text: `[${agName}] ${evt.eventType} ${evt.ok===false ? '✗ '+escapeHtml(evt.error||'') : '✓'}` });
+          if (terminalLines.length > 80) terminalLines.shift();
+          renderTerminal();
+        }
       } catch {}
     };
     es.onerror = () => {
