@@ -226,6 +226,26 @@ async function registerClawbotRemote({ apiBase, agentId, displayName, registrati
   return data;
 }
 
+async function verifyClawbotRemote({ apiBase, agentId, agentToken }) {
+  const res = await fetch(`${apiBase}/api/clawbots/verify`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-agent-id": agentId,
+      "x-agent-token": agentToken,
+    },
+    body: JSON.stringify({ agentId }),
+  });
+  const text = await res.text();
+  let data = null;
+  try { data = JSON.parse(text); } catch {}
+  if (!res.ok) {
+    const msg = data?.reason || data?.error || `HTTP ${res.status}`;
+    throw new Error(`remote verify failed: ${msg}`);
+  }
+  return data;
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const [group, sub] = args._;
@@ -364,6 +384,7 @@ async function main() {
   const agentId = String(args["agent-id"] || process.env.APE_CLAW_AGENT_ID || storedAuth.agentId || "local-cli").trim();
   _agentId = agentId;
   const agentToken = String(args["agent-token"] || process.env.APE_CLAW_AGENT_TOKEN || storedAuth.agentToken || "").trim();
+  const apiBaseForIdentity = resolveRemoteApiBase(args);
   let verifiedBot = null;
   let sharedOpenseaKey = "";
   if (agentToken) {
@@ -372,7 +393,23 @@ async function main() {
       verifiedBot = v.agent;
       sharedOpenseaKey = v.sharedOpenseaApiKey || "";
     } else {
-      fail(`Clawbot verification failed: ${v.reason}. Register first with: ape-claw clawbot register --agent-id <id> --json`, command, { agentId });
+      // If this machine doesn't have clawbots.json (or it's out of date),
+      // try to verify against the shared backend when configured.
+      if (apiBaseForIdentity) {
+        try {
+          const rv = await verifyClawbotRemote({ apiBase: apiBaseForIdentity, agentId, agentToken });
+          if (rv?.verified) {
+            verifiedBot = rv.agent || { id: agentId, name: agentId };
+            sharedOpenseaKey = String(rv.sharedOpenseaApiKey || "");
+          } else {
+            fail(`Clawbot verification failed: ${v.reason}`, command, { agentId });
+          }
+        } catch (err) {
+          fail(`Clawbot verification failed: ${v.reason}`, command, { agentId, remote: apiBaseForIdentity, remoteError: err.message });
+        }
+      } else {
+        fail(`Clawbot verification failed: ${v.reason}. Register first with: ape-claw clawbot register --agent-id <id> --json`, command, { agentId });
+      }
     }
   }
 

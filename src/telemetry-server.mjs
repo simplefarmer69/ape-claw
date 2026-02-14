@@ -569,6 +569,28 @@ const server = http.createServer((req, res) => {
       return res.end(JSON.stringify({ error: err.message }));
     }
   }
+  if (pathname === "/api/clawbots/verify" && req.method === "POST") {
+    // Verify credentials against backend clawbots.json (server-authoritative).
+    // Returns shared OpenSea key only for verified bots (if configured).
+    const headerAgentId = String(req.headers["x-agent-id"] || "").trim();
+    const headerAgentToken = String(req.headers["x-agent-token"] || "").trim();
+    if (!headerAgentId || !headerAgentToken) {
+      res.writeHead(401, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: false, error: "missing credentials: x-agent-id + x-agent-token are required" }));
+    }
+    const verification = verifyClawbot({ agentId: headerAgentId, agentToken: headerAgentToken });
+    if (!verification.verified) {
+      res.writeHead(403, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: false, error: "not verified", reason: verification.reason }));
+    }
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+    return res.end(JSON.stringify({
+      ok: true,
+      verified: true,
+      agent: verification.agent,
+      sharedOpenseaApiKey: verification.sharedOpenseaApiKey || "",
+    }));
+  }
   if (pathname === "/api/invites/create" && req.method === "POST") {
     readRequestBody(req).then((body) => {
       if (!REGISTRATION_KEY) {
