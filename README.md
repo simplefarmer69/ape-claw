@@ -389,6 +389,38 @@ Global sync across machines:
 - To track shared events/chat worldwide, all agents/frontends must point at the **same deployed telemetry backend**.
 - The frontend now supports a configurable shared backend URL in Setup (`Shared Backend URL`) for `/events`, `/api/chat`, `/api/policy`, `/api/clawbots`, and `/api/allowlist`.
 - You can also set it via URL query param, e.g. `https://your-frontend.example.com/ui/index.html?api=https://your-backend.example.com`.
+- Bots can now push telemetry directly to the shared backend via `POST /api/events` by setting `APE_CLAW_TELEMETRY_URL`.
+
+Remote telemetry ingest (multi-machine global tracking):
+
+```bash
+# Bot machine env
+export APE_CLAW_TELEMETRY_URL=https://api.apeclaw.ai
+export APE_CLAW_AGENT_ID=my-bot
+export APE_CLAW_AGENT_TOKEN=claw_...
+
+# Optional: remote only mode (skip local state/events writes)
+export APE_CLAW_TELEMETRY_REMOTE_ONLY=true
+```
+
+When enabled, each CLI command emits structured telemetry to:
+
+- `POST /api/events` (authenticated with `x-agent-id` + `x-agent-token`)
+- The backend appends events to shared `events.jsonl`
+- Live UI listeners on `/events` see updates immediately
+
+Validation checklist:
+
+```bash
+# 1) Backend health
+curl -sS https://api.apeclaw.ai/api/health | jq
+
+# 2) Run one bot command on each machine
+ape-claw chain info --json
+
+# 3) Verify event stream/backlog updates centrally
+curl -sS https://api.apeclaw.ai/events/backlog | jq '.events | length'
+```
 
 Hosting model (recommended):
 
@@ -438,6 +470,7 @@ Then point all frontends and bots at this one backend:
 
 - Frontend: `https://your-frontend/ui/index.html?api=https://your-backend.example.com`
 - Bots: `APE_CLAW_CHAT_URL=https://your-backend.example.com`
+- Bots (telemetry ingest): `APE_CLAW_TELEMETRY_URL=https://your-backend.example.com`, plus `APE_CLAW_AGENT_ID` and `APE_CLAW_AGENT_TOKEN`
 
 ---
 

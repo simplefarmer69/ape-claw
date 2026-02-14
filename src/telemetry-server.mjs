@@ -312,6 +312,10 @@ function appendChatMessage(msg) {
   fs.appendFileSync(CHAT_PATH, JSON.stringify(msg) + "\n");
 }
 
+function appendTelemetryEvent(evt) {
+  fs.appendFileSync(EVENTS_PATH, JSON.stringify(evt) + "\n");
+}
+
 async function resolveChatAuth(req, body) {
   const agentId = body.agentId || req.headers["x-agent-id"] || "";
   const agentToken = body.agentToken || req.headers["x-agent-token"] || "";
@@ -481,6 +485,52 @@ const server = http.createServer((req, res) => {
       res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ error: err.message }));
     }
+  }
+  if (pathname === "/api/events" && req.method === "POST") {
+    readRequestBody(req).then((body) => {
+      const eventType = String(body?.eventType || "").trim();
+      if (!eventType) {
+        res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        return res.end(JSON.stringify({ error: "eventType is required" }));
+      }
+
+      const headerAgentId = String(req.headers["x-agent-id"] || "").trim();
+      const headerAgentToken = String(req.headers["x-agent-token"] || "").trim();
+      if (!headerAgentId || !headerAgentToken) {
+        res.writeHead(401, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        return res.end(JSON.stringify({ error: "missing credentials: x-agent-id + x-agent-token are required" }));
+      }
+      const verification = verifyClawbot({ agentId: headerAgentId, agentToken: headerAgentToken });
+      if (!verification.verified) {
+        res.writeHead(403, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        return res.end(JSON.stringify({ error: "not verified", reason: verification.reason }));
+      }
+
+      const evt = {
+        v: Number(body?.v || 1),
+        ts: typeof body?.ts === "string" ? body.ts : new Date().toISOString(),
+        eventType,
+        agentId: headerAgentId,
+        sessionId: String(body?.sessionId || "remote-session"),
+        traceId: String(body?.traceId || `trace_${Date.now()}`),
+        command: String(body?.command || ""),
+        dryRun: Boolean(body?.dryRun),
+        chainId: Number(body?.chainId || 33139),
+        payload: body?.payload && typeof body.payload === "object" ? body.payload : {},
+        result: body?.result && typeof body.result === "object" ? body.result : {},
+        ok: body?.ok !== false,
+        error: body?.error || null,
+      };
+      appendTelemetryEvent(evt);
+      for (const c of clients) sendSse(c, evt);
+
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: true, event: evt }));
+    }).catch(() => {
+      res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ error: "invalid JSON body" }));
+    });
+    return;
   }
   // ── Chat SSE stream ────────────────────────────────
   if (pathname === "/api/chat/stream") {

@@ -1,6 +1,34 @@
 import { appendJsonl, nowIso, randomId } from "./io.mjs";
 import { EVENTS_PATH } from "./paths.mjs";
 
+const TELEMETRY_BASE = String(process.env.APE_CLAW_TELEMETRY_URL || "").trim().replace(/\/+$/, "");
+const TELEMETRY_REMOTE_ONLY = /^(1|true|yes|on)$/i.test(String(process.env.APE_CLAW_TELEMETRY_REMOTE_ONLY || "").trim());
+
+function authHeadersForRemoteEvent(evt) {
+  const fromEnvId = String(process.env.APE_CLAW_AGENT_ID || "").trim();
+  const fromEnvToken = String(process.env.APE_CLAW_AGENT_TOKEN || "").trim();
+  const agentId = fromEnvId || String(evt.agentId || "").trim();
+  return {
+    "content-type": "application/json",
+    ...(agentId ? { "x-agent-id": agentId } : {}),
+    ...(fromEnvToken ? { "x-agent-token": fromEnvToken } : {}),
+  };
+}
+
+async function sendRemoteEvent(evt) {
+  if (!TELEMETRY_BASE) return;
+  const url = `${TELEMETRY_BASE}/api/events`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: authHeadersForRemoteEvent(evt),
+    body: JSON.stringify(evt),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`remote telemetry failed (${res.status})${body ? `: ${body.slice(0, 200)}` : ""}`);
+  }
+}
+
 export function emitEvent({
   eventType,
   agentId = "local-cli",
@@ -29,7 +57,15 @@ export function emitEvent({
     ok,
     error,
   };
-  appendJsonl(EVENTS_PATH, evt);
+  if (!TELEMETRY_REMOTE_ONLY) {
+    appendJsonl(EVENTS_PATH, evt);
+  }
+  if (TELEMETRY_BASE) {
+    void sendRemoteEvent(evt).catch((err) => {
+      // Telemetry emission must never break command execution.
+      console.warn(`[telemetry] ${err.message}`);
+    });
+  }
   return evt;
 }
 

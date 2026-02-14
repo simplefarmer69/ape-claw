@@ -4,7 +4,7 @@
   "nativeGasToken": "APE",
   "bridge": {
     "provider": "relay",
-    "maxBridgeFeeBps": 100,
+    "maxBridgeFeeBps": 400,
     "requireMinAmountOut": true,
     "defaultTo": "apechain",
     "defaultToken": "APE"
@@ -20,7 +20,7 @@
     "simulationRequired": true
   },
   "execution": {
-    "dailySpendCap": 10000,
+    "dailySpendCap": 100000,
     "confirmPhraseRequired": true,
     "autonomousMode": false
   }
