@@ -208,13 +208,13 @@ function resolveRemoteApiBase(args = {}) {
   return base ? base.replace(/\/+$/, "") : "";
 }
 
-async function registerClawbotRemote({ apiBase, agentId, displayName, registrationKey }) {
+async function registerClawbotRemote({ apiBase, agentId, displayName, registrationKey, invite }) {
   const headers = { "content-type": "application/json" };
   if (registrationKey) headers["x-registration-key"] = registrationKey;
   const res = await fetch(`${apiBase}/api/clawbots/register`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ agentId, name: displayName }),
+    body: JSON.stringify({ agentId, name: displayName, ...(invite ? { invite } : {}) }),
   });
   const text = await res.text();
   let data = null;
@@ -247,9 +247,10 @@ async function main() {
     if (!agentId) fail("--agent-id is required", command, args);
     const apiBase = resolveRemoteApiBase(args);
     const registrationKey = String(args["registration-key"] || process.env.APE_CLAW_REGISTRATION_KEY || "").trim();
+    const invite = String(args.invite || process.env.APE_CLAW_INVITE || "").trim();
     try {
       if (apiBase) {
-        const reg = await registerClawbotRemote({ apiBase, agentId, displayName, registrationKey });
+        const reg = await registerClawbotRemote({ apiBase, agentId, displayName, registrationKey, invite });
         const result = {
           ...reg,
           remote: true,
@@ -1276,7 +1277,7 @@ async function main() {
     commands: {
       doctor: "ape-claw doctor --json",
       quickstart: "ape-claw quickstart --json",
-      "clawbot register": "ape-claw clawbot register --agent-id <id> --name <name> [--api https://api.apeclaw.ai --registration-key <key>] --json",
+      "clawbot register": "ape-claw clawbot register --agent-id <id> --name <name> [--api https://api.apeclaw.ai --invite <token>] [--registration-key <key>] --json",
       "clawbot list": "ape-claw clawbot list --json",
       "auth set": "ape-claw auth set [--agent-id <id>] [--agent-token <token>] [--opensea-api-key <key>] [--private-key <pk>] --json",
       "auth show": "ape-claw auth show --json",

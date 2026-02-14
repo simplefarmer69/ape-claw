@@ -1,11 +1,13 @@
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
-import { ROOT as PROJECT_ROOT, EVENTS_PATH, ALLOWLIST_PATH, POLICY_PATH, OPENSEA_OVERRIDES_PATH, CLAWBOTS_PATH, CHAT_PATH } from "./lib/paths.mjs";
+import { createHash, randomUUID } from "node:crypto";
+import { ROOT as PROJECT_ROOT, EVENTS_PATH, ALLOWLIST_PATH, POLICY_PATH, OPENSEA_OVERRIDES_PATH, CLAWBOTS_PATH, CHAT_PATH, INVITES_PATH } from "./lib/paths.mjs";
 import { ensureDir } from "./lib/io.mjs";
 import { verifyClawbot, registerClawbot } from "./lib/clawbots.mjs";
 
 const PORT = Number(process.env.APE_CLAW_UI_PORT || 8787);
+const BIND_HOST = String(process.env.APE_CLAW_BIND_HOST || "").trim();
 const ROOT = PROJECT_ROOT;
 const UI_PATH = path.join(ROOT, "ui", "index.html");
 const clients = new Set();
@@ -13,12 +15,21 @@ const OPENSEA_API_BASE = "https://api.opensea.io/api/v2";
 const MOLTBOOK_API_BASE = String(process.env.MOLTBOOK_API_BASE || "https://www.moltbook.com/api/v1").replace(/\/+$/, "");
 const MOLTBOOK_APP_KEY = String(process.env.MOLTBOOK_APP_KEY || "").trim();
 const REGISTRATION_KEY = String(process.env.APE_CLAW_REGISTRATION_KEY || "").trim();
+const OPEN_REGISTRATION = /^(1|true|yes|on)$/i.test(String(process.env.APE_CLAW_OPEN_REGISTRATION || "").trim());
+const REGISTRATION_COOLDOWN_MS = Math.max(
+  0,
+  Number(process.env.APE_CLAW_REGISTRATION_COOLDOWN_MS || 10000),
+);
+const registrationByIp = new Map();
+const INVITE_TTL_MS = Math.max(60_000, Number(process.env.APE_CLAW_INVITE_TTL_MS || 24 * 60 * 60 * 1000));
+const INVITE_MAX_USES = Math.max(1, Number(process.env.APE_CLAW_INVITE_MAX_USES || 5));
 const ICON_CACHE_TTL_MS = 10 * 60 * 1000;
 let allowlistIconCache = { expiresAt: 0, data: null, inFlight: null };
 
 ensureDir(path.dirname(EVENTS_PATH));
 if (!fs.existsSync(EVENTS_PATH)) fs.writeFileSync(EVENTS_PATH, "");
 if (!fs.existsSync(CHAT_PATH)) fs.writeFileSync(CHAT_PATH, "");
+ensureDir(path.dirname(INVITES_PATH));
 
 function sendSse(res, evt) {
   res.write(`data: ${JSON.stringify(evt)}\n\n`);
@@ -317,6 +328,71 @@ function appendTelemetryEvent(evt) {
   fs.appendFileSync(EVENTS_PATH, JSON.stringify(evt) + "\n");
 }
 
+function sha256(input) {
+  return createHash("sha256").update(String(input)).digest("hex");
+}
+
+function readInvites() {
+  try {
+    if (!fs.existsSync(INVITES_PATH)) return { invites: {} };
+    const raw = fs.readFileSync(INVITES_PATH, "utf8");
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return { invites: {} };
+    if (!parsed.invites || typeof parsed.invites !== "object") return { invites: {} };
+    return parsed;
+  } catch {
+    return { invites: {} };
+  }
+}
+
+function writeInvites(data) {
+  try {
+    ensureDir(path.dirname(INVITES_PATH));
+    fs.writeFileSync(INVITES_PATH, JSON.stringify(data, null, 2));
+  } catch {
+    // ignore write failures (best-effort)
+  }
+}
+
+function mintInvite({ ttlMs = INVITE_TTL_MS, uses = 1 } = {}) {
+  const safeUses = Math.max(1, Math.min(INVITE_MAX_USES, Number(uses) || 1));
+  const safeTtl = Math.max(60_000, Math.min(7 * 24 * 60 * 60 * 1000, Number(ttlMs) || INVITE_TTL_MS));
+  const token = `inv_${randomUUID().replace(/-/g, "")}`;
+  const tokenHash = sha256(token);
+  const now = Date.now();
+  const invites = readInvites();
+  invites.invites[tokenHash] = {
+    createdAt: new Date(now).toISOString(),
+    expiresAt: new Date(now + safeTtl).toISOString(),
+    usesRemaining: safeUses,
+  };
+  writeInvites(invites);
+  return { token, tokenHash, expiresAt: invites.invites[tokenHash].expiresAt, usesRemaining: safeUses };
+}
+
+function consumeInvite(inviteToken) {
+  const token = String(inviteToken || "").trim();
+  if (!token) return { ok: false, reason: "missing invite" };
+  const tokenHash = sha256(token);
+  const invites = readInvites();
+  const row = invites.invites?.[tokenHash];
+  if (!row) return { ok: false, reason: "invite not found" };
+  const now = Date.now();
+  const exp = new Date(row.expiresAt || 0).getTime();
+  if (!exp || exp <= now) return { ok: false, reason: "invite expired" };
+  const remaining = Number(row.usesRemaining || 0);
+  if (remaining <= 0) return { ok: false, reason: "invite exhausted" };
+  invites.invites[tokenHash] = { ...row, usesRemaining: remaining - 1, lastUsedAt: new Date(now).toISOString() };
+  writeInvites(invites);
+  return { ok: true };
+}
+
+function clientIpFromReq(req) {
+  const xff = String(req.headers["x-forwarded-for"] || "").trim();
+  if (xff) return xff.split(",")[0].trim();
+  return String(req.socket?.remoteAddress || "").trim() || "unknown";
+}
+
 async function resolveChatAuth(req, body) {
   const agentId = body.agentId || req.headers["x-agent-id"] || "";
   const agentToken = body.agentToken || req.headers["x-agent-token"] || "";
@@ -452,6 +528,7 @@ const server = http.createServer((req, res) => {
         policy: POLICY_PATH,
         allowlist: ALLOWLIST_PATH,
         clawbots: CLAWBOTS_PATH,
+        invites: INVITES_PATH,
       },
       counts: {
         eventsBytes: fs.existsSync(EVENTS_PATH) ? fs.statSync(EVENTS_PATH).size : 0,
@@ -461,6 +538,10 @@ const server = http.createServer((req, res) => {
         moltbookEnabled: Boolean(MOLTBOOK_APP_KEY),
         moltbookApiBase: MOLTBOOK_API_BASE,
         registrationEnabled: Boolean(REGISTRATION_KEY),
+        openRegistration: OPEN_REGISTRATION,
+        registrationCooldownMs: REGISTRATION_COOLDOWN_MS,
+        inviteTtlMs: INVITE_TTL_MS,
+        inviteMaxUses: INVITE_MAX_USES,
       },
       ts: new Date().toISOString(),
     };
@@ -488,16 +569,67 @@ const server = http.createServer((req, res) => {
       return res.end(JSON.stringify({ error: err.message }));
     }
   }
-  if (pathname === "/api/clawbots/register" && req.method === "POST") {
+  if (pathname === "/api/invites/create" && req.method === "POST") {
     readRequestBody(req).then((body) => {
       if (!REGISTRATION_KEY) {
         res.writeHead(503, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
-        return res.end(JSON.stringify({ error: "registration is disabled: backend missing APE_CLAW_REGISTRATION_KEY" }));
+        return res.end(JSON.stringify({ error: "invite creation disabled: backend missing APE_CLAW_REGISTRATION_KEY" }));
       }
       const providedKey = String(req.headers["x-registration-key"] || "").trim();
       if (!providedKey || providedKey !== REGISTRATION_KEY) {
         res.writeHead(403, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
         return res.end(JSON.stringify({ error: "invalid registration key" }));
+      }
+      const ttlMs = body?.ttlMs;
+      const uses = body?.uses;
+      const invite = mintInvite({ ttlMs, uses });
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({
+        ok: true,
+        invite: invite.token,
+        expiresAt: invite.expiresAt,
+        usesRemaining: invite.usesRemaining,
+        note: "Share this invite privately. It can be redeemed via clawbot register --invite <token>.",
+      }));
+    }).catch(() => {
+      res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ error: "invalid JSON body" }));
+    });
+    return;
+  }
+  if (pathname === "/api/clawbots/register" && req.method === "POST") {
+    readRequestBody(req).then((body) => {
+      const inviteToken = String(body?.invite || "").trim();
+      const inviteOk = inviteToken ? consumeInvite(inviteToken) : { ok: false, reason: "missing invite" };
+
+      if (!REGISTRATION_KEY && !OPEN_REGISTRATION && !inviteOk.ok) {
+        res.writeHead(503, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        return res.end(JSON.stringify({
+          error: "registration is disabled: use an invite, set APE_CLAW_REGISTRATION_KEY, or enable APE_CLAW_OPEN_REGISTRATION",
+        }));
+      }
+      const hasValidKey = (() => {
+        if (!REGISTRATION_KEY) return false;
+        const providedKey = String(req.headers["x-registration-key"] || "").trim();
+        return Boolean(providedKey) && providedKey === REGISTRATION_KEY;
+      })();
+      if (!OPEN_REGISTRATION && !hasValidKey && !inviteOk.ok) {
+        res.writeHead(403, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        return res.end(JSON.stringify({ error: "registration not allowed (missing invite or invalid registration key)" }));
+      }
+      if (OPEN_REGISTRATION && !hasValidKey && REGISTRATION_COOLDOWN_MS > 0) {
+        const ip = clientIpFromReq(req);
+        const now = Date.now();
+        const last = Number(registrationByIp.get(ip) || 0);
+        if (last && now - last < REGISTRATION_COOLDOWN_MS) {
+          const waitMs = REGISTRATION_COOLDOWN_MS - (now - last);
+          res.writeHead(429, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+          return res.end(JSON.stringify({
+            error: "registration rate limited",
+            retryAfterMs: waitMs,
+          }));
+        }
+        registrationByIp.set(ip, now);
       }
 
       const agentId = String(body?.agentId || "").trim();
@@ -757,7 +889,7 @@ fs.watchFile(EVENTS_PATH, { interval: 500 }, () => {
   }
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, BIND_HOST || undefined, () => {
   console.log(`ape-claw telemetry server listening on http://localhost:${PORT}`);
   console.log(`SSE stream: http://localhost:${PORT}/events`);
 });

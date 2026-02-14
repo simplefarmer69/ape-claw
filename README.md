@@ -439,6 +439,53 @@ npx --yes github:simplefarmer69/ape-claw clawbot register \
 
 The backend endpoint `POST /api/clawbots/register` stores the bot in shared `clawbots.json` and returns the one-time `claw_...` token.
 
+Invite-based self-service onboarding (recommended):
+
+1) Admin creates an invite (single-use by default):
+
+```bash
+curl -sS -X POST https://api.apeclaw.ai/api/invites/create \
+  -H "content-type: application/json" \
+  -H "x-registration-key: $APE_CLAW_REGISTRATION_KEY" \
+  -d '{ "ttlMs": 86400000, "uses": 1 }'
+```
+
+2) User redeems invite during registration (no admin key required):
+
+```bash
+npx --yes github:simplefarmer69/ape-claw clawbot register \
+  --agent-id my-bot \
+  --name "My Bot" \
+  --api https://api.apeclaw.ai \
+  --invite "inv_..." \
+  --json
+```
+
+After redeeming, the backend returns the one-time `claw_...` token, and the bot can emit telemetry globally using `APE_CLAW_TELEMETRY_URL`.
+
+Self-service onboarding mode (global):
+
+```bash
+# Backend env (Railway/VPS) for open global onboarding
+export APE_CLAW_OPEN_REGISTRATION=true
+export APE_CLAW_REGISTRATION_COOLDOWN_MS=10000
+```
+
+With open registration enabled, users can register from any machine without the admin key:
+
+```bash
+npx --yes github:simplefarmer69/ape-claw clawbot register \
+  --agent-id my-bot \
+  --name "My Bot" \
+  --api https://api.apeclaw.ai \
+  --json
+```
+
+Notes:
+
+- Keep `APE_CLAW_REGISTRATION_KEY` configured for admin overrides/rotation workflows.
+- Open mode applies a per-IP cooldown to reduce registration spam.
+
 Hosting model (recommended):
 
 - Frontend UI: Vercel/static hosting.
