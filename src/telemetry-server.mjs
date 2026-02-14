@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { ROOT as PROJECT_ROOT, EVENTS_PATH, ALLOWLIST_PATH, POLICY_PATH, OPENSEA_OVERRIDES_PATH, CLAWBOTS_PATH, CHAT_PATH } from "./lib/paths.mjs";
 import { ensureDir } from "./lib/io.mjs";
-import { verifyClawbot } from "./lib/clawbots.mjs";
+import { verifyClawbot, registerClawbot } from "./lib/clawbots.mjs";
 
 const PORT = Number(process.env.APE_CLAW_UI_PORT || 8787);
 const ROOT = PROJECT_ROOT;
@@ -12,6 +12,7 @@ const clients = new Set();
 const OPENSEA_API_BASE = "https://api.opensea.io/api/v2";
 const MOLTBOOK_API_BASE = String(process.env.MOLTBOOK_API_BASE || "https://www.moltbook.com/api/v1").replace(/\/+$/, "");
 const MOLTBOOK_APP_KEY = String(process.env.MOLTBOOK_APP_KEY || "").trim();
+const REGISTRATION_KEY = String(process.env.APE_CLAW_REGISTRATION_KEY || "").trim();
 const ICON_CACHE_TTL_MS = 10 * 60 * 1000;
 let allowlistIconCache = { expiresAt: 0, data: null, inFlight: null };
 
@@ -394,7 +395,7 @@ async function verifyMoltbookIdentity(identityToken) {
 const CORS_HEADERS = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "GET, POST, OPTIONS",
-  "access-control-allow-headers": "content-type, x-agent-id, x-agent-token, x-moltbook-identity",
+  "access-control-allow-headers": "content-type, x-agent-id, x-agent-token, x-moltbook-identity, x-registration-key",
 };
 
 const server = http.createServer((req, res) => {
@@ -459,6 +460,7 @@ const server = http.createServer((req, res) => {
       identity: {
         moltbookEnabled: Boolean(MOLTBOOK_APP_KEY),
         moltbookApiBase: MOLTBOOK_API_BASE,
+        registrationEnabled: Boolean(REGISTRATION_KEY),
       },
       ts: new Date().toISOString(),
     };
@@ -485,6 +487,45 @@ const server = http.createServer((req, res) => {
       res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ error: err.message }));
     }
+  }
+  if (pathname === "/api/clawbots/register" && req.method === "POST") {
+    readRequestBody(req).then((body) => {
+      if (!REGISTRATION_KEY) {
+        res.writeHead(503, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        return res.end(JSON.stringify({ error: "registration is disabled: backend missing APE_CLAW_REGISTRATION_KEY" }));
+      }
+      const providedKey = String(req.headers["x-registration-key"] || "").trim();
+      if (!providedKey || providedKey !== REGISTRATION_KEY) {
+        res.writeHead(403, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        return res.end(JSON.stringify({ error: "invalid registration key" }));
+      }
+
+      const agentId = String(body?.agentId || "").trim();
+      const displayName = String(body?.name || agentId || "").trim();
+      if (!agentId) {
+        res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        return res.end(JSON.stringify({ error: "agentId is required" }));
+      }
+      try {
+        const reg = registerClawbot({ agentId, displayName });
+        const result = {
+          registered: true,
+          agentId: reg.agentId,
+          name: reg.displayName,
+          token: reg.token,
+          note: "Save this token — it is shown only once. Use as APE_CLAW_AGENT_TOKEN or --agent-token.",
+        };
+        res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        return res.end(JSON.stringify(result));
+      } catch (err) {
+        res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        return res.end(JSON.stringify({ error: err.message || "registration failed" }));
+      }
+    }).catch(() => {
+      res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ error: "invalid JSON body" }));
+    });
+    return;
   }
   if (pathname === "/api/events" && req.method === "POST") {
     readRequestBody(req).then((body) => {

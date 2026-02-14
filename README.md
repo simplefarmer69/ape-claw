@@ -422,6 +422,23 @@ ape-claw chain info --json
 curl -sS https://api.apeclaw.ai/events/backlog | jq '.events | length'
 ```
 
+Global bot registration (no manual clawbots.json resync):
+
+```bash
+# Backend env (Railway/VPS)
+export APE_CLAW_REGISTRATION_KEY=super_secret_registration_key
+
+# Any bot machine can now register directly against shared backend
+npx --yes github:simplefarmer69/ape-claw clawbot register \
+  --agent-id my-bot \
+  --name "My Bot" \
+  --api https://api.apeclaw.ai \
+  --registration-key "$APE_CLAW_REGISTRATION_KEY" \
+  --json
+```
+
+The backend endpoint `POST /api/clawbots/register` stores the bot in shared `clawbots.json` and returns the one-time `claw_...` token.
+
 Hosting model (recommended):
 
 - Frontend UI: Vercel/static hosting.

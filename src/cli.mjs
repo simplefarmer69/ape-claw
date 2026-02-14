@@ -201,6 +201,31 @@ function installApeClawSkill(args) {
   };
 }
 
+function resolveRemoteApiBase(args = {}) {
+  const explicit = String(args.api || "").trim();
+  const fromEnv = String(process.env.APE_CLAW_API_BASE || process.env.APE_CLAW_TELEMETRY_URL || "").trim();
+  const base = explicit || fromEnv;
+  return base ? base.replace(/\/+$/, "") : "";
+}
+
+async function registerClawbotRemote({ apiBase, agentId, displayName, registrationKey }) {
+  const headers = { "content-type": "application/json" };
+  if (registrationKey) headers["x-registration-key"] = registrationKey;
+  const res = await fetch(`${apiBase}/api/clawbots/register`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ agentId, name: displayName }),
+  });
+  const text = await res.text();
+  let data = null;
+  try { data = JSON.parse(text); } catch {}
+  if (!res.ok) {
+    const msg = data?.error || `HTTP ${res.status}`;
+    throw new Error(`remote registration failed: ${msg}`);
+  }
+  return data;
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const [group, sub] = args._;
@@ -220,7 +245,19 @@ async function main() {
     const agentId = String(args["agent-id"] || "").trim();
     const displayName = String(args.name || agentId || "").trim();
     if (!agentId) fail("--agent-id is required", command, args);
+    const apiBase = resolveRemoteApiBase(args);
+    const registrationKey = String(args["registration-key"] || process.env.APE_CLAW_REGISTRATION_KEY || "").trim();
     try {
+      if (apiBase) {
+        const reg = await registerClawbotRemote({ apiBase, agentId, displayName, registrationKey });
+        const result = {
+          ...reg,
+          remote: true,
+          apiBase,
+        };
+        emitEvent({ eventType: "clawbot.registered", command, dryRun: true, result: { agentId: reg.agentId, name: reg.name || displayName, remote: true } });
+        return print(result, asJson);
+      }
       const reg = registerClawbot({ agentId, displayName });
       const result = {
         registered: true,
@@ -228,11 +265,12 @@ async function main() {
         name: reg.displayName,
         token: reg.token,
         note: "Save this token — it is shown only once. Use as APE_CLAW_AGENT_TOKEN or --agent-token.",
+        remote: false,
       };
       emitEvent({ eventType: "clawbot.registered", command, dryRun: true, result: { agentId: reg.agentId, name: reg.displayName } });
       return print(result, asJson);
     } catch (err) {
-      fail(err.message, command, { agentId });
+      fail(err.message, command, { agentId, apiBase: apiBase || null });
     }
   }
   if (group === "clawbot" && sub === "list") {
@@ -1238,7 +1276,7 @@ async function main() {
     commands: {
       doctor: "ape-claw doctor --json",
       quickstart: "ape-claw quickstart --json",
-      "clawbot register": "ape-claw clawbot register --agent-id <id> --name <name> --json",
+      "clawbot register": "ape-claw clawbot register --agent-id <id> --name <name> [--api https://api.apeclaw.ai --registration-key <key>] --json",
       "clawbot list": "ape-claw clawbot list --json",
       "auth set": "ape-claw auth set [--agent-id <id>] [--agent-token <token>] [--opensea-api-key <key>] [--private-key <pk>] --json",
       "auth show": "ape-claw auth show --json",
