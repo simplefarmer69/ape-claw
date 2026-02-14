@@ -1701,7 +1701,10 @@ function processEvent(evt) {
   // ── Chain info
   if (et === 'chain.info.read') {
     const block = result.latestBlock ? `block ${Number(result.latestBlock).toLocaleString()}` : 'block unknown';
-    const rpcStatus = result.rpcOk ? 'RPC ✓' : 'RPC ✗';
+    // Treat missing rpcOk as unknown (neutral) rather than failure.
+    const rpcStatus = (typeof result.rpcOk === 'boolean')
+      ? (result.rpcOk ? 'RPC ✓' : 'RPC ✗')
+      : 'RPC ?';
     if (result.latestBlock) document.getElementById('chainBlock').textContent = `#${Number(result.latestBlock).toLocaleString()}`;
     return feedItem(t,'⛓️',`<strong>${escapeHtml(ag)}</strong> chain info: ${block}, ${rpcStatus}`);
   }

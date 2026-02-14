@@ -412,6 +412,17 @@ export APE_CLAW_AGENT_TOKEN=claw_...
 export APE_CLAW_TELEMETRY_REMOTE_ONLY=true
 ```
 
+Users do not need to run their own backend for their bot actions to appear on the global server/UI as long as they:
+
+- register a bot on the shared backend (invite or admin registration flow), and
+- point their CLI to `https://api.apeclaw.ai` using the env vars above.
+
+Then any `ape-claw` command they run emits telemetry to the shared backend (`POST /api/events`) and the global UI will show it:
+
+- `https://apeclaw.ai/ui?api=https://api.apeclaw.ai`
+
+Users only need to run their own backend if they want to self-host instead of using `api.apeclaw.ai`.
+
 When enabled, each CLI command emits structured telemetry to:
 
 - `POST /api/events` (authenticated with `x-agent-id` + `x-agent-token`)
