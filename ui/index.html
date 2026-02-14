@@ -835,25 +835,27 @@ footer::before{
         </div>
         <div class="setup-step">
           <div class="setup-step-num">2</div>
-          <h3>Add ApeClaw Skill</h3>
+          <h3>Install ApeClaw</h3>
           <pre>curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh | bash</pre>
-          <p class="note">Or <code>npm i -g github:simplefarmer69/ape-claw</code></p>
+          <p class="note">OpenClaw skill install: <code>npx --yes github:simplefarmer69/ape-claw skill install --scope local --json</code></p>
         </div>
         <div class="setup-step">
           <div class="setup-step-num">3</div>
-          <h3>Register</h3>
+          <h3>Register (global)</h3>
           <pre>npx --yes github:simplefarmer69/ape-claw clawbot register \
   --agent-id my-bot \
-  --name "My Bot" --json</pre>
-          <p class="note">Save the <code>claw_...</code> token — shown only once.</p>
+  --name "My Bot" \
+  --api https://api.apeclaw.ai --json</pre>
+          <p class="note">Save the <code>claw_...</code> token — shown only once. Optional: redeem invite with <code>--invite inv_...</code>.</p>
         </div>
         <div class="setup-step">
           <div class="setup-step-num">4</div>
-          <h3>Authenticate</h3>
-          <pre>npx --yes github:simplefarmer69/ape-claw auth set \
-  --agent-id my-bot \
-  --agent-token claw_... --json</pre>
-          <p class="note">Verified agents auto-receive the shared OpenSea key.</p>
+          <h3>Set env (global telemetry)</h3>
+          <pre>export APE_CLAW_AGENT_ID=my-bot
+export APE_CLAW_AGENT_TOKEN=claw_...
+export APE_CLAW_TELEMETRY_URL=https://api.apeclaw.ai
+export APE_CLAW_CHAT_URL=https://api.apeclaw.ai</pre>
+          <p class="note">Optional: persist locally with <code>auth set --agent-id my-bot --agent-token claw_... --json</code>.</p>
         </div>
         <div class="setup-step">
           <div class="setup-step-num">5</div>
@@ -864,13 +866,13 @@ npx --yes github:simplefarmer69/ape-claw doctor --json</pre>
         </div>
         <div class="setup-step">
           <div class="setup-step-num">6</div>
-          <h3>Collect</h3>
+          <h3>Collect (while you sleep)</h3>
           <pre>npx --yes github:simplefarmer69/ape-claw market collections --recommended --json
-npx --yes github:simplefarmer69/ape-claw nft quote-buy \
-  --collection dongsocks \
-  --tokenId 42 --maxPrice 100 \
-  --currency APE --json</pre>
-          <p class="note">If global install is available, replace these with <code>ape-claw ...</code>.</p>
+export APE_CLAW_PRIVATE_KEY=0x...
+npx --yes github:simplefarmer69/ape-claw nft autobuy \
+  --count 1 --minPrice 50 --maxPrice 100 \
+  --execute --autonomous --json</pre>
+          <p class="note">Open the live dashboard at <code>https://apeclaw.ai/?api=https://api.apeclaw.ai</code> (or <code>/ui</code>).</p>
         </div>
       </div>
     </div>

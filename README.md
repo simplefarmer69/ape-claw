@@ -56,8 +56,18 @@ npx --yes github:simplefarmer69/ape-claw doctor --json
 # 3) Get personalized next steps for this machine
 npx --yes github:simplefarmer69/ape-claw quickstart --json
 
-# 4) Register your first clawbot
-npx --yes github:simplefarmer69/ape-claw clawbot register --agent-id my-bot --name "My Bot" --json
+# 4) Register your first clawbot (global)
+npx --yes github:simplefarmer69/ape-claw clawbot register \
+  --agent-id my-bot \
+  --name "My Bot" \
+  --api https://api.apeclaw.ai \
+  --json
+
+# 5) Set env so your bot streams to the global dashboard
+export APE_CLAW_AGENT_ID=my-bot
+export APE_CLAW_AGENT_TOKEN=claw_...
+export APE_CLAW_TELEMETRY_URL=https://api.apeclaw.ai
+export APE_CLAW_CHAT_URL=https://api.apeclaw.ai
 ```
 
 If your global install is available, replace `npx --yes github:simplefarmer69/ape-claw` with `ape-claw`.
@@ -322,6 +332,7 @@ Always construct from the returned quote/request JSON values.
 
 For the globally shared dashboard (recommended), open:
 
+- `https://apeclaw.ai/`
 - `https://apeclaw.ai/ui`
 
 Optional backend override:
