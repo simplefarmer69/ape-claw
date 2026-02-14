@@ -222,8 +222,8 @@ ape-claw clawbot list --json
 | `auth clear --field <...> --json` | Remove one saved auth field (or `--all`) |
 | `market collections --recommended --json` | Allowlisted collections |
 | `market listings --collection <slug> --maxPrice <n> --json` | Live listings from OpenSea |
-| `nft autobuy --count <n> --maxPrice <n> --json` | Plan buys across many allowlisted collections (creates quotes) |
-| `nft autobuy --count <n> --maxPrice <n> --execute --autonomous --json` | Execute multi-collection autonomous buy loop |
+| `nft autobuy --count <n> [--minPrice <n>] --maxPrice <n> --json` | Plan buys across allowlisted collections (optional price floor; creates quotes) |
+| `nft autobuy --count <n> [--minPrice <n>] --maxPrice <n> --execute --autonomous --json` | Execute multi-collection autonomous buy loop (optional price floor) |
 | `nft quote-buy --collection <slug> --tokenId <id> --maxPrice <n> --currency APE --json` | Create buy quote |
 | `nft simulate --quote <quoteId> --json` | Simulate before execute |
 | `nft buy --quote <quoteId> --execute --confirm "..." --json` | Execute buy on-chain (manual confirm flow) |
@@ -281,7 +281,7 @@ Use `nft autobuy` when you want the bot to choose buys across many allowlisted c
 ape-claw nft autobuy --count 3 --maxPrice 50 --budget 120 --json
 
 # Execute autonomously for selected candidates
-ape-claw nft autobuy --count 3 --maxPrice 50 --budget 120 --execute --autonomous --json
+ape-claw nft autobuy --count 3 --minPrice 0 --maxPrice 50 --budget 120 --execute --autonomous --json
 ```
 
 Notes:
@@ -311,7 +311,7 @@ Always construct from the returned quote/request JSON values.
 | `simulationRequired` | Must simulate before buy |
 | `confirmPhraseRequired` | Must provide exact confirm string |
 | `dailySpendCap` | Combined NFT + bridge spend enforced |
-| Collection allowlist | Only recommended collections (unless `--allow-unsafe`) |
+| Collection allowlist | Autobuy scans the recommended allowlist by default. You can bypass allowlist checks with `--allow-unsafe`, but autobuy still only *scans* the allowlist universe unless you add discovery. |
 | Currency allowlist | Only `APE` by default |
 | Replay protection | Quotes can only be executed once |
 | Private key check | Explicit check before any tx |

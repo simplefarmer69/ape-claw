@@ -636,6 +636,7 @@ async function main() {
     const count = Math.max(1, Number(args.count || 1));
     const scanLimit = Math.max(count, Number(args.scan || Math.max(10, count * 4)));
     const maxPrice = Number(args.maxPrice || policy.nftBuy.maxPricePerTx);
+    const minPrice = Number(args.minPrice || 0);
     const budget = Number(args.budget || 0);
     const currency = String(args.currency || "APE").toUpperCase();
     const dataSource = String(args.dataSource || policy.market.dataSource || "opensea");
@@ -649,6 +650,8 @@ async function main() {
       : [];
 
     if (!Number.isFinite(maxPrice) || maxPrice <= 0) fail("--maxPrice must be > 0", command, args);
+    if (!Number.isFinite(minPrice) || minPrice < 0) fail("--minPrice must be >= 0", command, args);
+    if (minPrice > maxPrice) fail("--minPrice must be <= --maxPrice", command, args);
     if (currency !== "APE") fail("nft autobuy currently supports --currency APE only", command, args);
     if (String(dataSource).toLowerCase() === "opensea" && !openseaKey) {
       fail("OPENSEA_API_KEY is required for nft autobuy with OpenSea data source.", command, args);
@@ -700,10 +703,13 @@ async function main() {
           slugOverrides,
         });
         const live = (listingsOut.listings || [])
-          .filter((l) => Number.isFinite(Number(l.priceApe)) && Number(l.priceApe) > 0 && Number(l.priceApe) <= maxPrice)
+          .filter((l) => {
+            const p = Number(l.priceApe);
+            return Number.isFinite(p) && p > 0 && p >= minPrice && p <= maxPrice;
+          })
           .sort((a, b) => Number(a.priceApe) - Number(b.priceApe))[0];
         if (!live) {
-          skipped.push({ collection: collectionRef, reason: "no listing within max price" });
+          skipped.push({ collection: collectionRef, reason: "no listing within price range" });
           continue;
         }
         candidates.push({
@@ -731,7 +737,7 @@ async function main() {
       const result = {
         ok: true,
         message: "No autobuy candidates selected under current constraints.",
-        constraints: { count, scanLimit, maxPrice, budget: budget > 0 ? budget : null, currency, dataSource, includeDisabled },
+        constraints: { count, scanLimit, minPrice, maxPrice, budget: budget > 0 ? budget : null, currency, dataSource, includeDisabled },
         scannedCollections: universe.length,
         candidateCount: candidates.length,
         selectedCount: 0,
@@ -773,7 +779,7 @@ async function main() {
         ok: true,
         dryRun: true,
         message: "Autobuy planned quotes generated. Re-run with --execute --autonomous to send.",
-        constraints: { count, scanLimit, maxPrice, budget: budget > 0 ? budget : null, currency, dataSource, includeDisabled },
+        constraints: { count, scanLimit, minPrice, maxPrice, budget: budget > 0 ? budget : null, currency, dataSource, includeDisabled },
         scannedCollections: universe.length,
         candidateCount: candidates.length,
         selectedCount: selected.length,
@@ -817,7 +823,7 @@ async function main() {
       ok: failed.length === 0,
       execute: true,
       autonomous: true,
-      constraints: { count, scanLimit, maxPrice, budget: budget > 0 ? budget : null, currency, dataSource, includeDisabled },
+      constraints: { count, scanLimit, minPrice, maxPrice, budget: budget > 0 ? budget : null, currency, dataSource, includeDisabled },
       scannedCollections: universe.length,
       candidateCount: candidates.length,
       selectedCount: selected.length,
@@ -1285,8 +1291,8 @@ async function main() {
       "chain info": "ape-claw chain info --json",
       "market collections": "ape-claw market collections --recommended --json",
       "market listings": "ape-claw market listings --collection <slug> --maxPrice <n> --json",
-      "nft autobuy": "ape-claw nft autobuy --count <n> --maxPrice <n> [--budget <n>] [--scan <n>] [--all] --json",
-      "nft autobuy (execute)": "ape-claw nft autobuy --count <n> --maxPrice <n> --execute --autonomous --json",
+      "nft autobuy": "ape-claw nft autobuy --count <n> [--minPrice <n>] --maxPrice <n> [--budget <n>] [--scan <n>] [--all] --json",
+      "nft autobuy (execute)": "ape-claw nft autobuy --count <n> [--minPrice <n>] --maxPrice <n> --execute --autonomous --json",
       "nft quote-buy": "ape-claw nft quote-buy --collection <slug> --tokenId <id> --maxPrice <n> --currency APE --json",
       "nft simulate": "ape-claw nft simulate --quote <quoteId> --json",
       "nft buy": 'ape-claw nft buy --quote <quoteId> --execute --confirm "BUY <collection> #<tokenId> <priceApe> APE" --json',
