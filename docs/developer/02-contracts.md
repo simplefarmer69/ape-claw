@@ -1,6 +1,6 @@
 # Smart Contracts Reference
 
-Complete reference for all ApeClaw v2-alpha smart contracts, including ABIs, function signatures, events, and viem integration examples.
+Complete reference for all ApeClaw v2 smart contracts, including ABIs, function signatures, events, and viem integration examples.
 
 ## Table of Contents
 

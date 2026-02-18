@@ -75,7 +75,7 @@ Execution is value-moving. Enforce caps and require explicit approvals.
 
 Read: `docs/V1_WORKFLOWS.md`.
 
-## v2-alpha (Onchain Skills + Receipts)
+## v2 (Onchain Skills + Receipts)
 
 ### Deploy + seed locally (Hardhat devnet)
 

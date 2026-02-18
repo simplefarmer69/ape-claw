@@ -50,7 +50,8 @@ Links:
 - **UI (direct)**: `https://apeclaw.ai/ui`
 - **THE POD landing**: `https://apeclaw.ai/pod`
 - **Docs (web)**: `https://apeclaw.ai/docs`
-- **v2-alpha docs**: `docs/APECLAW_V2_ALPHA.md`
+- **Skills Library**: `https://apeclaw.ai/skills`
+- **v2 docs**: `docs/APECLAW_V2_ALPHA.md`
 - **Web4 plan status**: `docs/WEB4_PLAN_STATUS.md`
 - **Supported networks (reality check)**: `docs/SUPPORTED_NETWORKS.md`
 - **Contributing**: `docs/CONTRIBUTING.md`
@@ -151,7 +152,7 @@ PodVault (coming soon):
 - First-class SkillCard payload extraction directly from `clawhub.ai` pages (the GitHub mirror path works today)
 - Publishing SkillCards to IPFS/Arweave (today `uri` is typically `file://...` or a source URL)
 
-### Run v2-alpha locally (devnet)
+### Run v2 locally (devnet)
 
 ```bash
 npm run contracts:compile
@@ -372,12 +373,12 @@ ape-claw clawbot list --json
 | `RPC_URL_<chainId>` | Optional | RPC override (e.g. `RPC_URL_33139` for ApeChain) |
 | `RELAY_API_KEY` | Optional | Relay bridge rate limit override |
 | `APECLAW_SKILLCARD_URI_BASE` | Optional | v2 seed script URI base for publishing SkillCards (instead of `file://...`) |
-| `APE_CLAW_V2_RPC_URL` | Optional | v2-alpha RPC URL for onchain v2 commands |
-| `APE_CLAW_V2_PRIVATE_KEY` | Optional | v2-alpha private key for onchain v2 commands |
-| `APE_CLAW_V2_SKILL_NFT` | Optional | v2-alpha SkillNFT address |
-| `APE_CLAW_V2_SKILL_REGISTRY` | Optional | v2-alpha SkillRegistry address |
-| `APE_CLAW_V2_INTENT_REGISTRY` | Optional | v2-alpha IntentRegistry address |
-| `APE_CLAW_V2_RECEIPT_REGISTRY` | Optional | v2-alpha ReceiptRegistry address |
+| `APE_CLAW_V2_RPC_URL` | Optional | v2 RPC URL for onchain v2 commands |
+| `APE_CLAW_V2_PRIVATE_KEY` | Optional | v2 private key for onchain v2 commands |
+| `APE_CLAW_V2_SKILL_NFT` | Optional | v2 SkillNFT address |
+| `APE_CLAW_V2_SKILL_REGISTRY` | Optional | v2 SkillRegistry address |
+| `APE_CLAW_V2_INTENT_REGISTRY` | Optional | v2 IntentRegistry address |
+| `APE_CLAW_V2_RECEIPT_REGISTRY` | Optional | v2 ReceiptRegistry address |
 
 ---
 
@@ -411,11 +412,11 @@ ape-claw clawbot list --json
 | `npm run skillcards:import` | Import SkillCards from manifest into `skillcards/imported/` |
 | `npm run skillcards:import -- --strict` | Import only real SkillCard payloads (no stub fallbacks) |
 | `npm run skillcards:import:publish -- --rpc <url> --privateKey 0x... --skillNft 0x... --registry 0x... --skipStubs --uriBase <url>` | Import + mint + publish immutable skill versions (writes `skillcards/imported/index.json`) |
-| `v2 skill mint --rpc <url> --privateKey 0x... --skillNft 0x... --registry 0x... --json` | Mint a Skill NFT (v2-alpha) |
-| `v2 skill publish --rpc <url> --privateKey 0x... --registry 0x... --skillId <id> --file <skillcard.json> --json` | Publish an immutable skill version (v2-alpha) |
-| `v2 intent create --rpc <url> --privateKey 0x... --intents 0x... --payload '{...}' --json` | Create an intent (v2-alpha) |
-| `v2 intent cancel --rpc <url> --privateKey 0x... --intents 0x... --intentId <id> --json` | Cancel an intent (v2-alpha) |
-| `v2 receipt record --rpc <url> --privateKey 0x... --receipts 0x... --traceId <trace> [--subject <string>] [--payload '{...}'] [--uri ipfs://...] --json` | Record an onchain receipt by `traceIdHash` (v2-alpha) |
+| `v2 skill mint --rpc <url> --privateKey 0x... --skillNft 0x... --registry 0x... --json` | Mint a Skill NFT (v2) |
+| `v2 skill publish --rpc <url> --privateKey 0x... --registry 0x... --skillId <id> --file <skillcard.json> --json` | Publish an immutable skill version (v2) |
+| `v2 intent create --rpc <url> --privateKey 0x... --intents 0x... --payload '{...}' --json` | Create an intent (v2) |
+| `v2 intent cancel --rpc <url> --privateKey 0x... --intents 0x... --intentId <id> --json` | Cancel an intent (v2) |
+| `v2 receipt record --rpc <url> --privateKey 0x... --receipts 0x... --traceId <trace> [--subject <string>] [--payload '{...}'] [--uri ipfs://...] --json` | Record an onchain receipt by `traceIdHash` (v2) |
 | `v2 receipt get --rpc <url> --receipts 0x... --traceId <trace> --json` | Read an onchain receipt back (agent “memory reload” primitive) |
 
 ---
@@ -788,6 +789,9 @@ node ./src/cli.mjs doctor --json
 
 | Resource | URL |
 |----------|-----|
+| **ApeClaw** | [https://apeclaw.ai](https://apeclaw.ai) |
+| **Skills Library** | [https://apeclaw.ai/skills](https://apeclaw.ai/skills) |
+| **API** | [https://api.apeclaw.ai](https://api.apeclaw.ai) |
 | **OpenClaw** | [https://openclaw.ai](https://openclaw.ai) |
 | OpenClaw GitHub | [github.com/openclaw/openclaw](https://github.com/openclaw/openclaw) |
 | ApeClaw GitHub | [github.com/simplefarmer69/ape-claw](https://github.com/simplefarmer69/ape-claw) |

@@ -2,7 +2,7 @@
 
 THE POD is the deployment harness for long-running autonomous agents.
 
-In v2-alpha it is intentionally:
+In v2 it is intentionally:
 
 - strict opt-in
 - safe-by-default (dry-run)
@@ -79,7 +79,7 @@ Emitted event types:
 
 ## Optional: onchain receipts (strict opt-in)
 
-If you want a permanent, chain-verifiable audit trail, the Pod can record low-frequency receipts to `ReceiptRegistry` (v2-alpha).
+If you want a permanent, chain-verifiable audit trail, the Pod can record low-frequency receipts to `ReceiptRegistry` (v2).
 
 This is strict opt-in and best-effort; it should never block the loop.
 
@@ -158,7 +158,7 @@ The `otherside-navigator` SkillCard includes a minimal "runner contract" in its 
 
 ## Safety posture (do not weaken by default)
 
-In v2-alpha, real input injection is available but must remain strict opt-in. By default, the runner logs intended actions to disk (dry-run).
+In v2, real input injection is available but must remain strict opt-in. By default, the runner logs intended actions to disk (dry-run).
 
 When input injection is added later, it must remain:
 

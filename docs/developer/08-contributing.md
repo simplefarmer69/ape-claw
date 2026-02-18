@@ -25,7 +25,7 @@ ApeClaw/
 │   └── shared/         # Shared sidebar, motion effects
 ├── skillcards/
 │   ├── seed/           # Core skills (committed)
-│   └── imported/       # Imported skills (gitignored)
+│   └── imported/       # Imported skills (individual files gitignored; index.json tracked)
 ├── pod/                # Pod runner + templates
 ├── scripts/            # Utility scripts
 ├── config/             # Example config files

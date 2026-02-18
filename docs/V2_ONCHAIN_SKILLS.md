@@ -1,6 +1,6 @@
-# v2-alpha Onchain Skills
+# v2 Onchain Skills
 
-v2-alpha introduces onchain primitives so skills can be versioned immutably and referenced without trusting a single backend.
+v2 introduces onchain primitives so skills can be versioned immutably and referenced without trusting a single backend.
 
 ## Contracts (shipped)
 
@@ -11,9 +11,9 @@ v2-alpha introduces onchain primitives so skills can be versioned immutably and 
   - append-only versions per skillId
   - each version stores:
     - `versionHash` (bytes32)
-    - `contentHash` (bytes32) — hash of SkillCard JSON
-    - `uri` (string) — where the SkillCard content lives (file/ipfs/ar/http)
-    - `riskTier` (uint8) — convention: 1 low, 2 medium, 3 high
+    - `contentHash` (bytes32) -- hash of SkillCard JSON
+    - `uri` (string) -- where the SkillCard content lives (file/ipfs/ar/http)
+    - `riskTier` (uint8) -- convention: 1 low, 2 medium, 3 high
 - `IntentRegistry` (`contracts/IntentRegistry.sol`)
   - minimal create/cancel intent primitive
 - `ReceiptRegistry` (`contracts/ReceiptRegistry.sol`)
@@ -94,9 +94,11 @@ npm run skillcards:import:publish -- \
 
 The chain always stores hashes; the URI is an *access path*, not the source of truth.
 
-## Revenue share (THE POD)
+## Revenue share (THE POD) -- coming soon
 
-In v2-alpha, the “download/install agreement” is enforced in two layers:
+> **Note:** PodVault revenue sharing is deployed as a contract primitive but the full UI and claim flows are coming soon.
+
+In v2, the "download/install agreement" is enforced in two layers:
 
 - Onchain where possible: SkillNFT supports EIP-2981 royalties, so a SkillNFT can route marketplace royalty revenue to a shared `PodVault`.
 - Offchain for now: the Pod workspace includes `REVENUE_SHARING.md` as an explicit runner contract note until `AgentAccount` + `PolicyEngine` enforcement ships.
@@ -140,4 +142,3 @@ ape-claw v2 receipt record \
 ### Record receipts from THE POD (optional)
 
 The Pod runner supports strict opt-in onchain receipts (low frequency) via flags in `pod/run_agent.py` and the helper script `pod/record_receipt.mjs`.
-

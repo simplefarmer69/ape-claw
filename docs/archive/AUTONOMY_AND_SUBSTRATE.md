@@ -21,9 +21,9 @@ This doc answers a common (valid) critique:
 
 The goal is not hype. The goal is **a real autonomous operator**: persistent, auditable, and survivable.
 
-## Substrate control: what we anchor onchain today (v2-alpha)
+## Substrate control: what we anchor onchain today (v2)
 
-v2-alpha makes the chain the source of truth for the pieces that matter:
+v2 makes the chain the source of truth for the pieces that matter:
 
 - `SkillNFT`: provenance and ownership (one token per skill).
 - `SkillRegistry`: immutable, append-only versions (content-addressed).
@@ -50,7 +50,7 @@ The real answer to "bounded automation" is enforcement + governance:
 - Permissionless solvers (planned): execution competition, not a single central runner.
 - Attestations/reputation (planned): version trust for skills.
 
-v2-alpha is the foundation for those phases.
+v2 is the foundation for those phases.
 
 ## Practical definition of "autonomy" used here
 

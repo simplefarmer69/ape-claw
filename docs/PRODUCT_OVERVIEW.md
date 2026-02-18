@@ -6,7 +6,7 @@ It is built around one hard requirement:
 
 - the system must remain **auditable and operable** even if a UI/backend disappears
 
-That is why v2-alpha ships onchain primitives (skills + receipts) and why the runtime emits structured telemetry.
+That is why v2 ships onchain primitives (skills + receipts) and why the runtime emits structured telemetry.
 
 ## The Product Surface
 
@@ -78,7 +78,7 @@ At a high level:
 - **Operator machine** runs the CLI and/or THE POD runner
 - **Backend** receives telemetry + hosts a state snapshot API
 - **UI** reads from the backend (SSE + REST)
-- **Chain** is the source-of-truth for v2-alpha primitives
+- **Chain** is the source-of-truth for v2 primitives
 
 ### Backend responsibilities
 
@@ -91,7 +91,7 @@ The backend is intentionally simple:
 
 Read: `docs/GLOBAL_BACKEND.md`
 
-### Chain responsibilities (v2-alpha)
+### Chain responsibilities (v2)
 
 The chain anchors:
 

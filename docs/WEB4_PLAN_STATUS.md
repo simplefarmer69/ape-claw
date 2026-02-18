@@ -4,7 +4,7 @@ This project includes the reference plan in `web4_onchain_skills_plan.pdf`.
 
 This doc maps that plan to what ApeClaw has shipped today.
 
-## What is shipped (v2-alpha)
+## What is shipped (v2)
 
 These components exist in-repo and are tested:
 
@@ -28,7 +28,7 @@ These components exist in-repo and are tested:
 - `PodVault` (`contracts/PodVault.sol`)
   - PaymentSplitter-style revenue receiver for THE POD (native + ERC20)
 - Seed + deploy flow (`npm run contracts:seed`)
-  - deploys v2-alpha contracts
+  - deploys v2 contracts
   - publishes all SkillCards in `skillcards/seed/`
 
 SkillCards + library ingestion:
@@ -59,7 +59,7 @@ The Web4 plan calls out these primitives as critical for full permissionless aut
 - Attestation/reputation registry + eval packs onchain
 - Disputes + slashing (optional later phase)
 
-The current posture is deliberately "v2-alpha":
+The current posture is deliberately "v2":
 
 - strong provenance + immutable versions + receipts primitive
 - strict opt-in for high-risk automation
@@ -73,7 +73,7 @@ The current posture is deliberately "v2-alpha":
     - discovery: `/skills` (seed + imported + submitted SkillCards, onchain status visualization)
     - intents: `/skills#intents` ships a safe command-generator surface for `v2 intent create|cancel`
     - install: download/curl commands are surfaced per-skill; full “one-click install into an agent runtime” remains planned
-- P1 (AgentAccount + module skills + receipts): shipped (v2-alpha minimal primitives)
+- P1 (AgentAccount + module skills + receipts): shipped (v2 minimal primitives)
   - `AgentAccount.executeSkill()` enforces `PolicyEngine.preCheck()` and best-effort records to `ReceiptRegistry`
   - modules shipped: `SwapModule`, `BridgeModule`, `NftBuyModule` (policy-gated call wrappers; routing/UX remains offchain)
 - P2 (permissionless solvers): not shipped

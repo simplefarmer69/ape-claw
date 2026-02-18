@@ -15,10 +15,13 @@ The dashboard reads from the backend in two ways:
 1. **SSE stream** (live updates)
 2. **REST snapshots** (initial state, tables, allowlist, clawbot list)
 
-Backend is selected via `?api=...`:
+Backend is selected automatically:
 
-- default: `https://api.apeclaw.ai`
-- override example: `/ui?api=https://your-backend.example.com`
+- **Production** (Vercel): defaults to `https://api.apeclaw.ai` when running on a non-localhost origin
+- **Local dev**: defaults to `window.location.origin` (typically `http://localhost:8787`)
+- **Manual override**: append `?api=https://your-backend.example.com` to any page URL
+
+All frontend pages (`/ui`, `/skills`, `/pod`, `/docs`) share this resolution logic.
 
 ## Header
 

@@ -141,7 +141,7 @@ Search across all skills (seed, imported, and user-submitted).
 - `source` (optional): Filter by source (`seed`, `imported`, or `user`)
 - `vetted` (optional): Filter by vetted status (`1` for vetted only)
 - `page` (optional): Page number (default: 1)
-- `limit` (optional): Results per page (default: 50, max: 200)
+- `limit` (optional): Results per page (default: 50, max: 5000)
 
 **Response:**
 ```json
@@ -173,6 +173,61 @@ Search across all skills (seed, imported, and user-submitted).
 **Status Codes:**
 - `200`: Success
 - `500`: Search failed
+
+---
+
+#### GET /api/skills/get
+
+Fetch full skill details by slug, including the SkillCard JSON when available on disk.
+
+**Query Parameters:**
+- `slug` (required): The skill slug to look up
+
+**Response:**
+```json
+{
+  "ok": true,
+  "skill": {
+    "name": "My Skill",
+    "slug": "my-skill",
+    "description": "Does something useful",
+    "source": "imported",
+    "vettedOk": true,
+    "riskTier": 2,
+    "sourceUrl": "https://example.com",
+    "fileName": "my-skill.v1.0.0.json"
+  },
+  "card": { /* full SkillCard JSON (when file exists on disk) */ }
+}
+```
+
+**Status Codes:**
+- `200`: Success
+- `400`: Missing slug parameter
+- `404`: Skill not found
+- `500`: Internal error
+
+---
+
+#### GET /api/skills/stats
+
+Returns aggregate skill library statistics.
+
+**Response:**
+```json
+{
+  "ok": true,
+  "total": 1028,
+  "seed": 8,
+  "imported": 1020,
+  "user": 0,
+  "vetted": 1020,
+  "onchain": 0
+}
+```
+
+**Status Codes:**
+- `200`: Success
 
 ---
 

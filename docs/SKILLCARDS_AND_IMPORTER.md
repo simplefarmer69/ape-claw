@@ -8,7 +8,7 @@ SkillCards are portable JSON documents that describe:
 - what risk tier it carries,
 - provenance (who published it, where it came from).
 
-In v2-alpha, the chain stores `contentHash` and `uri` so SkillCards can be content-addressed.
+In v2, the chain stores `contentHash` and `uri` so SkillCards can be content-addressed.
 
 ## Seed SkillCards
 
@@ -23,8 +23,8 @@ npm run skillcards:import
 ```
 
 - Manifest: `skillcards/import-sources.json`
-- Output: `skillcards/imported/` (generated; ignored by git)
-- Index file: `skillcards/imported/index.json`
+- Output: `skillcards/imported/` (individual JSON files gitignored; `index.json` is tracked)
+- Index file: `skillcards/imported/index.json` (enriched with descriptions; served globally via `/api/skills/search`)
 - Versioned filenames: `<slug>.v<version>.json` (stable for publishing + upgrades)
 
 ## Install ACP (Bounties) via importer
@@ -119,6 +119,16 @@ This is devnet-first. For ApeChain deployment, you will typically want:
 
 - a real content URI (IPFS/Arweave/http) rather than `file://...`
 - a review pipeline to set `riskTier` and permissions appropriately
+
+## Global API Access
+
+Skills are served globally via the backend API at `https://api.apeclaw.ai`. The UI at [apeclaw.ai/skills](https://apeclaw.ai/skills) consumes these endpoints:
+
+- `GET /api/skills/search` — search and browse all skills (seed + imported + user)
+- `GET /api/skills/get?slug=<slug>` — fetch full skill details and SkillCard JSON by slug
+- `GET /api/skills/stats` — aggregate counts (total, seed, imported, vetted, onchain)
+
+The `index.json` is tracked in git and deployed to the backend. Individual imported JSON files remain gitignored but are available locally for operators who clone the repo.
 
 ## How the importer maps to onchain hashes
 

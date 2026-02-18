@@ -1,15 +1,15 @@
-# ApeClaw v2-alpha (Ship Today)
+# ApeClaw v2 (Onchain Skills + THE POD)
 
-This document describes the v2-alpha build: onchain skill primitives + a seed library, while preserving all v1 CLI/policy/telemetry/UI functionality.
+This document describes the v2 build: onchain skill primitives + a seed library, while preserving all v1 CLI/policy/telemetry/UI functionality.
 
-## What v2-alpha adds (no breaking changes)
+## What v2 adds (no breaking changes)
 
 - Onchain skill provenance and immutable versioning (Web4 plan):
   - `SkillNFT` (one token per skill)
   - `SkillRegistry` (append-only versions with `contentHash` + `uri`)
   - `IntentRegistry` (create/cancel intents)
   - `ReceiptRegistry` (append-only receipts keyed by `traceIdHash` + `contentHash`)
-  - `AgentAccount` + `PolicyEngine` (minimal onchain policy hooks; v2-alpha)
+  - `AgentAccount` + `PolicyEngine` (minimal onchain policy hooks)
   - initial module skills: `SwapModule`, `BridgeModule`, `NftBuyModule` (policy-gated call wrappers)
 - Seed SkillCards published into the registry:
   - `apeclaw-nft-autobuy`
@@ -26,7 +26,7 @@ The autonomy critique is valid when an “agent” depends on:
 - mutable offchain skill definitions
 - a single backend that can disappear
 
-v2-alpha anchors the skill library onchain with append-only versioning. UIs/indexers remain optional UX layers. Skills can be cloned, hashed, and verified without trusting a single server.
+v2 anchors the skill library onchain with append-only versioning. UIs/indexers remain optional UX layers. Skills can be cloned, hashed, and verified without trusting a single server.
 
 For a clear mapping of the full Web4 plan (and what is still not shipped), read:
 
@@ -119,7 +119,7 @@ No raw screenshots should be shipped to random endpoints. Keep it local or expli
 
 The goal is to ingest skills from large public libraries (e.g. ClawHub) into an onchain registry without trusting a single backend.
 
-v2-alpha includes an importer that pulls SkillCard payloads into `skillcards/imported/` from a manifest:
+v2 includes an importer that pulls SkillCard payloads into `skillcards/imported/` from a manifest:
 
 ```bash
 npm run skillcards:import
@@ -146,7 +146,7 @@ If you only want real payloads (no stubs), use strict mode:
 npm run skillcards:import -- --strict
 ```
 
-### Publishing imported SkillCards onchain (v2-alpha)
+### Publishing imported SkillCards onchain
 
 The importer can optionally mint + publish each imported SkillCard using the same hashing flow as the seed script:
 
@@ -166,7 +166,7 @@ Notes:
 
 ## THE POD (workspace harness)
 
-v2-alpha includes a Pod workspace scaffold based on the “workspace files are the product” harness pattern:
+v2 includes a Pod workspace scaffold based on the “workspace files are the product” harness pattern:
 
 ```bash
 ape-claw pod init --dir ./pod-workspace --json
@@ -181,7 +181,7 @@ This is the minimum substrate for crash recovery and persistent operation.
 
 ## Notes on CLI invocation
 
-If you don't have `ape-claw` on PATH yet, you can run v2-alpha commands via:
+If you don't have `ape-claw` on PATH yet, you can run v2 commands via:
 
 ```bash
 npx --yes github:simplefarmer69/ape-claw pod init --dir ./pod-workspace --json

@@ -114,7 +114,9 @@ python3 pod/run_agent.py \
 
 **Warning**: Fully loaded mode uses real macOS input injection. Only enable when you explicitly want system input control.
 
-## PodVault Revenue Sharing
+## PodVault Revenue Sharing (coming soon)
+
+> **Note:** PodVault revenue sharing is deployed as a contract primitive but the full UI and claim flows are coming soon.
 
 PodVault enables revenue sharing from SkillNFT royalties to Pod members.
 

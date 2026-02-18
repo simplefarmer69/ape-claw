@@ -1,6 +1,6 @@
-# v2-alpha Onchain Guide (Skills + Receipts)
+# v2 Onchain Guide (Skills + Receipts)
 
-This doc explains the **shipped** v2-alpha onchain system in operator terms:
+This doc explains the **shipped** v2 onchain system in operator terms:
 
 - what the contracts do,
 - how the offchain SkillCard / importer relates to onchain records,
@@ -17,7 +17,7 @@ The critique ApeClaw targets:
 
 - many “agents” are bounded automation tied to APIs they don't control
 
-v2-alpha moves key primitives onchain so the system has a durable substrate:
+v2 moves key primitives onchain so the system has a durable substrate:
 
 - immutable skill versions
 - append-only receipts for audit anchors
@@ -46,7 +46,7 @@ Read: `docs/AUTONOMY_AND_SUBSTRATE.md`
 
 ### IntentRegistry
 
-- minimal lifecycle primitive for intent creation/cancel (v2-alpha)
+- minimal lifecycle primitive for intent creation/cancel (v2)
 
 ### AgentAccount + PolicyEngine (minimal)
 
@@ -65,7 +65,7 @@ This is the fastest path to verify the onchain stack:
 npx hardhat node --hostname 127.0.0.1 --port 8545
 ```
 
-2. Deploy + seed v2-alpha contracts and seed skills:
+2. Deploy + seed v2 contracts and seed skills:
 
 ```bash
 npm run contracts:seed

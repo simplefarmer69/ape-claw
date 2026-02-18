@@ -8,7 +8,7 @@ It is designed to be:
 - resumable (writes state/journal to disk)
 - compatible with the ApeClaw v2 SkillCard `otherside-navigator`
 
-## What works now (v2-alpha scaffold)
+## What works now (v2 scaffold)
 
 - Reads latest screenshot from a rolling buffer directory on disk
 - Detects if the screen hasn’t changed for N seconds (stuck detection)

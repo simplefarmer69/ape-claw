@@ -15,7 +15,7 @@ This doc is the source of truth for:
 Most of ApeClaw is built around ApeChain as the primary chain:
 
 - NFT workflows (buy/autobuy) are designed for ApeChain allowlisted collections.
-- v2-alpha contracts are ApeChain-ready and tested on local devnet.
+- v2 contracts are ApeChain-ready and tested on local devnet.
 
 Chain ID:
 
@@ -23,7 +23,7 @@ Chain ID:
 
 ### Local devnet (Hardhat)
 
-v2-alpha onchain primitives and seed publishing work on a local Hardhat network:
+v2 onchain primitives and seed publishing work on a local Hardhat network:
 
 ```bash
 npm run contracts:seed

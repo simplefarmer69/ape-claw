@@ -4,7 +4,7 @@ Get ApeClaw running and execute your first skill in 5 minutes.
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - A terminal
 - (Optional) A wallet private key for onchain operations
 
@@ -40,7 +40,7 @@ Visit [http://localhost:8787/ui](http://localhost:8787/ui) or [https://apeclaw.a
 
 ## Step 5: Browse Skills
 
-Visit [/skills](http://localhost:8787/skills) to browse 500+ skills in the Library of Alexandria.
+Visit [/skills](https://apeclaw.ai/skills) to browse 1,020+ skills in the Library of Alexandria, served globally via API.
 
 ## Next Steps
 

@@ -17,7 +17,7 @@ This starts a local Hardhat node on `http://127.0.0.1:8545` with Chain ID 31337.
 
 ### Deploy Contracts
 ```bash
-npx hardhat run contracts-scripts/deploy-and-seed-v2-alpha.js --network localhost
+npx hardhat run contracts-scripts/deploy-and-seed-v2.js --network localhost
 ```
 
 This script deploys the following contracts in order:
@@ -102,7 +102,7 @@ export APE_CLAW_V2_PRIVATE_KEY=0x...
 
 ### Deploy
 ```bash
-npx hardhat run contracts-scripts/deploy-and-seed-v2-alpha.js --network apechain
+npx hardhat run contracts-scripts/deploy-and-seed-v2.js --network apechain
 ```
 
 The deployment process:

@@ -59,7 +59,7 @@ Note: mint/publish happen in CLI (not in the browser). The UI never asks for pri
 
 ## Post an intent (UI path)
 
-Intents are a minimal v2-alpha primitive for “work orders” (useful for solver-style architectures).
+Intents are a minimal v2 primitive for “work orders” (useful for solver-style architectures).
 
 1) Go to `/skills#intents`
 2) Paste an intent payload JSON string

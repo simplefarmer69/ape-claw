@@ -208,7 +208,7 @@ function preCheck(address module, address target, bytes4 selector, uint256 value
 }
 ```
 
-Registration example (from `deploy-and-seed-v2-alpha.js`):
+Registration example (from `deploy-and-seed-v2.js`):
 
 ```javascript
 await policy.write.setMaxValuePerTx([parseEther("1")]);

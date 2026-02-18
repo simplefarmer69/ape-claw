@@ -14,7 +14,7 @@ it agrees that:
 This is enforced by:
 
 - Onchain routing where possible (e.g. SkillNFT royalties via EIP-2981 to a `PodVault` receiver).
-- Offchain policy + audits in v2-alpha (logs + receipts) until full `AgentAccount` + `PolicyEngine` enforcement ships.
+- Offchain policy + audits in v2 (logs + receipts) until full `AgentAccount` + `PolicyEngine` enforcement ships.
 
 ## What counts as "revenue"
 

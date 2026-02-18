@@ -32,10 +32,11 @@ Production routing is:
 - `https://apeclaw.ai/docs` -> docs hub
 - `https://api.apeclaw.ai` -> shared backend API + SSE
 
-Backend override (self-host/custom):
+Frontend API resolution:
 
-- `https://apeclaw.ai/app?api=https://your-backend.example.com`
-- `https://apeclaw.ai/ui?api=https://your-backend.example.com`
+- All pages (`/ui`, `/skills`, `/pod`, `/docs`) default to `https://api.apeclaw.ai` when running on a non-localhost origin (e.g. Vercel)
+- On localhost, the frontend defaults to `window.location.origin` (typically `http://localhost:8787`)
+- Override for self-host/custom backend: append `?api=https://your-backend.example.com` to any page URL
 
 ## Persistence model
 
@@ -102,6 +103,7 @@ Basic production checks:
 ```bash
 curl -sS https://api.apeclaw.ai/api/health | jq
 curl -sS https://api.apeclaw.ai/api/clawbots | jq
+curl -sS https://api.apeclaw.ai/api/skills/stats | jq
 curl -sS https://api.apeclaw.ai/events/backlog | jq '.events | length'
 ```
 
@@ -135,7 +137,9 @@ Optional:
 ## Troubleshooting checklist
 
 - `GET https://api.apeclaw.ai/api/health` returns JSON (not 404)
+- `GET https://api.apeclaw.ai/api/skills/stats` returns non-zero totals (skills data deployed)
 - `GET https://api.apeclaw.ai/events` stays open (SSE)
-- UI uses `?api=https://api.apeclaw.ai` when needed (or defaults correctly)
+- UI defaults to `https://api.apeclaw.ai` on non-localhost (or use `?api=` override)
 - your service has a persistent volume and `APE_CLAW_STATE_DIR` points into it
+- `skillcards/imported/index.json` is present on the backend (tracked in git)
 

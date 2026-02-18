@@ -32,7 +32,7 @@ npm run contracts:compile
 
 ### Test Structure
 
-Contract tests live in `contracts-test/` directory. The main test file is `v2-alpha-registry.test.js`, which covers:
+Contract tests live in `contracts-test/` directory. The main test file is `v2-registry.test.js`, which covers:
 
 - SkillNFT minting and ownership
 - SkillRegistry version publishing
@@ -173,11 +173,11 @@ npm run contracts:seed
 Or explicitly target localhost:
 
 ```bash
-npx hardhat run contracts-scripts/deploy-and-seed-v2-alpha.js --network localhost
+npx hardhat run contracts-scripts/deploy-and-seed-v2.js --network localhost
 ```
 
 The seed script:
-1. Deploys all v2-alpha contracts (SkillNFT, SkillRegistry, PolicyEngine, AgentAccount, etc.)
+1. Deploys all v2 contracts (SkillNFT, SkillRegistry, PolicyEngine, AgentAccount, etc.)
 2. Configures PolicyEngine with module allowlists
 3. Reads all JSON SkillCards from `skillcards/seed/`
 4. Mints SkillNFTs and publishes versions to the registry
