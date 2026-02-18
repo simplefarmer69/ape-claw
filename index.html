@@ -467,7 +467,7 @@
           <div class="step-card ac-observe">
             <div class="step-num">1</div>
             <h3>Install + Check</h3>
-            <p>Install ApeClaw and run <a href="/docs?doc=CLI_GUIDE.md">ape-claw doctor</a> to confirm chain access and config readiness.</p>
+            <p>Install ApeClaw and run <a href="/docs?doc=operator/03-cli-reference.md">ape-claw doctor</a> to confirm chain access and config readiness.</p>
           </div>
 
           <div class="step-card ac-observe">
@@ -479,7 +479,7 @@
           <div class="step-card ac-observe">
             <div class="step-num">3</div>
             <h3>Explore + Contribute</h3>
-            <p>Watch the <a href="/ui">live feed</a>, browse the <a href="/skills">skill library</a>, or <a href="/docs?doc=CONTRIBUTING.md">contribute</a> a skill and publish it onchain.</p>
+            <p>Watch the <a href="/ui">live feed</a>, browse the <a href="/skills">skill library</a>, or <a href="/docs?doc=developer/08-contributing.md">contribute</a> a skill and publish it onchain.</p>
           </div>
         </div>
       </div>
@@ -520,8 +520,12 @@
 
     <!-- Footer -->
     <div class="foot ac-observe">
-      <div>ApeClaw Terminal · ApeChain</div>
-      <div class="online"><span class="dot" aria-hidden="true"></span><span id="onlineText">Online</span></div>
+      <div>ApeClaw Terminal · ApeChain · Powered by <a href="https://x.com/ClutchMarkets" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-weight:700">Clutch Labs</a></div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <a href="https://x.com/ClutchMarkets" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;color:var(--muted);text-decoration:none;font-size:10px;transition:color .2s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> ClutchMarkets</a>
+        <a href="https://x.com/ApeClawAI" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;color:var(--muted);text-decoration:none;font-size:10px;transition:color .2s" onmouseover="this.style.color='var(--cyan)'" onmouseout="this.style.color='var(--muted)'"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> ApeClaw</a>
+        <div class="online"><span class="dot" aria-hidden="true"></span><span id="onlineText">Online</span></div>
+      </div>
     </div>
 
   </div>
@@ -543,7 +547,9 @@
 
       var api = '';
       try { var u = new URL(window.location.href); api = (u.searchParams.get('api') || '').trim(); } catch (e) {}
-      if (!api) api = 'https://api.apeclaw.ai';
+      if (!api) {
+        try { api = window.location.origin; } catch(e) { api = ''; }
+      }
       var apiBase = api.replace(/\/+$/, '');
 
       /* Typewriter */
@@ -580,7 +586,7 @@
         setCountUp($('statClawbots'), botCount);
       }).catch(function () { setOnline(false); });
 
-      setCountUp($('statContracts'), 6);
+      setCountUp($('statContracts'), 10);
 
       (function () {
         var SEED_COUNT = 8;

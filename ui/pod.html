@@ -653,7 +653,9 @@
         var u = new URL(window.location.href);
         api = (u.searchParams.get('api') || '').trim();
       } catch (e) {}
-      if (!api) api = 'https://api.apeclaw.ai';
+      if (!api) {
+        try { api = window.location.origin; } catch(e) { api = ''; }
+      }
       var apiBase = api.replace(/\/+$/, '');
       try {
         var ah = document.getElementById('apiHealthLink');
@@ -718,28 +720,31 @@
 
       // PodVault dashboard
       (function(){
-        var apiBase2 = apiBase; // reuse existing apiBase
-        fetch(apiBase2 + '/api/v2/config', {headers:{'accept':'application/json'}})
+        fetch(apiBase + '/api/v2/config', {headers:{'accept':'application/json'}})
           .then(function(r){ return r.json(); })
           .then(function(cfg){
-            var vault = cfg.podVault || (cfg.record && cfg.record.podVault) || '';
+            var dep = cfg.deployment || {};
+            var vault = cfg.podVault || dep.podVault || '';
+            var rpc = (cfg.receiptsRead && cfg.receiptsRead.rpcUrl) || '';
             var info = document.getElementById('vaultInfo');
             var badge = document.getElementById('vaultBadge');
             var cmd = document.getElementById('vaultReleaseCmd');
             if (!vault) {
-              if (info) info.innerHTML = '<p>PodVault not deployed yet. Run <code>npm run contracts:seed</code> to deploy.</p>';
+              if (info) info.innerHTML = '<p>PodVault not deployed yet. Run <code>npx hardhat run contracts-scripts/deploy-and-seed-v2-alpha.js --network localhost</code> to deploy.</p>';
               if (badge) { badge.textContent = 'NOT DEPLOYED'; badge.className = 'badge'; }
               return;
             }
-            fetch(apiBase2 + '/api/v2/config', {headers:{'accept':'application/json'}})
-              .then(function(r2){ return r2.json(); })
-              .then(function(full){
-                var rpc = full.receiptsRead && full.receiptsRead.rpcUrl || '';
-                if (!rpc) return;
-                if (badge) { badge.textContent = 'DEPLOYED'; badge.className = 'badge live'; }
-                if (info) info.innerHTML = '<p><strong>Address:</strong> <code>' + vault + '</code></p><p><strong>RPC:</strong> <code>' + rpc + '</code></p><p>Use <code>ape-claw v2 vault status</code> for full member + balance details.</p>';
-                if (cmd) cmd.innerHTML = '<span style="color:var(--cyan)">ape-claw</span> v2 vault release --rpc ' + rpc + ' --vault ' + vault + ' --member &lt;YOUR_ADDRESS&gt; --json';
-              }).catch(function(){});
+            if (badge) { badge.textContent = 'DEPLOYED'; badge.className = 'badge live'; }
+            var html = '<p><strong>Address:</strong> <code>' + vault + '</code></p>';
+            if (rpc) html += '<p><strong>RPC:</strong> <code>' + rpc + '</code></p>';
+            html += '<p>Use <code>ape-claw v2 vault status</code> for full member + balance details.</p>';
+            if (info) info.innerHTML = html;
+            if (cmd) {
+              var cmdStr = '<span style="color:var(--cyan)">ape-claw</span> v2 vault release';
+              if (rpc) cmdStr += ' --rpc ' + rpc;
+              cmdStr += ' --vault ' + vault + ' --member &lt;YOUR_ADDRESS&gt; --json';
+              cmd.innerHTML = cmdStr;
+            }
           }).catch(function(){
             var info = document.getElementById('vaultInfo');
             if (info) info.innerHTML = '<p>Could not reach backend. Is the server running?</p>';

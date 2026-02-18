@@ -748,6 +748,75 @@ footer::before{
   .chat-auth-bar .chat-auth-status{margin-left:0}
 }
 
+/* ── Platform stats bar ──────────────────────────── */
+.platform-stats-bar{
+  display:flex;flex-wrap:wrap;gap:6px 16px;
+  padding:14px 24px;margin-bottom:2px;
+  background:linear-gradient(90deg, rgba(255,90,31,.04), rgba(0,240,255,.04));
+  border-bottom:1px solid var(--border);
+  position:relative;z-index:1;
+}
+.platform-stat{
+  display:flex;align-items:center;gap:6px;
+  font-size:.7rem;color:var(--dim);
+  transition:color .2s;
+}
+.platform-stat:hover{color:var(--text)}
+.platform-stat .ps-icon{font-size:.85rem}
+.platform-stat .ps-val{
+  font-family:var(--font-mono);font-weight:800;color:var(--accent);
+  font-size:.85rem;min-width:24px;
+}
+.platform-stat .ps-label{letter-spacing:.06em;text-transform:uppercase;font-size:.58rem}
+.platform-stat.highlight .ps-val{color:var(--neon-green);text-shadow:0 0 8px rgba(57,255,20,.4)}
+@keyframes statPulse{0%,100%{opacity:1}50%{opacity:.6}}
+.platform-stat.pulsing .ps-val{animation:statPulse 1.5s ease-in-out 3}
+
+/* ── Skills library panel ────────────────────────── */
+.skills-panel-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;
+  max-height:400px;overflow-y:auto;padding:4px 0;
+}
+.skill-mini-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:10px 12px;position:relative;overflow:hidden;
+  transition:border-color .2s,box-shadow .2s,transform .15s;cursor:default;
+}
+.skill-mini-card:hover{
+  border-color:rgba(0,240,255,.35);
+  box-shadow:0 0 14px rgba(0,240,255,.08);
+  transform:translateY(-1px);
+}
+.skill-mini-card::before{
+  content:'';position:absolute;top:0;left:0;bottom:0;width:3px;
+  background:var(--accent);
+}
+.skill-mini-card[data-tier="low"]::before{background:var(--neon-green)}
+.skill-mini-card[data-tier="medium"]::before{background:var(--gold)}
+.skill-mini-card[data-tier="high"]::before{background:#ff4444}
+.skill-mini-card[data-tier="critical"]::before{background:#ff0055}
+.skill-mini-name{font-size:.72rem;font-weight:700;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.skill-mini-desc{font-size:.6rem;color:var(--dim);line-height:1.4;max-height:2.8em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.skill-mini-meta{display:flex;gap:6px;margin-top:5px;font-size:.55rem;color:var(--dim)}
+.skill-mini-meta .sms{font-family:var(--font-mono);padding:1px 5px;border-radius:3px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
+.skill-mini-meta .sms.src-seed{color:var(--accent);border-color:rgba(255,90,31,.2)}
+.skill-mini-meta .sms.src-imported{color:var(--neon-green);border-color:rgba(57,255,20,.2)}
+.skill-mini-meta .sms.src-user{color:#a78bfa;border-color:rgba(167,139,250,.2)}
+.skill-mini-meta .sms.onchain{color:var(--gold);border-color:rgba(243,202,64,.2)}
+.skills-summary-row{
+  display:flex;flex-wrap:wrap;gap:12px;padding:8px 0;
+  border-bottom:1px solid rgba(255,255,255,.04);margin-bottom:8px;
+}
+.skills-summary-stat{
+  display:flex;align-items:center;gap:5px;font-size:.65rem;
+}
+.skills-summary-stat .ss-num{font-family:var(--font-mono);font-weight:800;color:var(--accent);font-size:.8rem}
+.skills-summary-stat .ss-label{color:var(--dim);text-transform:uppercase;letter-spacing:.06em;font-size:.55rem}
+.skills-recent-label{
+  font-size:.6rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;
+  margin:8px 0 6px;
+}
+
 /* ── Reduced motion ──────────────────────────────── */
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{
@@ -892,6 +961,45 @@ python3 pod/run_agent.py \
   </div>
 </div>
 
+<!-- ═══════ PLATFORM STATS BAR ═══════ -->
+<div class="platform-stats-bar reveal reveal-2 ac-observe" id="platformStatsBar">
+  <div class="platform-stat highlight">
+    <span class="ps-icon">📚</span>
+    <span class="ps-val" id="psSkillsTotal">—</span>
+    <span class="ps-label">Skills in Library</span>
+  </div>
+  <div class="platform-stat">
+    <span class="ps-icon">⛓️</span>
+    <span class="ps-val" id="psSkillsOnchain">—</span>
+    <span class="ps-label">Published Onchain</span>
+  </div>
+  <div class="platform-stat">
+    <span class="ps-icon">✅</span>
+    <span class="ps-val" id="psSkillsVetted">—</span>
+    <span class="ps-label">Vetted</span>
+  </div>
+  <div class="platform-stat">
+    <span class="ps-icon">🦞</span>
+    <span class="ps-val" id="psAgentCount">0</span>
+    <span class="ps-label">Clawllectors</span>
+  </div>
+  <div class="platform-stat">
+    <span class="ps-icon">📡</span>
+    <span class="ps-val" id="psEventCount">0</span>
+    <span class="ps-label">Events</span>
+  </div>
+  <div class="platform-stat">
+    <span class="ps-icon">🖼️</span>
+    <span class="ps-val" id="psNftCount">0</span>
+    <span class="ps-label">NFTs</span>
+  </div>
+  <div class="platform-stat">
+    <span class="ps-icon">🌉</span>
+    <span class="ps-val" id="psBridgeCount">0</span>
+    <span class="ps-label">Bridge Ops</span>
+  </div>
+</div>
+
 <!-- ═══════ COLLECTIONS BAR ═══════ -->
 <div class="reveal reveal-2" style="padding:12px 24px 0;position:relative;z-index:1">
   <div class="collections-tools">
@@ -964,6 +1072,36 @@ python3 pod/run_agent.py \
   <div class="panel reveal reveal-4 ac-observe">
     <div class="panel-header"><span class="icon">🌉</span> Bridge Operations <span class="badge" id="bridgeCountBadge">0</span></div>
     <div class="panel-body" id="bridgePanel"></div>
+  </div>
+
+  <!-- ── Skills Library ── -->
+  <div class="panel reveal reveal-4 ac-observe" style="grid-column:1/-1">
+    <div class="panel-header">
+      <span class="icon">📚</span> Skills Library <span class="badge" id="skillCountBadge">0</span>
+      <span class="panel-actions">
+        <input class="mini-input" id="skillSearchInput" type="search" placeholder="Search skills…" aria-label="Search skills">
+        <select class="mini-select" id="skillSourceFilter" aria-label="Filter by source">
+          <option value="">All Sources</option>
+          <option value="seed">Seed</option>
+          <option value="imported">Imported</option>
+          <option value="user">User Added</option>
+        </select>
+        <a href="/skills" class="mini-btn" style="text-decoration:none">Open Library →</a>
+      </span>
+    </div>
+    <div class="panel-body">
+      <div class="skills-summary-row" id="skillsSummaryRow">
+        <div class="skills-summary-stat"><span class="ss-num" id="ssSeed">—</span><span class="ss-label">Seed</span></div>
+        <div class="skills-summary-stat"><span class="ss-num" id="ssImported">—</span><span class="ss-label">Imported</span></div>
+        <div class="skills-summary-stat"><span class="ss-num" id="ssUser">—</span><span class="ss-label">User</span></div>
+        <div class="skills-summary-stat"><span class="ss-num" id="ssOnchain">—</span><span class="ss-label">Onchain</span></div>
+        <div class="skills-summary-stat"><span class="ss-num" id="ssVetted">—</span><span class="ss-label">Vetted</span></div>
+      </div>
+      <div class="skills-recent-label">Recently Added</div>
+      <div class="skills-panel-grid" id="skillsPanelGrid">
+        <div style="color:var(--dim);font-size:.7rem;padding:20px;text-align:center;grid-column:1/-1">Loading skills…</div>
+      </div>
+    </div>
   </div>
 
   <!-- ── Clawllector Chat ── -->
@@ -1790,15 +1928,20 @@ function renderTerminal() {
 function updateStats() {
   const activeCount = [...agentMap.values()].filter(a => a.status==='active').length;
   const totalCount = agentMap.size;
-  document.getElementById('totalAgents').textContent = activeCount + '/' + totalCount;
-  document.getElementById('totalEvents').textContent = totalEvents.toLocaleString();
-  document.getElementById('totalNfts').textContent = totalNfts;
-  document.getElementById('totalBridged').textContent = Math.round(totalBridged).toLocaleString();
-  document.getElementById('totalSpent').textContent = Math.round(totalSpent).toLocaleString();
-  document.getElementById('agentCountBadge').textContent = totalCount;
-  document.getElementById('eventCountBadge').textContent = totalEvents.toLocaleString();
-  document.getElementById('nftCountBadge').textContent = totalNfts;
-  document.getElementById('bridgeCountBadge').textContent = bridgeOps.length;
+  const setIf = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  setIf('totalAgents', activeCount + '/' + totalCount);
+  setIf('totalEvents', totalEvents.toLocaleString());
+  setIf('totalNfts', totalNfts);
+  setIf('totalBridged', Math.round(totalBridged).toLocaleString());
+  setIf('totalSpent', Math.round(totalSpent).toLocaleString());
+  setIf('agentCountBadge', totalCount);
+  setIf('eventCountBadge', totalEvents.toLocaleString());
+  setIf('nftCountBadge', totalNfts);
+  setIf('bridgeCountBadge', bridgeOps.length);
+  setIf('psAgentCount', totalCount.toLocaleString());
+  setIf('psEventCount', totalEvents.toLocaleString());
+  setIf('psNftCount', totalNfts);
+  setIf('psBridgeCount', bridgeOps.length);
 }
 
 function setConnectionStatus(connected) {
@@ -2680,6 +2823,104 @@ async function boot() {
     if (el) el.textContent = `${new Date().toISOString().slice(11, 19)}Z`;
   }, 1000);
 }
+
+// ═══════════════════════════════════════════════════════════
+//  SKILLS LIBRARY DASHBOARD PANEL
+// ═══════════════════════════════════════════════════════════
+let skillsCache = { stats: null, skills: [], filtered: [] };
+
+function renderSkillCards(skills) {
+  const grid = document.getElementById('skillsPanelGrid');
+  if (!grid) return;
+  if (!skills || skills.length === 0) {
+    grid.innerHTML = '<div style="color:var(--dim);font-size:.7rem;padding:20px;text-align:center;grid-column:1/-1">No skills found</div>';
+    return;
+  }
+  grid.innerHTML = skills.map(s => {
+    const tier = String(s.riskTier || 'low').toLowerCase();
+    const srcClass = s.source === 'seed' ? 'src-seed' : s.source === 'imported' ? 'src-imported' : 'src-user';
+    const desc = escapeHtml(String(s.description || '').slice(0, 120));
+    const name = escapeHtml(String(s.name || s.slug || 'Unnamed'));
+    const onchain = s.onchainTokenId != null ? '<span class="sms onchain">⛓ onchain</span>' : '';
+    return `<div class="skill-mini-card" data-tier="${escapeHtml(tier)}">
+      <div class="skill-mini-name">${name}</div>
+      <div class="skill-mini-desc">${desc || '<em>No description</em>'}</div>
+      <div class="skill-mini-meta">
+        <span class="sms ${srcClass}">${escapeHtml(s.source || 'unknown')}</span>
+        ${s.riskTier ? '<span class="sms">' + escapeHtml(s.riskTier) + '</span>' : ''}
+        ${onchain}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function fetchSkillsStats() {
+  try {
+    const resp = await fetch(apiBase + '/api/skills/stats');
+    if (!resp.ok) throw new Error('stats ' + resp.status);
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.error || 'stats failed');
+    skillsCache.stats = data;
+
+    const setIf = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setIf('psSkillsTotal', data.total.toLocaleString());
+    setIf('psSkillsOnchain', data.onchain.toLocaleString());
+    setIf('psSkillsVetted', data.vetted.toLocaleString());
+    setIf('skillCountBadge', data.total.toLocaleString());
+    setIf('ssSeed', data.seed.toLocaleString());
+    setIf('ssImported', data.imported.toLocaleString());
+    setIf('ssUser', data.user.toLocaleString());
+    setIf('ssOnchain', data.onchain.toLocaleString());
+    setIf('ssVetted', data.vetted.toLocaleString());
+
+    const totalEl = document.getElementById('psSkillsTotal');
+    if (totalEl) { totalEl.parentElement.classList.add('pulsing'); setTimeout(() => totalEl.parentElement.classList.remove('pulsing'), 5000); }
+
+    if (data.recent && data.recent.length > 0) {
+      renderSkillCards(data.recent);
+    }
+  } catch (err) {
+    console.warn('[skills-stats]', err.message);
+  }
+}
+
+async function fetchSkillsSearch(query, source) {
+  try {
+    const params = new URLSearchParams({ limit: '50' });
+    if (query) params.set('q', query);
+    if (source) params.set('source', source);
+    const resp = await fetch(apiBase + '/api/skills/search?' + params.toString());
+    if (!resp.ok) throw new Error('search ' + resp.status);
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.error || 'search failed');
+    skillsCache.skills = data.results;
+    skillsCache.filtered = data.results;
+    renderSkillCards(data.results);
+    const badge = document.getElementById('skillCountBadge');
+    if (badge && skillsCache.stats) badge.textContent = skillsCache.stats.total.toLocaleString();
+  } catch (err) {
+    console.warn('[skills-search]', err.message);
+  }
+}
+
+(function initSkillsPanel() {
+  const searchInput = document.getElementById('skillSearchInput');
+  const sourceFilter = document.getElementById('skillSourceFilter');
+  let debounce;
+  if (searchInput) searchInput.addEventListener('input', () => {
+    clearTimeout(debounce);
+    debounce = setTimeout(() => fetchSkillsSearch(searchInput.value, sourceFilter?.value || ''), 300);
+  });
+  if (sourceFilter) sourceFilter.addEventListener('change', () => {
+    fetchSkillsSearch(searchInput?.value || '', sourceFilter.value);
+  });
+})();
+
+async function refreshSkillsLoop() {
+  await fetchSkillsStats();
+  setInterval(fetchSkillsStats, 120_000);
+}
+refreshSkillsLoop();
 
 boot();
 </script>

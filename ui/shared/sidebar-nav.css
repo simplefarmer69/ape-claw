@@ -117,6 +117,7 @@
   display:flex;
   flex-direction:column;
   gap:6px;
+  flex:1;
 }
 .sb-link{
   display:flex;
@@ -183,6 +184,63 @@
 .sb-footer a{ color: rgba(99,215,255,.9); text-decoration:none; }
 .sb-footer a:hover{ text-decoration:underline; }
 
+.sb-powered{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-bottom:8px;
+}
+.sb-powered-label{
+  font-size:9px;
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  color: rgba(212,230,250,.4);
+}
+.sb-powered-link{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  font-weight:700;
+  font-size:11px;
+  letter-spacing:.04em;
+  color: var(--sb-accent) !important;
+  transition: text-shadow .2s;
+}
+.sb-powered-link:hover{
+  text-decoration:none !important;
+  text-shadow: 0 0 8px rgba(207,255,4,.4);
+}
+.sb-powered-logo{
+  width:16px;
+  height:16px;
+  color: var(--sb-accent);
+  filter: drop-shadow(0 0 4px rgba(207,255,4,.25));
+}
+.sb-footer-links{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.sb-footer-links a{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  font-size:10px;
+  color: var(--sb-side-muted) !important;
+  transition: color .2s;
+}
+.sb-footer-links a:hover{
+  color: var(--sb-accent2) !important;
+  text-decoration:none !important;
+}
+.sb-footer-links svg{
+  opacity:.7;
+  transition: opacity .2s;
+}
+.sb-footer-links a:hover svg{
+  opacity:1;
+}
+
 /* Desktop: always show a slim rail that expands on hover (stonkbrokers-style). */
 @media (min-width: 980px){
   .sb-menu-btn{ display:none; }
@@ -193,12 +251,14 @@
   }
   .sb-sidebar:hover{ width: var(--sb-side-w); }
   .sb-inner{ overflow-y:auto; }
-  .sb-brand strong, .sb-brand span, .sb-text, .sb-sub, .sb-footer{ opacity:0; transition: opacity .20s ease; white-space:nowrap; }
+  .sb-brand strong, .sb-brand span, .sb-text, .sb-sub, .sb-footer, .sb-powered, .sb-footer-links{ opacity:0; transition: opacity .20s ease; white-space:nowrap; }
   .sb-sidebar:hover .sb-brand strong,
   .sb-sidebar:hover .sb-brand span,
   .sb-sidebar:hover .sb-text,
   .sb-sidebar:hover .sb-sub,
-  .sb-sidebar:hover .sb-footer{ opacity:1; }
+  .sb-sidebar:hover .sb-footer,
+  .sb-sidebar:hover .sb-powered,
+  .sb-sidebar:hover .sb-footer-links{ opacity:1; }
 }
 
 /* Page content spacing when sidebar is present on desktop */

@@ -280,7 +280,7 @@
         </p>
         <div class="mini-note" id="backendNote">Backend: <code>auto</code></div>
         <div class="tools" aria-label="Start here shortcuts">
-          <a class="btn" href="/docs?doc=CONTRIBUTING.md" data-keep-query="1">Contribute</a>
+          <a class="btn" href="/docs?doc=developer/08-contributing.md" data-keep-query="1">Contribute</a>
           <a class="btn" href="/skills#your-skills" data-keep-query="1">Add Skill</a>
           <a class="btn" href="/pod" data-keep-query="1">Run Pod</a>
         </div>
@@ -370,7 +370,7 @@
           var api = (u.searchParams.get("api") || "").trim();
           if (api) return api.replace(/\/+$/, "");
         } catch (e) {}
-        return "https://api.apeclaw.ai";
+        try { return window.location.origin; } catch(e) { return ""; }
       }
 
       function escapeHtml(s){
@@ -685,9 +685,8 @@
         var meta = DOCS.find(function(d){ return d.file === doc; }) || null;
         setToolbar(doc, meta ? meta.title : "");
 
-        // Handle both old flat structure and new subdirectory structure
-        var url = "/docs/" + encodeURIComponent(doc);
-        var ghRaw = "https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/docs/" + encodeURIComponent(doc);
+        var url = "/docs/" + doc.split("/").map(encodeURIComponent).join("/");
+        var ghRaw = "https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/docs/" + doc.split("/").map(encodeURIComponent).join("/");
 
         function tryFetch(u){
           return fetch(u, { headers: { "accept": "text/plain" } })

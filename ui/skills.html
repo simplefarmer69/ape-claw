@@ -867,7 +867,9 @@
           if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) api = origin;
         } catch (e) {}
       }
-      if (!api) api = 'https://api.apeclaw.ai';
+      if (!api) {
+        try { api = window.location.origin; } catch(e) { api = ''; }
+      }
       var apiBase = api.replace(/\/+$/, '');
       var apiNote = document.getElementById('apiNote');
       if (apiNote) apiNote.textContent = 'Backend: ' + apiBase;

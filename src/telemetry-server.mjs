@@ -857,6 +857,28 @@ const server = http.createServer((req, res) => {
       return res.end(JSON.stringify({ ok: false, error: err.message || "search failed" }));
     }
   }
+  if (pathname === "/api/skills/stats" && req.method === "GET") {
+    try {
+      const all = getMergedSkillIndex();
+      const seed = all.filter((s) => s.source === "seed").length;
+      const imported = all.filter((s) => s.source === "imported").length;
+      const user = all.filter((s) => s.source === "user").length;
+      const vetted = all.filter((s) => s.vettedOk === true).length;
+      const onchain = all.filter((s) => s.onchainTokenId != null).length;
+      let recent = all.filter((s) => s.addedAt).sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
+      if (recent.length === 0) recent = all.slice(-20).reverse();
+      recent = recent.slice(0, 10).map((s) => ({
+        name: s.name, slug: s.slug, source: s.source, addedAt: s.addedAt,
+        riskTier: s.riskTier, description: String(s.description || "").slice(0, 150),
+        onchainTokenId: s.onchainTokenId ?? null,
+      }));
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: true, total: all.length, seed, imported, user, vetted, onchain, recent }));
+    } catch (err) {
+      res.writeHead(500, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: false, error: err.message || "stats failed" }));
+    }
+  }
   if (pathname === "/api/skillcards/user/auth-check" && req.method === "GET") {
     const auth = requireSkillWriteAuth(req);
     res.writeHead(auth.ok ? 200 : 401, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
