@@ -1488,7 +1488,8 @@ const server = http.createServer((req, res) => {
     "/skills": "/ui/skills.html",
     "/favicon-lobster.png": "/ui/favicon-lobster.png",
   };
-  const rewrite = REWRITES[pathname] || REWRITES[String(pathname || "").replace(/\/+$/, "")] || "";
+  const cleanPath = String(pathname || "").replace(/\/+$/, "").toLowerCase() || pathname;
+  const rewrite = REWRITES[pathname] || REWRITES[String(pathname || "").replace(/\/+$/, "")] || REWRITES[cleanPath] || "";
   if (rewrite) {
     const p = path.join(ROOT, rewrite);
     if (!fs.existsSync(p)) {
