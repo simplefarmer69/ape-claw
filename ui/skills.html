@@ -678,7 +678,7 @@
               </div>
             </div>
           </div>
-          <div class="code"><span class="k">curl</span> -fsSL &lt;apiBase&gt;/skillcards/user/&lt;file&gt; -o ./skillcards/user/&lt;file&gt;<br><span class="k">ape-claw</span> v2 skill publish --skillId &lt;id&gt; --file ./skillcards/user/&lt;file&gt; --json</div>
+          <div class="code"><span class="k">curl</span> -fsSL &lt;apiBase&gt;/api/skills/get?slug=&lt;slug&gt; -o ./&lt;slug&gt;.json<br><span class="k">ape-claw</span> v2 skill publish --skillId &lt;id&gt; --file ./&lt;slug&gt;.json --json</div>
         </div>
       </div>
     </div>
@@ -1044,56 +1044,56 @@
         {
           name: 'ApeClaw NFT Autobuy',
           slug: 'apeclaw-nft-autobuy',
-          file: '/skillcards/seed/apeclaw-nft-autobuy.v1.json',
+          file: '/api/skills/get?slug=apeclaw-nft-autobuy',
           riskTier: 1,
           desc: 'Collect NFTs while you sleep (policy gated).'
         },
         {
           name: 'ACP Browse (Discover Providers)',
           slug: 'acp-browse',
-          file: '/skillcards/seed/acp-browse.v1.json',
+          file: '/api/skills/get?slug=acp-browse',
           riskTier: 1,
           desc: 'Find specialist agents before posting bounties.'
         },
         {
           name: 'ACP Bounty (Post Work Request)',
           slug: 'acp-bounty-post',
-          file: '/skillcards/seed/acp-bounty-post.v1.json',
+          file: '/api/skills/get?slug=acp-bounty-post',
           riskTier: 3,
           desc: 'Post a bounty with explicit USDC budget (strict opt-in).'
         },
         {
           name: 'ACP Bounty (Poll + Match Lifecycle)',
           slug: 'acp-bounty-poll',
-          file: '/skillcards/seed/acp-bounty-poll.v1.json',
+          file: '/api/skills/get?slug=acp-bounty-poll',
           riskTier: 2,
           desc: 'Poll candidates/jobs and surface deliverables.'
         },
         {
           name: 'ACP Fulfillment (Earn USDC → PodVault)',
           slug: 'acp-fulfill-and-route',
-          file: '/skillcards/seed/acp-fulfill-and-route.v1.json',
+          file: '/api/skills/get?slug=acp-fulfill-and-route',
           riskTier: 3,
           desc: 'Fulfill jobs and route earnings into PodVault (strict opt-in).'
         },
         {
           name: 'ApeClaw Receipt Recorder',
           slug: 'apeclaw-receipt-recorder',
-          file: '/skillcards/seed/apeclaw-receipt-recorder.v1.json',
+          file: '/api/skills/get?slug=apeclaw-receipt-recorder',
           riskTier: 2,
           desc: 'Anchor audit receipts onchain (ReceiptRegistry).'
         },
         {
           name: 'ApeClaw Bridge Relay',
           slug: 'apeclaw-bridge-relay',
-          file: '/skillcards/seed/apeclaw-bridge-relay.v1.json',
+          file: '/api/skills/get?slug=apeclaw-bridge-relay',
           riskTier: 2,
           desc: 'Bridge execution wrapper with confirm phrases and caps.'
         },
         {
           name: 'Otherside Navigator',
           slug: 'otherside-navigator',
-          file: '/skillcards/seed/otherside-navigator.v1.json',
+          file: '/api/skills/get?slug=otherside-navigator',
           riskTier: 3,
           desc: 'Mac mini Pod loop (dry-run scaffold; strict opt-in).'
         }
@@ -1279,19 +1279,23 @@
         }
 
         function openDetails(it, pub, fileHref) {
-          var key = String(fileHref || it.fileName || it.slug || '');
+          var key = String(it.slug || fileHref || it.fileName || '');
           if (key && cache[key]) {
             openModal('Skill details', detailsHtml(it, pub, cache[key]), function () { closeModal(); }, function () {});
             return;
           }
-          // Show modal immediately, then upgrade once fetched.
           openModal('Skill details', '<div class="loading">Loading SkillCard JSON…</div>', function () { closeModal(); }, function () {});
-          if (!fileHref) return;
-          fetch(apiBase + fileHref, { headers: { 'accept': 'application/json' } })
+          var slug = String(it.slug || '').trim();
+          if (!slug) {
+            openModal('Skill details', detailsHtml(it, pub, null), function () { closeModal(); }, function () {});
+            return;
+          }
+          fetch(apiBase + '/api/skills/get?slug=' + encodeURIComponent(slug), { headers: { 'accept': 'application/json' } })
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (j) {
-              if (key) cache[key] = j || {};
-              openModal('Skill details', detailsHtml(it, pub, j), function () { closeModal(); }, function () {});
+              var card = (j && j.card) ? j.card : (j && j.skill) ? j.skill : null;
+              if (key) cache[key] = card || {};
+              openModal('Skill details', detailsHtml(it, pub, card), function () { closeModal(); }, function () {});
             })
             .catch(function () {
               openModal('Skill details', detailsHtml(it, pub, null), function () { closeModal(); }, function () {});
@@ -1301,16 +1305,15 @@
         out.innerHTML = items.map(function (it) {
           var risk = Number(it.riskTier || 2);
           var pub = (publishedBySlug && it && it.slug && publishedBySlug[it.slug]) ? publishedBySlug[it.slug] : null;
-          var fileHref = it.fileName ? ('/skillcards/imported/' + String(it.fileName)) : '';
+          var fileHref = it.slug ? ('/api/skills/get?slug=' + encodeURIComponent(it.slug)) : '';
           var sourceHref = String(it.sourceUrl || '').trim();
           var rpc = localStorage.getItem('apeclaw_v2_rpc') || '';
           var reg = localStorage.getItem('apeclaw_v2_registry') || '';
-          // For CLI usage, download the JSON first.
-          var dlCmd = it.fileName ? ('curl -fsSL \"' + apiBase + fileHref + '\" -o \"./skillcards/imported/' + String(it.fileName) + '\"') : '';
-          var pubCmd = it.fileName
+          var dlCmd = it.slug ? ('curl -fsSL \"' + apiBase + '/api/skills/get?slug=' + encodeURIComponent(it.slug) + '\" -o \"./' + (it.fileName || it.slug + '.json') + '\"') : '';
+          var pubCmd = it.slug
             ? ((rpc && reg)
-              ? ('ape-claw v2 skill publish --rpc \"' + String(rpc).trim() + '\" --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --registry \"' + String(reg).trim() + '\" --skillId <id> --file \"./skillcards/imported/' + String(it.fileName) + '\" --riskTier ' + String(Number(it.riskTier || 1)) + ' --json')
-              : ('ape-claw v2 skill publish --rpc <url> --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --registry <addr> --skillId <id> --file \"./skillcards/imported/' + String(it.fileName) + '\" --riskTier ' + String(Number(it.riskTier || 1)) + ' --json'))
+              ? ('ape-claw v2 skill publish --rpc \"' + String(rpc).trim() + '\" --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --registry \"' + String(reg).trim() + '\" --skillId <id> --file \"./' + (it.fileName || it.slug + '.json') + '\" --riskTier ' + String(Number(it.riskTier || 1)) + ' --json')
+              : ('ape-claw v2 skill publish --rpc <url> --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --registry <addr> --skillId <id> --file \"./' + (it.fileName || it.slug + '.json') + '\" --riskTier ' + String(Number(it.riskTier || 1)) + ' --json'))
             : '';
           var title = it.name || it.slug || 'Imported Skill';
           var metaBits = [];
@@ -1381,55 +1384,7 @@
             })();
           }
 
-          // Auto-enhance a small batch with real SkillCard descriptions (best-effort).
-          // This avoids making the imported library feel like a plain list of slugs.
-          function trunc(s, n) {
-            var t = String(s || '').trim();
-            if (!t) return '';
-            return (t.length > n) ? (t.slice(0, n - 1) + '…') : t;
-          }
-          function extractDesc(obj) {
-            if (!obj || typeof obj !== 'object') return '';
-            var d = String(obj.description || obj.desc || '').trim();
-            return d;
-          }
-          var toLoad = [];
-          var AUTO_N = 18;
-          for (var j = 0; j < items.length && toLoad.length < AUTO_N; j++) {
-            var it2 = items[j];
-            var d0 = String(it2 && (it2.description || it2.desc) ? (it2.description || it2.desc) : '').trim();
-            var fh = it2 && it2.fileName ? ('/skillcards/imported/' + String(it2.fileName)) : '';
-            if (!fh) continue;
-            if (d0) continue;
-            if (cache[fh]) continue;
-            toLoad.push({ idx: j, fileHref: fh });
-          }
-          var inFlight = 0;
-          var q = toLoad.slice();
-          function pump() {
-            while (inFlight < 4 && q.length) {
-              (function () {
-                var job = q.shift();
-                inFlight++;
-                fetch(apiBase + job.fileHref, { headers: { 'accept': 'application/json' } })
-                  .then(function (r) { return r.ok ? r.json() : null; })
-                  .then(function (obj) {
-                    cache[job.fileHref] = obj || {};
-                    var d1 = extractDesc(obj);
-                    if (d1 && cards[job.idx]) {
-                      var el = cards[job.idx].querySelector('.skill-desc');
-                      if (el) el.textContent = trunc(d1, 220);
-                    }
-                  })
-                  .catch(function () {})
-                  .finally(function () {
-                    inFlight--;
-                    pump();
-                  });
-              })();
-            }
-          }
-          pump();
+          // Descriptions are now served inline from the API index — no individual file fetches needed.
         } catch (e) {}
       }
 
@@ -1940,11 +1895,11 @@
         }
         setHtml(userSkillList, arr.map(function (it) {
           var risk = Number(it.riskTier || 2);
-          var fileHref = it.fileName ? ('/skillcards/user/' + encodeURIComponent(String(it.fileName))) : '';
+          var fileHref = it.slug ? ('/api/skills/get?slug=' + encodeURIComponent(it.slug)) : '';
           var created = it.createdAt ? (' · ' + String(it.createdAt)) : '';
           var onchainMeta = (it.onchain && it.onchain.skillId) ? (' · onchain: skillId=' + String(it.onchain.skillId)) : '';
           var meta = ['slug: ' + (it.slug || '?'), 'v' + (it.version || '?')].join(' · ') + onchainMeta + created;
-          var dlCmd = fileHref ? ('curl -fsSL \"' + apiBase + fileHref + '\" -o \"./skillcards/user/' + String(it.fileName) + '\"') : '';
+          var dlCmd = it.slug ? ('curl -fsSL \"' + apiBase + '/api/skills/get?slug=' + encodeURIComponent(it.slug) + '\" -o \"./' + (it.fileName || it.slug + '.json') + '\"') : '';
           var rpc = v2RpcUrl ? String(v2RpcUrl.value || '').trim() : '';
           var nft = v2SkillNft ? String(v2SkillNft.value || '').trim() : '';
           var reg = v2Registry ? String(v2Registry.value || '').trim() : '';
@@ -1953,10 +1908,11 @@
           var mintCmd = (rpc && nft && reg)
             ? ('ape-claw v2 skill mint --rpc \"' + rpc + '\" --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --skillNft \"' + nft + '\" --registry \"' + reg + '\"' + (rr && rb ? (' --royalty-receiver \"' + rr + '\" --royalty-bps ' + rb) : '') + ' --json')
             : ('ape-claw v2 skill mint --rpc <url> --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --skillNft <addr> --registry <addr> --json');
-          var pubCmd = it.fileName
+          var localFile = it.fileName || (it.slug ? it.slug + '.json' : '');
+          var pubCmd = localFile
             ? ((rpc && reg)
-              ? ('ape-claw v2 skill publish --rpc \"' + rpc + '\" --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --registry \"' + reg + '\" --skillId <id> --file \"./skillcards/user/' + String(it.fileName) + '\" --riskTier ' + String(Number(it.riskTier || 1)) + ' --json')
-              : ('ape-claw v2 skill publish --rpc <url> --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --registry <addr> --skillId <id> --file \"./skillcards/user/' + String(it.fileName) + '\" --riskTier ' + String(Number(it.riskTier || 1)) + ' --json'))
+              ? ('ape-claw v2 skill publish --rpc \"' + rpc + '\" --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --registry \"' + reg + '\" --skillId <id> --file \"./' + localFile + '\" --riskTier ' + String(Number(it.riskTier || 1)) + ' --json')
+              : ('ape-claw v2 skill publish --rpc <url> --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --registry <addr> --skillId <id> --file \"./' + localFile + '\" --riskTier ' + String(Number(it.riskTier || 1)) + ' --json'))
             : '';
           return (
             '<div class="item">' +
