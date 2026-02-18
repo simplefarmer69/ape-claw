@@ -810,7 +810,7 @@ const server = http.createServer((req, res) => {
       const sourceFilter = String(reqUrl.searchParams.get("source") || "").trim().toLowerCase();
       const vettedFilter = String(reqUrl.searchParams.get("vetted") || "").trim();
       const page = Math.max(1, Number(reqUrl.searchParams.get("page") || 1));
-      const limit = Math.min(200, Math.max(1, Number(reqUrl.searchParams.get("limit") || 50)));
+      const limit = Math.min(5000, Math.max(1, Number(reqUrl.searchParams.get("limit") || 50)));
 
       let results = getMergedSkillIndex();
 
@@ -1165,14 +1165,23 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // Serve user SkillCard JSON under a stable, public path (read-only).
-  if (pathname.startsWith("/skillcards/user/") && req.method === "GET") {
-    const fileName = decodeURIComponent(String(pathname || "").slice("/skillcards/user/".length));
-    if (!fileName || fileName.includes("..") || fileName.includes("/") || fileName.includes("\\")) {
+  // Serve individual SkillCard JSON files (read-only, public).
+  // Supports: /skillcards/user/<file>, /skillcards/imported/<file>, /skillcards/seed/<file>
+  if (pathname.startsWith("/skillcards/") && req.method === "GET") {
+    const segments = pathname.slice("/skillcards/".length).split("/");
+    const bucket = segments[0];
+    const fileName = segments.length > 1 ? decodeURIComponent(segments.slice(1).join("/")) : "";
+    const ALLOWED_BUCKETS = {
+      user: SKILLCARDS_USER_DIR,
+      imported: path.join(ROOT, "skillcards", "imported"),
+      seed: SKILLCARDS_SEED_DIR,
+    };
+    const baseDir = ALLOWED_BUCKETS[bucket];
+    if (!baseDir || !fileName || fileName.includes("..") || fileName.includes("\\")) {
       res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
       return res.end(JSON.stringify({ error: "invalid file" }));
     }
-    const filePath = path.join(SKILLCARDS_USER_DIR, fileName);
+    const filePath = path.join(baseDir, fileName);
     if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
       res.writeHead(404, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
       return res.end(JSON.stringify({ error: "not found" }));

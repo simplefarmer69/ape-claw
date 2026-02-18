@@ -1484,18 +1484,12 @@
           importedBadge.textContent = filtered.length ? ('FOUND ' + filtered.length + (publishedCount ? (' · ONCHAIN ' + publishedCount) : '')) : 'NONE';
         }
       }
-      fetch(apiBase + '/api/skills/search?limit=2000', { headers: { 'accept': 'application/json' } })
+      fetch(apiBase + '/api/skills/search?limit=5000', { headers: { 'accept': 'application/json' } })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) {
           if (!j || !j.ok) {
-            // Fallback: try the local index for dev mode
-            return fetch('/skillcards/imported/index.json', { headers: { 'accept': 'application/json' } })
-              .then(function (r2) { return r2.ok ? r2.json() : null; })
-              .then(function (j2) {
-                var arr = j2 && j2.imported && Array.isArray(j2.imported) ? j2.imported : [];
-                importedAll = arr.filter(function (x) { return x && x.importOk; });
-                applyImportedFilters();
-              });
+            if (importedBadge) importedBadge.textContent = 'UNAVAILABLE';
+            return;
           }
           var results = j.results || [];
           importedAll = results.map(function (s) {
