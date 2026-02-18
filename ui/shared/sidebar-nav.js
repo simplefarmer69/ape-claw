@@ -53,7 +53,7 @@
     var attrs = active ? ' aria-current="page"' : "";
     if (l.external) attrs += ' target="_blank" rel="noopener"';
     navHtml +=
-      '<a class="sb-link" href="' + String(l.href) + '"' + attrs + ">" +
+      '<a class="sb-link" href="' + String(l.href) + '" data-tip="' + String(l.label) + '"' + attrs + ">" +
       iconSvg(l.icon) +
       '<span class="sb-text">' + String(l.label) + "</span>" +
       (l.external ? '<span class="sb-sub">EXT</span>' : '<span class="sb-sub"></span>') +
