@@ -78,12 +78,12 @@
  }
  .collections-tools input,.collections-tools select{
   background:rgba(0,0,0,.35);border:1px solid var(--border);color:var(--text);
-  padding:6px 8px;border-radius:8px;font-size:.68rem
+  padding:6px 8px;border-radius:2px;font-size:.68rem
  }
  .collections-tools label{font-size:.65rem;color:var(--dim);display:flex;gap:4px;align-items:center}
  .setup-step .copy-code-btn{
-  margin-top:6px;border:1px solid var(--border);background:rgba(0,240,255,.07);color:var(--text);
-  border-radius:8px;padding:4px 8px;font-size:.62rem;cursor:pointer
+  margin-top:6px;border:1px solid var(--border);background:rgba(207,255,4,.06);color:var(--text);
+  border-radius:2px;padding:4px 8px;font-size:.62rem;cursor:pointer
  }
  .chat-input-meta{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
  .chat-counter{font-size:.62rem;color:var(--dim)}
@@ -217,7 +217,7 @@ body::after{display:none !important}
 .agent-card:hover{border-color:var(--accent);box-shadow:0 0 20px var(--accent-glow);transform:translateY(-2px)}
 .agent-card::before{
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,var(--accent),var(--neon-cyan),var(--neon-purple));
+  background:linear-gradient(90deg,var(--accent),var(--neon-cyan),var(--accent));
 }
 .agent-card.verified-card::before{background:linear-gradient(90deg,var(--neon-green),var(--neon-cyan),var(--neon-green))}
 .agent-name{font-weight:700;font-size:.85rem;margin-bottom:2px;display:flex;align-items:center;gap:6px}
@@ -277,7 +277,7 @@ body::after{display:none !important}
 }
 .nft-img span{position:relative;z-index:1}
 .nft-img img{
-  position:relative;z-index:1;width:72%;height:72%;border-radius:10px;object-fit:cover;
+  position:relative;z-index:1;width:72%;height:72%;border-radius:2px;object-fit:cover;
   border:1px solid rgba(255,255,255,.12);
 }
 .nft-info{padding:10px}
@@ -394,7 +394,7 @@ body::after{display:none !important}
 .chat-msg-time{font-family:var(--font-mono);font-size:.6rem;color:var(--dim);margin-left:auto}
 .chat-msg-text{font-size:.78rem;line-height:1.55;color:var(--text);word-break:break-word}
 .chat-msg-reply{
-  margin:4px 0 6px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);
+  margin:4px 0 6px;padding:6px 8px;border-radius:2px;border:1px solid var(--border);
   background:rgba(255,255,255,.02);font-size:.65rem;color:var(--dim)
 }
 .chat-msg-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:7px}
@@ -567,7 +567,7 @@ header{animation:headerSlide .5s cubic-bezier(.22,1,.36,1) both}
 /* ── Header accent underline ────────────────────── */
 header::after{
   content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;
-  background:linear-gradient(90deg, var(--accent), var(--neon-cyan), var(--neon-purple), var(--accent));
+  background:linear-gradient(90deg, var(--accent), var(--neon-cyan), var(--accent));
   background-size:300% 100%;
   animation:shimmerGlow 6s linear infinite;
   opacity:.6;
@@ -577,7 +577,7 @@ header::after{
 .panel{position:relative}
 .panel::before{
   content:'';position:absolute;inset:-1px;border-radius:var(--radius);z-index:-1;
-  background:linear-gradient(135deg, rgba(255,90,31,.2), rgba(0,240,255,.15), rgba(176,38,255,.15));
+  background:linear-gradient(135deg, rgba(207,255,4,.15), rgba(99,215,255,.1), rgba(0,255,0,.08));
   opacity:0;transition:opacity .4s;
   animation:borderGlow 4s ease-in-out infinite;
 }
@@ -593,7 +593,7 @@ header::after{
 /* ── Agent card inner glow ───────────────────────── */
 .agent-card::after{
   content:'';position:absolute;top:0;left:0;right:0;bottom:0;
-  background:radial-gradient(ellipse at 50% 0%, rgba(255,90,31,.08), transparent 60%);
+  background:radial-gradient(ellipse at 50% 0%, rgba(207,255,4,.06), transparent 60%);
   opacity:0;transition:opacity .3s;pointer-events:none;
 }
 .agent-card:hover::after{opacity:1}
@@ -627,7 +627,7 @@ header::after{
 /* ── Collection chip enhancement ─────────────────── */
 .col-chip{transition:border-color .2s,background .2s,transform .15s,box-shadow .2s}
 .col-chip:hover,.col-chip.active{
-  border-color:var(--accent);background:rgba(255,77,0,.08);
+  border-color:var(--accent);background:rgba(207,255,4,.06);
   transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.2);
 }
 
@@ -658,8 +658,8 @@ header::after{
 }
 
 /* ── Text selection ──────────────────────────────── */
-::selection{background:rgba(255,90,31,.35);color:#fff}
-::-moz-selection{background:rgba(255,90,31,.35);color:#fff}
+::selection{background:rgba(207,255,4,.3);color:#fff}
+::-moz-selection{background:rgba(207,255,4,.3);color:#fff}
 
 /* ── Global focus-visible ────────────────────────── */
 :focus-visible{
@@ -691,19 +691,19 @@ header::after{
   box-shadow:0 4px 16px rgba(0,0,0,.15);
 }
 .setup-step-num{
-  box-shadow:0 0 12px var(--accent-glow);
+  box-shadow:0 0 8px var(--accent-glow);
   transition:transform .2s,box-shadow .2s;
 }
 .setup-step:hover .setup-step-num{
-  transform:scale(1.1);
-  box-shadow:0 0 20px var(--accent-glow);
+  transform:scale(1.05);
+  box-shadow:0 0 14px var(--accent-glow);
 }
 
 /* ── Footer enhancement ──────────────────────────── */
 footer{position:relative}
 footer::before{
   content:'';position:absolute;top:0;left:10%;right:10%;height:1px;
-  background:linear-gradient(90deg, transparent, rgba(255,90,31,.25), rgba(0,240,255,.2), transparent);
+  background:linear-gradient(90deg, transparent, rgba(207,255,4,.3), transparent);
 }
 
 /* ── Responsive ───────────────────────────────────── */
@@ -729,7 +729,7 @@ footer::before{
 .platform-stats-bar{
   display:flex;flex-wrap:wrap;gap:6px 16px;
   padding:14px 24px;margin-bottom:2px;
-  background:linear-gradient(90deg, rgba(255,90,31,.04), rgba(0,240,255,.04));
+  background:linear-gradient(90deg, rgba(207,255,4,.03), rgba(99,215,255,.03));
   border-bottom:1px solid var(--border);
   position:relative;z-index:1;
 }
@@ -776,7 +776,7 @@ footer::before{
 .skill-mini-desc{font-size:.6rem;color:var(--dim);line-height:1.4;max-height:2.8em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .skill-mini-meta{display:flex;gap:6px;margin-top:5px;font-size:.55rem;color:var(--dim)}
 .skill-mini-meta .sms{font-family:var(--font-mono);padding:1px 5px;border-radius:3px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
-.skill-mini-meta .sms.src-seed{color:var(--accent);border-color:rgba(255,90,31,.2)}
+.skill-mini-meta .sms.src-seed{color:var(--accent);border-color:rgba(207,255,4,.2)}
 .skill-mini-meta .sms.src-imported{color:var(--neon-green);border-color:rgba(57,255,20,.2)}
 .skill-mini-meta .sms.src-user{color:#a78bfa;border-color:rgba(167,139,250,.2)}
 .skill-mini-meta .sms.onchain{color:var(--gold);border-color:rgba(243,202,64,.2)}
@@ -828,15 +828,15 @@ footer::before{
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;margin-bottom:16px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--radius)">
         <strong style="font-size:.7rem;color:var(--dim)">Display</strong>
-        <select id="themePresetSel" aria-label="Theme preset" style="font-size:.66rem;border-radius:8px;border:1px solid var(--border);background:#0f1120;color:var(--text);padding:5px 7px">
+        <select id="themePresetSel" aria-label="Theme preset" style="font-size:.66rem;border-radius:2px;border:1px solid var(--border);background:#0b1622;color:var(--text);padding:5px 7px">
           <option value="abyss">Abyss</option>
           <option value="ember">Ember</option>
           <option value="daylight">Daylight</option>
         </select>
-        <button type="button" id="toggleDenseBtn" style="font-size:.64rem;border-radius:8px;border:1px solid var(--border);background:#0f1120;color:var(--text);padding:5px 7px">Dense</button>
-        <button type="button" id="toggleFocusBtn" style="font-size:.64rem;border-radius:8px;border:1px solid var(--border);background:#0f1120;color:var(--text);padding:5px 7px">Focus</button>
-        <button type="button" id="toggleMotionBtn" style="font-size:.64rem;border-radius:8px;border:1px solid var(--border);background:#0f1120;color:var(--text);padding:5px 7px">Low Motion</button>
-        <button type="button" id="themeResetBtn" style="font-size:.64rem;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--dim);padding:5px 7px">Reset</button>
+        <button type="button" id="toggleDenseBtn" style="font-size:.64rem;border-radius:2px;border:1px solid var(--border);background:#0b1622;color:var(--text);padding:5px 7px">Dense</button>
+        <button type="button" id="toggleFocusBtn" style="font-size:.64rem;border-radius:2px;border:1px solid var(--border);background:#0b1622;color:var(--text);padding:5px 7px">Focus</button>
+        <button type="button" id="toggleMotionBtn" style="font-size:.64rem;border-radius:2px;border:1px solid var(--border);background:#0b1622;color:var(--text);padding:5px 7px">Low Motion</button>
+        <button type="button" id="themeResetBtn" style="font-size:.64rem;border-radius:2px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--dim);padding:5px 7px">Reset</button>
       </div>
       <div class="panel-toolbar" style="margin-bottom:16px">
         <strong style="font-size:.7rem;color:var(--dim)">Setup Mode</strong>
@@ -1137,11 +1137,12 @@ python3 pod/run_agent.py \
 </div>
 
 <footer>
-  <div>ApeClaw &mdash; an <a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--accent2);font-weight:600">OpenClaw</a> skill for ApeChain NFT operations</div>
+  <div>ApeClaw Terminal &middot; ApeChain &middot; Powered by <a href="https://x.com/ClutchMarkets" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-weight:700">Clutch Labs</a></div>
   <div class="footer-links">
-    <a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--accent2)">OpenClaw</a>
+    <a href="https://x.com/ClutchMarkets" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> ClutchMarkets</a>
+    <a href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a>
     <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
-    <a href="https://github.com/simplefarmer69/ape-claw#commands" target="_blank" rel="noopener">Docs</a>
+    <a href="/docs" data-keep-query="1">Docs</a>
     <a href="https://apescan.io" target="_blank" rel="noopener">ApeScan</a>
   </div>
 </footer>

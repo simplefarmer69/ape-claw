@@ -13,7 +13,6 @@
     { href: "/skills", label: "Skills", icon: "skills" },
     { href: "/docs",   label: "Docs",   icon: "docs" },
     { href: "https://x.com/ClutchMarkets", label: "ClutchMarkets", icon: "x", external: true },
-    { href: "https://x.com/ApeClawAI", label: "ApeClaw", icon: "x", external: true },
     { href: "https://github.com/simplefarmer69/ape-claw", label: "GitHub", icon: "github", external: true },
     { href: "https://openclaw.ai", label: "OpenClaw", icon: "claw", external: true },
   ];
@@ -99,10 +98,6 @@
             '<a href="https://x.com/ClutchMarkets" target="_blank" rel="noopener">' +
               '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>' +
               ' ClutchMarkets' +
-            '</a>' +
-            '<a href="https://x.com/ApeClawAI" target="_blank" rel="noopener">' +
-              '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>' +
-              ' ApeClaw' +
             '</a>' +
           '</div>' +
         '</div>' +
