@@ -1,13 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "rewrites": [
-    { "source": "/favicon-lobster.png", "destination": "/ui/favicon-lobster.png" },
-    { "source": "/ui", "destination": "/ui/index.html" },
-    { "source": "/app", "destination": "/ui/index.html" },
-    { "source": "/docs", "destination": "/ui/docs.html" },
-    { "source": "/pod", "destination": "/ui/pod.html" },
-    { "source": "/skills", "destination": "/ui/skills.html" }
+  "routes": [
+    { "src": "^/pod/?$", "dest": "/ui/pod.html" },
+    { "src": "^/docs/?$", "dest": "/ui/docs.html" },
+    { "src": "^/skills/?$", "dest": "/ui/skills.html" },
+    { "src": "^/ui/?$", "dest": "/ui/index.html" },
+    { "src": "^/app/?$", "dest": "/ui/index.html" },
+    { "src": "^/favicon-lobster\\.png$", "dest": "/ui/favicon-lobster.png" },
+    { "handle": "filesystem" }
   ]
 }

@@ -2856,7 +2856,7 @@ function renderSkillCards(skills) {
 
 async function fetchSkillsStats() {
   try {
-    const resp = await fetch(apiBase + '/api/skills/stats');
+    const resp = await fetch(apiUrl('/api/skills/stats'));
     if (!resp.ok) throw new Error('stats ' + resp.status);
     const data = await resp.json();
     if (!data.ok) throw new Error(data.error || 'stats failed');
@@ -2895,7 +2895,7 @@ async function fetchSkillsSearch(query, source) {
     const params = new URLSearchParams({ limit: '50' });
     if (query) params.set('q', query);
     if (source) params.set('source', source);
-    const resp = await fetch(apiBase + '/api/skills/search?' + params.toString());
+    const resp = await fetch(apiUrl('/api/skills/search?' + params.toString()));
     if (!resp.ok) throw new Error('search ' + resp.status);
     const data = await resp.json();
     if (!data.ok) throw new Error(data.error || 'search failed');
@@ -2928,9 +2928,11 @@ async function refreshSkillsLoop() {
   await fetchSkillsStats();
   setInterval(fetchSkillsStats, 120_000);
 }
-refreshSkillsLoop();
 
-boot();
+(async function () {
+  await boot();
+  refreshSkillsLoop();
+})();
 </script>
 </body>
 </html>
