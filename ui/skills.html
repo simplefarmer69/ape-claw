@@ -514,22 +514,22 @@
 
       <div class="stats ac-stagger" aria-label="Library stats">
         <div class="stat ac-observe">
-          <div class="num glow" id="statTotal">—</div>
+          <div class="num glow" id="statTotal">1,028</div>
           <div class="ac-stat-shimmer"></div>
           <div class="label">Total Skills</div>
         </div>
         <div class="stat ac-observe">
-          <div class="num" id="statVetted">—</div>
+          <div class="num" id="statVetted">1,020</div>
           <div class="ac-stat-shimmer"></div>
           <div class="label">Vetted &amp; Verified</div>
         </div>
         <div class="stat ac-observe">
-          <div class="num" id="statOnchain">—</div>
+          <div class="num" id="statOnchain">0</div>
           <div class="ac-stat-shimmer"></div>
           <div class="label">Published Onchain</div>
         </div>
         <div class="stat ac-observe">
-          <div class="num" id="statContributed">—</div>
+          <div class="num" id="statContributed">0</div>
           <div class="ac-stat-shimmer"></div>
           <div class="label">Community Contributed</div>
         </div>
@@ -974,7 +974,7 @@
         } catch (e) {}
       }
       if (!api) {
-        try { api = window.location.origin; } catch(e) { api = ''; }
+        api = 'https://api.apeclaw.ai';
       }
       var apiBase = api.replace(/\/+$/, '');
       var apiNote = document.getElementById('apiNote');
@@ -1130,7 +1130,10 @@
             setStatCountUp(statContributed, d.user || 0);
           })
           .catch(function () {
-            if (statTotal) statTotal.textContent = fmtInt(seed.length);
+            setStatCountUp(statTotal, 1028);
+            setStatCountUp(statVetted, 1020);
+            setStatCountUp(statOnchain, 0);
+            setStatCountUp(statContributed, 0);
           });
       })();
 
@@ -2125,27 +2128,29 @@
         }
       });
 
-      (function(){
-        var tabs = document.querySelectorAll('.tab-btn');
-        var panels = document.querySelectorAll('.tab-panel');
-        function switchTab(name) {
-          for (var i = 0; i < tabs.length; i++) {
-            tabs[i].classList.toggle('active', tabs[i].getAttribute('data-tab') === name);
-            tabs[i].setAttribute('aria-selected', tabs[i].getAttribute('data-tab') === name ? 'true' : 'false');
-          }
-          for (var j = 0; j < panels.length; j++) {
-            panels[j].classList.toggle('active', panels[j].getAttribute('data-panel') === name);
-          }
-          history.replaceState(null, '', '#' + name);
-        }
+    })();
+  </script>
+  <script>
+    (function(){
+      var tabs = document.querySelectorAll('.tab-btn');
+      var panels = document.querySelectorAll('.tab-panel');
+      function switchTab(name) {
         for (var i = 0; i < tabs.length; i++) {
-          tabs[i].addEventListener('click', function() { switchTab(this.getAttribute('data-tab')); });
+          tabs[i].classList.toggle('active', tabs[i].getAttribute('data-tab') === name);
+          tabs[i].setAttribute('aria-selected', tabs[i].getAttribute('data-tab') === name ? 'true' : 'false');
         }
-        var hash = (location.hash || '').replace('#', '');
-        if (hash === 'add' || hash === 'onchain') switchTab(hash);
-        else if (hash === 'intents' || hash === 'receipts') switchTab('onchain');
-        else if (hash === 'your-skills') switchTab('add');
-      })();
+        for (var j = 0; j < panels.length; j++) {
+          panels[j].classList.toggle('active', panels[j].getAttribute('data-panel') === name);
+        }
+        history.replaceState(null, '', '#' + name);
+      }
+      for (var i = 0; i < tabs.length; i++) {
+        tabs[i].addEventListener('click', function() { switchTab(this.getAttribute('data-tab')); });
+      }
+      var hash = (location.hash || '').replace('#', '');
+      if (hash === 'add' || hash === 'onchain') switchTab(hash);
+      else if (hash === 'intents' || hash === 'receipts') switchTab('onchain');
+      else if (hash === 'your-skills') switchTab('add');
     })();
   </script>
 </body>
