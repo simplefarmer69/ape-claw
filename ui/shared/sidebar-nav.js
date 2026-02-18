@@ -72,8 +72,16 @@
     '<aside class="sb-sidebar" id="sbSidebar" data-open="0" aria-label="Menu">' +
       '<div class="sb-inner">' +
         '<div class="sb-brand">' +
-          '<div class="sb-mark" aria-hidden="true"></div>' +
-          '<div>' +
+          '<div class="sb-mark" aria-hidden="true">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+              '<path d="M6.5 3C4.5 5 4 7 4 9c0 2.5 1.5 4 3 5"/>' +
+              '<path d="M17.5 3c2 2 2.5 4 2.5 6 0 2.5-1.5 4-3 5"/>' +
+              '<path d="M7 14c-1 1-2 3-2 5 0 1 .5 2 2 2s2.5-1 3-2"/>' +
+              '<path d="M17 14c1 1 2 3 2 5 0 1-.5 2-2 2s-2.5-1-3-2"/>' +
+              '<circle cx="12" cy="12" r="3"/>' +
+            '</svg>' +
+          '</div>' +
+          '<div class="sb-brand-text">' +
             "<strong>APECLAW</strong>" +
             '<span>terminal library • pod swarm</span>' +
           "</div>" +

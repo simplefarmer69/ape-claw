@@ -496,7 +496,7 @@
         <p class="sec-sub">The terminal is live and growing. Follow us for updates, new features, and ecosystem announcements.</p>
 
         <div class="comm-btns">
-          <a class="btn" href="https://x.com/ApeClawAI" target="_blank" rel="noopener">
+          <a class="btn" href="https://x.com/ClutchMarkets" target="_blank" rel="noopener">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             Follow on X
           </a>
@@ -570,25 +570,34 @@
 
       function setCountUp(el, value) {
         if (!el) return;
-        el.setAttribute('data-countup', String(value));
+        var n = Number(value || 0);
+        el.setAttribute('data-countup', String(n));
         el.textContent = '0';
-        if (window.acTriggerCountUp) window.acTriggerCountUp(el);
+        if (window.acTriggerCountUp) {
+          window.acTriggerCountUp(el);
+        }
+        setTimeout(function () {
+          if (!el.getAttribute('data-countup-started') || el.textContent === '0') {
+            el.textContent = fmtInt(n);
+            el.setAttribute('data-countup-started', '1');
+          }
+        }, 2500);
       }
 
       var onlineText = $('onlineText');
       function setOnline(ok) { if (onlineText) onlineText.textContent = ok ? 'Online' : 'Offline'; }
 
-      Promise.allSettled([fetchJson('/api/health'), fetchJson('/api/clawbots')]).then(function (res) {
-        var health = (res[0] && res[0].status === 'fulfilled') ? res[0].value : null;
-        var bots = (res[1] && res[1].status === 'fulfilled') ? res[1].value : null;
-        setOnline(Boolean(health && health.ok));
-        var botCount = (bots && bots.json && typeof bots.json.count !== 'undefined') ? bots.json.count : 0;
-        setCountUp($('statClawbots'), botCount);
-      }).catch(function () { setOnline(false); });
+      function loadStats() {
+        Promise.allSettled([fetchJson('/api/health'), fetchJson('/api/clawbots')]).then(function (res) {
+          var health = (res[0] && res[0].status === 'fulfilled') ? res[0].value : null;
+          var bots = (res[1] && res[1].status === 'fulfilled') ? res[1].value : null;
+          setOnline(Boolean(health && health.ok));
+          var botCount = (bots && bots.json && typeof bots.json.count !== 'undefined') ? bots.json.count : 0;
+          setCountUp($('statClawbots'), botCount);
+        }).catch(function () { setOnline(false); });
 
-      setCountUp($('statContracts'), 13);
+        setCountUp($('statContracts'), 13);
 
-      (function () {
         var elS = $('statSkills');
         var elP = $('statPublishedSub');
         if (elS) elS.textContent = '0';
@@ -601,7 +610,13 @@
             if (elP) elP.textContent = 'onchain: ' + fmtInt(d.onchain || 0) + ' · vetted: ' + fmtInt(d.vetted || 0);
           })
           .catch(function () {});
-      })();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadStats);
+      } else {
+        loadStats();
+      }
     })();
   </script>
 </body>

@@ -87,17 +87,24 @@
 }
 .sb-mark{
   width:30px;height:30px;
-  border:1px solid rgba(99,215,255,.25);
-  background: rgba(9,13,18,0.5);
-  box-shadow: inset 0 0 0 1px rgba(15,29,44,0.9);
-  border-radius:2px;
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(207,255,4,.3);
+  background: rgba(9,13,18,0.6);
+  border-radius:4px;
   position:relative;
+  box-shadow: 0 0 12px rgba(207,255,4,.08), inset 0 0 0 1px rgba(15,29,44,0.9);
+  transition: border-color .3s, box-shadow .3s, width .25s ease, height .25s ease;
 }
-.sb-mark:before{
-  content:"";
-  position:absolute; inset:6px 7px 6px 7px;
-  border:1px solid rgba(207,255,4,.35);
-  box-shadow: 0 0 18px rgba(207,255,4,.08);
+.sb-mark:hover{
+  border-color:rgba(207,255,4,.5);
+  box-shadow: 0 0 20px rgba(207,255,4,.15), inset 0 0 0 1px rgba(15,29,44,0.9);
+}
+.sb-mark svg{
+  width:18px;height:18px;
+  color:var(--sb-accent);
+  filter:drop-shadow(0 0 4px rgba(207,255,4,.3));
+  transition: width .25s ease, height .25s ease;
 }
 .sb-brand strong{
   font-size:12px;
@@ -258,40 +265,43 @@
   .sb-inner{ overflow-y:auto; overflow-x:hidden; }
 
   /* Collapsed: center icons, hide everything else */
-  .sb-nav{ padding:8px 6px; }
+  .sb-nav{ padding:8px 4px; }
   .sb-link{
     justify-content:center;
-    padding:11px 0;
+    gap:0;
+    padding:12px 0;
     border-color:transparent;
     background:transparent;
     overflow:hidden;
+    border-radius:6px;
   }
-  .sb-link:hover{ background:rgba(207,255,4,.05); border-color:transparent; }
-  .sb-link[aria-current="page"]{ border-color:rgba(207,255,4,.2); background:rgba(207,255,4,.06); }
+  .sb-link:hover{ background:rgba(207,255,4,.06); border-color:rgba(207,255,4,.12); }
+  .sb-link[aria-current="page"]{ border-color:rgba(207,255,4,.22); background:rgba(207,255,4,.08); }
   .sb-link[aria-current="page"]::before{ left:50%; transform:translate(-50%,-50%); top:4px; width:4px; height:4px; }
+  .sb-ico{ width:20px; height:20px; }
   .sb-text, .sb-sub{
-    max-width:0; opacity:0; overflow:hidden;
-    transition: max-width .25s ease, opacity .2s ease;
-    white-space:nowrap;
+    display:none;
   }
-  .sb-brand{ justify-content:center; padding:14px 6px 12px; }
-  .sb-brand strong, .sb-brand span{
-    max-width:0; opacity:0; overflow:hidden;
-    transition: max-width .25s ease, opacity .2s ease;
-    white-space:nowrap;
+  .sb-brand{ justify-content:center; padding:12px 4px 10px; gap:0; }
+  .sb-brand .sb-brand-text{
+    display:none;
   }
+  .sb-mark{ width:36px; height:36px; }
+  .sb-mark svg{ width:20px; height:20px; }
   .sb-footer, .sb-powered, .sb-footer-links{
-    opacity:0; overflow:hidden; max-height:0;
-    transition: opacity .2s ease, max-height .25s ease;
+    opacity:0; overflow:hidden; max-height:0; padding:0;
+    transition: opacity .2s ease, max-height .25s ease, padding .25s ease;
   }
 
   /* Expanded (hover): restore everything */
   .sb-sidebar:hover .sb-nav{ padding:10px; }
   .sb-sidebar:hover .sb-link{
     justify-content:flex-start;
+    gap:10px;
     padding:10px 10px;
     border-color:rgba(99,215,255,.14);
     background:rgba(11,22,34,0.35);
+    border-radius:2px;
   }
   .sb-sidebar:hover .sb-link:hover{
     border-color:rgba(99,215,255,.32);
@@ -303,14 +313,15 @@
   .sb-sidebar:hover .sb-link[aria-current="page"]::before{
     left:10px; transform:translateY(-50%); top:50%; width:6px; height:6px;
   }
+  .sb-sidebar:hover .sb-ico{ width:18px; height:18px; }
   .sb-sidebar:hover .sb-text,
-  .sb-sidebar:hover .sb-sub{ max-width:200px; opacity:1; }
-  .sb-sidebar:hover .sb-brand{ justify-content:flex-start; padding:14px 14px 12px; }
-  .sb-sidebar:hover .sb-brand strong,
-  .sb-sidebar:hover .sb-brand span{ max-width:200px; opacity:1; }
-  .sb-sidebar:hover .sb-footer,
-  .sb-sidebar:hover .sb-powered,
-  .sb-sidebar:hover .sb-footer-links{ opacity:1; max-height:120px; }
+  .sb-sidebar:hover .sb-sub{ display:inline; }
+  .sb-sidebar:hover .sb-brand{ justify-content:flex-start; gap:10px; padding:14px 14px 12px; }
+  .sb-sidebar:hover .sb-brand .sb-brand-text{ display:block; }
+  .sb-sidebar:hover .sb-mark{ width:30px; height:30px; }
+  .sb-sidebar:hover .sb-footer{ opacity:1; max-height:120px; padding:12px 12px 14px; }
+  .sb-sidebar:hover .sb-powered{ opacity:1; max-height:60px; }
+  .sb-sidebar:hover .sb-footer-links{ opacity:1; max-height:60px; }
 }
 
 /* Desktop collapsed: show tooltip on icon hover */
