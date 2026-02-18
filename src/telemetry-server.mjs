@@ -137,27 +137,13 @@ function buildMergedSkillIndex() {
       const raw = fs.readFileSync(SKILLCARDS_IMPORTED_INDEX_PATH, "utf8");
       const index = JSON.parse(raw);
       const imported = Array.isArray(index?.imported) ? index.imported : [];
-      const importedDir = path.join(ROOT, "skillcards", "imported");
       for (const item of imported) {
         if (item && typeof item === "object" && item.name && item.slug) {
-          // Try to read description from the actual JSON file if not in index
-          let description = String(item.description || "").trim();
-          if (!description && item.fileName) {
-            try {
-              const filePath = path.join(importedDir, item.fileName);
-              if (fs.existsSync(filePath)) {
-                const fileRaw = fs.readFileSync(filePath, "utf8");
-                const fileSkill = JSON.parse(fileRaw);
-                description = String(fileSkill?.description || "").trim();
-              }
-            } catch {
-              // Fall back to empty description
-            }
-          }
           merged.push({
             name: String(item.name || "").trim(),
             slug: String(item.slug || "").trim(),
-            description,
+            description: String(item.description || "").trim(),
+            fileName: String(item.fileName || "").trim() || null,
             source: "imported",
             vettedOk: Boolean(item.vettedOk),
             importOk: Boolean(item.importOk),
@@ -855,6 +841,39 @@ const server = http.createServer((req, res) => {
     } catch (err) {
       res.writeHead(500, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
       return res.end(JSON.stringify({ ok: false, error: err.message || "search failed" }));
+    }
+  }
+  if (pathname === "/api/skills/get" && req.method === "GET") {
+    try {
+      const slug = String(reqUrl.searchParams.get("slug") || "").trim();
+      if (!slug) {
+        res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        return res.end(JSON.stringify({ ok: false, error: "missing slug" }));
+      }
+      const all = getMergedSkillIndex();
+      const match = all.find((s) => s.slug === slug);
+      if (!match) {
+        res.writeHead(404, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        return res.end(JSON.stringify({ ok: false, error: "skill not found" }));
+      }
+      let fullCard = null;
+      const bucketDirs = {
+        seed: SKILLCARDS_SEED_DIR,
+        imported: path.join(ROOT, "skillcards", "imported"),
+        user: SKILLCARDS_USER_DIR,
+      };
+      const baseDir = bucketDirs[match.source];
+      if (baseDir && match.fileName) {
+        try {
+          const fp = path.join(baseDir, match.fileName);
+          if (fs.existsSync(fp)) fullCard = JSON.parse(fs.readFileSync(fp, "utf8"));
+        } catch { /* index metadata is still returned below */ }
+      }
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: true, skill: match, card: fullCard }));
+    } catch (err) {
+      res.writeHead(500, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: false, error: err.message || "get failed" }));
     }
   }
   if (pathname === "/api/skills/stats" && req.method === "GET") {
