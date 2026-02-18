@@ -10,6 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/ui/shared/sidebar-nav.css">
+  <script defer src="/ui/shared/sidebar-nav.js"></script>
   <style>
     /* StonkBrokers terminal theme (Inter + square borders). */
     :root{
@@ -273,7 +275,8 @@
   <div class="bg-fade" aria-hidden="true"></div>
   <div class="scanlines" aria-hidden="true"></div>
   <div class="noise" aria-hidden="true"></div>
-  <div class="wrap">
+  <div id="sbNavMount"></div>
+  <div class="wrap sb-content-offset">
     <div class="top">
       <a class="brand" href="/" aria-label="ApeClaw">
         <div class="logo" aria-hidden="true"><img src="/favicon-lobster.png" alt=""></div>
@@ -482,11 +485,12 @@
             <span class="badge live">LIVE</span>
           </div>
           <p>
-            Anchor versions and receipts so your contributions survive UI/backends and remain auditable.
+            Anchor versions and receipts so your contributions survive UI/backends and remain auditable. Use intents to post work orders as a primitive for solver-style coordination.
           </p>
           <div class="code"><span class="k">ape-claw</span> v2 skill mint --json<br><span class="k">ape-claw</span> v2 skill publish --skillId &lt;id&gt; --file skillcards/... --json<br><span class="k">ape-claw</span> v2 receipt record --traceId "..." --payload '{...}' --json</div>
           <div class="cta" style="margin-top:10px">
             <a class="btn primary" href="/docs?doc=ONCHAIN_V2_GUIDE.md" data-keep-query="1">Onchain guide</a>
+            <a class="btn" href="/skills#intents" data-keep-query="1">Intents UI</a>
             <a class="btn" href="/ui?filter=v2" data-keep-query="1">See v2 feed</a>
           </div>
         </div>

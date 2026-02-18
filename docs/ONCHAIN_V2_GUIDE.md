@@ -92,6 +92,10 @@ ape-claw v2 receipt record --rpc http://127.0.0.1:8545 --receipts 0x... --traceI
 ape-claw v2 receipt get --rpc http://127.0.0.1:8545 --receipts 0x... --traceId "demo_1" --json
 ```
 
+UI option (read-only, no signing in browser):
+
+- `GET /skills#receipts` (Receipt explorer + CLI command generator)
+
 ## Where SkillCards Fit
 
 SkillCards are offchain JSON payloads that define:

@@ -10,6 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/ui/shared/sidebar-nav.css">
+  <script defer src="/ui/shared/sidebar-nav.js"></script>
   <style>
     :root{
       --bg:#111111;
@@ -215,6 +217,7 @@
     .code{
       margin-top:12px;padding:12px 12px;border-radius:2px;border:1px solid #2a4056;background:#0b1622;
       font-family:var(--mono);font-size:12px;color:#d4e6fa;overflow:auto;line-height:1.55;
+      white-space:pre-wrap;word-break:break-word;
     }
     .k{color:var(--cyan)}
 
@@ -392,7 +395,8 @@
   <div class="bg-fade" aria-hidden="true"></div>
   <div class="scanlines" aria-hidden="true"></div>
   <div class="noise" aria-hidden="true"></div>
-  <div class="wrap">
+  <div id="sbNavMount"></div>
+  <div class="wrap sb-content-offset">
     <div class="top">
       <a class="brand" href="/" aria-label="ApeClaw">
         <div class="logo" aria-hidden="true"><img src="/favicon-lobster.png" alt=""></div>
@@ -421,6 +425,8 @@
         <a class="btn primary" href="/docs?doc=V2_ONCHAIN_SKILLS.md" data-keep-query="1">Read v2 Skills Doc</a>
         <a class="btn" href="/docs?doc=SKILLCARDS_AND_IMPORTER.md" data-keep-query="1">SkillCards + Importer</a>
         <a class="btn" href="/docs?doc=CONTRIBUTING.md" data-keep-query="1">Contribute</a>
+        <a class="btn" href="#intents">Intents</a>
+        <a class="btn" href="#receipts">Receipts</a>
         <a class="btn" href="/ui?filter=v2" data-keep-query="1">View v2 Feed</a>
       </div>
       <a class="scroll" href="#getting-started"><span class="chev" aria-hidden="true">⌄</span> Getting started</a>
@@ -442,6 +448,9 @@
           <div class="num" id="statPublished">—</div>
           <div class="label">Published onchain (known)</div>
         </div>
+      </div>
+      <div class="note" style="margin-top:10px">
+        “Imported” counts SkillCards present in <code>skillcards/imported/index.json</code>. “Published (known)” is the number of imported slugs with a recorded publish tx in that index (not a full chain scan).
       </div>
     </div>
 
@@ -554,6 +563,8 @@
             <input id="v2RpcUrl" type="text" placeholder="v2 rpc url (APE_CLAW_V2_RPC_URL)" autocomplete="off" spellcheck="false">
             <input id="v2SkillNft" type="text" placeholder="SkillNFT address (APE_CLAW_V2_SKILL_NFT)" autocomplete="off" spellcheck="false">
             <input id="v2Registry" type="text" placeholder="SkillRegistry address (APE_CLAW_V2_SKILL_REGISTRY)" autocomplete="off" spellcheck="false">
+            <input id="v2Intents" type="text" placeholder="IntentRegistry address (APE_CLAW_V2_INTENT_REGISTRY)" autocomplete="off" spellcheck="false">
+            <input id="v2Receipts" type="text" placeholder="ReceiptRegistry address (APE_CLAW_V2_RECEIPT_REGISTRY)" autocomplete="off" spellcheck="false">
             <input id="royaltyReceiver" type="text" placeholder="royalty receiver (PodVault address)" autocomplete="off" spellcheck="false">
             <input id="royaltyBps" type="text" placeholder="royalty bps (e.g. 500)" autocomplete="off" spellcheck="false">
             <button class="btn" id="saveV2SettingsBtn" type="button">Save Settings</button>
@@ -632,6 +643,80 @@
       </div>
     </div>
 
+    <div class="section" id="intents">
+      <h2>Intents (v2-alpha)</h2>
+      <div class="grid">
+        <div class="card">
+          <div class="cardhead">
+            <h3>Create intent (command generator)</h3>
+            <span class="badge alpha">SAFE</span>
+          </div>
+          <p>
+            IntentRegistry is a minimal primitive for solver-style architectures. This UI never signs onchain; it generates CLI commands.
+          </p>
+          <div class="tools" aria-label="Intent create inputs">
+            <textarea id="intentPayload" placeholder='Intent payload JSON (stringified), example: {"type":"task","goal":"import 50 skills","constraints":{"maxSpendApe":0}}'></textarea>
+            <div class="row">
+              <input id="intentExpiresAt" type="text" placeholder="expiresAt unix seconds (optional)" autocomplete="off" spellcheck="false">
+              <button class="btn" id="copyIntentCreateBtn" type="button">Copy create</button>
+            </div>
+          </div>
+          <div class="code" id="intentCreatePreview"><span class="k">ape-claw</span> v2 intent create --rpc &lt;url&gt; --privateKey "$APE_CLAW_V2_PRIVATE_KEY" --intents &lt;addr&gt; --payload '{...}' --json</div>
+        </div>
+        <div class="card">
+          <div class="cardhead">
+            <h3>Cancel intent (command generator)</h3>
+            <span class="badge alpha">SAFE</span>
+          </div>
+          <p>
+            Cancels a previously created intent by `intentId`. Use this to revoke stale work orders.
+          </p>
+          <div class="tools" aria-label="Intent cancel inputs">
+            <div class="row">
+              <input id="intentCancelId" type="text" placeholder="intentId (number)" autocomplete="off" spellcheck="false">
+              <button class="btn" id="copyIntentCancelBtn" type="button">Copy cancel</button>
+            </div>
+          </div>
+          <div class="code" id="intentCancelPreview"><span class="k">ape-claw</span> v2 intent cancel --rpc &lt;url&gt; --privateKey "$APE_CLAW_V2_PRIVATE_KEY" --intents &lt;addr&gt; --intentId &lt;id&gt; --json</div>
+          <div class="note">To see intents settle, your solver network is the missing piece (P2). This ships the primitive + command surface.</div>
+        </div>
+      </div>
+      <div class="tools" aria-label="Intent docs shortcuts">
+        <a class="pill" href="/docs?doc=ONCHAIN_V2_GUIDE.md" data-keep-query="1">Onchain guide</a>
+        <a class="pill" href="/docs?doc=WEB4_PLAN_STATUS.md" data-keep-query="1">Plan status</a>
+        <a class="pill" href="/docs?doc=WEB4_SWARM_MODEL.md" data-keep-query="1">Swarm model</a>
+      </div>
+    </div>
+
+    <div class="section" id="receipts">
+      <h2>Receipts (v2-alpha)</h2>
+      <div class="grid">
+        <div class="card">
+          <div class="cardhead">
+            <h3>Receipt explorer (read-only)</h3>
+            <span class="badge alpha">SAFE</span>
+          </div>
+          <p>
+            Receipts are the “onchain memory anchor” primitive. This UI never signs; it can generate a CLI command, and can optionally read via the backend API
+            if the server is configured with <code>APE_CLAW_V2_RPC_URL</code> + <code>APE_CLAW_V2_RECEIPT_REGISTRY</code>.
+          </p>
+          <div class="tools" aria-label="Receipt explorer inputs">
+            <div class="row">
+              <input id="receiptTraceId" type="text" placeholder="traceId (string)" autocomplete="off" spellcheck="false">
+              <button class="btn" id="copyReceiptGetBtn" type="button">Copy get</button>
+              <button class="btn" id="fetchReceiptGetBtn" type="button">Fetch</button>
+            </div>
+          </div>
+          <div class="code" id="receiptGetPreview"><span class="k">ape-claw</span> v2 receipt get --rpc &lt;url&gt; --receipts &lt;addr&gt; --traceId "&lt;traceId&gt;" --json</div>
+          <div class="code" id="receiptGetResult">Result: —</div>
+        </div>
+      </div>
+      <div class="tools" aria-label="Receipt docs shortcuts">
+        <a class="pill" href="/docs?doc=ONCHAIN_V2_GUIDE.md" data-keep-query="1">Onchain guide</a>
+        <a class="pill" href="/docs?doc=WEB4_SWARM_MODEL.md" data-keep-query="1">Swarm model</a>
+      </div>
+    </div>
+
     <div class="section" id="seed-library">
       <h2>Seed Skill Library</h2>
       <div class="card">
@@ -670,6 +755,10 @@
             <option value="med">risk: med</option>
             <option value="high">risk: high</option>
           </select>
+          <label title="Only show imported skills that passed local vetting (recommended)">
+            <input id="onlyVetted" type="checkbox" checked>
+            Vetted only
+          </label>
           <label title="Only show imported skills that have a publish tx recorded in the importer index">
             <input id="onlyOnchain" type="checkbox">
             Onchain only
@@ -773,6 +862,15 @@
         var u = new URL(window.location.href);
         api = (u.searchParams.get('api') || '').trim();
       } catch (e) {}
+      // Default backend selection:
+      // - local dev: same-origin (telemetry server serves UI + API)
+      // - prod: api.apeclaw.ai unless overridden via ?api=
+      if (!api) {
+        try {
+          var origin = String(window.location.origin || '');
+          if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) api = origin;
+        } catch (e) {}
+      }
       if (!api) api = 'https://api.apeclaw.ai';
       var apiBase = api.replace(/\/+$/, '');
       var apiNote = document.getElementById('apiNote');
@@ -1213,6 +1311,7 @@
       var importedSearch = document.getElementById('importedSearch');
       var riskFilter = document.getElementById('riskFilter');
       var onlyOnchain = document.getElementById('onlyOnchain');
+      var onlyVetted = document.getElementById('onlyVetted');
       var importedBadge = document.getElementById('importedBadge');
       var importedAll = [];
       var publishedBySlug = {};
@@ -1220,10 +1319,15 @@
         var q = importedSearch ? String(importedSearch.value || '') : '';
         var bucket = riskFilter ? String(riskFilter.value || 'all') : 'all';
         var onchainOnly = Boolean(onlyOnchain && onlyOnchain.checked);
+        var vettedOnly = Boolean(!onlyVetted || onlyVetted.checked);
         var filtered = importedAll.filter(function (it) {
           if (!matchesSearch(it, q)) return false;
           var b = riskBucket(it.riskTier || 2);
           if (bucket !== 'all' && b !== bucket) return false;
+          if (vettedOnly) {
+            var ok = (it && (it.vettedOk === true || (it.vetted && it.vetted.ok === true)));
+            if (!ok) return false;
+          }
           if (onchainOnly) {
             var pub = (it && it.slug && publishedBySlug[it.slug]) ? publishedBySlug[it.slug] : null;
             if (!(pub && pub.txs && pub.txs.publish)) return false;
@@ -1276,6 +1380,7 @@
       }
       if (riskFilter) riskFilter.addEventListener('change', applyImportedFilters);
       if (onlyOnchain) onlyOnchain.addEventListener('change', applyImportedFilters);
+      if (onlyVetted) onlyVetted.addEventListener('change', applyImportedFilters);
 
       // ── User-submitted skills (server-side library) ────────────────────────
       var authAgentId = document.getElementById('authAgentId');
@@ -1303,10 +1408,26 @@
       var v2RpcUrl = document.getElementById('v2RpcUrl');
       var v2SkillNft = document.getElementById('v2SkillNft');
       var v2Registry = document.getElementById('v2Registry');
+      var v2Intents = document.getElementById('v2Intents');
+      var v2Receipts = document.getElementById('v2Receipts');
       var royaltyReceiver = document.getElementById('royaltyReceiver');
       var royaltyBps = document.getElementById('royaltyBps');
       var saveV2SettingsBtn = document.getElementById('saveV2SettingsBtn');
       var v2SettingsNote = document.getElementById('v2SettingsNote');
+
+      var intentPayload = document.getElementById('intentPayload');
+      var intentExpiresAt = document.getElementById('intentExpiresAt');
+      var intentCancelId = document.getElementById('intentCancelId');
+      var copyIntentCreateBtn = document.getElementById('copyIntentCreateBtn');
+      var copyIntentCancelBtn = document.getElementById('copyIntentCancelBtn');
+      var intentCreatePreview = document.getElementById('intentCreatePreview');
+      var intentCancelPreview = document.getElementById('intentCancelPreview');
+
+      var receiptTraceId = document.getElementById('receiptTraceId');
+      var copyReceiptGetBtn = document.getElementById('copyReceiptGetBtn');
+      var fetchReceiptGetBtn = document.getElementById('fetchReceiptGetBtn');
+      var receiptGetPreview = document.getElementById('receiptGetPreview');
+      var receiptGetResult = document.getElementById('receiptGetResult');
 
       var userSkillsAll = [];
 
@@ -1376,11 +1497,15 @@
           var rpc = localStorage.getItem('apeclaw_v2_rpc') || '';
           var nft = localStorage.getItem('apeclaw_v2_skillnft') || '';
           var reg = localStorage.getItem('apeclaw_v2_registry') || '';
+          var intents = localStorage.getItem('apeclaw_v2_intents') || '';
+          var receipts = localStorage.getItem('apeclaw_v2_receipts') || '';
           var rr = localStorage.getItem('apeclaw_v2_royalty_receiver') || '';
           var rb = localStorage.getItem('apeclaw_v2_royalty_bps') || '500';
           if (v2RpcUrl) v2RpcUrl.value = rpc;
           if (v2SkillNft) v2SkillNft.value = nft;
           if (v2Registry) v2Registry.value = reg;
+          if (v2Intents) v2Intents.value = intents;
+          if (v2Receipts) v2Receipts.value = receipts;
           if (royaltyReceiver) royaltyReceiver.value = rr;
           if (royaltyBps) royaltyBps.value = rb;
           if (v2SettingsNote) v2SettingsNote.textContent = 'Mint/publish commands use env var `APE_CLAW_V2_PRIVATE_KEY` (never paste keys here).';
@@ -1391,10 +1516,156 @@
           localStorage.setItem('apeclaw_v2_rpc', v2RpcUrl ? String(v2RpcUrl.value || '').trim() : '');
           localStorage.setItem('apeclaw_v2_skillnft', v2SkillNft ? String(v2SkillNft.value || '').trim() : '');
           localStorage.setItem('apeclaw_v2_registry', v2Registry ? String(v2Registry.value || '').trim() : '');
+          localStorage.setItem('apeclaw_v2_intents', v2Intents ? String(v2Intents.value || '').trim() : '');
+          localStorage.setItem('apeclaw_v2_receipts', v2Receipts ? String(v2Receipts.value || '').trim() : '');
           localStorage.setItem('apeclaw_v2_royalty_receiver', royaltyReceiver ? String(royaltyReceiver.value || '').trim() : '');
           localStorage.setItem('apeclaw_v2_royalty_bps', royaltyBps ? String(royaltyBps.value || '').trim() : '');
         } catch (e) {}
         flash('Saved v2 settings');
+      }
+
+      function autofillV2SettingsFromBackend() {
+        // Only fill empty fields to avoid clobbering explicit operator input.
+        fetch(apiBase + '/api/v2/config', { headers: { 'accept': 'application/json' } })
+          .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, json: j }; }); })
+          .then(function (out) {
+            if (!out.ok || !out.json || !out.json.ok) return;
+            var dep = out.json.deployment || {};
+            var rr = out.json.receiptsRead || {};
+            if (v2RpcUrl && !String(v2RpcUrl.value || '').trim() && rr && rr.rpcUrl) v2RpcUrl.value = String(rr.rpcUrl);
+            if (v2SkillNft && !String(v2SkillNft.value || '').trim() && dep && dep.skillNft) v2SkillNft.value = String(dep.skillNft);
+            if (v2Registry && !String(v2Registry.value || '').trim() && dep && dep.registry) v2Registry.value = String(dep.registry);
+            if (v2Intents && !String(v2Intents.value || '').trim() && dep && dep.intents) v2Intents.value = String(dep.intents);
+            if (v2Receipts && !String(v2Receipts.value || '').trim() && (rr && rr.receiptsAddress)) v2Receipts.value = String(rr.receiptsAddress);
+            // Persist if anything was filled.
+            saveV2Settings();
+            renderIntentPreviews();
+            renderReceiptPreview();
+            try {
+              if (v2SettingsNote) {
+                var note = 'Mint/publish commands use env var `APE_CLAW_V2_PRIVATE_KEY` (never paste keys here).';
+                if (rr && rr.inferredRpc) note += ' v2 settings auto-filled from backend (local dev).';
+                v2SettingsNote.textContent = note;
+              }
+            } catch (e) {}
+          })
+          .catch(function () {});
+      }
+
+      function getIntentCreateCmd() {
+        var rpc = v2RpcUrl ? String(v2RpcUrl.value || '').trim() : '';
+        var intents = v2Intents ? String(v2Intents.value || '').trim() : '';
+        var payloadRaw = intentPayload ? String(intentPayload.value || '').trim() : '';
+        var expRaw = intentExpiresAt ? String(intentExpiresAt.value || '').trim() : '';
+        var exp = expRaw ? (' --expiresAt ' + expRaw) : '';
+        if (!payloadRaw) payloadRaw = '{"type":"task","goal":"..."}';
+        // Validate JSON (we still pass it as a string).
+        try { JSON.parse(payloadRaw); } catch (e) {}
+        if (!rpc) rpc = '<url>';
+        if (!intents) intents = '<addr>';
+        return 'ape-claw v2 intent create --rpc \"' + rpc + '\" --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --intents \"' + intents + '\" --payload \'' + payloadRaw.replace(/'/g, \"\\\\'\") + '\'' + exp + ' --json';
+      }
+      function getIntentCancelCmd() {
+        var rpc = v2RpcUrl ? String(v2RpcUrl.value || '').trim() : '';
+        var intents = v2Intents ? String(v2Intents.value || '').trim() : '';
+        var id = intentCancelId ? String(intentCancelId.value || '').trim() : '';
+        if (!rpc) rpc = '<url>';
+        if (!intents) intents = '<addr>';
+        if (!id) id = '<id>';
+        return 'ape-claw v2 intent cancel --rpc \"' + rpc + '\" --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --intents \"' + intents + '\" --intentId ' + id + ' --json';
+      }
+      function renderIntentPreviews() {
+        if (intentCreatePreview) {
+          var c1 = getIntentCreateCmd();
+          intentCreatePreview.innerHTML = '<span class="k">ape-claw</span> ' + escapeHtml(c1.replace(/^ape-claw\\s+/,''));
+        }
+        if (intentCancelPreview) {
+          var c2 = getIntentCancelCmd();
+          intentCancelPreview.innerHTML = '<span class="k">ape-claw</span> ' + escapeHtml(c2.replace(/^ape-claw\\s+/,''));
+        }
+      }
+
+      function getReceiptGetCmd() {
+        var rpc = v2RpcUrl ? String(v2RpcUrl.value || '').trim() : '';
+        var receipts = v2Receipts ? String(v2Receipts.value || '').trim() : '';
+        var traceId = receiptTraceId ? String(receiptTraceId.value || '').trim() : '';
+        if (!rpc) rpc = '<url>';
+        if (!receipts) receipts = '<addr>';
+        if (!traceId) traceId = '<traceId>';
+        return 'ape-claw v2 receipt get --rpc \"' + rpc + '\" --receipts \"' + receipts + '\" --traceId \"' + traceId.replace(/\"/g, '\\\\\"') + '\" --json';
+      }
+
+      function renderReceiptPreview() {
+        if (receiptGetPreview) {
+          var c = getReceiptGetCmd();
+          receiptGetPreview.innerHTML = '<span class="k">ape-claw</span> ' + escapeHtml(c.replace(/^ape-claw\\s+/,''));
+        }
+      }
+
+      function fetchReceipt() {
+        var traceId = receiptTraceId ? String(receiptTraceId.value || '').trim() : '';
+        if (!traceId) { showToast('Enter a traceId first', true); return; }
+        if (receiptGetResult) receiptGetResult.textContent = 'Result: fetching...';
+        fetch(apiBase + '/api/v2/receipt/get?traceId=' + encodeURIComponent(traceId), { headers: { 'accept': 'application/json' } })
+          .then(function (r) { return r.text().then(function (t) { return { ok: r.ok, status: r.status, text: t }; }); })
+          .then(function (out) {
+            var obj = null;
+            try { obj = JSON.parse(out.text || ''); } catch (e) {}
+            if (!out.ok) {
+              var msg = (obj && (obj.error || obj.reason)) ? (obj.error || obj.reason) : ('HTTP ' + out.status);
+              if (receiptGetResult) receiptGetResult.textContent = 'Result: error: ' + msg;
+              showToast('Receipt fetch failed', true);
+              return;
+            }
+            if (receiptGetResult) receiptGetResult.textContent = 'Result: ' + JSON.stringify(obj, null, 2);
+            showToast('Receipt fetched');
+          })
+          .catch(function (e) {
+            if (receiptGetResult) receiptGetResult.textContent = 'Result: error: ' + (e && e.message ? e.message : 'failed');
+            showToast('Receipt fetch failed', true);
+          });
+      }
+
+      function getReceiptGetCmd() {
+        var rpc = v2RpcUrl ? String(v2RpcUrl.value || '').trim() : '';
+        var receipts = v2Receipts ? String(v2Receipts.value || '').trim() : '';
+        var traceId = receiptTraceId ? String(receiptTraceId.value || '').trim() : '';
+        if (!rpc) rpc = '<url>';
+        if (!receipts) receipts = '<addr>';
+        if (!traceId) traceId = '<traceId>';
+        // Use double quotes for traceId; escape " for shell safety.
+        return 'ape-claw v2 receipt get --rpc \"' + rpc + '\" --receipts \"' + receipts + '\" --traceId \"' + traceId.replace(/\"/g, '\\\\\"') + '\" --json';
+      }
+      function renderReceiptPreview() {
+        if (receiptGetPreview) {
+          var c = getReceiptGetCmd();
+          receiptGetPreview.innerHTML = '<span class="k">ape-claw</span> ' + escapeHtml(c.replace(/^ape-claw\\s+/, ''));
+        }
+      }
+      function setReceiptResult(msg, isErr) {
+        if (!receiptGetResult) return;
+        receiptGetResult.textContent = String(msg || 'Result: —');
+        try { receiptGetResult.style.color = isErr ? '#ffd1d1' : '#d4e6fa'; } catch (e) {}
+      }
+      function fetchReceiptGet() {
+        var traceId = receiptTraceId ? String(receiptTraceId.value || '').trim() : '';
+        if (!traceId) { showToast('Enter a traceId first', true); return; }
+        setReceiptResult('Result: fetching...', false);
+        fetch(apiBase + '/api/v2/receipt/get?traceId=' + encodeURIComponent(traceId), { headers: { 'accept': 'application/json' } })
+          .then(function (r) { return r.text().then(function (t) { return { ok: r.ok, status: r.status, text: t }; }); })
+          .then(function (out) {
+            var j = null;
+            try { j = JSON.parse(out.text || '{}'); } catch (e) {}
+            if (!out.ok || !j || !j.ok) {
+              var msg = (j && (j.error || j.reason)) ? (j.error || j.reason) : ('HTTP ' + out.status);
+              setReceiptResult('Result: error\n' + msg, true);
+              return;
+            }
+            setReceiptResult('Result:\n' + JSON.stringify(j, null, 2), false);
+          })
+          .catch(function (e) {
+            setReceiptResult('Result: error\n' + (e && e.message ? e.message : 'fetch failed'), true);
+          });
       }
 
       function authHeaders() {
@@ -1679,12 +1950,26 @@
 
       loadAuth();
       loadV2Settings();
+      renderIntentPreviews();
+      renderReceiptPreview();
+      autofillV2SettingsFromBackend();
       if (saveAuthBtn) saveAuthBtn.addEventListener('click', function(){ saveAuth(); });
       if (checkAuthBtn) checkAuthBtn.addEventListener('click', function(){ saveAuth(); checkAuth(); });
       if (clearAuthBtn) clearAuthBtn.addEventListener('click', function(){ clearAuth(); });
       if (validateSkillBtn) validateSkillBtn.addEventListener('click', function(){ renderPreview(); });
       if (addSkillBtn) addSkillBtn.addEventListener('click', function(){ saveAuth(); addUserSkill(); });
       if (saveV2SettingsBtn) saveV2SettingsBtn.addEventListener('click', function(){ saveV2Settings(); loadUserSkills(); });
+      if (v2RpcUrl) v2RpcUrl.addEventListener('input', function(){ renderIntentPreviews(); renderReceiptPreview(); });
+      if (v2Intents) v2Intents.addEventListener('input', renderIntentPreviews);
+      if (v2Receipts) v2Receipts.addEventListener('input', renderReceiptPreview);
+      if (intentPayload) intentPayload.addEventListener('input', renderIntentPreviews);
+      if (intentExpiresAt) intentExpiresAt.addEventListener('input', renderIntentPreviews);
+      if (intentCancelId) intentCancelId.addEventListener('input', renderIntentPreviews);
+      if (copyIntentCreateBtn) copyIntentCreateBtn.addEventListener('click', function(){ copyText(getIntentCreateCmd()); showToast('Copied intent create'); });
+      if (copyIntentCancelBtn) copyIntentCancelBtn.addEventListener('click', function(){ copyText(getIntentCancelCmd()); showToast('Copied intent cancel'); });
+      if (receiptTraceId) receiptTraceId.addEventListener('input', renderReceiptPreview);
+      if (copyReceiptGetBtn) copyReceiptGetBtn.addEventListener('click', function(){ copyText(getReceiptGetCmd()); showToast('Copied receipt get'); });
+      if (fetchReceiptGetBtn) fetchReceiptGetBtn.addEventListener('click', function(){ fetchReceipt(); });
       if (formatJsonBtn) formatJsonBtn.addEventListener('click', function(){ formatJson(); });
       if (loadTemplateBtn) loadTemplateBtn.addEventListener('click', function(){
         var k = templateSelect ? String(templateSelect.value || '').trim() : '';

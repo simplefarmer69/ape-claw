@@ -102,6 +102,10 @@ ape-claw v2 intent create --payload '{\"type\":\"demo\",\"goal\":\"enter_othersi
 ape-claw v2 intent cancel --intentId 1 --json
 ```
 
+If you prefer a safer UX surface that never asks for a private key in the browser, use the UI command generator:
+
+- `GET /skills#intents`
+
 ## Otherside Navigator (strict opt-in)
 
 The `otherside-navigator` SkillCard is intentionally high-risk and disabled by default. It is designed to run on a Mac mini “Pod” and uses:

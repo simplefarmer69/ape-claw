@@ -223,7 +223,8 @@ function normalizeImportedSkillcard(obj, src, { sourceUrl }) {
     publisher: "apeclaw-importer",
     signed: false,
     source: src.source || "unknown",
-    sourceUrl: String(sourceUrl || src.url || "").trim(),
+    // Preserve per-skill provenance if the source provided it (e.g. GitHub webUrl/rawUrl).
+    sourceUrl: String(sc?.provenance?.sourceUrl || sourceUrl || src.url || "").trim(),
     importedAt: new Date().toISOString(),
   };
 
@@ -245,6 +246,85 @@ function normalizeImportedSkillcard(obj, src, { sourceUrl }) {
   if (!Array.isArray(out.eval_packs)) out.eval_packs = [];
 
   return out;
+}
+
+function assessSkillcardSafety(skillcard) {
+  // Heuristic safety review: block obvious destructive payloads and quarantine anything
+  // that looks like exfiltration, privilege escalation, persistence, or RCE patterns.
+  const sc = skillcard && typeof skillcard === "object" ? skillcard : {};
+  const bindings = Array.isArray(sc.bindings) ? sc.bindings : [];
+  const textParts = [];
+  const push = (v) => {
+    if (v === undefined || v === null) return;
+    textParts.push(String(v));
+  };
+  push(sc.name);
+  push(sc.slug);
+  push(sc.description);
+  try { push(JSON.stringify(sc.constraints || {})); } catch {}
+  try { push(JSON.stringify(sc.required_permissions || [])); } catch {}
+  for (const b of bindings) {
+    if (!b || typeof b !== "object") continue;
+    push(b.type);
+    push(b.command);
+    push(b.url);
+    try { push(JSON.stringify(b)); } catch {}
+  }
+  const blob = textParts.join("\n");
+
+  const signals = [];
+  const hit = (id, re) => {
+    try { if (re.test(blob)) signals.push(id); } catch {}
+  };
+
+  // Destructive/bricking.
+  hit("rm_rf", /\brm\s+-rf\b/i);
+  hit("mkfs", /\bmkfs(\.| )/i);
+  hit("dd_disk", /\bdd\s+if=\/dev\/(zero|random)\b/i);
+  hit("fork_bomb", /:\(\)\s*\{\s*:\s*\|\s*:\s*&\s*\}\s*;\s*:/);
+
+  // Remote code execution / suspicious piping.
+  hit("curl_pipe_bash", /\b(curl|wget)\b[^\n]*\|\s*(bash|sh)\b/i);
+  hit("eval_base64_pipe", /\b(base64\s+-d|openssl\s+base64)\b[\s\S]*\|\s*(bash|sh)\b/i);
+  hit("bash_c", /\bbash\s+-c\b/i);
+  hit("powershell", /\bpowershell\b/i);
+
+  // Persistence / priv escalation.
+  hit("sudo", /\bsudo\b/i);
+  hit("cron", /\b(crontab|\/etc\/cron|cron\.d)\b/i);
+  hit("launchctl", /\blaunchctl\b/i);
+  hit("systemd", /\b(systemctl|\/etc\/systemd)\b/i);
+
+  // Exfil / webhook patterns.
+  hit("discord_webhook", /discord\.com\/api\/webhooks/i);
+  hit("slack_webhook", /hooks\.slack\.com\/services/i);
+  hit("pastebin", /pastebin\.com/i);
+  hit("ngrok", /\bngrok\b/i);
+
+  // Secrets mentioned (not always malicious, but should be manually reviewed).
+  hit("secrets_keywords", /\b(privateKey|mnemonic|seed phrase|api[_-]?key|bearer\s+|authorization:|x-agent-token)\b/i);
+
+  const hardBlock = ["rm_rf", "mkfs", "dd_disk", "fork_bomb"].some((s) => signals.includes(s));
+  if (hardBlock) return { verdict: "block", ok: false, signals, reasons: signals };
+
+  const needsReview = [
+    "curl_pipe_bash",
+    "eval_base64_pipe",
+    "discord_webhook",
+    "slack_webhook",
+    "pastebin",
+    "ngrok",
+    "sudo",
+    "cron",
+    "launchctl",
+    "systemd",
+    "secrets_keywords",
+    "powershell",
+    "bash_c",
+  ].some((s) => signals.includes(s));
+  if (needsReview) return { verdict: "review", ok: false, signals, reasons: signals };
+
+  return { verdict: "allow", ok: true, signals: [], reasons: [] };
 }
 
 function safeVersionForFile(v) {
@@ -643,7 +723,8 @@ function convertSkillMdToSkillcard(md, src, { webUrl = "", rawUrl = "" } = {}) {
     if (m) { title = String(m[1] || "").trim(); break; }
   }
   const desc = firstParagraph(text);
-  const name = String(src.name || title || src.slug || "Imported Skill").trim();
+  // Prefer the SKILL.md title for a clean UX name; src.name is often a source label.
+  const name = String(title || src.skillName || src.slug || src.name || "Imported Skill").trim();
   const slug = safeSlug(src.slug || name);
   const version = String(src.version || "1.0.0").trim() || "1.0.0";
   const riskTier = Number(src.riskTier || 2);
@@ -685,6 +766,7 @@ async function importGithubRepoSkillMarkdown(src) {
   const ref = String(src.ref || "main").trim();
   const basePath = String(src.basePath || "").trim().replace(/^\/+|\/+$/g, "");
   const limit = Math.max(1, Math.min(500, Number(src.limit || 100)));
+  const offset = Math.max(0, Math.floor(Number(src.offset || 0) || 0));
   if (!owner || !repo) {
     return { ok: false, mode: "github_repo_skill_md", error: "missing_owner_or_repo", sourceUrl: "" };
   }
@@ -730,7 +812,7 @@ async function importGithubRepoSkillMarkdown(src) {
   const inBase = basePath
     ? mdPaths.filter((p) => p === basePath || p.startsWith(basePath + "/"))
     : mdPaths;
-  const selected = inBase.slice(0, limit);
+  const selected = inBase.slice(offset, offset + limit);
 
   const skillcards = [];
   for (const p of selected) {
@@ -745,7 +827,8 @@ async function importGithubRepoSkillMarkdown(src) {
     const card = convertSkillMdToSkillcard(mdRes.text, {
       ...src,
       slug,
-      name: src.name ? `${src.name}: ${leaf}` : leaf,
+      // Keep per-skill name clean; source labels belong in provenance.
+      skillName: leaf,
       path: p,
       version: src.version || "1.0.0",
       description: src.description || "",
@@ -764,7 +847,7 @@ async function importGithubRepoSkillMarkdown(src) {
     status: treeRes.status || 200,
     sourceUrl: `https://github.com/${owner}/${repo}/tree/${ref}/${basePath}`,
     skillcards,
-    meta: { owner, repo, ref, basePath, commitSha, found: mdPaths.length, selected: selected.length },
+    meta: { owner, repo, ref, basePath, commitSha, found: mdPaths.length, offset, limit, selected: selected.length },
   };
 }
 
@@ -784,6 +867,7 @@ async function main() {
 
   const results = [];
   const written = [];
+  const quarantined = [];
 
   for (const src of sources) {
     try {
@@ -836,6 +920,7 @@ async function main() {
         const parsed = readSkillcardJson(file);
         const versionHash = computeSkillVersionHash(parsed.version);
         const contentHash = computeSkillcardContentHash(parsed);
+        const vet = assessSkillcardSafety(parsed);
         const rec = {
           ok: true,
           importOk,
@@ -849,11 +934,14 @@ async function main() {
           riskTier: Number((parsed.constraints || {}).riskTier || 0),
           file,
           fileName,
-          sourceUrl,
+          sourceUrl: String(parsed?.provenance?.sourceUrl || sourceUrl || ""),
           hashes: { versionHash, contentHash },
+          vetted: vet,
+          vettedOk: Boolean(vet && vet.ok),
         };
         results.push(rec);
         written.push({ ...rec, skillcard: parsed, fileUri: `file://${file}` });
+        if (!rec.vettedOk) quarantined.push(rec);
         continue;
       }
 
@@ -867,6 +955,7 @@ async function main() {
         const parsed = readSkillcardJson(file);
         const versionHash = computeSkillVersionHash(parsed.version);
         const contentHash = computeSkillcardContentHash(parsed);
+        const vet = assessSkillcardSafety(parsed);
         const rec = {
           ok: true,
           importOk: !!imported.ok,
@@ -880,11 +969,14 @@ async function main() {
           riskTier: Number((parsed.constraints || {}).riskTier || 0),
           file,
           fileName,
-          sourceUrl,
+          sourceUrl: String(parsed?.provenance?.sourceUrl || sourceUrl || ""),
           hashes: { versionHash, contentHash },
+          vetted: vet,
+          vettedOk: Boolean(vet && vet.ok),
         };
         results.push(rec);
         written.push({ ...rec, skillcard: parsed, fileUri: `file://${file}` });
+        if (!rec.vettedOk) quarantined.push(rec);
       }
     } catch (e) {
       results.push({
@@ -902,6 +994,10 @@ async function main() {
     let filtered = args.skipStubs
       ? okItems.filter((w) => !(w.skillcard && w.skillcard.constraints && w.skillcard.constraints.importedStub === true))
       : okItems;
+    // Safety default: only publish items that passed local vetting.
+    if (!args.allowUnvetted && !args.allow_unvetted) {
+      filtered = filtered.filter((w) => Boolean(w.vettedOk));
+    }
     const publishSlugPrefix = String(args.publishSlugPrefix || args.publish_slug_prefix || "").trim();
     if (publishSlugPrefix) {
       filtered = filtered.filter((w) => String(w?.skillcard?.slug || w?.slug || "").startsWith(publishSlugPrefix));
@@ -938,6 +1034,7 @@ async function main() {
           manifest: manifestPath,
           outDir,
           imported: results,
+          quarantined,
           published,
         },
         null,
@@ -956,6 +1053,7 @@ async function main() {
         outDir,
         index: indexPath,
         imported: results,
+        quarantined,
         published,
       },
       null,

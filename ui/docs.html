@@ -10,6 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/ui/shared/sidebar-nav.css">
+  <script defer src="/ui/shared/sidebar-nav.js"></script>
   <style>
     :root{
       --bg:#111111;
@@ -276,7 +278,8 @@
   <div class="bg-fade" aria-hidden="true"></div>
   <div class="scanlines" aria-hidden="true"></div>
   <div class="noise" aria-hidden="true"></div>
-  <div class="wrap">
+  <div id="sbNavMount"></div>
+  <div class="wrap sb-content-offset">
     <div class="top">
       <a class="brand" href="/" aria-label="ApeClaw">
         <div class="logo" aria-hidden="true"><img src="/favicon-lobster.png" alt=""></div>

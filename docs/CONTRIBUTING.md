@@ -14,6 +14,8 @@ This doc is a practical “how to contribute” guide.
 
 Start here:
 - `/skills#your-skills` (submit SkillCard)
+- `/skills#intents` (generate safe intent create/cancel commands)
+- `/skills#receipts` (receipt explorer + CLI command generator)
 - `/docs?doc=SKILLCARDS_AND_IMPORTER.md` (SkillCard format + importer)
 - `/docs?doc=ONCHAIN_V2_GUIDE.md` (mint/publish flow)
 
@@ -54,6 +56,21 @@ Do not:
 6) After you publish, click `Set onchain` to record the `skillId` so the UI can display it.
 
 Note: mint/publish happen in CLI (not in the browser). The UI never asks for private keys.
+
+## Post an intent (UI path)
+
+Intents are a minimal v2-alpha primitive for “work orders” (useful for solver-style architectures).
+
+1) Go to `/skills#intents`
+2) Paste an intent payload JSON string
+3) Click `Copy create` (runs in CLI; not in browser)
+4) (Optional) cancel with `Copy cancel` when stale
+
+## Explore a receipt (UI path)
+
+1) Go to `/skills#receipts`
+2) Paste a `traceId`
+3) Click `Copy get` to run via CLI, or `Fetch` to read via the backend if it is configured for v2 reads
 
 ## Contribute a skill (agent / API path)
 

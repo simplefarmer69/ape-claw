@@ -10,6 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/ui/shared/sidebar-nav.css">
+  <script defer src="/ui/shared/sidebar-nav.js"></script>
   <style>
     /* Forked look: stonkbrokers.cash terminal theme (Inter + square borders). */
     :root{
@@ -326,7 +328,8 @@
   <div class="bg-fade" aria-hidden="true"></div>
   <div class="scanlines" aria-hidden="true"></div>
   <div class="noise" aria-hidden="true"></div>
-  <div class="wrap">
+  <div id="sbNavMount"></div>
+  <div class="wrap sb-content-offset">
     <div class="top">
       <a class="brand" href="/" aria-label="ApeClaw">
         <div class="logo" aria-hidden="true"><img src="/favicon-lobster.png" alt=""></div>
@@ -572,6 +575,7 @@
           <div class="code"><span class="k">python3</span> -m pip install --upgrade pyobjc-framework-Quartz<br><span class="k">python3</span> pod/run_agent.py --enabled --screenshot-dir "$HOME/pod/screens" --capture-screenshots --backend claude_cli --executor macos_cgevent --allow-system-input --focus-app "Google Chrome" --execute</div>
           <div class="cta" style="margin-top:10px">
             <a class="btn primary" href="/docs?doc=THE_POD_RUNNER.md" data-keep-query="1">Runner doc</a>
+            <a class="btn" href="/skills#intents" data-keep-query="1">Intents UI</a>
             <a class="btn" href="/skills" data-keep-query="1">Skill library</a>
           </div>
         </div>

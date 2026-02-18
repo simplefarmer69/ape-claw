@@ -9,7 +9,7 @@
       "basePath": "",
       "slugPrefix": "bankr-openclaw",
       "riskTier": 2,
-      "limit": 80
+      "limit": 220
     },
     {
       "source": "github_repo_skill_md",
@@ -20,7 +20,19 @@
       "basePath": "skills",
       "slugPrefix": "clawhub",
       "riskTier": 2,
-      "limit": 220
+      "limit": 900
+    },
+    {
+      "source": "github_repo_skill_md",
+      "name": "ClawHub Mirror (openclaw/skills) — bulk import (batch 2)",
+      "owner": "openclaw",
+      "repo": "skills",
+      "ref": "main",
+      "basePath": "skills",
+      "slugPrefix": "clawhub",
+      "riskTier": 2,
+      "offset": 500,
+      "limit": 500
     },
     {
       "source": "github_repo_skill_md",

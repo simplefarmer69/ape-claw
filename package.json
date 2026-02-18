@@ -47,6 +47,7 @@
     "audit:relay-rpcs": "node ./scripts/audit-relay-rpcs.mjs",
     "skillcards:import": "node ./scripts/import-skillcards.mjs",
     "skillcards:import:publish": "node ./scripts/import-skillcards.mjs --publish",
+    "skillcards:report": "node ./scripts/report-imported-skillcards.mjs",
     "prepublishOnly": "npm test"
   },
   "engines": {

@@ -102,6 +102,10 @@ Read a receipt back (reload onchain context):
 ape-claw v2 receipt get --rpc "<url>" --receipts 0x... --traceId "..." --json
 ```
 
+UI option (read-only, no signing in browser):
+
+- `GET /skills#receipts`
+
 Read: `docs/ONCHAIN_V2_GUIDE.md` and `docs/V2_ONCHAIN_SKILLS.md`.
 
 ## Operational Safety Defaults

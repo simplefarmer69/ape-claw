@@ -9,6 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/ui/shared/sidebar-nav.css">
+<script defer src="/ui/shared/sidebar-nav.js"></script>
 <style>
 /* ── Reset & base ─────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -809,7 +811,8 @@ footer::before{
 <a href="#mainContent" class="skip-link">Skip to dashboard content</a>
 <div class="bg-collage" aria-hidden="true" id="bgCollage"></div>
 <div class="bg-fade" aria-hidden="true"></div>
-<div class="app">
+<div id="sbNavMount"></div>
+<div class="app sb-content-offset">
 <div class="ambient-layer" aria-hidden="true"></div>
 <div id="srStatus" aria-live="polite" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden"></div>
 <div class="toast-stack" id="toastStack"></div>

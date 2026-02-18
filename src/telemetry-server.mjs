@@ -2,9 +2,11 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
+import { createPublicClient, getContract, http as viemHttp, keccak256, toHex } from "viem";
 import { ROOT as PROJECT_ROOT, STATE_DIR, EVENTS_PATH, ALLOWLIST_PATH, POLICY_PATH, OPENSEA_OVERRIDES_PATH, CLAWBOTS_PATH, CHAT_PATH, INVITES_PATH } from "./lib/paths.mjs";
 import { ensureDir } from "./lib/io.mjs";
 import { verifyClawbot, registerClawbot } from "./lib/clawbots.mjs";
+import { ReceiptRegistry_ABI } from "./lib/v2-onchain-abi.mjs";
 
 const PORT = Number(process.env.APE_CLAW_UI_PORT || 8787);
 const BIND_HOST = String(process.env.APE_CLAW_BIND_HOST || "").trim();
@@ -25,6 +27,54 @@ const INVITE_TTL_MS = Math.max(60_000, Number(process.env.APE_CLAW_INVITE_TTL_MS
 const INVITE_MAX_USES = Math.max(1, Number(process.env.APE_CLAW_INVITE_MAX_USES || 5));
 const ICON_CACHE_TTL_MS = 10 * 60 * 1000;
 let allowlistIconCache = { expiresAt: 0, data: null, inFlight: null };
+
+function resolveV2DeploymentRecord() {
+  // Best-effort: used only for read-only UX helpers (no signing).
+  try {
+    const dir = path.join(STATE_DIR, "v2-deployments");
+    if (!fs.existsSync(dir)) return null;
+    const entries = fs.readdirSync(dir).filter((f) => f.endsWith(".json"));
+    if (!entries.length) return null;
+    // Choose the most recently modified record (better for local dev).
+    let pick = entries[0];
+    let best = -1;
+    for (const f of entries) {
+      try {
+        const st = fs.statSync(path.join(dir, f));
+        const mt = Number(st.mtimeMs || 0);
+        if (mt > best) { best = mt; pick = f; }
+      } catch {}
+    }
+    const raw = JSON.parse(fs.readFileSync(path.join(dir, pick), "utf8"));
+    return raw && typeof raw === "object" ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+function resolveV2ReceiptReadConfig() {
+  const fromEnvRpc = String(process.env.APE_CLAW_V2_RPC_URL || process.env.RPC_URL_33139 || "").trim();
+  const fromEnvReceipts = String(process.env.APE_CLAW_V2_RECEIPT_REGISTRY || "").trim();
+  const rec = resolveV2DeploymentRecord();
+  const receiptsAddress = fromEnvReceipts || String(rec?.receipts || "").trim();
+  let rpcUrl = fromEnvRpc;
+  let inferredRpc = false;
+  if (!rpcUrl && rec && Number(rec.chainId) === 31337) {
+    // Local Hardhat node default (only if we detect a local deployment record).
+    rpcUrl = "http://127.0.0.1:8545";
+    inferredRpc = true;
+  }
+  if (!rpcUrl || !receiptsAddress) {
+    return {
+      ok: false,
+      rpcUrl: rpcUrl || "",
+      receiptsAddress: receiptsAddress || "",
+      inferredRpc,
+      reason: "missing v2 config (set APE_CLAW_V2_RPC_URL and APE_CLAW_V2_RECEIPT_REGISTRY, or run contracts seed locally)",
+    };
+  }
+  return { ok: true, rpcUrl, receiptsAddress, inferredRpc };
+}
 
 ensureDir(path.dirname(EVENTS_PATH));
 if (!fs.existsSync(EVENTS_PATH)) fs.writeFileSync(EVENTS_PATH, "");
@@ -699,7 +749,64 @@ const server = http.createServer((req, res) => {
     });
     return;
   }
+
+  // Read-only v2 helper: fetch a receipt by traceId (no signing).
+  if (pathname === "/api/v2/receipt/get" && req.method === "GET") {
+    const traceId = String(reqUrl.searchParams.get("traceId") || reqUrl.searchParams.get("trace") || "").trim();
+    if (!traceId) {
+      res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: false, error: "missing traceId" }));
+    }
+    const cfg = resolveV2ReceiptReadConfig();
+    if (!cfg.ok) {
+      res.writeHead(501, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: false, error: cfg.reason, inferredRpc: cfg.inferredRpc || false }));
+    }
+    (async () => {
+      const publicClient = createPublicClient({ transport: viemHttp(cfg.rpcUrl) });
+      const receipts = getContract({
+        address: cfg.receiptsAddress,
+        abi: ReceiptRegistry_ABI,
+        client: { public: publicClient },
+      });
+      const traceIdHash = keccak256(toHex(traceId));
+      const isRecorded = await receipts.read.isRecorded([traceIdHash]);
+      const receipt = isRecorded ? await receipts.read.getReceipt([traceIdHash]) : null;
+      const result = {
+        ok: true,
+        traceId,
+        traceIdHash,
+        isRecorded: Boolean(isRecorded),
+        receipt,
+      };
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      // viem returns bigint for uints; JSON.stringify would throw.
+      res.end(JSON.stringify(result, (_k, v) => (typeof v === "bigint" ? v.toString() : v)));
+    })().catch((err) => {
+      // Avoid crashing the whole server if the client disconnected or we already replied.
+      if (res.headersSent || res.writableEnded) return;
+      res.writeHead(502, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.end(JSON.stringify({ ok: false, error: err?.message || "receipt read failed" }));
+    });
+    return;
+  }
+
+  // Read-only v2 helper: return latest known deployment record + receipt read config.
+  // This is used to auto-fill UI inputs in local/dev without copy-pasting addresses.
+  if (pathname === "/api/v2/config" && req.method === "GET") {
+    const rec = resolveV2DeploymentRecord();
+    const v2Cfg = resolveV2ReceiptReadConfig();
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+    return res.end(JSON.stringify({
+      ok: true,
+      deployment: rec,
+      receiptsRead: v2Cfg,
+      ts: new Date().toISOString(),
+    }, (_k, v) => (typeof v === "bigint" ? v.toString() : v)));
+  }
+
   if (pathname === "/api/health") {
+    const v2Cfg = resolveV2ReceiptReadConfig();
     const payload = {
       ok: true,
       service: "ape-claw-telemetry",
@@ -726,6 +833,12 @@ const server = http.createServer((req, res) => {
         registrationCooldownMs: REGISTRATION_COOLDOWN_MS,
         inviteTtlMs: INVITE_TTL_MS,
         inviteMaxUses: INVITE_MAX_USES,
+      },
+      v2: {
+        rpcUrl: v2Cfg.ok ? v2Cfg.rpcUrl : (v2Cfg.rpcUrl || null),
+        receiptRegistry: v2Cfg.ok ? v2Cfg.receiptsAddress : (v2Cfg.receiptsAddress || null),
+        inferredRpc: Boolean(v2Cfg.inferredRpc),
+        configured: Boolean(v2Cfg.ok),
       },
       ts: new Date().toISOString(),
     };

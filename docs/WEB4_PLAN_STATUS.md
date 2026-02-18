@@ -69,8 +69,13 @@ The current posture is deliberately "v2-alpha":
 
 - P0 (contracts + basic UI): partially shipped
   - contracts shipped: yes (SkillNFT, Registry, IntentRegistry, ReceiptRegistry)
-  - basic UI for discovery/install/intents: not shipped (we have a dashboard + library landing, not a full skill store)
-- P1 (AgentAccount + module skills + receipts): partially shipped (minimal primitives)
+  - basic UI for discovery/install/intents: partially shipped
+    - discovery: `/skills` (seed + imported + submitted SkillCards, onchain status visualization)
+    - intents: `/skills#intents` ships a safe command-generator surface for `v2 intent create|cancel`
+    - install: download/curl commands are surfaced per-skill; full “one-click install into an agent runtime” remains planned
+- P1 (AgentAccount + module skills + receipts): shipped (v2-alpha minimal primitives)
+  - `AgentAccount.executeSkill()` enforces `PolicyEngine.preCheck()` and best-effort records to `ReceiptRegistry`
+  - modules shipped: `SwapModule`, `BridgeModule`, `NftBuyModule` (policy-gated call wrappers; routing/UX remains offchain)
 - P2 (permissionless solvers): not shipped
 - P3 (attestations/reputation): not shipped
 - P4 (disputes/slashing): not shipped
