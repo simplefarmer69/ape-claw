@@ -1,17 +1,38 @@
 import { appendJsonl, nowIso, randomId } from "./io.mjs";
 import { EVENTS_PATH } from "./paths.mjs";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
 const TELEMETRY_BASE = String(process.env.APE_CLAW_TELEMETRY_URL || "").trim().replace(/\/+$/, "");
 const TELEMETRY_REMOTE_ONLY = /^(1|true|yes|on)$/i.test(String(process.env.APE_CLAW_TELEMETRY_REMOTE_ONLY || "").trim());
 
+function authStorePath() {
+  return path.join(os.homedir(), ".ape-claw", "auth.json");
+}
+
+function loadAuthStore() {
+  try {
+    const p = authStorePath();
+    if (!fs.existsSync(p)) return {};
+    const raw = fs.readFileSync(p, "utf8");
+    const j = JSON.parse(raw);
+    return j && typeof j === "object" ? j : {};
+  } catch {
+    return {};
+  }
+}
+
 function authHeadersForRemoteEvent(evt) {
+  const stored = loadAuthStore();
   const fromEnvId = String(process.env.APE_CLAW_AGENT_ID || "").trim();
   const fromEnvToken = String(process.env.APE_CLAW_AGENT_TOKEN || "").trim();
-  const agentId = fromEnvId || String(evt.agentId || "").trim();
+  const agentId = fromEnvId || String(stored.agentId || "").trim() || String(evt.agentId || "").trim();
+  const token = fromEnvToken || String(stored.agentToken || "").trim();
   return {
     "content-type": "application/json",
     ...(agentId ? { "x-agent-id": agentId } : {}),
-    ...(fromEnvToken ? { "x-agent-token": fromEnvToken } : {}),
+    ...(token ? { "x-agent-token": token } : {}),
   };
 }
 

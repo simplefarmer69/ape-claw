@@ -26,6 +26,11 @@ import { quoteBridgeRelay, executeBridgeRelay, getBridgeRelayStatus } from "./li
 import { getListingFulfillmentData, executeListingFulfillmentTx } from "./lib/nft-opensea.mjs";
 import { resolveRpcUrl } from "./lib/rpc.mjs";
 import { verifyClawbot, registerClawbot, listClawbots, loadClawbotsConfig } from "./lib/clawbots.mjs";
+import { createPublicClient, createWalletClient, http, getContract, keccak256, toHex } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { SkillNFT_ABI, SkillRegistry_ABI, IntentRegistry_ABI, ReceiptRegistry_ABI } from "./lib/v2-onchain-abi.mjs";
+import { computeSkillcardContentHash, computeSkillVersionHash, readSkillcardJson, stableJsonStringify } from "./lib/v2-skillcard.mjs";
+import { initPodWorkspace } from "./lib/pod-init.mjs";
 
 function parseArgs(argv) {
   const out = { _: [] };
@@ -1314,6 +1319,209 @@ async function main() {
     return print(result, asJson);
   }
 
+  // ═══════════════════════════════════════════════════════════
+  //  V2-ALPHA: ONCHAIN SKILLS (registry + intents)
+  //  Additive only: does not change any v1 command behavior.
+  // ═══════════════════════════════════════════════════════════
+  if (group === "v2" && sub === "skill") {
+    const action = args._[2];
+    const rpcUrl = String(args.rpc || process.env.APE_CLAW_V2_RPC_URL || process.env.RPC_URL_33139 || "").trim();
+    const pk = String(args.privateKey || process.env.APE_CLAW_V2_PRIVATE_KEY || "").trim();
+    const skillNftAddress = String(args.skillNft || process.env.APE_CLAW_V2_SKILL_NFT || "").trim();
+    const registryAddress = String(args.registry || process.env.APE_CLAW_V2_SKILL_REGISTRY || "").trim();
+
+    if (!rpcUrl) return fail("Missing --rpc (or APE_CLAW_V2_RPC_URL / RPC_URL_33139)", command, args);
+    if (!pk) return fail("Missing --privateKey (or APE_CLAW_V2_PRIVATE_KEY)", command, args);
+    if (!skillNftAddress) return fail("Missing --skillNft (or APE_CLAW_V2_SKILL_NFT)", command, args);
+    if (!registryAddress) return fail("Missing --registry (or APE_CLAW_V2_SKILL_REGISTRY)", command, args);
+
+    const account = privateKeyToAccount(pk.startsWith("0x") ? pk : `0x${pk}`);
+    const publicClient = createPublicClient({ transport: http(rpcUrl) });
+    const walletClient = createWalletClient({ transport: http(rpcUrl), account });
+
+    const skillNft = getContract({ address: skillNftAddress, abi: SkillNFT_ABI, client: { public: publicClient, wallet: walletClient } });
+    const registry = getContract({ address: registryAddress, abi: SkillRegistry_ABI, client: { public: publicClient, wallet: walletClient } });
+
+    if (action === "mint") {
+      const parentId = BigInt(args.parentId || 0);
+      const royaltyReceiver = String(args["royalty-receiver"] || args.royaltyReceiver || "").trim();
+      const royaltyBpsRaw = args["royalty-bps"] ?? args.royaltyBps;
+      const royaltyBps = royaltyBpsRaw !== undefined && royaltyBpsRaw !== null && String(royaltyBpsRaw).trim() !== ""
+        ? Number(royaltyBpsRaw)
+        : 0;
+      const useRoyalty = !!royaltyReceiver && Number.isFinite(royaltyBps) && royaltyBps > 0;
+
+      const hash = useRoyalty
+        ? await skillNft.write.mintSkillWithRoyalty([parentId, royaltyReceiver, royaltyBps])
+        : await skillNft.write.mintSkill([parentId]);
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      const nextId = await skillNft.read.nextSkillId();
+      const skillId = BigInt(nextId) - 1n;
+      const result = {
+        ok: true,
+        skillId: String(skillId),
+        txHash: receipt.transactionHash,
+        ...(useRoyalty ? { royaltyReceiver, royaltyBps } : {}),
+      };
+      emitEvent({ eventType: "v2.skill.minted", agentId: _agentId, command, dryRun: false, result });
+      return print(result, asJson);
+    }
+
+    if (action === "publish") {
+      const skillId = BigInt(args.skillId || 0);
+      const file = String(args.file || "").trim();
+      const uri = String(args.uri || (file ? `file://${path.resolve(file)}` : "")).trim();
+      const riskTier = Number(args.riskTier || 1);
+      if (!skillId) return fail("Missing --skillId", command, args);
+      if (!file) return fail("Missing --file (skillcard json)", command, args);
+      const obj = readSkillcardJson(file);
+      const versionHash = computeSkillVersionHash(obj.version);
+      const contentHash = computeSkillcardContentHash(obj);
+      const txHash = await registry.write.publishVersion([skillId, versionHash, contentHash, uri, riskTier]);
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      const result = {
+        ok: true,
+        skillId: String(skillId),
+        versionHash,
+        contentHash,
+        uri,
+        txHash: receipt.transactionHash,
+      };
+      emitEvent({ eventType: "v2.skill.version.published", agentId: _agentId, command, dryRun: false, result });
+      return print(result, asJson);
+    }
+
+    return fail("Unknown v2 skill action. Use: ape-claw v2 skill mint|publish", command, args);
+  }
+
+  if (group === "v2" && sub === "intent") {
+    const action = args._[2];
+    const rpcUrl = String(args.rpc || process.env.APE_CLAW_V2_RPC_URL || process.env.RPC_URL_33139 || "").trim();
+    const pk = String(args.privateKey || process.env.APE_CLAW_V2_PRIVATE_KEY || "").trim();
+    const intentsAddress = String(args.intents || process.env.APE_CLAW_V2_INTENT_REGISTRY || "").trim();
+    if (!rpcUrl) return fail("Missing --rpc (or APE_CLAW_V2_RPC_URL / RPC_URL_33139)", command, args);
+    if (!pk) return fail("Missing --privateKey (or APE_CLAW_V2_PRIVATE_KEY)", command, args);
+    if (!intentsAddress) return fail("Missing --intents (or APE_CLAW_V2_INTENT_REGISTRY)", command, args);
+
+    const account = privateKeyToAccount(pk.startsWith("0x") ? pk : `0x${pk}`);
+    const publicClient = createPublicClient({ transport: http(rpcUrl) });
+    const walletClient = createWalletClient({ transport: http(rpcUrl), account });
+    const intents = getContract({ address: intentsAddress, abi: IntentRegistry_ABI, client: { public: publicClient, wallet: walletClient } });
+
+    if (action === "create") {
+      const payload = String(args.payload || "").trim();
+      const expiresAt = Number(args.expiresAt || 0);
+      if (!payload) return fail("Missing --payload (stringified intent payload)", command, args);
+      const intentHash = keccak256(toHex(payload));
+      const txHash = await intents.write.createIntent([intentHash, expiresAt]);
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      const result = { ok: true, intentHash, txHash: receipt.transactionHash, expiresAt };
+      emitEvent({ eventType: "v2.intent.created", agentId: _agentId, command, dryRun: false, result });
+      return print(result, asJson);
+    }
+
+    if (action === "cancel") {
+      const intentId = BigInt(args.intentId || 0);
+      if (!intentId) return fail("Missing --intentId", command, args);
+      const txHash = await intents.write.cancelIntent([intentId]);
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      const result = { ok: true, intentId: String(intentId), txHash: receipt.transactionHash };
+      emitEvent({ eventType: "v2.intent.cancelled", agentId: _agentId, command, dryRun: false, result });
+      return print(result, asJson);
+    }
+
+    return fail("Unknown v2 intent action. Use: ape-claw v2 intent create|cancel", command, args);
+  }
+
+  if (group === "v2" && sub === "receipt") {
+    const action = args._[2];
+    const rpcUrl = String(args.rpc || process.env.APE_CLAW_V2_RPC_URL || process.env.RPC_URL_33139 || "").trim();
+    const pk = String(args.privateKey || process.env.APE_CLAW_V2_PRIVATE_KEY || "").trim();
+    const receiptsAddress = String(args.receipts || process.env.APE_CLAW_V2_RECEIPT_REGISTRY || "").trim();
+    if (!rpcUrl) return fail("Missing --rpc (or APE_CLAW_V2_RPC_URL / RPC_URL_33139)", command, args);
+    if (!receiptsAddress) return fail("Missing --receipts (or APE_CLAW_V2_RECEIPT_REGISTRY)", command, args);
+
+    const publicClient = createPublicClient({ transport: http(rpcUrl) });
+    const receiptsRead = getContract({
+      address: receiptsAddress,
+      abi: ReceiptRegistry_ABI,
+      client: { public: publicClient },
+    });
+
+    if (action === "record") {
+      if (!pk) return fail("Missing --privateKey (or APE_CLAW_V2_PRIVATE_KEY)", command, args);
+      const account = privateKeyToAccount(pk.startsWith("0x") ? pk : `0x${pk}`);
+      const walletClient = createWalletClient({ transport: http(rpcUrl), account });
+      const receipts = getContract({
+        address: receiptsAddress,
+        abi: ReceiptRegistry_ABI,
+        client: { public: publicClient, wallet: walletClient },
+      });
+      const traceId = String(args.traceId || args.trace || "").trim();
+      if (!traceId) return fail("Missing --traceId", command, args);
+      const subjectStr = String(args.subject || (_agentId ? `agent:${_agentId}` : "agent:unknown")).trim();
+      const uri = String(args.uri || "").trim();
+      const payloadStr = String(args.payload || "").trim();
+      let payloadObj = {};
+      if (payloadStr) {
+        try {
+          payloadObj = JSON.parse(payloadStr);
+        } catch {
+          return fail("Invalid --payload JSON string", command, args);
+        }
+      }
+
+      const traceIdHash = keccak256(toHex(traceId));
+      const contentHash = keccak256(toHex(stableJsonStringify({ subject: subjectStr, payload: payloadObj })));
+      const subjectHash = keccak256(toHex(subjectStr));
+      const txHash = await receipts.write.recordReceipt([traceIdHash, contentHash, subjectHash, uri]);
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      const result = {
+        ok: true,
+        traceId,
+        traceIdHash,
+        contentHash,
+        subject: subjectStr,
+        subjectHash,
+        uri,
+        txHash: receipt.transactionHash,
+      };
+      emitEvent({ eventType: "v2.receipt.recorded", agentId: _agentId, command, dryRun: false, result });
+      return print(result, asJson);
+    }
+
+    if (action === "get") {
+      const traceId = String(args.traceId || args.trace || "").trim();
+      if (!traceId) return fail("Missing --traceId", command, args);
+      const traceIdHash = keccak256(toHex(traceId));
+      const isRecorded = await receiptsRead.read.isRecorded([traceIdHash]);
+      const receipt = isRecorded ? await receiptsRead.read.getReceipt([traceIdHash]) : null;
+      const result = {
+        ok: true,
+        traceId,
+        traceIdHash,
+        isRecorded: Boolean(isRecorded),
+        receipt,
+      };
+      emitEvent({ eventType: "v2.receipt.read", agentId: _agentId, command, dryRun: true, result: { traceId, traceIdHash, isRecorded } });
+      return print(result, asJson);
+    }
+
+    return fail("Unknown v2 receipt action. Use: ape-claw v2 receipt record|get", command, args);
+  }
+
+  if (group === "pod" && sub === "init") {
+    const target = String(args.dir || "./pod-workspace").trim();
+    const templatesDir = path.join(process.cwd(), "pod", "templates");
+    try {
+      const result = initPodWorkspace({ targetDir: target, templatesDir });
+      emitEvent({ eventType: "pod.init.completed", agentId: _agentId, command, dryRun: false, result });
+      return print(result, asJson);
+    } catch (err) {
+      return fail(err.message || "pod init failed", command, args);
+    }
+  }
+
   const helpObj = {
     ok: false,
     error: `Unknown command: ${args._.join(" ")}`,
@@ -1340,6 +1548,13 @@ async function main() {
       "bridge status": "ape-claw bridge status --request <requestId> --json",
       "allowlist audit": "ape-claw allowlist audit --json",
       "skill install": "ape-claw skill install --scope local --json",
+      "v2 skill mint": "ape-claw v2 skill mint --rpc <url> --privateKey 0x... --skillNft 0x... --registry 0x... [--parentId 0] [--royalty-receiver 0x... --royalty-bps 500] --json",
+      "v2 skill publish": "ape-claw v2 skill publish --rpc <url> --privateKey 0x... --registry 0x... --skillId <id> --file <skillcard.json> [--uri ipfs://...] [--riskTier 1] --json",
+      "v2 intent create": "ape-claw v2 intent create --rpc <url> --privateKey 0x... --intents 0x... --payload '{...}' [--expiresAt <unixSec>] --json",
+      "v2 intent cancel": "ape-claw v2 intent cancel --rpc <url> --privateKey 0x... --intents 0x... --intentId <id> --json",
+      "v2 receipt record": "ape-claw v2 receipt record --rpc <url> --privateKey 0x... --receipts 0x... --traceId <trace> [--subject <string>] [--payload '{...}'] [--uri ipfs://...] --json",
+      "v2 receipt get": "ape-claw v2 receipt get --rpc <url> --receipts 0x... --traceId <trace> --json",
+      "pod init": "ape-claw pod init --dir ./pod-workspace --json",
     },
     globalFlags: {
       "--json": "Recommended for deterministic parsing (all output as JSON).",

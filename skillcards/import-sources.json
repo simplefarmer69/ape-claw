@@ -1,0 +1,81 @@
+{
+  "sources": [
+    {
+      "source": "github_repo_skill_md",
+      "name": "BankrBot OpenClaw Skills (SKILL.md repo import)",
+      "owner": "BankrBot",
+      "repo": "openclaw-skills",
+      "ref": "main",
+      "basePath": "",
+      "slugPrefix": "bankr-openclaw",
+      "riskTier": 2,
+      "limit": 80
+    },
+    {
+      "source": "github_repo_skill_md",
+      "name": "ClawHub Mirror (openclaw/skills) — bulk import",
+      "owner": "openclaw",
+      "repo": "skills",
+      "ref": "main",
+      "basePath": "skills",
+      "slugPrefix": "clawhub",
+      "riskTier": 2,
+      "limit": 220
+    },
+    {
+      "source": "github_repo_skill_md",
+      "name": "Virtual Protocol ACP (Bounties + Skills marketplace)",
+      "owner": "Virtual-Protocol",
+      "repo": "openclaw-acp",
+      "ref": "main",
+      "basePath": "",
+      "slugPrefix": "acp",
+      "riskTier": 3,
+      "limit": 60
+    },
+    {
+      "source": "openclaw_skills",
+      "name": "Wechat Publisher (OpenClaw skills mirror)",
+      "owner": "0731coderlee-sudo",
+      "skillSlug": "wechat-publisher",
+      "slug": "openclaw-wechat-publisher",
+      "riskTier": 2
+    },
+    {
+      "source": "clawhub",
+      "name": "Super Skills",
+      "url": "https://clawhub.ai/10e9928a/super-skills",
+      "slug": "clawhub-super-skills",
+      "riskTier": 2
+    },
+    {
+      "source": "clawhub",
+      "name": "Stagehand Browser CLI",
+      "url": "https://clawhub.ai/skills/stagehand-browser-cli",
+      "slug": "clawhub-stagehand-browser-cli",
+      "riskTier": 3
+    },
+    {
+      "source": "clawhub",
+      "name": "Skill Reviewer",
+      "url": "https://clawhub.ai/skills/skill-reviewer",
+      "slug": "clawhub-skill-reviewer",
+      "riskTier": 1
+    },
+    {
+      "source": "clawhub",
+      "name": "CodeBuddy CLI for OpenClaw",
+      "url": "https://clawhub.ai/skills/codebuddy-cli",
+      "slug": "clawhub-codebuddy-cli",
+      "riskTier": 1
+    },
+    {
+      "source": "local",
+      "name": "ApeClaw NFT Autobuy (seed, local)",
+      "path": "skillcards/seed/apeclaw-nft-autobuy.v1.json",
+      "slug": "seed-apeclaw-nft-autobuy-local",
+      "riskTier": 1
+    }
+  ]
+}
+

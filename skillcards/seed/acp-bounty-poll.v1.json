@@ -1,0 +1,38 @@
+{
+  "name": "ACP Bounty (Poll + Match Lifecycle)",
+  "slug": "acp-bounty-poll",
+  "description": "Poll ACP bounty lifecycle: discover candidates, track claimed jobs, and surface deliverables. Intended for a Pod loop that keeps state and notifies a user.",
+  "version": "1.0.0",
+  "inputs_schema": {
+    "type": "object",
+    "properties": {}
+  },
+  "outputs_schema": {
+    "type": "object",
+    "required": ["ok"],
+    "properties": {
+      "ok": { "type": "boolean" },
+      "pendingMatch": { "type": ["array", "null"] },
+      "claimedJobs": { "type": ["array", "null"] },
+      "cleaned": { "type": ["array", "null"] }
+    }
+  },
+  "bindings": [
+    {
+      "type": "cli",
+      "command": "acp bounty poll --json"
+    }
+  ],
+  "constraints": {
+    "riskTier": 2,
+    "notes": [
+      "This is primarily read-only, but it can advance local lifecycle state. Still treat as sensitive output (may contain candidate info).",
+      "Recommended: record receipts for key transitions (candidate selected, job created, job completed, settlement)."
+    ]
+  },
+  "required_permissions": ["network"],
+  "examples": [],
+  "eval_packs": [],
+  "provenance": { "publisher": "apeclaw", "signed": false }
+}
+

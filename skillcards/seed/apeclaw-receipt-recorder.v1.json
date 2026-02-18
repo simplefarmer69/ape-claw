@@ -1,0 +1,64 @@
+{
+  "name": "ApeClaw Receipt Recorder",
+  "slug": "apeclaw-receipt-recorder",
+  "description": "Record an append-only onchain receipt (ReceiptRegistry) for an action traceId. Designed to anchor auditability onchain without trusting a backend.",
+  "version": "1.0.0",
+  "inputs_schema": {
+    "type": "object",
+    "required": ["rpc", "privateKey", "receipts", "traceId"],
+    "properties": {
+      "rpc": { "type": "string", "description": "RPC URL for the target chain (ApeChain or local dev)." },
+      "privateKey": { "type": "string", "description": "EVM private key used to sign the receipt transaction." },
+      "receipts": { "type": "string", "description": "ReceiptRegistry contract address." },
+      "traceId": { "type": "string", "description": "Unique traceId for this action (hashed onchain)." },
+      "subject": { "type": "string", "default": "agent:unknown", "description": "Subject identifier (hashed onchain), e.g. agentId or account." },
+      "payload": { "type": ["object", "null"], "default": {}, "description": "Receipt payload (content-addressed via stable JSON hash)." },
+      "uri": { "type": "string", "default": "", "description": "Optional offchain URI (IPFS/Arweave/http/file) for additional evidence." }
+    }
+  },
+  "outputs_schema": {
+    "type": "object",
+    "required": ["ok", "txHash", "traceIdHash", "contentHash", "subjectHash"],
+    "properties": {
+      "ok": { "type": "boolean" },
+      "txHash": { "type": "string" },
+      "traceIdHash": { "type": "string" },
+      "contentHash": { "type": "string" },
+      "subjectHash": { "type": "string" },
+      "uri": { "type": "string" }
+    }
+  },
+  "bindings": [
+    {
+      "type": "cli",
+      "command": "ape-claw v2 receipt record --rpc <rpc> --privateKey <privateKey> --receipts <receipts> --traceId <traceId> [--subject <subject>] [--payload '<payloadJson>'] [--uri <uri>] --json"
+    }
+  ],
+  "constraints": {
+    "riskTier": 2,
+    "notes": [
+      "This skill writes an immutable receipt onchain. It should be used for audit anchors, not for storing secrets.",
+      "Prefer putting large evidence blobs in offchain storage and referencing via --uri."
+    ]
+  },
+  "required_permissions": ["onchain_execute"],
+  "examples": [
+    {
+      "title": "Record a receipt (local dev)",
+      "value": {
+        "rpc": "http://127.0.0.1:8545",
+        "privateKey": "0x...",
+        "receipts": "0xReceiptRegistry...",
+        "traceId": "nft_buy_1700000000_abc123",
+        "subject": "agent:the-clawllector",
+        "payload": { "kind": "nft.buy.confirmed", "collection": "gs-on-ape", "priceApe": 75 }
+      }
+    }
+  ],
+  "eval_packs": [],
+  "provenance": {
+    "publisher": "apeclaw",
+    "signed": false
+  }
+}
+

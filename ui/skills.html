@@ -1,0 +1,1740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skills — ApeClaw</title>
+  <meta name="description" content="ApeClaw Skills: SkillCards, SkillNFT provenance, immutable versions, receipts, and Pod revenue sharing (royalties to PodVault).">
+  <link rel="icon" type="image/png" href="/favicon-lobster.png">
+  <link rel="apple-touch-icon" href="/favicon-lobster.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#111111;
+      --panel:#1c1c1c;
+      --panel-2:#232323;
+      --panel-hover:#2a2a2a;
+      --panel-border:rgba(207,255,4,.75);
+      --panel-border-soft:rgba(207,255,4,.35);
+      --glow:rgba(207,255,4,.22);
+      --muted:#a6a6a6;
+      --text:#e6e6e6;
+      --amber:#cfff04;
+      --amber-soft:rgba(207,255,4,.75);
+      --green:#00ff00;
+      --cyan:#63d7ff;
+      --danger:#ff3333;
+      --mono: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      --terminal-gray:#474546;
+      --terminal-lightgray:#9e9e9e;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{
+      min-height:100vh;
+      font-family:"Inter","Segoe UI","Roboto",Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      position:relative;
+      overflow-x:hidden;
+      -webkit-font-smoothing:antialiased;
+      letter-spacing:.03em;
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:0;
+      background:
+        radial-gradient(900px 500px at 20% 10%, rgba(207,255,4,0.10) 0%, transparent 60%),
+        radial-gradient(700px 380px at 85% 75%, rgba(0,255,0,0.06) 0%, transparent 55%),
+        linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.85));
+    }
+    .noise{
+      position:fixed;inset:0;pointer-events:none;z-index:2;opacity:0.07;mix-blend-mode:overlay;
+      background-image:
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 1px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 4px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 6px);
+    }
+    .scanlines{overflow:hidden;position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:1}
+    .scanlines:before,.scanlines:after{display:block;pointer-events:none;content:"";position:absolute}
+    .scanlines:before{width:100%;height:2px;z-index:2147483649;background:rgba(0,0,0,0.3);opacity:0.75;animation:scanline 6s linear infinite}
+    .scanlines:after{top:0;right:0;bottom:0;left:0;z-index:2147483648;background:linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.3) 51%);background-size:100% 4px;animation:scanlines 1s steps(60) infinite}
+    @keyframes scanline{0%{transform:translate3d(0,200000%,0)}}
+    @keyframes scanlines{0%{background-position:0 200000%}}
+    :focus-visible{outline:2px dashed var(--amber);outline-offset:3px}
+
+    /* Disable the older collage background (previous iteration). */
+    .bg-collage, .bg-fade{display:none !important}
+    .bg-collage{
+      position:fixed;
+      inset:0;
+      z-index:0;
+      opacity:0.12;
+      pointer-events:none;
+      display:grid;
+      grid-template-columns:repeat(10,1fr);
+      gap:5px;
+      padding:5px;
+    }
+    .bg-collage img{
+      width:100%;
+      aspect-ratio:1/1;
+      object-fit:cover;
+      border-radius:3px;
+      image-rendering:pixelated;
+      filter:saturate(0.7) contrast(0.85) brightness(0.9);
+      transform:rotate(var(--r));
+    }
+    .bg-fade{
+      position:fixed;inset:0;z-index:1;pointer-events:none;
+      background:
+        radial-gradient(ellipse 90% 50% at 50% 0%, rgba(2,3,5,0.15) 0%, rgba(2,3,5,0.95) 100%),
+        linear-gradient(180deg, rgba(2,3,5,0.1) 0%, rgba(2,3,5,0.7) 40%, rgba(2,3,5,1) 100%);
+    }
+    a{color:inherit;text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    .wrap{position:relative;z-index:3;max-width:1080px;margin:0 auto;padding:20px 20px 28px}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{
+      width:36px;height:36px;border-radius:8px;
+      border:2px solid rgba(255,159,26,0.3);
+      overflow:hidden;flex-shrink:0;background:#02070d;
+    }
+    .logo img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+    .brand h1{
+      margin:0;font-size:18px;font-weight:900;letter-spacing:.08em;
+      text-transform:uppercase;color:var(--amber);
+      text-shadow:0 0 24px rgba(255,159,26,0.2);
+    }
+    .nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .nav a{
+      font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+      padding:8px 10px;border-radius:2px;border:1px solid var(--panel-border);
+      background:rgba(9,13,18,0.7);color:var(--muted);transition:all .2s ease;
+    }
+    .nav a:hover{border-color:var(--cyan);background:#1b1f24;color:var(--text);text-decoration:none}
+    .nav a[aria-current="page"]{
+      border-color:rgba(207,255,4,.55);
+      color:var(--text);
+      background:linear-gradient(180deg,var(--panel-2) 0%,var(--panel) 100%);
+      box-shadow:inset 0 0 0 1px rgba(207,255,4,.10);
+    }
+
+    .hero{
+      background:linear-gradient(180deg,var(--panel-2) 0%,var(--panel) 100%);
+      border:1px solid var(--panel-border);
+      border-radius:2px;
+      box-shadow:inset 0 0 0 1px #0f1d2c;
+      padding:32px 28px 28px;
+      margin-bottom:16px;
+    }
+    .eyebrow{
+      font-size:12px;font-weight:800;color:var(--amber-soft);
+      letter-spacing:.07em;text-transform:uppercase;
+    }
+    .title{
+      margin:10px 0 10px;
+      font-size:44px;font-weight:900;letter-spacing:-.01em;line-height:1.02;
+      text-transform:uppercase;color:var(--amber);
+    }
+    .subtitle{margin:0;color:var(--muted);font-size:14px;line-height:1.65;max-width:92ch}
+    .cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      padding:10px 18px;border-radius:2px;border:1px solid #2a3d52;
+      background:#0f1b28;color:#f4f7fc;font-weight:700;font-size:13px;
+      letter-spacing:.04em;text-transform:uppercase;cursor:pointer;transition:all .2s ease;white-space:nowrap;
+    }
+    .btn:hover{border-color:var(--cyan);background:#132335;text-decoration:none}
+    .btn.primary{
+      border-color:#8a5b12;background:linear-gradient(180deg,#ffb64a 0%,#ff9f1a 100%);
+      color:#1b1204;box-shadow:inset 0 0 0 1px rgba(255,231,191,0.28);
+    }
+    .btn.primary:hover{background:linear-gradient(180deg,#ffc168 0%,#ffa92f 100%);box-shadow:inset 0 0 0 1px rgba(255,240,210,0.34)}
+
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(207,255,4,.22);
+      background:rgba(9,13,18,0.6);
+      color:var(--muted);
+      font-size:12px;
+      letter-spacing:.02em;
+    }
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px rgba(255,159,26,0.35)}
+    .scroll{margin-top:14px;color:var(--muted);font-size:12px;display:inline-flex;align-items:center;gap:8px;letter-spacing:.04em;text-transform:uppercase}
+    .scroll:hover{text-decoration:none;color:var(--text)}
+    .scroll .chev{color:var(--amber-soft)}
+
+    .stats{display:grid;grid-template-columns:1fr;gap:14px;margin-top:16px}
+    @media(min-width:860px){.stats{grid-template-columns:repeat(4,1fr)}}
+    .stat{
+      background:linear-gradient(180deg,var(--panel-2) 0%,var(--panel) 100%);
+      border:1px solid var(--panel-border);
+      border-radius:2px;
+      padding:16px 16px 14px;
+      box-shadow:inset 0 0 0 1px #0f1d2c;
+      min-height:86px;
+    }
+    .stat .num{font-weight:900;font-size:28px;color:var(--amber);letter-spacing:-.01em}
+    .stat .label{margin-top:6px;color:var(--muted);font-size:12px;line-height:1.4;text-transform:uppercase;letter-spacing:.04em}
+
+    .section{margin-top:22px}
+    .section h2{
+      margin:0 0 10px;font-size:13px;font-weight:800;color:var(--amber-soft);
+      letter-spacing:.07em;text-transform:uppercase;
+    }
+    .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:14px}
+    @media(min-width:860px){.grid{grid-template-columns:1fr 1fr}}
+    .card{
+      background:linear-gradient(180deg,var(--panel-2) 0%,var(--panel) 100%);
+      border:1px solid var(--panel-border);
+      border-radius:2px;
+      padding:20px 20px 18px;
+      box-shadow:inset 0 0 0 1px #0f1d2c;
+      transition:border-color .25s,box-shadow .25s;
+    }
+    .card:hover{border-color:var(--cyan);box-shadow:0 6px 24px rgba(0,0,0,0.3)}
+    .cardhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .card h3{margin:0;font-size:13px;font-weight:700;color:var(--amber-soft);text-transform:uppercase;letter-spacing:.06em}
+    .badge{
+      font-size:11px;padding:5px 8px;border-radius:2px;border:1px solid var(--panel-border);
+      color:var(--muted);background:rgba(9,13,18,0.6);white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;
+    }
+    .badge.alpha{border-color:rgba(207,255,4,.25);color:var(--amber-soft)}
+    .badge.live{border-color:rgba(0,255,0,.25);color:rgba(0,255,0,.8)}
+    .badge.found{border-color:rgba(99,215,255,.28);color:rgba(99,215,255,.85)}
+    .card p{margin:12px 0 0;color:var(--muted);font-size:13px;line-height:1.65}
+    .code{
+      margin-top:12px;padding:12px 12px;border-radius:2px;border:1px solid #2a4056;background:#0b1622;
+      font-family:var(--mono);font-size:12px;color:#d4e6fa;overflow:auto;line-height:1.55;
+    }
+    .k{color:var(--cyan)}
+
+    .list{margin-top:10px;display:flex;flex-direction:column;gap:10px}
+    .item{
+      border:1px solid #2a4056;background:#0b1622;border-radius:2px;
+      padding:12px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+    }
+    .item strong{font-size:13px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--amber-soft)}
+    .item .meta{color:var(--muted);font-size:12px;line-height:1.4;margin-top:6px}
+    .item .links{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .pill{
+      font-size:11px;padding:6px 8px;border-radius:2px;border:1px solid #2a4056;
+      color:#d4e6fa;background:rgba(9,13,18,0.5);white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;
+    }
+    .pill.low{border-color:rgba(99,215,255,.35)}
+    .pill.med{border-color:rgba(207,255,4,.22)}
+    .pill.high{border-color:rgba(255,51,51,.28);color:#ffd1d1}
+    .tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+    .tools input{
+      background:#0b1622;border:1px solid #2a4056;color:#d4e6fa;padding:9px 10px;border-radius:2px;
+      font-size:13px;min-width:260px;outline:none;
+    }
+    .tools input:focus{border-color:var(--cyan)}
+    .tools input::placeholder{color:rgba(166,166,166,.95)}
+    .tools textarea{
+      width:100%;
+      background:#0b1622;
+      border:1px solid #2a4056;
+      color:#d4e6fa;
+      padding:9px 10px;
+      border-radius:2px;
+      font-size:13px;
+      outline:none;
+      font-family:var(--mono);
+      line-height:1.5;
+      min-height:160px;
+      resize:vertical;
+    }
+    .tools textarea:focus{border-color:var(--cyan)}
+    .tools .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;width:100%}
+    .note{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.55;
+    }
+    .note code{font-family:var(--mono);font-size:12px;color:#d4e6fa}
+    .danger-note{
+      margin-top:12px;
+      border:1px solid rgba(255,51,51,.25);
+      background:rgba(255,51,51,.06);
+      border-radius:2px;
+      padding:12px;
+      color:#ffd1d1;
+      font-size:12.5px;
+      line-height:1.65;
+    }
+    .toast{
+      position:fixed;
+      left:12px;
+      right:12px;
+      bottom:12px;
+      z-index:50;
+      display:none;
+      border:1px solid var(--panel-border);
+      background:rgba(9,13,18,0.92);
+      border-radius:2px;
+      padding:10px 12px;
+      color:#d4e6fa;
+      font-size:12.5px;
+      line-height:1.4;
+      box-shadow:0 10px 36px rgba(0,0,0,0.45);
+    }
+    .toast.show{display:block}
+    .toast.err{border-color:rgba(255,51,51,.35);color:#ffd1d1}
+
+    .modal-backdrop{
+      position:fixed;inset:0;z-index:60;
+      background:rgba(0,0,0,0.65);
+      display:none;
+      padding:18px;
+    }
+    .modal-backdrop.show{display:flex;align-items:center;justify-content:center}
+    .modal{
+      width:min(720px, 100%);
+      border:1px solid var(--panel-border);
+      background:linear-gradient(180deg,var(--panel-2) 0%,var(--panel) 100%);
+      border-radius:2px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.55);
+      padding:16px;
+    }
+    .modal h3{
+      margin:0;
+      font-size:13px;
+      font-weight:900;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      color:var(--amber-soft);
+    }
+    .modal .body{margin-top:12px}
+    .modal .body .note{margin-top:8px}
+    .modal .footer{margin-top:14px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+    .modal input{
+      width:100%;
+      background:#0b1622;border:1px solid #2a4056;color:#d4e6fa;
+      padding:9px 10px;border-radius:2px;font-size:13px;outline:none;
+    }
+    .modal input:focus{border-color:var(--cyan)}
+    .modal label{
+      display:block;
+      margin-top:10px;
+      font-size:11px;
+      color:var(--muted);
+      letter-spacing:.04em;
+      text-transform:uppercase;
+    }
+    .tools select{
+      background:#0b1622;border:1px solid #2a4056;color:#d4e6fa;padding:9px 10px;border-radius:2px;
+      font-size:13px;outline:none;
+    }
+    .tools select:focus{border-color:var(--cyan)}
+    .tools label{
+      display:inline-flex;align-items:center;gap:8px;
+      border:1px solid #2a4056;background:rgba(9,13,18,0.5);
+      padding:7px 9px;border-radius:2px;
+      font-size:12px;color:#d4e6fa;text-transform:uppercase;letter-spacing:.04em;
+      user-select:none;
+    }
+    .tools input[type="checkbox"]{width:14px;height:14px;min-width:0;accent-color:var(--amber)}
+    .cards{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns:1fr;
+      gap:14px;
+    }
+    @media(min-width:860px){.cards{grid-template-columns:1fr 1fr}}
+    .skill-card{
+      background:linear-gradient(180deg,var(--panel-2) 0%,var(--panel) 100%);
+      border:1px solid var(--panel-border);
+      border-radius:2px;
+      padding:16px 16px 14px;
+      box-shadow:inset 0 0 0 1px #0f1d2c;
+      transition:border-color .25s,box-shadow .25s;
+      min-height:152px;
+      display:flex;
+      flex-direction:column;
+    }
+    .skill-card:hover{border-color:var(--cyan);box-shadow:0 6px 24px rgba(0,0,0,0.3)}
+    .skill-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .skill-title{
+      margin:0;
+      font-size:13px;
+      font-weight:900;
+      letter-spacing:.03em;
+      text-transform:uppercase;
+      color:var(--amber);
+    }
+    .skill-desc{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+      flex:1;
+    }
+    .skill-meta{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .pill.nft{border-color:rgba(0,255,0,.25);color:rgba(0,255,0,.8)}
+    .pill.off{border-color:rgba(207,255,4,.22);color:var(--amber-soft)}
+    .skill-actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .foot{margin-top:18px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;text-transform:uppercase;letter-spacing:.04em}
+  </style>
+</head>
+<body>
+  <div class="bg-collage" aria-hidden="true" id="bgCollage"></div>
+  <div class="bg-fade" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="top">
+      <a class="brand" href="/" aria-label="ApeClaw">
+        <div class="logo" aria-hidden="true"><img src="/favicon-lobster.png" alt=""></div>
+        <h1>ApeClaw</h1>
+      </a>
+      <div class="nav" aria-label="Primary links">
+        <a href="/ui" data-keep-query="1">Dashboard</a>
+        <a href="/pod" data-keep-query="1">THE POD</a>
+        <a href="/skills" data-keep-query="1" aria-current="page">Skills</a>
+        <a href="/docs" data-keep-query="1">Docs</a>
+        <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="pill"><span class="dot" aria-hidden="true"></span> Library of Alexandria: seed + imported + onchain</div>
+      <div class="eyebrow">Skills</div>
+      <h2 class="title">Skills are content-addressed.</h2>
+      <p class="subtitle">
+        A SkillCard is hashed, published onchain, and referenced immutably. When a skill is minted as a SkillNFT, it can route revenue to a Pod
+        revenue receiver (EIP-2981 royalties → PodVault) and leave a permanent audit trail (ReceiptRegistry). You can contribute by submitting a SkillCard
+        to this library and publishing an immutable onchain version.
+      </p>
+      <div class="cta">
+        <a class="btn primary" href="/docs?doc=V2_ONCHAIN_SKILLS.md" data-keep-query="1">Read v2 Skills Doc</a>
+        <a class="btn" href="/docs?doc=SKILLCARDS_AND_IMPORTER.md" data-keep-query="1">SkillCards + Importer</a>
+        <a class="btn" href="/docs?doc=CONTRIBUTING.md" data-keep-query="1">Contribute</a>
+        <a class="btn" href="/ui?filter=v2" data-keep-query="1">View v2 Feed</a>
+      </div>
+      <a class="scroll" href="#getting-started"><span class="chev" aria-hidden="true">⌄</span> Getting started</a>
+
+      <div class="stats" aria-label="Library stats">
+        <div class="stat">
+          <div class="num" id="statSeed">—</div>
+          <div class="label">Seed skills (shipped)</div>
+        </div>
+        <div class="stat">
+          <div class="num" id="statImported">—</div>
+          <div class="label">Imported skills (local)</div>
+        </div>
+        <div class="stat">
+          <div class="num" id="statUser">—</div>
+          <div class="label">Your skills (submitted)</div>
+        </div>
+        <div class="stat">
+          <div class="num" id="statPublished">—</div>
+          <div class="label">Published onchain (known)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="getting-started">
+      <h2>Getting Started</h2>
+      <div class="grid">
+        <div class="card">
+          <div class="cardhead">
+            <h3>1) Import a big library (optional)</h3>
+            <span class="badge alpha">LOCAL</span>
+          </div>
+          <p>
+            Pull SkillCards from external sources into <code>skillcards/imported/</code>. This makes browsing fast while you decide what to publish onchain.
+          </p>
+          <div class="code"><span class="k">npm</span> run skillcards:import -- --skipStubs</div>
+          <div class="tools" aria-label="Copy import command">
+            <a class="pill" href="#" data-copy="npm run skillcards:import -- --skipStubs">Copy command</a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="cardhead">
+            <h3>2) Mint a SkillNFT (revenue share)</h3>
+            <span class="badge live">LIVE</span>
+          </div>
+          <p>
+            Mint creates a persistent skill identity. Royalties can route into a Pod receiver (PodVault) for revenue share across the Pod.
+          </p>
+          <div class="code"><span class="k">ape-claw</span> v2 skill mint --royalty-receiver 0xPodVault... --royalty-bps 500 --json</div>
+          <div class="tools" aria-label="Copy mint command">
+            <a class="pill" href="#" data-copy="ape-claw v2 skill mint --rpc <url> --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --skillNft <addr> --registry <addr> --royalty-receiver 0xPodVault... --royalty-bps 500 --json">Copy command</a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="cardhead">
+            <h3>3) Publish immutable versions</h3>
+            <span class="badge alpha">ALPHA</span>
+          </div>
+          <p>
+            Publishing anchors an immutable version with a <code>contentHash</code> + <code>uri</code>. The chain becomes the library source of truth.
+          </p>
+          <div class="code"><span class="k">ape-claw</span> v2 skill publish --skillId 1 --file skillcards/seed/apeclaw-nft-autobuy.v1.json --json</div>
+          <div class="tools" aria-label="Copy publish command">
+            <a class="pill" href="#" data-copy="ape-claw v2 skill publish --rpc <url> --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --registry <addr> --skillId 1 --file \"skillcards/seed/apeclaw-nft-autobuy.v1.json\" --riskTier 1 --json">Copy command</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="your-skills">
+      <h2>Your Skills</h2>
+      <div class="grid">
+        <div class="card">
+          <div class="cardhead">
+            <h3>Add a SkillCard (to this backend)</h3>
+            <span class="badge live">READY</span>
+          </div>
+          <p>
+            Paste a SkillCard JSON to add it to this Skills library (server-side storage). This is designed to be safe: no private keys and no execution in-browser.
+          </p>
+          <div class="note">
+            New here? Read <a href="/docs?doc=CONTRIBUTING.md" data-keep-query="1">Contributing</a> for the full submit → mint → publish flow.
+          </div>
+          <div class="danger-note">
+            Never paste private keys, API keys, or secrets into SkillCards. Treat SkillCards as public metadata + execution bindings.
+          </div>
+
+          <div class="tools" style="margin-top:12px" aria-label="Skill submission auth">
+            <div class="row">
+              <input id="authAgentId" type="text" placeholder="x-agent-id (required to submit/delete)" autocomplete="off" spellcheck="false">
+              <input id="authAgentToken" type="password" placeholder="x-agent-token" autocomplete="off" spellcheck="false">
+              <button class="btn" id="saveAuthBtn" type="button">Save Auth</button>
+              <button class="btn" id="checkAuthBtn" type="button">Check</button>
+              <button class="btn" id="clearAuthBtn" type="button">Clear</button>
+            </div>
+            <div class="note" id="authStatus">Auth: not set</div>
+          </div>
+
+          <div class="tools" style="margin-top:12px" aria-label="SkillCard JSON input">
+            <div class="row">
+              <select id="templateSelect" aria-label="SkillCard template">
+                <option value="">template: choose</option>
+                <option value="low">Low risk (read-only / browse)</option>
+                <option value="med">Medium risk (writes / automation)</option>
+                <option value="high">High risk (spend / escrow)</option>
+              </select>
+              <button class="btn" id="loadTemplateBtn" type="button">Load Template</button>
+              <button class="btn" id="formatJsonBtn" type="button">Format JSON</button>
+            </div>
+            <textarea id="skillJson" placeholder='Paste SkillCard JSON here (example): {"name":"My Skill","slug":"my-skill","version":"1.0.0","description":"...","bindings":[{"type":"cli","command":"..."}],"constraints":{"riskTier":2}}'></textarea>
+            <div class="row">
+              <input id="skillSourceUrl" type="url" placeholder="Optional source URL (GitHub/ClawHub/etc)" autocomplete="off" spellcheck="false">
+              <button class="btn" id="loadFromUrlBtn" type="button">Load URL</button>
+              <button class="btn" id="validateSkillBtn" type="button">Validate</button>
+              <button class="btn primary" id="addSkillBtn" type="button">Add To Library</button>
+            </div>
+            <div class="note" id="skillPreview">Preview: —</div>
+            <div class="note" id="addSkillStatus"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="cardhead">
+            <h3>Submitted Skills</h3>
+            <span class="badge alpha" id="userBadge">AUTO</span>
+          </div>
+          <p>
+            These are SkillCards submitted to this backend. Use them as the shared library surface, then mint/publish onchain from CLI when ready.
+          </p>
+          <div class="tools" aria-label="Mint/publish settings">
+            <input id="v2RpcUrl" type="text" placeholder="v2 rpc url (APE_CLAW_V2_RPC_URL)" autocomplete="off" spellcheck="false">
+            <input id="v2SkillNft" type="text" placeholder="SkillNFT address (APE_CLAW_V2_SKILL_NFT)" autocomplete="off" spellcheck="false">
+            <input id="v2Registry" type="text" placeholder="SkillRegistry address (APE_CLAW_V2_SKILL_REGISTRY)" autocomplete="off" spellcheck="false">
+            <input id="royaltyReceiver" type="text" placeholder="royalty receiver (PodVault address)" autocomplete="off" spellcheck="false">
+            <input id="royaltyBps" type="text" placeholder="royalty bps (e.g. 500)" autocomplete="off" spellcheck="false">
+            <button class="btn" id="saveV2SettingsBtn" type="button">Save Settings</button>
+          </div>
+          <div class="note" id="v2SettingsNote">Mint/publish commands use env var `APE_CLAW_V2_PRIVATE_KEY` (never paste keys here).</div>
+          <div class="tools" aria-label="Submitted skills search">
+            <input id="userSkillSearch" type="search" placeholder="Search your skills (name/slug/version)..." autocomplete="off" spellcheck="false">
+          </div>
+          <div class="list" id="userSkillList">
+            <div class="item">
+              <div>
+                <strong>No submissions yet</strong> <span class="pill med">tip</span>
+                <div class="meta">Submit a SkillCard JSON on the left, then it will show up here.</div>
+              </div>
+              <div class="links">
+                <a class="pill" href="/docs?doc=SKILLCARDS_AND_IMPORTER.md" data-keep-query="1">Docs</a>
+              </div>
+            </div>
+          </div>
+          <div class="code"><span class="k">curl</span> -fsSL &lt;apiBase&gt;/skillcards/user/&lt;file&gt; -o ./skillcards/user/&lt;file&gt;<br><span class="k">ape-claw</span> v2 skill publish --skillId &lt;id&gt; --file ./skillcards/user/&lt;file&gt; --json</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="how-it-works">
+      <h2>How Skills Work</h2>
+      <div class="grid">
+        <div class="card">
+          <div class="cardhead">
+            <h3>Immutable Versions (SkillRegistry)</h3>
+            <span class="badge alpha">ALPHA</span>
+          </div>
+          <p>
+            Skills are published as immutable versions with a <code>contentHash</code> and a <code>uri</code>. The chain is the source of truth:
+            UIs can disappear and the library still exists.
+          </p>
+          <div class="code"><span class="k">npm</span> run contracts:seed<br><span class="k">ape-claw</span> v2 skill publish --skillId 1 --file skillcards/seed/apeclaw-nft-autobuy.v1.json --json</div>
+          <div class="tools" aria-label="Copy seed command">
+            <a class="pill" href="#" data-copy="npm run contracts:seed">Copy seed</a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="cardhead">
+            <h3>Pod Revenue Share (SkillNFT → PodVault)</h3>
+            <span class="badge live">LIVE</span>
+          </div>
+          <p>
+            When a skill is an NFT, royalty revenue can be routed to a Pod-wide receiver (a split vault).
+            This is the onchain enforcement layer for “share revenue among all agents in the Pod”.
+          </p>
+          <div class="code"><span class="k">ape-claw</span> v2 skill mint --royalty-receiver 0xPodVault... --royalty-bps 500 --json</div>
+        </div>
+        <div class="card">
+          <div class="cardhead">
+            <h3>Receipts Primitive (ReceiptRegistry)</h3>
+            <span class="badge live">LIVE</span>
+          </div>
+          <p>
+            Receipts are append-only audit anchors keyed by <code>traceIdHash</code>. They are designed for “what happened” truth without trusting a backend.
+          </p>
+          <div class="code"><span class="k">ape-claw</span> v2 receipt record --traceId "..." --subject "agent:my-bot" --payload '{...}' --json</div>
+          <div class="tools" aria-label="Copy receipt command">
+            <a class="pill" href="#" data-copy="ape-claw v2 receipt record --rpc <url> --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --receipts <addr> --traceId \"...\" --subject \"agent:my-bot\" --payload '{...}' --json">Copy command</a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="cardhead">
+            <h3>Safety Posture (Pod)</h3>
+            <span class="badge alpha">ALPHA</span>
+          </div>
+          <p>
+            High-risk skills remain strict opt-in. Pod default is dry-run with a kill switch, runtime cap, and auditable logs.
+          </p>
+          <div class="code"><span class="k">ape-claw</span> pod init --dir ./pod-workspace --json<br><span class="k">python3</span> pod/run_agent.py --enabled --dry-run --backend stub --screenshot-dir "$HOME/pod/screens"</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="seed-library">
+      <h2>Seed Skill Library</h2>
+      <div class="card">
+        <div class="cardhead">
+          <h3>Shipped Seed Skills (SkillCards)</h3>
+          <span class="badge live" id="seedBadge">READY</span>
+        </div>
+        <p>These ship in-repo and can be published onchain via the seed script.</p>
+        <div class="tools" aria-label="Seed skills search">
+          <input id="seedSearch" type="search" placeholder="Search seed skills (name/slug)..." autocomplete="off" spellcheck="false">
+        </div>
+        <div class="list" id="seedList"></div>
+        <div class="code"><span class="k">npm</span> run contracts:seed</div>
+        <div class="tools" aria-label="Copy contracts seed">
+          <a class="pill" href="#" data-copy="npm run contracts:seed">Copy command</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="imported-library">
+      <h2>Imported Skill Library</h2>
+      <div class="card">
+        <div class="cardhead">
+          <h3>Imported Skills (optional)</h3>
+          <span class="badge alpha" id="importedBadge">AUTO</span>
+        </div>
+        <p>
+          If you run the importer, this page will automatically detect <code>skillcards/imported/index.json</code> and render the imported library
+          (including sources like ACP bounties). This is a local/dev convenience; for global discovery, publish onchain.
+        </p>
+        <div class="tools" aria-label="Imported skills search">
+          <input id="importedSearch" type="search" placeholder="Search imported skills (name/slug/source)..." autocomplete="off" spellcheck="false">
+          <select id="riskFilter" aria-label="Risk filter">
+            <option value="all">risk: all</option>
+            <option value="low">risk: low</option>
+            <option value="med">risk: med</option>
+            <option value="high">risk: high</option>
+          </select>
+          <label title="Only show imported skills that have a publish tx recorded in the importer index">
+            <input id="onlyOnchain" type="checkbox">
+            Onchain only
+          </label>
+        </div>
+        <div class="cards" id="importedList">
+          <div class="item">
+            <div>
+              <strong>Nothing imported yet</strong> <span class="pill med">optional</span>
+              <div class="meta">Run the importer to populate <code>skillcards/imported/</code>, then refresh.</div>
+            </div>
+            <div class="links">
+              <a class="pill" href="/docs?doc=SKILLCARDS_AND_IMPORTER.md" data-keep-query="1">Docs</a>
+            </div>
+          </div>
+        </div>
+        <div class="code"><span class="k">npm</span> run skillcards:import -- --skipStubs</div>
+        <div class="tools" aria-label="Copy import">
+          <a class="pill" href="#" data-copy="npm run skillcards:import -- --skipStubs">Copy command</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div>Skill library is permissionless · UI is optional</div>
+      <div id="apiNote">Backend: auto</div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h3 id="modalTitle">Modal</h3>
+      <div class="body" id="modalBody"></div>
+      <div class="footer">
+        <button class="btn" id="modalCancelBtn" type="button">Cancel</button>
+        <button class="btn primary" id="modalOkBtn" type="button">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // Lightweight collage background to match the Stonk terminal feel.
+      try {
+        var c = document.getElementById('bgCollage');
+        if (c && !c.hasChildNodes()) {
+          var N = 80;
+          for (var i = 0; i < N; i++) {
+            var img = document.createElement('img');
+            img.src = '/favicon-lobster.png';
+            img.alt = '';
+            img.style.setProperty('--r', (Math.round((Math.random() * 10 - 5) * 10) / 10) + 'deg');
+            c.appendChild(img);
+          }
+        }
+      } catch (e) {}
+
+      // Preserve ?api=... when navigating within the product.
+      var search = (window.location && window.location.search) ? String(window.location.search) : '';
+      if (search) {
+        try {
+          var as = document.querySelectorAll('a[data-keep-query="1"]');
+          for (var i = 0; i < as.length; i++) {
+            var href = String(as[i].getAttribute('href') || '');
+            if (!href || href.indexOf('http') === 0 || href.indexOf('#') === 0) continue;
+            if (href.indexOf('?') !== -1) continue;
+            as[i].setAttribute('href', href + search);
+          }
+        } catch (e) {}
+      }
+
+      function escapeHtml(v) {
+        return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+      function pillForRisk(n) {
+        var r = Number(n || 0);
+        if (r >= 3) return '<span class="pill high">risk: high</span>';
+        if (r === 2) return '<span class="pill med">risk: med</span>';
+        return '<span class="pill low">risk: low</span>';
+      }
+      function fmtInt(n) {
+        try { return new Intl.NumberFormat().format(Number(n || 0)); } catch (e) { return String(n || 0); }
+      }
+      function riskBucket(n) {
+        var r = Number(n || 0);
+        if (r >= 3) return 'high';
+        if (r === 2) return 'med';
+        return 'low';
+      }
+      function toSlug(input) {
+        return String(input || '')
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      }
+
+      var api = '';
+      try {
+        var u = new URL(window.location.href);
+        api = (u.searchParams.get('api') || '').trim();
+      } catch (e) {}
+      if (!api) api = 'https://api.apeclaw.ai';
+      var apiBase = api.replace(/\/+$/, '');
+      var apiNote = document.getElementById('apiNote');
+      if (apiNote) apiNote.textContent = 'Backend: ' + apiBase;
+
+      // Toast + modal (stonk-style: explicit, non-blocking UI feedback).
+      var toastEl = document.getElementById('toast');
+      var toastT = null;
+      function showToast(msg, isErr) {
+        if (!toastEl) return;
+        try {
+          toastEl.className = 'toast' + (isErr ? ' show err' : ' show');
+          toastEl.textContent = String(msg || '');
+          if (toastT) clearTimeout(toastT);
+          toastT = setTimeout(function () {
+            toastEl.className = 'toast';
+            toastEl.textContent = '';
+          }, isErr ? 2800 : 1600);
+        } catch (e) {}
+      }
+
+      var modalBackdrop = document.getElementById('modalBackdrop');
+      var modalTitle = document.getElementById('modalTitle');
+      var modalBody = document.getElementById('modalBody');
+      var modalCancelBtn = document.getElementById('modalCancelBtn');
+      var modalOkBtn = document.getElementById('modalOkBtn');
+      var modalState = { onOk: null, onCancel: null };
+      function closeModal() {
+        if (!modalBackdrop) return;
+        modalBackdrop.classList.remove('show');
+        modalBackdrop.setAttribute('aria-hidden', 'true');
+        if (modalBody) modalBody.innerHTML = '';
+        modalState.onOk = null;
+        modalState.onCancel = null;
+      }
+      function openModal(title, html, onOk, onCancel) {
+        if (!modalBackdrop || !modalTitle || !modalBody) return;
+        modalTitle.textContent = String(title || 'Modal');
+        modalBody.innerHTML = String(html || '');
+        modalState.onOk = onOk || null;
+        modalState.onCancel = onCancel || null;
+        modalBackdrop.classList.add('show');
+        modalBackdrop.setAttribute('aria-hidden', 'false');
+        // Focus first input if present.
+        try {
+          var first = modalBody.querySelector('input,textarea,select,button,a');
+          if (first && first.focus) first.focus();
+        } catch (e) {}
+      }
+      if (modalCancelBtn) modalCancelBtn.addEventListener('click', function () {
+        try { if (modalState.onCancel) modalState.onCancel(); } catch (e) {}
+        closeModal();
+      });
+      if (modalOkBtn) modalOkBtn.addEventListener('click', function () {
+        try { if (modalState.onOk) modalState.onOk(); } catch (e) {}
+      });
+      if (modalBackdrop) modalBackdrop.addEventListener('click', function (ev) {
+        if (ev && ev.target === modalBackdrop) closeModal();
+      });
+      document.addEventListener('keydown', function (ev) {
+        if (!modalBackdrop) return;
+        if (!modalBackdrop.classList.contains('show')) return;
+        if (ev && ev.key === 'Escape') closeModal();
+      });
+
+      var seed = [
+        {
+          name: 'ApeClaw NFT Autobuy',
+          slug: 'apeclaw-nft-autobuy',
+          file: '/skillcards/seed/apeclaw-nft-autobuy.v1.json',
+          riskTier: 1,
+          desc: 'Collect NFTs while you sleep (policy gated).'
+        },
+        {
+          name: 'ACP Browse (Discover Providers)',
+          slug: 'acp-browse',
+          file: '/skillcards/seed/acp-browse.v1.json',
+          riskTier: 1,
+          desc: 'Find specialist agents before posting bounties.'
+        },
+        {
+          name: 'ACP Bounty (Post Work Request)',
+          slug: 'acp-bounty-post',
+          file: '/skillcards/seed/acp-bounty-post.v1.json',
+          riskTier: 3,
+          desc: 'Post a bounty with explicit USDC budget (strict opt-in).'
+        },
+        {
+          name: 'ACP Bounty (Poll + Match Lifecycle)',
+          slug: 'acp-bounty-poll',
+          file: '/skillcards/seed/acp-bounty-poll.v1.json',
+          riskTier: 2,
+          desc: 'Poll candidates/jobs and surface deliverables.'
+        },
+        {
+          name: 'ACP Fulfillment (Earn USDC → PodVault)',
+          slug: 'acp-fulfill-and-route',
+          file: '/skillcards/seed/acp-fulfill-and-route.v1.json',
+          riskTier: 3,
+          desc: 'Fulfill jobs and route earnings into PodVault (strict opt-in).'
+        },
+        {
+          name: 'ApeClaw Receipt Recorder',
+          slug: 'apeclaw-receipt-recorder',
+          file: '/skillcards/seed/apeclaw-receipt-recorder.v1.json',
+          riskTier: 2,
+          desc: 'Anchor audit receipts onchain (ReceiptRegistry).'
+        },
+        {
+          name: 'ApeClaw Bridge Relay',
+          slug: 'apeclaw-bridge-relay',
+          file: '/skillcards/seed/apeclaw-bridge-relay.v1.json',
+          riskTier: 2,
+          desc: 'Bridge execution wrapper with confirm phrases and caps.'
+        },
+        {
+          name: 'Otherside Navigator',
+          slug: 'otherside-navigator',
+          file: '/skillcards/seed/otherside-navigator.v1.json',
+          riskTier: 3,
+          desc: 'Mac mini Pod loop (dry-run scaffold; strict opt-in).'
+        }
+      ];
+
+      var statSeed = document.getElementById('statSeed');
+      var statImported = document.getElementById('statImported');
+      var statPublished = document.getElementById('statPublished');
+      var statUser = document.getElementById('statUser');
+      if (statSeed) statSeed.textContent = fmtInt(seed.length);
+      if (statImported) statImported.textContent = '0';
+      if (statUser) statUser.textContent = '0';
+      if (statPublished) statPublished.textContent = '0';
+
+      var seedAll = seed.slice();
+      var seedSearch = document.getElementById('seedSearch');
+      var seedList = document.getElementById('seedList');
+      var seedBadge = document.getElementById('seedBadge');
+      function matchesSeed(s, q) {
+        if (!q) return true;
+        var t = q.trim().toLowerCase();
+        if (!t) return true;
+        var hay = [s.name, s.slug].map(function (x) { return String(x || '').toLowerCase(); }).join(' ');
+        return hay.indexOf(t) !== -1;
+      }
+      function renderSeed(items) {
+        if (!seedList) return;
+        var arr = Array.isArray(items) ? items : [];
+        if (seedBadge) seedBadge.textContent = arr.length ? ('FOUND ' + String(arr.length)) : 'NONE';
+        if (!arr.length) {
+          seedList.innerHTML = (
+            '<div class="item">' +
+              '<div>' +
+                '<strong>No seed matches</strong> <span class="pill med">tip</span>' +
+                '<div class="meta">Try clearing search, or browse the imported library below.</div>' +
+              '</div>' +
+              '<div class="links">' +
+                '<a class="pill" href="#imported-library">Imported</a>' +
+              '</div>' +
+            '</div>'
+          );
+          return;
+        }
+        seedList.innerHTML = arr.map(function (s) {
+          var raw = 'https://raw.githubusercontent.com/simplefarmer69/ape-claw/main' + s.file;
+          var rpc = localStorage.getItem('apeclaw_v2_rpc') || '';
+          var reg = localStorage.getItem('apeclaw_v2_registry') || '';
+          var pubCmd = (rpc && reg)
+            ? ('ape-claw v2 skill publish --rpc \"' + String(rpc).trim() + '\" --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --registry \"' + String(reg).trim() + '\" --skillId <id> --file \"' + s.file.replace(/^\//,'') + '\" --riskTier ' + String(Number(s.riskTier || 1)) + ' --json')
+            : ('ape-claw v2 skill publish --rpc <url> --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --registry <addr> --skillId <id> --file \"' + s.file.replace(/^\//,'') + '\" --riskTier ' + String(Number(s.riskTier || 1)) + ' --json');
+          return (
+            '<div class="item">' +
+              '<div>' +
+                '<strong>' + escapeHtml(s.name) + '</strong> ' + pillForRisk(s.riskTier) +
+                '<div class="meta">' + escapeHtml(s.desc) + '</div>' +
+                '<div class="meta">' + escapeHtml('slug: ' + s.slug) + '</div>' +
+              '</div>' +
+              '<div class="links">' +
+                '<a class="pill" href="' + escapeHtml(s.file) + '" target="_blank" rel="noopener">JSON</a>' +
+                '<a class="pill" href="' + escapeHtml(raw) + '" target="_blank" rel="noopener">Raw</a>' +
+                '<a class="pill" href="#" data-copy="' + escapeHtml(pubCmd) + '">Copy publish</a>' +
+                '<a class="pill" href="/docs?doc=SKILLCARDS_AND_IMPORTER.md" data-keep-query="1">Docs</a>' +
+              '</div>' +
+            '</div>'
+          );
+        }).join('');
+      }
+      renderSeed(seedAll);
+      if (seedSearch) {
+        seedSearch.addEventListener('input', function () {
+          var q = String(seedSearch.value || '');
+          var filtered = seedAll.filter(function (s) { return matchesSeed(s, q); });
+          renderSeed(filtered);
+          if (statSeed) statSeed.textContent = fmtInt(filtered.length);
+        });
+      }
+
+      function renderImported(items, publishedBySlug) {
+        var out = document.getElementById('importedList');
+        if (!out) return;
+        if (!items || !items.length) {
+          out.innerHTML = (
+            '<div class="skill-card">' +
+              '<div class="skill-top">' +
+                '<div>' +
+                  '<div class="skill-title">No imported matches</div>' +
+                  '<div class="skill-meta"><span class="pill med">tip</span></div>' +
+                '</div>' +
+              '</div>' +
+              '<div class="skill-desc">Try clearing search/filters.</div>' +
+              '<div class="skill-actions">' +
+                '<a class="pill" href="/docs?doc=SKILLCARDS_AND_IMPORTER.md" data-keep-query="1">Docs</a>' +
+              '</div>' +
+            '</div>'
+          );
+          return;
+        }
+
+        // Best-effort cache for showing descriptions/bindings from SkillCard JSON.
+        if (!window.__apeclawSkillcardCache) window.__apeclawSkillcardCache = {};
+        var cache = window.__apeclawSkillcardCache;
+
+        function shortHash(h) {
+          var s = String(h || '').trim();
+          if (!s) return '';
+          if (s.length <= 14) return s;
+          return s.slice(0, 10) + '…' + s.slice(-4);
+        }
+
+        function guessSummary(it) {
+          // Index.json often has no description; give the user something meaningful.
+          var name = String(it && it.name ? it.name : '').toLowerCase();
+          var slug = String(it && it.slug ? it.slug : '').toLowerCase();
+          var s = name + ' ' + slug;
+          if (s.indexOf('bounty') !== -1) return 'ACP workflow: discover/post/poll/fulfill bounties (value-moving; strict opt-in).';
+          if (s.indexOf('bridge') !== -1) return 'Cross-chain workflow: quote and execute bridging with caps and confirmations.';
+          if (s.indexOf('nft') !== -1 || s.indexOf('opensea') !== -1) return 'NFT workflow: search/list/quote/buy with allowlist + policy gates.';
+          if (s.indexOf('wallet') !== -1 || s.indexOf('transfer') !== -1 || s.indexOf('swap') !== -1) return 'Wallet workflow: signing, transfers, swaps, or account management.';
+          return 'SkillCard imported from an external library. Click Details to view what it does.';
+        }
+
+        function detailsHtml(it, pub, cardObj) {
+          var title = escapeHtml(it.name || it.slug || 'Skill');
+          var slug = escapeHtml(it.slug || '');
+          var ver = escapeHtml(it.version || '');
+          var source = escapeHtml(it.source || it.mode || '');
+          var srcUrl = String(it.sourceUrl || '').trim();
+          var risk = Number(it.riskTier || 2);
+          var desc = '';
+          var bindings = 0;
+          var inputs = '';
+          if (cardObj && typeof cardObj === 'object') {
+            desc = String(cardObj.description || cardObj.desc || '').trim();
+            bindings = Array.isArray(cardObj.bindings) ? cardObj.bindings.length : 0;
+            try {
+              var req = (cardObj.inputs_schema && cardObj.inputs_schema.required && Array.isArray(cardObj.inputs_schema.required)) ? cardObj.inputs_schema.required : [];
+              inputs = req.length ? req.join(', ') : '';
+            } catch (e) {}
+          }
+          if (!desc) desc = String(it.description || it.desc || '').trim() || guessSummary(it);
+
+          var onchain = (pub && pub.skillId) ? ('<span class="pill nft">SkillNFT #' + escapeHtml(pub.skillId) + '</span>') : '<span class="pill off">Offchain</span>';
+          var mintTx = (pub && pub.txs && pub.txs.mint) ? String(pub.txs.mint) : '';
+          var pubTx = (pub && pub.txs && pub.txs.publish) ? String(pub.txs.publish) : '';
+          var uri = (pub && pub.uri) ? String(pub.uri) : '';
+
+          var html = '';
+          html += '<div class="note"><strong>' + title + '</strong></div>';
+          html += '<div class="note">' + onchain + ' ' + pillForRisk(risk) + '</div>';
+          html += '<div class="note">slug: <code>' + slug + '</code> · v<code>' + ver + '</code>' + (source ? (' · source: <code>' + source + '</code>') : '') + '</div>';
+          if (desc) html += '<div class="note" style="margin-top:10px">' + escapeHtml(desc) + '</div>';
+          if (bindings) html += '<div class="note">bindings: <code>' + String(bindings) + '</code></div>';
+          if (inputs) html += '<div class="note">inputs: <code>' + escapeHtml(inputs) + '</code></div>';
+          if (srcUrl) html += '<div class="note">source: <a href="' + escapeHtml(srcUrl) + '" target="_blank" rel="noopener">' + escapeHtml(srcUrl) + '</a></div>';
+          if (uri) html += '<div class="note">onchain uri: <code>' + escapeHtml(uri) + '</code></div>';
+          if (mintTx) html += '<div class="note">mint tx: <code>' + escapeHtml(mintTx) + '</code></div>';
+          if (pubTx) html += '<div class="note">publish tx: <code>' + escapeHtml(pubTx) + '</code></div>';
+          html += '<div class="note" style="margin-top:12px">Tip: use the pills on the card to copy curl/mint/publish commands.</div>';
+          return html;
+        }
+
+        function openDetails(it, pub, fileHref) {
+          var key = String(fileHref || it.fileName || it.slug || '');
+          if (key && cache[key]) {
+            openModal('Skill details', detailsHtml(it, pub, cache[key]), function () { closeModal(); }, function () {});
+            return;
+          }
+          // Show modal immediately, then upgrade once fetched.
+          openModal('Skill details', '<div class="loading">Loading SkillCard JSON…</div>', function () { closeModal(); }, function () {});
+          if (!fileHref) return;
+          fetch(apiBase + fileHref, { headers: { 'accept': 'application/json' } })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (j) {
+              if (key) cache[key] = j || {};
+              openModal('Skill details', detailsHtml(it, pub, j), function () { closeModal(); }, function () {});
+            })
+            .catch(function () {
+              openModal('Skill details', detailsHtml(it, pub, null), function () { closeModal(); }, function () {});
+            });
+        }
+
+        out.innerHTML = items.map(function (it) {
+          var risk = Number(it.riskTier || 2);
+          var pub = (publishedBySlug && it && it.slug && publishedBySlug[it.slug]) ? publishedBySlug[it.slug] : null;
+          var fileHref = it.fileName ? ('/skillcards/imported/' + String(it.fileName)) : '';
+          var sourceHref = String(it.sourceUrl || '').trim();
+          var rpc = localStorage.getItem('apeclaw_v2_rpc') || '';
+          var reg = localStorage.getItem('apeclaw_v2_registry') || '';
+          // Imported skills are local to the backend; for CLI usage, download the JSON first.
+          var dlCmd = it.fileName ? ('curl -fsSL \"' + apiBase + fileHref + '\" -o \"./skillcards/imported/' + String(it.fileName) + '\"') : '';
+          var pubCmd = it.fileName
+            ? ((rpc && reg)
+              ? ('ape-claw v2 skill publish --rpc \"' + String(rpc).trim() + '\" --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --registry \"' + String(reg).trim() + '\" --skillId <id> --file \"./skillcards/imported/' + String(it.fileName) + '\" --riskTier ' + String(Number(it.riskTier || 1)) + ' --json')
+              : ('ape-claw v2 skill publish --rpc <url> --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --registry <addr> --skillId <id> --file \"./skillcards/imported/' + String(it.fileName) + '\" --riskTier ' + String(Number(it.riskTier || 1)) + ' --json'))
+            : '';
+          var title = it.name || it.slug || 'Imported Skill';
+          var metaBits = [];
+          if (it.slug) metaBits.push('slug: ' + it.slug);
+          if (it.version) metaBits.push('v' + it.version);
+          if (it.source) metaBits.push(String(it.source));
+          if (it.mode && it.mode !== it.source) metaBits.push(String(it.mode));
+          var desc = String(it.description || it.desc || '').trim();
+          if (!desc) desc = guessSummary(it);
+
+          var nftPill = (pub && pub.skillId) ? ('<span class="pill nft">SkillNFT #' + escapeHtml(String(pub.skillId)) + '</span>') : '<span class="pill off">Offchain</span>';
+          var mintTx = (pub && pub.txs && pub.txs.mint) ? String(pub.txs.mint) : '';
+          var publishTx = (pub && pub.txs && pub.txs.publish) ? String(pub.txs.publish) : '';
+
+          return (
+            '<div class="skill-card" data-imported-file="' + escapeHtml(String(fileHref || '')) + '">' +
+              '<div class="skill-top">' +
+                '<div>' +
+                  '<div class="skill-title">' + escapeHtml(title) + '</div>' +
+                  '<div class="skill-meta">' +
+                    nftPill + ' ' + pillForRisk(risk) +
+                    (metaBits.length ? (' <span class="pill">' + escapeHtml(metaBits.join(' · ')) + '</span>') : '') +
+                  '</div>' +
+                '</div>' +
+                '<div class="skill-actions">' +
+                  (fileHref ? ('<a class="pill" href="' + escapeHtml(fileHref) + '" target="_blank" rel="noopener">JSON</a>') : '') +
+                  (sourceHref ? ('<a class="pill" href="' + escapeHtml(sourceHref) + '" target="_blank" rel="noopener">Source</a>') : '') +
+                '</div>' +
+              '</div>' +
+              '<div class="skill-desc">' + escapeHtml(desc) + '</div>' +
+              '<div class="skill-actions">' +
+                (dlCmd ? ('<a class="pill" href="#" data-copy="' + escapeHtml(dlCmd) + '">Copy curl</a>') : '') +
+                (pubCmd ? ('<a class="pill" href="#" data-copy="' + escapeHtml(pubCmd) + '">Copy publish</a>') : '') +
+                (mintTx ? ('<a class="pill nft" href="#" data-copy="' + escapeHtml(mintTx) + '" title="mint tx hash">Copy mint tx</a>') : '') +
+                (publishTx ? ('<a class="pill nft" href="#" data-copy="' + escapeHtml(publishTx) + '" title="publish tx hash">Copy publish tx</a>') : '') +
+                '<a class="pill" href="#" data-details="1">Details</a>' +
+              '</div>' +
+            '</div>'
+          );
+        }).join('');
+
+        // Details handler (local to imported grid; copy/delete handled globally).
+        try {
+          var cards = out.querySelectorAll('.skill-card');
+          for (var i = 0; i < cards.length; i++) {
+            (function () {
+              var idx = i;
+              var card = cards[idx];
+              var btn = card.querySelector('a[data-details]');
+              if (!btn) return;
+              btn.addEventListener('click', function (ev) {
+                ev.preventDefault();
+                var fileHref = card.getAttribute('data-imported-file') || '';
+                var it = items[idx];
+                var pub = (publishedBySlug && it && it.slug && publishedBySlug[it.slug]) ? publishedBySlug[it.slug] : null;
+                openDetails(it, pub, fileHref);
+              });
+            })();
+          }
+
+          // Auto-enhance a small batch with real SkillCard descriptions (best-effort).
+          // This avoids making the imported library feel like a plain list of slugs.
+          function trunc(s, n) {
+            var t = String(s || '').trim();
+            if (!t) return '';
+            return (t.length > n) ? (t.slice(0, n - 1) + '…') : t;
+          }
+          function extractDesc(obj) {
+            if (!obj || typeof obj !== 'object') return '';
+            var d = String(obj.description || obj.desc || '').trim();
+            return d;
+          }
+          var toLoad = [];
+          var AUTO_N = 18;
+          for (var j = 0; j < items.length && toLoad.length < AUTO_N; j++) {
+            var it2 = items[j];
+            var d0 = String(it2 && (it2.description || it2.desc) ? (it2.description || it2.desc) : '').trim();
+            var fh = it2 && it2.fileName ? ('/skillcards/imported/' + String(it2.fileName)) : '';
+            if (!fh) continue;
+            if (d0) continue;
+            if (cache[fh]) continue;
+            toLoad.push({ idx: j, fileHref: fh });
+          }
+          var inFlight = 0;
+          var q = toLoad.slice();
+          function pump() {
+            while (inFlight < 4 && q.length) {
+              (function () {
+                var job = q.shift();
+                inFlight++;
+                fetch(apiBase + job.fileHref, { headers: { 'accept': 'application/json' } })
+                  .then(function (r) { return r.ok ? r.json() : null; })
+                  .then(function (obj) {
+                    cache[job.fileHref] = obj || {};
+                    var d1 = extractDesc(obj);
+                    if (d1 && cards[job.idx]) {
+                      var el = cards[job.idx].querySelector('.skill-desc');
+                      if (el) el.textContent = trunc(d1, 220);
+                    }
+                  })
+                  .catch(function () {})
+                  .finally(function () {
+                    inFlight--;
+                    pump();
+                  });
+              })();
+            }
+          }
+          pump();
+        } catch (e) {}
+      }
+
+      function normalize(s) { return String(s || '').toLowerCase(); }
+      function matchesSearch(it, q) {
+        if (!q) return true;
+        var s = q.trim().toLowerCase();
+        if (!s) return true;
+        var hay = [
+          it.name, it.slug, it.source, it.mode, it.sourceUrl, it.fileName,
+        ].map(normalize).join(' ');
+        return hay.indexOf(s) !== -1;
+      }
+
+      // Optional: render imported skillcards if present (best-effort).
+      var importedSearch = document.getElementById('importedSearch');
+      var riskFilter = document.getElementById('riskFilter');
+      var onlyOnchain = document.getElementById('onlyOnchain');
+      var importedBadge = document.getElementById('importedBadge');
+      var importedAll = [];
+      var publishedBySlug = {};
+      function applyImportedFilters() {
+        var q = importedSearch ? String(importedSearch.value || '') : '';
+        var bucket = riskFilter ? String(riskFilter.value || 'all') : 'all';
+        var onchainOnly = Boolean(onlyOnchain && onlyOnchain.checked);
+        var filtered = importedAll.filter(function (it) {
+          if (!matchesSearch(it, q)) return false;
+          var b = riskBucket(it.riskTier || 2);
+          if (bucket !== 'all' && b !== bucket) return false;
+          if (onchainOnly) {
+            var pub = (it && it.slug && publishedBySlug[it.slug]) ? publishedBySlug[it.slug] : null;
+            if (!(pub && pub.txs && pub.txs.publish)) return false;
+          }
+          return true;
+        });
+        renderImported(filtered.slice(0, 200), publishedBySlug);
+        if (statImported) statImported.textContent = fmtInt(filtered.length);
+        if (importedBadge) {
+          var publishedCount = 0;
+          try {
+            for (var i = 0; i < filtered.length; i++) {
+              var p = (filtered[i] && filtered[i].slug) ? publishedBySlug[filtered[i].slug] : null;
+              if (p && p.txs && p.txs.publish) publishedCount++;
+            }
+          } catch (e) {}
+          importedBadge.textContent = filtered.length ? ('FOUND ' + filtered.length + (publishedCount ? (' · ONCHAIN ' + publishedCount) : '')) : 'NONE';
+        }
+      }
+      fetch('/skillcards/imported/index.json', { headers: { 'accept': 'application/json' } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          var arr = j && j.imported && Array.isArray(j.imported) ? j.imported : [];
+          importedAll = arr.filter(function (x) { return x && x.importOk; });
+          publishedBySlug = {};
+          try {
+            var pub = j && j.published && Array.isArray(j.published) ? j.published : [];
+            for (var i = 0; i < pub.length; i++) {
+              if (pub[i] && pub[i].slug) publishedBySlug[String(pub[i].slug)] = pub[i];
+            }
+          } catch (e) {}
+          var publishedTotal = 0;
+          try {
+            for (var k in publishedBySlug) {
+              if (!Object.prototype.hasOwnProperty.call(publishedBySlug, k)) continue;
+              var p0 = publishedBySlug[k];
+              if (p0 && p0.txs && p0.txs.publish) publishedTotal++;
+            }
+          } catch (e) {}
+          if (statImported) statImported.textContent = fmtInt(importedAll.length);
+          if (statPublished) statPublished.textContent = fmtInt(publishedTotal);
+          applyImportedFilters();
+        })
+        .catch(function () {
+          if (importedBadge) importedBadge.textContent = 'NONE';
+        });
+
+      if (importedSearch) {
+        importedSearch.addEventListener('input', applyImportedFilters);
+      }
+      if (riskFilter) riskFilter.addEventListener('change', applyImportedFilters);
+      if (onlyOnchain) onlyOnchain.addEventListener('change', applyImportedFilters);
+
+      // ── User-submitted skills (server-side library) ────────────────────────
+      var authAgentId = document.getElementById('authAgentId');
+      var authAgentToken = document.getElementById('authAgentToken');
+      var saveAuthBtn = document.getElementById('saveAuthBtn');
+      var checkAuthBtn = document.getElementById('checkAuthBtn');
+      var clearAuthBtn = document.getElementById('clearAuthBtn');
+      var authStatus = document.getElementById('authStatus');
+
+      var skillJson = document.getElementById('skillJson');
+      var skillSourceUrl = document.getElementById('skillSourceUrl');
+      var loadFromUrlBtn = document.getElementById('loadFromUrlBtn');
+      var validateSkillBtn = document.getElementById('validateSkillBtn');
+      var addSkillBtn = document.getElementById('addSkillBtn');
+      var skillPreview = document.getElementById('skillPreview');
+      var addSkillStatus = document.getElementById('addSkillStatus');
+      var templateSelect = document.getElementById('templateSelect');
+      var loadTemplateBtn = document.getElementById('loadTemplateBtn');
+      var formatJsonBtn = document.getElementById('formatJsonBtn');
+
+      var userBadge = document.getElementById('userBadge');
+      var userSkillSearch = document.getElementById('userSkillSearch');
+      var userSkillList = document.getElementById('userSkillList');
+
+      var v2RpcUrl = document.getElementById('v2RpcUrl');
+      var v2SkillNft = document.getElementById('v2SkillNft');
+      var v2Registry = document.getElementById('v2Registry');
+      var royaltyReceiver = document.getElementById('royaltyReceiver');
+      var royaltyBps = document.getElementById('royaltyBps');
+      var saveV2SettingsBtn = document.getElementById('saveV2SettingsBtn');
+      var v2SettingsNote = document.getElementById('v2SettingsNote');
+
+      var userSkillsAll = [];
+
+      function setText(el, v) { if (el) el.textContent = String(v || ''); }
+      function setHtml(el, v) { if (el) el.innerHTML = String(v || ''); }
+      function flash(msg, isErr) {
+        setText(addSkillStatus, msg);
+        if (!addSkillStatus) return;
+        try { addSkillStatus.style.color = isErr ? '#ffd1d1' : '#d4e6fa'; } catch (e) {}
+        setTimeout(function(){ setText(addSkillStatus, ''); }, isErr ? 2400 : 1400);
+      }
+
+      function loadAuth() {
+        try {
+          var id = localStorage.getItem('apeclaw_skill_agent_id') || '';
+          var tok = localStorage.getItem('apeclaw_skill_agent_token') || '';
+          if (authAgentId) authAgentId.value = id;
+          if (authAgentToken) authAgentToken.value = tok;
+          if (authStatus) authStatus.textContent = (id && tok) ? ('Auth: set for ' + id) : 'Auth: not set';
+        } catch (e) {
+          if (authStatus) authStatus.textContent = 'Auth: unavailable';
+        }
+      }
+      function saveAuth() {
+        var id = authAgentId ? String(authAgentId.value || '').trim() : '';
+        var tok = authAgentToken ? String(authAgentToken.value || '').trim() : '';
+        try {
+          localStorage.setItem('apeclaw_skill_agent_id', id);
+          localStorage.setItem('apeclaw_skill_agent_token', tok);
+        } catch (e) {}
+        if (authStatus) authStatus.textContent = (id && tok) ? ('Auth: set for ' + id) : 'Auth: not set';
+      }
+      function clearAuth() {
+        try {
+          localStorage.removeItem('apeclaw_skill_agent_id');
+          localStorage.removeItem('apeclaw_skill_agent_token');
+        } catch (e) {}
+        if (authAgentId) authAgentId.value = '';
+        if (authAgentToken) authAgentToken.value = '';
+        if (authStatus) authStatus.textContent = 'Auth: not set';
+      }
+
+      function checkAuth() {
+        var id = authAgentId ? String(authAgentId.value || '').trim() : '';
+        var tok = authAgentToken ? String(authAgentToken.value || '').trim() : '';
+        if (!(id && tok)) {
+          if (authStatus) authStatus.textContent = 'Auth: not set';
+          return;
+        }
+        if (authStatus) authStatus.textContent = 'Auth: checking...';
+        fetch(apiBase + '/api/skillcards/user/auth-check', { headers: authHeaders() })
+          .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, json: j }; }); })
+          .then(function (out) {
+            if (out.ok && out.json && out.json.ok) {
+              if (authStatus) authStatus.textContent = 'Auth: verified (' + String(out.json.mode || 'ok') + ') for ' + id;
+            } else {
+              if (authStatus) authStatus.textContent = 'Auth: invalid for ' + id;
+            }
+          })
+          .catch(function () {
+            if (authStatus) authStatus.textContent = 'Auth: check failed';
+          });
+      }
+
+      function loadV2Settings() {
+        try {
+          var rpc = localStorage.getItem('apeclaw_v2_rpc') || '';
+          var nft = localStorage.getItem('apeclaw_v2_skillnft') || '';
+          var reg = localStorage.getItem('apeclaw_v2_registry') || '';
+          var rr = localStorage.getItem('apeclaw_v2_royalty_receiver') || '';
+          var rb = localStorage.getItem('apeclaw_v2_royalty_bps') || '500';
+          if (v2RpcUrl) v2RpcUrl.value = rpc;
+          if (v2SkillNft) v2SkillNft.value = nft;
+          if (v2Registry) v2Registry.value = reg;
+          if (royaltyReceiver) royaltyReceiver.value = rr;
+          if (royaltyBps) royaltyBps.value = rb;
+          if (v2SettingsNote) v2SettingsNote.textContent = 'Mint/publish commands use env var `APE_CLAW_V2_PRIVATE_KEY` (never paste keys here).';
+        } catch (e) {}
+      }
+      function saveV2Settings() {
+        try {
+          localStorage.setItem('apeclaw_v2_rpc', v2RpcUrl ? String(v2RpcUrl.value || '').trim() : '');
+          localStorage.setItem('apeclaw_v2_skillnft', v2SkillNft ? String(v2SkillNft.value || '').trim() : '');
+          localStorage.setItem('apeclaw_v2_registry', v2Registry ? String(v2Registry.value || '').trim() : '');
+          localStorage.setItem('apeclaw_v2_royalty_receiver', royaltyReceiver ? String(royaltyReceiver.value || '').trim() : '');
+          localStorage.setItem('apeclaw_v2_royalty_bps', royaltyBps ? String(royaltyBps.value || '').trim() : '');
+        } catch (e) {}
+        flash('Saved v2 settings');
+      }
+
+      function authHeaders() {
+        var h = { 'content-type': 'application/json', 'accept': 'application/json' };
+        var id = authAgentId ? String(authAgentId.value || '').trim() : '';
+        var tok = authAgentToken ? String(authAgentToken.value || '').trim() : '';
+        if (id && tok) {
+          h['x-agent-id'] = id;
+          h['x-agent-token'] = tok;
+        }
+        return h;
+      }
+
+      function parseSkillCardJson() {
+        var raw = skillJson ? String(skillJson.value || '') : '';
+        if (!raw.trim()) throw new Error('paste a SkillCard JSON first');
+        var obj;
+        try { obj = JSON.parse(raw); } catch (e) { throw new Error('invalid JSON'); }
+        if (!obj || typeof obj !== 'object') throw new Error('SkillCard must be a JSON object');
+        var name = String(obj.name || '').trim();
+        if (!name) throw new Error('skillcard.name is required');
+        var slug = toSlug(obj.slug || name);
+        if (!slug) throw new Error('skillcard.slug is required');
+        var version = String(obj.version || '1.0.0').trim();
+        if (!/^[0-9]+(\\.[0-9]+){0,3}([\\-+][0-9A-Za-z._-]+)?$/.test(version)) throw new Error('skillcard.version must look like semver');
+        var riskTier = Number(obj && obj.constraints && typeof obj.constraints.riskTier !== 'undefined' ? obj.constraints.riskTier : (obj.riskTier || 2));
+        if (!isFinite(riskTier)) riskTier = 2;
+        riskTier = Math.max(1, Math.min(3, Math.round(riskTier)));
+        var bindings = Array.isArray(obj.bindings) ? obj.bindings : [];
+        return { obj: obj, name: name, slug: slug, version: version, riskTier: riskTier, bindingsCount: bindings.length };
+      }
+
+      function containsSecretLikeText(raw) {
+        var s = String(raw || '');
+        // Lightweight heuristic: we only warn; we do not block if user insists.
+        return /(privateKey|private_key|mnemonic|seed phrase|apiKey|api_key|x-agent-token|authorization\\s*:|bearer\\s+|-----BEGIN)/i.test(s);
+      }
+
+      function renderPreview() {
+        try {
+          var p = parseSkillCardJson();
+          var warn = containsSecretLikeText(skillJson ? skillJson.value : '') ? ' · WARNING: looks like secrets present' : '';
+          setText(skillPreview, 'Preview: ' + p.name + ' · slug: ' + p.slug + ' · v' + p.version + ' · risk: ' + p.riskTier + ' · bindings: ' + p.bindingsCount + warn);
+        } catch (e) {
+          setText(skillPreview, 'Preview: ' + (e && e.message ? e.message : 'invalid'));
+        }
+      }
+
+      function formatJson() {
+        if (!skillJson) return;
+        try {
+          var p = parseSkillCardJson();
+          skillJson.value = JSON.stringify(p.obj, null, 2);
+          renderPreview();
+          flash('Formatted JSON');
+        } catch (e) {
+          flash('Format failed: ' + (e && e.message ? e.message : 'invalid'), true);
+        }
+      }
+
+      function loadTemplate(kind) {
+        var riskTier = 2;
+        var desc = 'Describe what this skill does.';
+        var bindings = [{ type: 'cli', command: 'echo \"replace with your command\"' }];
+        if (kind === 'low') { riskTier = 1; desc = 'Read-only / browse / summarize. No spend, no writes.'; }
+        if (kind === 'high') { riskTier = 3; desc = 'Spend / escrow / irreversible writes. Strict opt-in.'; }
+        if (kind === 'med') { riskTier = 2; desc = 'Writes / automation with caps. Confirm phrases recommended.'; }
+        var obj = {
+          name: 'New Skill',
+          slug: 'new-skill',
+          version: '1.0.0',
+          description: desc,
+          bindings: bindings,
+          constraints: { riskTier: riskTier },
+        };
+        if (skillJson) skillJson.value = JSON.stringify(obj, null, 2);
+        renderPreview();
+        flash('Loaded template');
+      }
+
+      function loadFromUrl() {
+        var url = skillSourceUrl ? String(skillSourceUrl.value || '').trim() : '';
+        if (!url) { flash('Enter a URL first', true); return; }
+        flash('Loading URL...');
+        fetch(url, { headers: { 'accept': 'application/json' } })
+          .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+          .then(function (t) {
+            if (skillJson) skillJson.value = t;
+            renderPreview();
+            flash('Loaded JSON from URL');
+          })
+          .catch(function (e) { flash('Load URL failed: ' + (e && e.message ? e.message : 'failed'), true); });
+      }
+
+      function matchesUserSkill(it, q) {
+        if (!q) return true;
+        var s = q.trim().toLowerCase();
+        if (!s) return true;
+        var hay = [it.name, it.slug, it.version, it.description].map(function (x) { return String(x || '').toLowerCase(); }).join(' ');
+        return hay.indexOf(s) !== -1;
+      }
+
+      function copyText(txt) {
+        try {
+          return Promise.resolve(navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(String(txt || '')) : null);
+        } catch (e) {
+          return Promise.resolve(null);
+        }
+      }
+
+      function renderUserSkills(items) {
+        if (!userSkillList) return;
+        var arr = Array.isArray(items) ? items : [];
+        if (userBadge) userBadge.textContent = arr.length ? ('FOUND ' + arr.length) : 'NONE';
+        if (statUser) statUser.textContent = fmtInt(arr.length);
+        if (!arr.length) {
+          setHtml(userSkillList,
+            '<div class="item">' +
+              '<div>' +
+                '<strong>No submissions yet</strong> <span class="pill med">tip</span>' +
+                '<div class="meta">Submit a SkillCard JSON on the left, then it will show up here.</div>' +
+              '</div>' +
+              '<div class="links">' +
+                '<a class="pill" href="/docs?doc=SKILLCARDS_AND_IMPORTER.md" data-keep-query="1">Docs</a>' +
+              '</div>' +
+            '</div>'
+          );
+          return;
+        }
+        setHtml(userSkillList, arr.map(function (it) {
+          var risk = Number(it.riskTier || 2);
+          var fileHref = it.fileName ? ('/skillcards/user/' + encodeURIComponent(String(it.fileName))) : '';
+          var created = it.createdAt ? (' · ' + String(it.createdAt)) : '';
+          var onchainMeta = (it.onchain && it.onchain.skillId) ? (' · onchain: skillId=' + String(it.onchain.skillId)) : '';
+          var meta = ['slug: ' + (it.slug || '?'), 'v' + (it.version || '?')].join(' · ') + onchainMeta + created;
+          var dlCmd = fileHref ? ('curl -fsSL \"' + apiBase + fileHref + '\" -o \"./skillcards/user/' + String(it.fileName) + '\"') : '';
+          var rpc = v2RpcUrl ? String(v2RpcUrl.value || '').trim() : '';
+          var nft = v2SkillNft ? String(v2SkillNft.value || '').trim() : '';
+          var reg = v2Registry ? String(v2Registry.value || '').trim() : '';
+          var rr = royaltyReceiver ? String(royaltyReceiver.value || '').trim() : '';
+          var rb = royaltyBps ? String(royaltyBps.value || '').trim() : '';
+          var mintCmd = (rpc && nft && reg)
+            ? ('ape-claw v2 skill mint --rpc \"' + rpc + '\" --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --skillNft \"' + nft + '\" --registry \"' + reg + '\"' + (rr && rb ? (' --royalty-receiver \"' + rr + '\" --royalty-bps ' + rb) : '') + ' --json')
+            : ('ape-claw v2 skill mint --rpc <url> --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --skillNft <addr> --registry <addr> --json');
+          var pubCmd = it.fileName
+            ? ((rpc && reg)
+              ? ('ape-claw v2 skill publish --rpc \"' + rpc + '\" --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --registry \"' + reg + '\" --skillId <id> --file \"./skillcards/user/' + String(it.fileName) + '\" --riskTier ' + String(Number(it.riskTier || 1)) + ' --json')
+              : ('ape-claw v2 skill publish --rpc <url> --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --registry <addr> --skillId <id> --file \"./skillcards/user/' + String(it.fileName) + '\" --riskTier ' + String(Number(it.riskTier || 1)) + ' --json'))
+            : '';
+          return (
+            '<div class="item">' +
+              '<div>' +
+                '<strong>' + escapeHtml(it.name || it.slug || 'Skill') + '</strong> ' + pillForRisk(risk) +
+                '<div class="meta">' + escapeHtml(meta) + '</div>' +
+                (it.description ? ('<div class="meta">' + escapeHtml(String(it.description)) + '</div>') : '') +
+              '</div>' +
+              '<div class="links">' +
+                (fileHref ? ('<a class="pill" href="' + escapeHtml(fileHref) + '" target="_blank" rel="noopener">JSON</a>') : '') +
+                (fileHref ? ('<a class="pill" href="' + escapeHtml(fileHref) + '" download>Download</a>') : '') +
+                (dlCmd ? ('<a class="pill" href="#" data-copy="' + escapeHtml(dlCmd) + '">Copy curl</a>') : '') +
+                ('<a class="pill" href="#" data-copy="' + escapeHtml(mintCmd) + '">Copy mint</a>') +
+                (pubCmd ? ('<a class="pill" href="#" data-copy="' + escapeHtml(pubCmd) + '">Copy publish</a>') : '') +
+                (it.fileName ? ('<a class="pill" href="#" data-mark="' + escapeHtml(String(it.fileName)) + '">Set onchain</a>') : '') +
+                (it.fileName ? ('<a class="pill" href="#" data-delete="' + escapeHtml(String(it.fileName)) + '">Delete</a>') : '') +
+              '</div>' +
+            '</div>'
+          );
+        }).join(''));
+
+        // Attach copy/delete handlers.
+        // Handlers are delegated globally (see below).
+      }
+
+      function loadUserSkills() {
+        fetch(apiBase + '/api/skillcards/user', { headers: { 'accept': 'application/json' } })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (j) {
+            userSkillsAll = (j && j.skills && Array.isArray(j.skills)) ? j.skills : [];
+            renderUserSkills(userSkillsAll);
+          })
+          .catch(function () {
+            if (userBadge) userBadge.textContent = 'NONE';
+          });
+      }
+
+      function addUserSkill() {
+        var id = authAgentId ? String(authAgentId.value || '').trim() : '';
+        var tok = authAgentToken ? String(authAgentToken.value || '').trim() : '';
+        if (!(id && tok)) {
+          flash('Set auth (x-agent-id/x-agent-token) to submit skills to this backend.', true);
+          return;
+        }
+        var parsed;
+        try { parsed = parseSkillCardJson(); } catch (e) { flash(e.message || 'invalid', true); return; }
+        if (containsSecretLikeText(skillJson ? skillJson.value : '')) {
+          var ok = confirm('This SkillCard looks like it may contain secrets. SkillCards should be public. Continue anyway?');
+          if (!ok) return;
+        }
+        var source = skillSourceUrl ? String(skillSourceUrl.value || '').trim() : '';
+        fetch(apiBase + '/api/skillcards/user/add', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ skillcard: parsed.obj, sourceUrl: source }),
+        }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, json: j }; }); })
+          .then(function (out) {
+            if (!out.ok || !out.json || !out.json.ok) throw new Error((out.json && out.json.error) ? out.json.error : 'submit failed');
+            flash('Added: ' + (out.json.entry && out.json.entry.fileName ? out.json.entry.fileName : 'ok'));
+            if (skillJson) skillJson.value = '';
+            if (skillSourceUrl) skillSourceUrl.value = '';
+            renderPreview();
+            loadUserSkills();
+          })
+          .catch(function (e) {
+            flash('Error: ' + (e && e.message ? e.message : 'failed'), true);
+          });
+      }
+
+      function deleteUserSkill(fileName) {
+        var id = authAgentId ? String(authAgentId.value || '').trim() : '';
+        var tok = authAgentToken ? String(authAgentToken.value || '').trim() : '';
+        if (!(id && tok)) {
+          flash('Set auth (x-agent-id/x-agent-token) to delete skills.', true);
+          return;
+        }
+        fetch(apiBase + '/api/skillcards/user/delete', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ fileName: fileName }),
+        }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, json: j }; }); })
+          .then(function (out) {
+            if (!out.ok || !out.json || !out.json.ok) throw new Error((out.json && out.json.error) ? out.json.error : 'delete failed');
+            flash('Deleted: ' + fileName);
+            loadUserSkills();
+          })
+          .catch(function (e) {
+            flash('Error: ' + (e && e.message ? e.message : 'failed'), true);
+          });
+      }
+
+      function markOnchain(fileName) {
+        var id = authAgentId ? String(authAgentId.value || '').trim() : '';
+        var tok = authAgentToken ? String(authAgentToken.value || '').trim() : '';
+        if (!(id && tok)) {
+          flash('Set auth (x-agent-id/x-agent-token) to mark onchain status.', true);
+          return;
+        }
+        openModal(
+          'Set onchain status',
+          '<div class="note">Record the onchain <code>skillId</code> (and optional tx hash) so the UI can display it. This does not execute any chain calls.</div>' +
+          '<label>Skill ID (number)</label>' +
+          '<input id="mSkillId" type="text" placeholder="e.g. 12">' +
+          '<label>Tx hash (optional)</label>' +
+          '<input id="mTxHash" type="text" placeholder="0x...">' +
+          '<div class="note">File: <code>' + escapeHtml(fileName) + '</code></div>',
+          function () {
+            var elSid = document.getElementById('mSkillId');
+            var elTx = document.getElementById('mTxHash');
+            var sid = Number(String(elSid ? elSid.value : '').trim());
+            if (!isFinite(sid) || sid <= 0) {
+              showToast('Invalid skillId', true);
+              return;
+            }
+            var txHash = String(elTx ? elTx.value : '').trim();
+            fetch(apiBase + '/api/skillcards/user/mark-onchain', {
+              method: 'POST',
+              headers: authHeaders(),
+              body: JSON.stringify({ fileName: fileName, skillId: Math.floor(sid), txHash: txHash }),
+            }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, json: j }; }); })
+              .then(function (out) {
+                if (!out.ok || !out.json || !out.json.ok) throw new Error((out.json && out.json.error) ? out.json.error : 'mark failed');
+                closeModal();
+                showToast('Onchain set (skillId=' + Math.floor(sid) + ')');
+                loadUserSkills();
+              })
+              .catch(function (e) {
+                showToast('Error: ' + (e && e.message ? e.message : 'failed'), true);
+              });
+          },
+          function () {}
+        );
+      }
+
+      loadAuth();
+      loadV2Settings();
+      if (saveAuthBtn) saveAuthBtn.addEventListener('click', function(){ saveAuth(); });
+      if (checkAuthBtn) checkAuthBtn.addEventListener('click', function(){ saveAuth(); checkAuth(); });
+      if (clearAuthBtn) clearAuthBtn.addEventListener('click', function(){ clearAuth(); });
+      if (validateSkillBtn) validateSkillBtn.addEventListener('click', function(){ renderPreview(); });
+      if (addSkillBtn) addSkillBtn.addEventListener('click', function(){ saveAuth(); addUserSkill(); });
+      if (saveV2SettingsBtn) saveV2SettingsBtn.addEventListener('click', function(){ saveV2Settings(); loadUserSkills(); });
+      if (formatJsonBtn) formatJsonBtn.addEventListener('click', function(){ formatJson(); });
+      if (loadTemplateBtn) loadTemplateBtn.addEventListener('click', function(){
+        var k = templateSelect ? String(templateSelect.value || '').trim() : '';
+        if (!k) { flash('Choose a template first', true); return; }
+        loadTemplate(k);
+      });
+      if (loadFromUrlBtn) loadFromUrlBtn.addEventListener('click', function(){ loadFromUrl(); });
+      if (skillJson) skillJson.addEventListener('input', function(){ renderPreview(); });
+
+      if (userSkillSearch) {
+        userSkillSearch.addEventListener('input', function () {
+          var q = String(userSkillSearch.value || '');
+          var filtered = userSkillsAll.filter(function (it) { return matchesUserSkill(it, q); });
+          renderUserSkills(filtered);
+        });
+      }
+      loadUserSkills();
+      checkAuth();
+
+      // Global delegated handlers for copy/delete/mark actions across all sections.
+      document.addEventListener('click', function (ev) {
+        var a = ev && ev.target ? ev.target.closest('a') : null;
+        if (!a) return;
+        var txt = a.getAttribute('data-copy');
+        if (txt) {
+          ev.preventDefault();
+          copyText(txt);
+          showToast('Copied to clipboard');
+          return;
+        }
+        var del = a.getAttribute('data-delete');
+        if (del) {
+          ev.preventDefault();
+          openModal(
+            'Delete submitted skill',
+            '<div class="note">This removes the stored SkillCard JSON from this backend.</div>' +
+            '<div class="danger-note" style="margin-top:10px">Delete: <code>' + escapeHtml(del) + '</code></div>',
+            function () { closeModal(); deleteUserSkill(del); },
+            function () {}
+          );
+          return;
+        }
+        var mark = a.getAttribute('data-mark');
+        if (mark) {
+          ev.preventDefault();
+          markOnchain(mark);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
+

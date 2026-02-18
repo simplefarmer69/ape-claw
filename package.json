@@ -18,10 +18,13 @@
   "files": [
     "src/**",
     "ui/**",
+    "docs/**",
     "config/policy.example.json",
     "config/clawbots.example.json",
     "allowlists/recommended.apechain.json",
     "allowlists/opensea-slug-overrides.json",
+    "skillcards/seed/**",
+    "skillcards/import-sources.json",
     ".cursor/skills/ape-claw/SKILL.md",
     "README.md"
   ],
@@ -29,14 +32,21 @@
     "ape-claw": "src/cli.mjs"
   },
   "scripts": {
-    "test": "node --test",
+    "test": "hardhat compile && node --test",
     "test:install": "bash ./scripts/test-install.sh",
     "telemetry": "node ./src/telemetry-server.mjs",
     "start:ui": "node ./src/telemetry-server.mjs",
+    "contracts:compile": "hardhat compile",
+    "contracts:test": "hardhat test nodejs",
+    "contracts:test:solidity": "hardhat test solidity",
+    "contracts:seed": "hardhat run ./contracts-scripts/deploy-and-seed-v2-alpha.js",
+    "contracts:seed:apechain": "hardhat run ./contracts-scripts/deploy-and-seed-v2-alpha.js --network apechain",
     "doctor": "node ./src/cli.mjs doctor --json",
     "resolve:opensea-ca": "node ./scripts/resolve-ca-opensea.mjs",
     "audit:allowlist": "node ./src/cli.mjs allowlist audit --json",
     "audit:relay-rpcs": "node ./scripts/audit-relay-rpcs.mjs",
+    "skillcards:import": "node ./scripts/import-skillcards.mjs",
+    "skillcards:import:publish": "node ./scripts/import-skillcards.mjs --publish",
     "prepublishOnly": "npm test"
   },
   "engines": {
@@ -45,5 +55,11 @@
   "dependencies": {
     "opensea-js": "^8.0.15",
     "viem": "^2.45.3"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-node-test-runner": "^3.0.8",
+    "@nomicfoundation/hardhat-viem": "^3.0.2",
+    "@openzeppelin/contracts": "^5.4.0",
+    "hardhat": "^3.1.8"
   }
 }

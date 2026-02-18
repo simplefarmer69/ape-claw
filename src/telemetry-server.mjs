@@ -2,7 +2,7 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
-import { ROOT as PROJECT_ROOT, EVENTS_PATH, ALLOWLIST_PATH, POLICY_PATH, OPENSEA_OVERRIDES_PATH, CLAWBOTS_PATH, CHAT_PATH, INVITES_PATH } from "./lib/paths.mjs";
+import { ROOT as PROJECT_ROOT, STATE_DIR, EVENTS_PATH, ALLOWLIST_PATH, POLICY_PATH, OPENSEA_OVERRIDES_PATH, CLAWBOTS_PATH, CHAT_PATH, INVITES_PATH } from "./lib/paths.mjs";
 import { ensureDir } from "./lib/io.mjs";
 import { verifyClawbot, registerClawbot } from "./lib/clawbots.mjs";
 
@@ -30,6 +30,46 @@ ensureDir(path.dirname(EVENTS_PATH));
 if (!fs.existsSync(EVENTS_PATH)) fs.writeFileSync(EVENTS_PATH, "");
 if (!fs.existsSync(CHAT_PATH)) fs.writeFileSync(CHAT_PATH, "");
 ensureDir(path.dirname(INVITES_PATH));
+
+// User-submitted SkillCards (stored server-side; no secrets).
+const SKILLCARDS_USER_DIR = path.join(STATE_DIR, "skillcards-user");
+const SKILLCARDS_USER_INDEX_PATH = path.join(SKILLCARDS_USER_DIR, "index.json");
+ensureDir(SKILLCARDS_USER_DIR);
+if (!fs.existsSync(SKILLCARDS_USER_INDEX_PATH)) {
+  fs.writeFileSync(SKILLCARDS_USER_INDEX_PATH, JSON.stringify({ skills: [] }, null, 2));
+}
+
+function safeVersion(v) {
+  const s = String(v || "").trim();
+  if (!s) return "";
+  // Keep filenames safe and predictable.
+  if (!/^[0-9]+(\.[0-9]+){0,3}([\-+][0-9A-Za-z._-]+)?$/.test(s)) return "";
+  return s;
+}
+
+function atomicWriteJson(filePath, data) {
+  ensureDir(path.dirname(filePath));
+  const tmp = `${filePath}.${randomUUID().slice(0, 8)}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
+  fs.renameSync(tmp, filePath);
+}
+
+function requireSkillWriteAuth(req) {
+  // Allow either admin key OR an authenticated clawbot.
+  const adminKey = String(req.headers["x-registration-key"] || "").trim();
+  if (adminKey && REGISTRATION_KEY && adminKey === REGISTRATION_KEY) {
+    return { ok: true, mode: "admin", agentId: null };
+  }
+  const agentId = String(req.headers["x-agent-id"] || "").trim();
+  const agentToken = String(req.headers["x-agent-token"] || "").trim();
+  if (agentId && agentToken) {
+    try {
+      const v = verifyClawbot(agentId, agentToken);
+      if (v?.ok) return { ok: true, mode: "agent", agentId };
+    } catch {}
+  }
+  return { ok: false, mode: "none", agentId: null };
+}
 
 function sendSse(res, evt) {
   res.write(`data: ${JSON.stringify(evt)}\n\n`);
@@ -516,6 +556,149 @@ const server = http.createServer((req, res) => {
   if (pathname === "/api/policy") {
     return serveJson(res, POLICY_PATH);
   }
+  if (pathname === "/api/skillcards/user" && req.method === "GET") {
+    try {
+      const raw = JSON.parse(fs.readFileSync(SKILLCARDS_USER_INDEX_PATH, "utf8"));
+      const skills = Array.isArray(raw?.skills) ? raw.skills : [];
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: true, skills }));
+    } catch (err) {
+      res.writeHead(500, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: false, error: err.message || "failed to load index" }));
+    }
+  }
+  if (pathname === "/api/skillcards/user/auth-check" && req.method === "GET") {
+    const auth = requireSkillWriteAuth(req);
+    res.writeHead(auth.ok ? 200 : 401, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+    return res.end(JSON.stringify({
+      ok: auth.ok,
+      mode: auth.mode,
+      agentId: auth.agentId,
+    }));
+  }
+  if (pathname === "/api/skillcards/user/add" && req.method === "POST") {
+    const auth = requireSkillWriteAuth(req);
+    if (!auth.ok) {
+      res.writeHead(401, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: false, error: "unauthorized (set x-agent-id/x-agent-token or x-registration-key)" }));
+    }
+    readRequestBody(req).then((body) => {
+      const skillcard = body?.skillcard || body?.card || body;
+      if (!skillcard || typeof skillcard !== "object") throw new Error("missing skillcard object");
+
+      const name = String(skillcard.name || "").trim();
+      if (!name) throw new Error("skillcard.name required");
+      const slug = toSlug(skillcard.slug || name);
+      if (!slug) throw new Error("skillcard.slug required");
+
+      const version = safeVersion(skillcard.version || "1.0.0");
+      if (!version) throw new Error("skillcard.version invalid (expected semver-ish)");
+
+      const desc = String(skillcard.description || "").trim();
+      const riskTierRaw = Number(skillcard?.constraints?.riskTier ?? skillcard?.riskTier ?? 2);
+      const riskTier = Number.isFinite(riskTierRaw) ? Math.max(1, Math.min(3, Math.round(riskTierRaw))) : 2;
+      const createdAt = new Date().toISOString();
+      const sourceUrl = String(body?.sourceUrl || skillcard?.provenance?.sourceUrl || "").trim();
+
+      // Persist SkillCard JSON.
+      const fileName = `${slug}.v${version}.json`;
+      const filePath = path.join(SKILLCARDS_USER_DIR, fileName);
+      const payload = { ...skillcard, slug, version, name, description: desc };
+      fs.writeFileSync(filePath, JSON.stringify(payload, null, 2));
+
+      // Update index (append-only by default; replace if exact file exists).
+      const idx = JSON.parse(fs.readFileSync(SKILLCARDS_USER_INDEX_PATH, "utf8"));
+      const skills = Array.isArray(idx?.skills) ? idx.skills : [];
+      const entry = {
+        fileName,
+        name,
+        slug,
+        version,
+        description: desc,
+        riskTier,
+        sourceUrl,
+        createdAt,
+        addedBy: auth.mode,
+        addedByAgentId: auth.agentId,
+      };
+      const next = skills.filter((s) => String(s?.fileName || "") !== fileName);
+      next.unshift(entry);
+      atomicWriteJson(SKILLCARDS_USER_INDEX_PATH, { skills: next });
+
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: true, entry, fileHref: `/skillcards/user/${encodeURIComponent(fileName)}` }));
+    }).catch((err) => {
+      res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: false, error: err.message || "invalid request" }));
+    });
+    return;
+  }
+  if (pathname === "/api/skillcards/user/delete" && req.method === "POST") {
+    const auth = requireSkillWriteAuth(req);
+    if (!auth.ok) {
+      res.writeHead(401, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: false, error: "unauthorized" }));
+    }
+    readRequestBody(req).then((body) => {
+      const fileName = String(body?.fileName || "").trim();
+      if (!fileName || fileName.includes("..") || fileName.includes("/") || fileName.includes("\\")) {
+        throw new Error("invalid fileName");
+      }
+      const filePath = path.join(SKILLCARDS_USER_DIR, fileName);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      const idx = JSON.parse(fs.readFileSync(SKILLCARDS_USER_INDEX_PATH, "utf8"));
+      const skills = Array.isArray(idx?.skills) ? idx.skills : [];
+      const next = skills.filter((s) => String(s?.fileName || "") !== fileName);
+      atomicWriteJson(SKILLCARDS_USER_INDEX_PATH, { skills: next });
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: true }));
+    }).catch((err) => {
+      res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: false, error: err.message || "invalid request" }));
+    });
+    return;
+  }
+  if (pathname === "/api/skillcards/user/mark-onchain" && req.method === "POST") {
+    const auth = requireSkillWriteAuth(req);
+    if (!auth.ok) {
+      res.writeHead(401, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: false, error: "unauthorized" }));
+    }
+    readRequestBody(req).then((body) => {
+      const fileName = String(body?.fileName || "").trim();
+      if (!fileName || fileName.includes("..") || fileName.includes("/") || fileName.includes("\\")) {
+        throw new Error("invalid fileName");
+      }
+      const skillIdNum = Number(body?.skillId);
+      if (!Number.isFinite(skillIdNum) || skillIdNum <= 0) throw new Error("invalid skillId");
+      const txHash = String(body?.txHash || "").trim();
+      const idx = JSON.parse(fs.readFileSync(SKILLCARDS_USER_INDEX_PATH, "utf8"));
+      const skills = Array.isArray(idx?.skills) ? idx.skills : [];
+      let found = false;
+      const next = skills.map((s) => {
+        if (String(s?.fileName || "") !== fileName) return s;
+        found = true;
+        return {
+          ...s,
+          onchain: {
+            skillId: Math.floor(skillIdNum),
+            txHash,
+            markedAt: new Date().toISOString(),
+          },
+        };
+      });
+      if (!found) throw new Error("skill not found");
+      atomicWriteJson(SKILLCARDS_USER_INDEX_PATH, { skills: next });
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: true }));
+    }).catch((err) => {
+      res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: false, error: err.message || "invalid request" }));
+    });
+    return;
+  }
   if (pathname === "/api/health") {
     const payload = {
       ok: true,
@@ -529,6 +712,7 @@ const server = http.createServer((req, res) => {
         allowlist: ALLOWLIST_PATH,
         clawbots: CLAWBOTS_PATH,
         invites: INVITES_PATH,
+        skillcardsUserIndex: SKILLCARDS_USER_INDEX_PATH,
       },
       counts: {
         eventsBytes: fs.existsSync(EVENTS_PATH) ? fs.statSync(EVENTS_PATH).size : 0,
@@ -568,6 +752,22 @@ const server = http.createServer((req, res) => {
       res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ error: err.message }));
     }
+  }
+
+  // Serve user SkillCard JSON under a stable, public path (read-only).
+  if (pathname.startsWith("/skillcards/user/") && req.method === "GET") {
+    const fileName = decodeURIComponent(String(pathname || "").slice("/skillcards/user/".length));
+    if (!fileName || fileName.includes("..") || fileName.includes("/") || fileName.includes("\\")) {
+      res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ error: "invalid file" }));
+    }
+    const filePath = path.join(SKILLCARDS_USER_DIR, fileName);
+    if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+      res.writeHead(404, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ error: "not found" }));
+    }
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+    return fs.createReadStream(filePath).pipe(res);
   }
   if (pathname === "/api/clawbots/verify" && req.method === "POST") {
     // Verify credentials against backend clawbots.json (server-authoritative).
@@ -703,7 +903,12 @@ const server = http.createServer((req, res) => {
 
       const evt = {
         v: Number(body?.v || 1),
-        ts: typeof body?.ts === "string" ? body.ts : new Date().toISOString(),
+        ts:
+          typeof body?.ts === "string"
+            ? body.ts
+            : (typeof body?.ts === "number" && Number.isFinite(body.ts))
+              ? new Date(body.ts * 1000).toISOString()
+              : new Date().toISOString(),
         eventType,
         agentId: headerAgentId,
         sessionId: String(body?.sessionId || "remote-session"),
@@ -711,10 +916,11 @@ const server = http.createServer((req, res) => {
         command: String(body?.command || ""),
         dryRun: Boolean(body?.dryRun),
         chainId: Number(body?.chainId || 33139),
-        payload: body?.payload && typeof body.payload === "object" ? body.payload : {},
+        payload: (body?.payload || body?.data) && typeof (body?.payload || body?.data) === "object" ? (body?.payload || body?.data) : {},
         result: body?.result && typeof body.result === "object" ? body.result : {},
         ok: body?.ok !== false,
         error: body?.error || null,
+        ...(body?.source ? { source: String(body.source) } : {}),
       };
       appendTelemetryEvent(evt);
       for (const c of clients) sendSse(c, evt);
@@ -860,13 +1066,42 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (pathname === "/" || pathname === "/index.html") {
-    if (!fs.existsSync(UI_PATH)) {
+  // ── Local UX rewrites (match Vercel routes) ───────────
+  // In production, Vercel rewrites /ui, /docs, /pod, /skills to static HTML files.
+  // For local dev, implement the same behavior so URLs are consistent.
+  const REWRITES = {
+    "/ui": "/ui/index.html",
+    "/app": "/ui/index.html",
+    "/docs": "/ui/docs.html",
+    "/pod": "/ui/pod.html",
+    "/skills": "/ui/skills.html",
+    "/favicon-lobster.png": "/ui/favicon-lobster.png",
+  };
+  const rewrite = REWRITES[pathname] || REWRITES[String(pathname || "").replace(/\/+$/, "")] || "";
+  if (rewrite) {
+    const p = path.join(ROOT, rewrite);
+    if (!fs.existsSync(p)) {
       res.writeHead(404);
-      return res.end("ui/index.html not found");
+      return res.end(`missing: ${rewrite}`);
+    }
+    const ext = path.extname(p).toLowerCase();
+    const mime = ext === ".html" ? "text/html; charset=utf-8"
+      : ext === ".png" ? "image/png"
+        : "application/octet-stream";
+    res.writeHead(200, { "content-type": mime });
+    return fs.createReadStream(p).pipe(res);
+  }
+
+  if (pathname === "/" || pathname === "/index.html") {
+    // Prefer the marketing landing page at repo root.
+    const landingPath = path.join(ROOT, "index.html");
+    const p = fs.existsSync(landingPath) ? landingPath : UI_PATH;
+    if (!fs.existsSync(p)) {
+      res.writeHead(404);
+      return res.end("index.html not found");
     }
     res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-    return fs.createReadStream(UI_PATH).pipe(res);
+    return fs.createReadStream(p).pipe(res);
   }
 
   // ── Static file serving for local dev ────────────────
@@ -874,6 +1109,8 @@ const server = http.createServer((req, res) => {
     ".html": "text/html", ".css": "text/css", ".js": "application/javascript",
     ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg",
     ".svg": "image/svg+xml", ".ico": "image/x-icon", ".webp": "image/webp",
+    ".md": "text/plain; charset=utf-8", ".txt": "text/plain; charset=utf-8",
+    ".woff2": "font/woff2",
   };
   const safePath = decodeURIComponent(pathname);
   if (!safePath.includes("..") && !safePath.includes("~")) {

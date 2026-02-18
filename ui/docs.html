@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Docs — ApeClaw</title>
+  <meta name="description" content="ApeClaw documentation: global backend, clawbots, telemetry, v1 workflows, v2-alpha onchain skills, SkillCards, THE POD runner.">
+  <link rel="icon" type="image/png" href="/favicon-lobster.png">
+  <link rel="apple-touch-icon" href="/favicon-lobster.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#111111;
+      --panel:#1c1c1c;
+      --panel-2:#232323;
+      --panel-hover:#2a2a2a;
+      --panel-border:rgba(207,255,4,.75);
+      --panel-border-soft:rgba(207,255,4,.35);
+      --glow:rgba(207,255,4,.22);
+      --muted:#a6a6a6;
+      --text:#e6e6e6;
+      --amber:#cfff04;
+      --amber-soft:rgba(207,255,4,.75);
+      --green:#00ff00;
+      --cyan:#63d7ff;
+      --danger:#ff3333;
+      --mono: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      --terminal-gray:#474546;
+      --terminal-lightgray:#9e9e9e;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{
+      min-height:100vh;
+      margin:0;
+      font-family:"Inter","Segoe UI","Roboto",Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      overflow-x:hidden;
+      -webkit-font-smoothing:antialiased;
+      letter-spacing:.03em;
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:0;
+      background:
+        radial-gradient(900px 500px at 20% 10%, rgba(207,255,4,0.10) 0%, transparent 60%),
+        radial-gradient(700px 380px at 85% 75%, rgba(0,255,0,0.06) 0%, transparent 55%),
+        linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.85));
+    }
+    .noise{
+      position:fixed;inset:0;pointer-events:none;z-index:2;opacity:0.07;mix-blend-mode:overlay;
+      background-image:
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 1px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 4px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 6px);
+    }
+    .scanlines{overflow:hidden;position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:1}
+    .scanlines:before,.scanlines:after{display:block;pointer-events:none;content:"";position:absolute}
+    .scanlines:before{width:100%;height:2px;z-index:2147483649;background:rgba(0,0,0,0.3);opacity:0.75;animation:scanline 6s linear infinite}
+    .scanlines:after{top:0;right:0;bottom:0;left:0;z-index:2147483648;background:linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.3) 51%);background-size:100% 4px;animation:scanlines 1s steps(60) infinite}
+    @keyframes scanline{0%{transform:translate3d(0,200000%,0)}}
+    @keyframes scanlines{0%{background-position:0 200000%}}
+    :focus-visible{outline:2px dashed var(--amber);outline-offset:3px}
+
+    /* Disable the older collage background (previous iteration). */
+    .bg-collage, .bg-fade{display:none !important}
+    a{color:inherit;text-decoration:none}
+    a:hover{text-decoration:underline}
+    .bg-fade{
+      position:fixed;inset:0;z-index:1;pointer-events:none;
+      background:
+        radial-gradient(ellipse 90% 50% at 50% 0%, rgba(2,3,5,0.15) 0%, rgba(2,3,5,0.95) 100%),
+        linear-gradient(180deg, rgba(2,3,5,0.1) 0%, rgba(2,3,5,0.7) 40%, rgba(2,3,5,1) 100%);
+    }
+    .bg-collage{
+      position:fixed;
+      inset:0;
+      z-index:0;
+      opacity:0.12;
+      pointer-events:none;
+      display:grid;
+      grid-template-columns:repeat(10,1fr);
+      gap:5px;
+      padding:5px;
+    }
+    .bg-collage img{
+      width:100%;
+      aspect-ratio:1/1;
+      object-fit:cover;
+      border-radius:3px;
+      image-rendering:pixelated;
+      filter:saturate(0.7) contrast(0.85) brightness(0.9);
+      transform:rotate(var(--r));
+    }
+
+    .wrap{position:relative;z-index:3;max-width:1260px;margin:0 auto;padding:20px 20px 28px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{
+      width:36px;height:36px;border-radius:8px;border:2px solid rgba(255,159,26,0.3);
+      overflow:hidden;flex-shrink:0;background:#02070d;
+    }
+    .logo img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+    .brand strong{
+      font-size:18px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);
+      text-shadow:0 0 24px rgba(255,159,26,0.2);
+    }
+    .links{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .link{
+      font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+      border:1px solid var(--panel-border);background:rgba(9,13,18,0.7);
+      padding:8px 10px;border-radius:2px;color:var(--muted);transition:all .2s ease;
+    }
+    .link:hover{border-color:var(--cyan);background:#1b1f24;color:var(--text);text-decoration:none}
+    .link[aria-current="page"]{
+      border-color:rgba(207,255,4,.55);
+      color:var(--text);
+      background:linear-gradient(180deg,var(--panel-2) 0%,var(--panel) 100%);
+      box-shadow:inset 0 0 0 1px rgba(207,255,4,.10);
+      text-decoration:none;
+    }
+
+    .layout{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
+    @media(min-width:980px){.layout{grid-template-columns:320px 1fr}}
+    .panel{
+      background:linear-gradient(180deg,var(--panel-2) 0%,var(--panel) 100%);
+      border:1px solid var(--panel-border);
+      border-radius:2px;
+      box-shadow:inset 0 0 0 1px #0f1d2c;
+    }
+    .sidebar{padding:14px}
+    .main{padding:16px}
+    @media(min-width:980px){
+      .sidebar{
+        position:sticky;
+        top:16px;
+        align-self:start;
+        max-height:calc(100vh - 32px);
+        overflow:auto;
+      }
+    }
+
+    .eyebrow{color:var(--amber-soft);font-weight:800;font-size:12px;letter-spacing:.07em;text-transform:uppercase}
+    .title{margin:10px 0 10px;font-size:36px;line-height:1.05;font-weight:900;letter-spacing:-.01em;text-transform:uppercase;color:var(--amber)}
+    .subtitle{margin:0;color:var(--muted);font-size:14px;line-height:1.65;max-width:92ch}
+
+    .mini-note{
+      margin-top:10px;display:inline-flex;align-items:center;gap:8px;
+      padding:7px 10px;border-radius:2px;border:1px solid var(--panel-border);
+      background:rgba(9,13,18,0.7);color:var(--muted);font-size:12px;max-width:100%;
+      text-transform:uppercase;letter-spacing:.04em;
+    }
+    .mini-note code{font-family:var(--mono);font-size:11px;color:var(--cyan);text-transform:none;letter-spacing:0}
+
+    .search{margin-top:12px;display:flex;gap:8px;align-items:center}
+    .search input{
+      width:100%;
+      border:1px solid #2a4056;
+      background:#0b1622;
+      color:#d4e6fa;
+      padding:9px 10px;
+      border-radius:2px;
+      font-size:13px;
+      outline:none;
+    }
+    .search input:focus{border-color:var(--cyan)}
+    .mini-btn{
+      border:1px solid #2a3d52;background:#0f1b28;color:#f4f7fc;border-radius:2px;
+      padding:9px 10px;font-size:13px;cursor:pointer;white-space:nowrap;
+      text-transform:uppercase;letter-spacing:.04em;font-weight:700;
+    }
+    .mini-btn:hover{border-color:var(--cyan);background:#132335}
+    .tools{margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .tools select{
+      border:1px solid #2a4056;
+      background:#0b1622;
+      color:#d4e6fa;
+      padding:9px 10px;
+      border-radius:2px;
+      font-size:13px;
+      outline:none;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      font-weight:700;
+    }
+    .tools select:focus{border-color:var(--cyan)}
+
+    .section-h{margin:14px 0 8px;font-size:12px;color:var(--amber-soft);letter-spacing:.07em;text-transform:uppercase;font-weight:800}
+    .doclist{display:flex;flex-direction:column;gap:6px}
+    .doclink{
+      border:1px solid #2a4056;background:#0b1622;border-radius:2px;
+      padding:10px 10px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+    }
+    .doclink:hover{border-color:var(--cyan);text-decoration:none}
+    .doclink.active{
+      border-color:rgba(207,255,4,.55);
+      box-shadow:inset 0 0 0 1px rgba(207,255,4,.10);
+      background:linear-gradient(180deg,var(--panel-2) 0%,var(--panel) 100%);
+    }
+    .docname{font-size:13px;color:var(--text);font-weight:800;letter-spacing:.02em;text-transform:uppercase}
+    .docdesc{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.45}
+    .tag{
+      font-size:11px;padding:5px 8px;border-radius:2px;border:1px solid #2a4056;
+      background:rgba(9,13,18,0.6);color:#d4e6fa;white-space:nowrap;margin-top:1px;
+      text-transform:uppercase;letter-spacing:.04em;
+    }
+
+    .toolbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+    .crumbs{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+    .toolbar .btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .btn{
+      border:1px solid #2a3d52;background:#0f1b28;color:#f4f7fc;border-radius:2px;
+      padding:8px 10px;font-size:12.5px;text-decoration:none;
+      text-transform:uppercase;letter-spacing:.04em;font-weight:700;
+    }
+    .btn:hover{border-color:var(--cyan);text-decoration:none;background:#132335}
+    .btn.dim{color:var(--muted)}
+
+    .content{border-top:1px solid rgba(255,255,255,.08);padding-top:12px}
+    .loading{
+      margin-top:12px;
+      padding:12px 12px;
+      border-radius:2px;
+      border:1px solid #2a4056;
+      background:#0b1622;
+      font-family:var(--mono);
+      font-size:12px;
+      color:#d4e6fa;
+      line-height:1.55;
+    }
+    .loading .k{color:var(--cyan)}
+
+    .md h1,.md h2,.md h3,.md h4{letter-spacing:-.01em;margin:16px 0 10px;font-weight:900;text-transform:uppercase;color:var(--amber)}
+    .md h1{font-size:28px;margin-top:0}
+    .md h2{font-size:20px}
+    .md h3{font-size:16px}
+    .md p{margin:10px 0;color:var(--text);line-height:1.75;font-size:14px}
+    .md ul,.md ol{margin:10px 0 10px 20px;color:var(--text);line-height:1.7;font-size:14px}
+    .md li{margin:5px 0}
+    .md code{
+      font-family:var(--mono);
+      font-size:.92em;
+      background:rgba(9,13,18,0.6);
+      padding:1px 5px;
+      border-radius:2px;
+      color:#d4e6fa;
+    }
+    .md pre{
+      margin:12px 0;padding:12px 12px;border-radius:2px;border:1px solid #2a4056;background:#0b1622;overflow:auto;
+    }
+    .md pre code{background:transparent;padding:0;border-radius:0;color:#d4e6fa;font-size:12.5px;display:block;white-space:pre}
+    .md blockquote{
+      margin:12px 0;padding:10px 12px;border-radius:2px;border:1px solid rgba(207,255,4,.22);
+      background:rgba(207,255,4,.06);color:var(--text);
+    }
+    .md a{color:var(--cyan)}
+
+    .toc{
+      margin-top:10px;border:1px solid #2a4056;background:#0b1622;border-radius:2px;
+      padding:10px 10px;color:var(--muted);font-size:12px;
+    }
+    .toc strong{color:var(--amber-soft);font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:800}
+    .toc a{display:block;padding:6px 6px;border-radius:2px;color:#d4e6fa;text-decoration:none}
+    .toc a:hover{background:rgba(255,255,255,.03);text-decoration:none}
+
+    .foot{margin-top:14px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  </style>
+</head>
+<body>
+  <div class="bg-collage" aria-hidden="true" id="bgCollage"></div>
+  <div class="bg-fade" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="top">
+      <a class="brand" href="/" aria-label="ApeClaw">
+        <div class="logo" aria-hidden="true"><img src="/favicon-lobster.png" alt=""></div>
+        <strong>ApeClaw</strong>
+      </a>
+      <div class="links">
+        <a class="link" href="/ui" data-keep-query="1">Dashboard</a>
+        <a class="link" href="/pod" data-keep-query="1">THE POD</a>
+        <a class="link" href="/skills" data-keep-query="1">Skills</a>
+        <a class="link" href="/docs" data-keep-query="1" aria-current="page">Docs</a>
+        <a class="link" href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
+        <a class="link" href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="panel sidebar">
+        <div class="eyebrow">Documentation</div>
+        <div class="title">Everything, in one place.</div>
+        <p class="subtitle">
+          This page renders the markdown in `docs/*.md` directly. Deep links work via `?doc=...`.
+        </p>
+        <div class="mini-note" id="backendNote">Backend: <code>auto</code></div>
+        <div class="tools" aria-label="Start here shortcuts">
+          <a class="btn" href="/docs?doc=CONTRIBUTING.md" data-keep-query="1">Contribute</a>
+          <a class="btn" href="/skills#your-skills" data-keep-query="1">Add Skill</a>
+          <a class="btn" href="/pod" data-keep-query="1">Run Pod</a>
+        </div>
+
+        <div class="search">
+          <input id="searchInput" type="search" placeholder="Search docs..." autocomplete="off" spellcheck="false">
+          <button class="mini-btn" id="copyLinkBtn" type="button" title="Copy link to this doc">Copy Link</button>
+        </div>
+        <div class="tools" aria-label="Doc filters">
+          <select id="tagFilter" aria-label="Tag filter">
+            <option value="all">tag: all</option>
+          </select>
+          <button class="mini-btn" id="clearBtn" type="button" title="Clear search + filters">Clear</button>
+        </div>
+        <div class="mini-note" id="statsNote">Docs: <code id="docsCount">0</code> · Showing: <code id="docsShowing">0</code></div>
+
+        <div id="docNav"></div>
+        <div class="foot">Tip: press <code>/</code> to focus search.</div>
+      </div>
+
+      <div class="panel main">
+        <div class="toolbar">
+          <div class="crumbs" id="crumbs">Loading…</div>
+          <div class="btns">
+            <a class="btn dim" id="rawBtn" href="#" target="_blank" rel="noopener">Raw</a>
+            <a class="btn dim" id="ghBtn" href="#" target="_blank" rel="noopener">GitHub</a>
+          </div>
+        </div>
+
+        <div class="toc" id="toc" style="display:none">
+          <strong>On this page</strong>
+          <div id="tocLinks"></div>
+        </div>
+
+        <div class="content md" id="content"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // Lightweight collage background to match the Stonk terminal feel.
+      try {
+        var c = document.getElementById('bgCollage');
+        if (c && !c.hasChildNodes()) {
+          var N = 80;
+          for (var i = 0; i < N; i++) {
+            var img = document.createElement('img');
+            img.src = '/favicon-lobster.png';
+            img.alt = '';
+            img.style.setProperty('--r', (Math.round((Math.random() * 10 - 5) * 10) / 10) + 'deg');
+            c.appendChild(img);
+          }
+        }
+      } catch (e) {}
+
+      var DOCS = [
+        { section: "Start Here", file: "README.md", title: "Docs Index", desc: "Operator-focused docs index (manual first).", tag: "manual" },
+        { section: "Start Here", file: "CONTRIBUTING.md", title: "Contributing", desc: "How users + agents add skills, run Pods, and publish onchain.", tag: "manual" },
+        { section: "Product Manual", file: "PRODUCT_OVERVIEW.md", title: "Product Overview", desc: "What ApeClaw is, what pages do, how the parts connect.", tag: "manual" },
+        { section: "Product Manual", file: "DASHBOARD_GUIDE.md", title: "Dashboard Guide", desc: "How to use /ui: feed, filters, setup panel, chat, debug.", tag: "ui" },
+        { section: "Product Manual", file: "CLI_GUIDE.md", title: "CLI Guide", desc: "How bots run: install patterns, identity, safety posture, common flows.", tag: "cli" },
+        { section: "Product Manual", file: "GLOBAL_BACKEND.md", title: "Global Backend", desc: "Persistence, CORS, routing, deployments, troubleshooting.", tag: "ops" },
+        { section: "Product Manual", file: "CLAWBOTS_AND_INVITES.md", title: "Clawbots + Invites", desc: "Global onboarding, verification, security model.", tag: "id" },
+        { section: "Product Manual", file: "TELEMETRY_AND_EVENTS.md", title: "Telemetry + Events", desc: "Event envelope, remote ingest, SSE streams, dedupe.", tag: "telemetry" },
+        { section: "Product Manual", file: "V1_WORKFLOWS.md", title: "v1 Workflows", desc: "NFT buy/autobuy + bridge flows, confirm phrases, safety gates.", tag: "v1" },
+        { section: "Product Manual", file: "SUPPORTED_NETWORKS.md", title: "Supported Networks", desc: "Reality check: what works today vs planned (no overclaiming).", tag: "nets" },
+        { section: "v2-alpha (Onchain)", file: "ONCHAIN_V2_GUIDE.md", title: "v2-alpha Onchain Guide", desc: "Operator flow for skills + receipts; how to seed/mint/publish/record.", tag: "onchain" },
+        { section: "v2-alpha (Onchain)", file: "APECLAW_V2_ALPHA.md", title: "v2-alpha Overview", desc: "Onchain primitives, SkillCards, THE POD, compatibility guardrails.", tag: "v2" },
+        { section: "v2-alpha (Onchain)", file: "V2_ONCHAIN_SKILLS.md", title: "v2 Onchain Skills", desc: "Contracts, hashing, seeding, risk tiers, URI strategy.", tag: "v2" },
+        { section: "v2-alpha (Onchain)", file: "SKILLCARDS_AND_IMPORTER.md", title: "SkillCards + Importer", desc: "Manifest → import → optional mint/publish; openclaw mirror support.", tag: "library" },
+        { section: "v2-alpha (Onchain)", file: "THE_POD_RUNNER.md", title: "THE POD Runner", desc: "Workspace scaffold, runner loop, kill switch, heartbeats.", tag: "pod" },
+        { section: "Market", file: "ACP_BOUNTIES.md", title: "ACP Bounties", desc: "Hire skills on demand (bounties), safety posture, receipts, revenue share.", tag: "market" },
+        { section: "Theory", file: "AUTONOMY_AND_SUBSTRATE.md", title: "Autonomy + Substrate", desc: "Why the chain matters: persistence, receipts, onchain source-of-truth.", tag: "thesis" },
+        { section: "Theory", file: "WEB4_SWARM_MODEL.md", title: "Web4 Swarm Model", desc: "How agents scale as a swarm with onchain skills + receipts + persistence.", tag: "thesis" },
+        { section: "Roadmap", file: "WEB4_PLAN_STATUS.md", title: "Web4 Plan Status", desc: "Plan mapping: what shipped vs what is still planned (no overclaiming).", tag: "plan" }
+      ];
+
+      function $(id){ return document.getElementById(id); }
+
+      function currentSearch(){
+        try { return (window.location && window.location.search) ? String(window.location.search) : ""; } catch (e) {}
+        return "";
+      }
+
+      function currentApiBase(){
+        try {
+          var u = new URL(window.location.href);
+          var api = (u.searchParams.get("api") || "").trim();
+          if (api) return api.replace(/\/+$/, "");
+        } catch (e) {}
+        return "https://api.apeclaw.ai";
+      }
+
+      function escapeHtml(s){
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function slugify(s){
+        return String(s || "")
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+      }
+
+      function inlineMd(s){
+        var out = escapeHtml(s);
+        // inline code
+        out = out.replace(/`([^`]+)`/g, function(_, c){ return "<code>" + escapeHtml(c) + "</code>"; });
+        // links [text](url)
+        out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(_, t, u){
+          var href = escapeHtml(u);
+          return "<a href=\"" + href + "\" target=\"_blank\" rel=\"noopener\">" + escapeHtml(t) + "</a>";
+        });
+        // bold **x**
+        out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+        return out;
+      }
+
+      function renderMarkdown(md){
+        var lines = String(md || "").replace(/\r/g, "").split("\n");
+        var html = [];
+        var toc = [];
+        var inCode = false;
+        var codeFence = "";
+        var codeBuf = [];
+        var para = [];
+        var inUl = false;
+        var inOl = false;
+        var quoteBuf = [];
+
+        function flushPara(){
+          if (!para.length) return;
+          html.push("<p>" + inlineMd(para.join(" ").trim()) + "</p>");
+          para = [];
+        }
+        function closeLists(){
+          if (inUl){ html.push("</ul>"); inUl = false; }
+          if (inOl){ html.push("</ol>"); inOl = false; }
+        }
+        function flushQuote(){
+          if (!quoteBuf.length) return;
+          closeLists();
+          flushPara();
+          html.push("<blockquote>" + inlineMd(quoteBuf.join("\n")) + "</blockquote>");
+          quoteBuf = [];
+        }
+
+        for (var i = 0; i < lines.length; i++){
+          var ln = lines[i];
+          var t = ln.trim();
+
+          // fenced code blocks
+          var fence = ln.match(/^```(.*)\s*$/);
+          if (fence){
+            if (!inCode){
+              flushQuote();
+              closeLists();
+              flushPara();
+              inCode = true;
+              codeFence = String(fence[1] || "").trim();
+              codeBuf = [];
+            } else {
+              inCode = false;
+              var code = escapeHtml(codeBuf.join("\n"));
+              html.push("<pre><code>" + code + "</code></pre>");
+              codeFence = "";
+              codeBuf = [];
+            }
+            continue;
+          }
+          if (inCode){
+            codeBuf.push(ln);
+            continue;
+          }
+
+          // blockquote
+          if (t.startsWith("> ")){
+            flushPara();
+            closeLists();
+            quoteBuf.push(t.slice(2));
+            continue;
+          } else {
+            flushQuote();
+          }
+
+          // headings
+          var h = ln.match(/^(#{1,4})\s+(.*)$/);
+          if (h){
+            closeLists();
+            flushPara();
+            var level = h[1].length;
+            var text = String(h[2] || "").trim();
+            var id = slugify(text);
+            html.push("<h" + level + " id=\"" + escapeHtml(id) + "\">" + inlineMd(text) + "</h" + level + ">");
+            if (level === 2 || level === 3){
+              toc.push({ level: level, id: id, text: text });
+            }
+            continue;
+          }
+
+          // lists
+          var ul = ln.match(/^\s*[-*]\s+(.*)$/);
+          var ol = ln.match(/^\s*\d+\.\s+(.*)$/);
+          if (ul){
+            flushPara();
+            if (inOl){ html.push("</ol>"); inOl = false; }
+            if (!inUl){ html.push("<ul>"); inUl = true; }
+            html.push("<li>" + inlineMd(ul[1]) + "</li>");
+            continue;
+          }
+          if (ol){
+            flushPara();
+            if (inUl){ html.push("</ul>"); inUl = false; }
+            if (!inOl){ html.push("<ol>"); inOl = true; }
+            html.push("<li>" + inlineMd(ol[1]) + "</li>");
+            continue;
+          }
+
+          // blank line closes blocks
+          if (!t){
+            closeLists();
+            flushPara();
+            continue;
+          }
+
+          // paragraph line
+          para.push(t);
+        }
+
+        flushQuote();
+        closeLists();
+        flushPara();
+
+        return { html: html.join("\n"), toc: toc };
+      }
+
+      function currentDocFromUrl(){
+        try {
+          var u = new URL(window.location.href);
+          var d = (u.searchParams.get("doc") || "").trim();
+          if (d) return d;
+        } catch (e) {}
+        return "README.md";
+      }
+
+      function setDocInUrl(doc){
+        try {
+          var u = new URL(window.location.href);
+          u.searchParams.set("doc", doc);
+          history.replaceState(null, "", u.toString());
+        } catch (e) {}
+      }
+
+      function keepQueryOnLinks(){
+        var search = currentSearch();
+        if (!search) return;
+        try {
+          var as = document.querySelectorAll('a[data-keep-query="1"]');
+          for (var i = 0; i < as.length; i++) {
+            var href = String(as[i].getAttribute("href") || "");
+            if (!href || href.indexOf("http") === 0 || href.indexOf("#") === 0) continue;
+            if (href.indexOf("?") !== -1) continue;
+            as[i].setAttribute("href", href + search);
+          }
+        } catch (e) {}
+      }
+
+      function highlightActiveDoc(doc){
+        var nav = $("docNav");
+        if (!nav) return;
+        try {
+          var links = nav.querySelectorAll("a[data-doc]");
+          for (var i = 0; i < links.length; i++){
+            var d = String(links[i].getAttribute("data-doc") || "");
+            var on = d === doc;
+            if (on) {
+              links[i].classList.add("active");
+              links[i].setAttribute("aria-current", "page");
+            } else {
+              links[i].classList.remove("active");
+              links[i].removeAttribute("aria-current");
+            }
+          }
+        } catch (e) {}
+      }
+
+      function groupDocs(list){
+        var out = {};
+        for (var i = 0; i < list.length; i++){
+          var d = list[i];
+          out[d.section] = out[d.section] || [];
+          out[d.section].push(d);
+        }
+        return out;
+      }
+
+      function renderNav(filter, tag){
+        var nav = $("docNav");
+        if (!nav) return;
+        var f = String(filter || "").toLowerCase().trim();
+        var tg = String(tag || "all").toLowerCase().trim();
+        var filtered = DOCS.filter(function(d){
+          if (!f) return true;
+          return (d.title + " " + d.desc + " " + d.file + " " + d.section + " " + (d.tag || "")).toLowerCase().indexOf(f) !== -1;
+        }).filter(function(d){
+          if (!tg || tg === "all") return true;
+          return String(d.tag || "").toLowerCase() === tg;
+        });
+
+        // Sidebar stats
+        try {
+          var dc = $("docsCount");
+          var ds = $("docsShowing");
+          if (dc) dc.textContent = String(DOCS.length);
+          if (ds) ds.textContent = String(filtered.length);
+        } catch (e) {}
+
+        var groups = groupDocs(filtered);
+        var sectionOrder = [];
+        var seen = {};
+        for (var i = 0; i < filtered.length; i++){
+          var s = filtered[i].section;
+          if (!seen[s]) { seen[s] = true; sectionOrder.push(s); }
+        }
+        var html = [];
+        var curDoc = currentDocFromUrl();
+        var apiBase = currentApiBase();
+        sectionOrder.forEach(function(section){
+          var items = groups[section] || [];
+          if (!items.length) return;
+          html.push("<div class=\"section-h\">" + escapeHtml(section) + " (" + items.length + ")" + "</div>");
+          html.push("<div class=\"doclist\">");
+          items.forEach(function(d){
+            // Keep current query params (e.g. ?api=...) when deep-linking to docs.
+            var href = "/docs?doc=" + encodeURIComponent(d.file) + "&api=" + encodeURIComponent(apiBase);
+            var active = (d.file === curDoc) ? " active" : "";
+            var currentAttr = (d.file === curDoc) ? " aria-current=\"page\"" : "";
+            html.push(
+              "<a class=\"doclink" + active + "\" href=\"" + href + "\" data-doc=\"" + escapeHtml(d.file) + "\"" + currentAttr + ">" +
+                "<div>" +
+                  "<div class=\"docname\">" + escapeHtml(d.title) + "</div>" +
+                  "<div class=\"docdesc\">" + escapeHtml(d.desc) + "</div>" +
+                "</div>" +
+                "<div class=\"tag\">" + escapeHtml(d.tag || "") + "</div>" +
+              "</a>"
+            );
+          });
+          html.push("</div>");
+        });
+
+        nav.innerHTML = html.join("\n");
+
+        // Intercept clicks to avoid full reload.
+        try {
+          var links = nav.querySelectorAll("a[data-doc]");
+          for (var i = 0; i < links.length; i++){
+            links[i].addEventListener("click", function(ev){
+              ev.preventDefault();
+              var doc = this.getAttribute("data-doc") || "README.md";
+              loadDoc(doc);
+            });
+          }
+        } catch (e) {}
+        highlightActiveDoc(curDoc);
+      }
+
+      function updateToc(toc){
+        var box = $("toc");
+        var list = $("tocLinks");
+        if (!box || !list) return;
+        if (!toc || !toc.length){
+          box.style.display = "none";
+          list.innerHTML = "";
+          return;
+        }
+        box.style.display = "block";
+        var html = [];
+        for (var i = 0; i < toc.length; i++){
+          var it = toc[i];
+          var pad = it.level === 3 ? " style=\"margin-left:10px\"" : "";
+          html.push("<a href=\"#" + escapeHtml(it.id) + "\"" + pad + ">" + escapeHtml(it.text) + "</a>");
+        }
+        list.innerHTML = html.join("\n");
+      }
+
+      function setToolbar(doc, title){
+        var crumbs = $("crumbs");
+        var rawBtn = $("rawBtn");
+        var ghBtn = $("ghBtn");
+        if (crumbs) crumbs.textContent = (title ? title : doc) + " · " + doc;
+
+        var rawUrl = "/docs/" + encodeURIComponent(doc);
+        if (rawBtn) rawBtn.setAttribute("href", rawUrl);
+
+        var ghUrl = "https://github.com/simplefarmer69/ape-claw/blob/main/docs/" + encodeURIComponent(doc);
+        if (ghBtn) ghBtn.setAttribute("href", ghUrl);
+      }
+
+      function loadDoc(doc){
+        var content = $("content");
+        if (content) content.innerHTML = "<div class=\"loading\">Loading <span class=\"k\">docs/</span>" + escapeHtml(doc) + "…</div>";
+        setDocInUrl(doc);
+        highlightActiveDoc(doc);
+
+        var meta = DOCS.find(function(d){ return d.file === doc; }) || null;
+        setToolbar(doc, meta ? meta.title : "");
+
+        var url = "/docs/" + encodeURIComponent(doc);
+        var ghRaw = "https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/docs/" + encodeURIComponent(doc);
+
+        function tryFetch(u){
+          return fetch(u, { headers: { "accept": "text/plain" } })
+            .then(function(r){
+              if (!r.ok) throw new Error("fetch failed: " + r.status);
+              return r.text();
+            });
+        }
+
+        tryFetch(url)
+          .catch(function(){
+            // Fallback so docs still work even if static `/docs/*.md` isn't served in some deployments.
+            try {
+              var rawBtn = $("rawBtn");
+              if (rawBtn) rawBtn.setAttribute("href", ghRaw);
+            } catch (e) {}
+            return tryFetch(ghRaw);
+          })
+          .then(function(md){
+            var rendered = renderMarkdown(md);
+            if (content) content.innerHTML = rendered.html;
+            updateToc(rendered.toc);
+          })
+          .catch(function(){
+            if (content) content.innerHTML = "<blockquote>Failed to load <code>" + escapeHtml(doc) + "</code>. Try <a href=\"" + escapeHtml(ghRaw) + "\" target=\"_blank\" rel=\"noopener\">GitHub raw</a>.</blockquote>";
+            updateToc([]);
+          });
+      }
+
+      // Init
+      keepQueryOnLinks();
+      try {
+        var n = $("backendNote");
+        if (n) n.innerHTML = "Backend: <code>" + escapeHtml(currentApiBase()) + "</code>";
+      } catch (e) {}
+      // Populate tag filter from DOCS list.
+      var tagFilter = $("tagFilter");
+      try {
+        if (tagFilter) {
+          var seen = {};
+          var tags = [];
+          for (var i = 0; i < DOCS.length; i++){
+            var t = String(DOCS[i].tag || "").trim();
+            if (!t) continue;
+            var k = t.toLowerCase();
+            if (seen[k]) continue;
+            seen[k] = true;
+            tags.push(t);
+          }
+          tags.sort(function(a, b){ return a.localeCompare(b); });
+          for (var j = 0; j < tags.length; j++){
+            var opt = document.createElement("option");
+            opt.value = String(tags[j]).toLowerCase();
+            opt.textContent = "tag: " + tags[j];
+            tagFilter.appendChild(opt);
+          }
+        }
+      } catch (e) {}
+
+      function currentTag(){
+        try { return tagFilter ? String(tagFilter.value || "all") : "all"; } catch (e) {}
+        return "all";
+      }
+
+      renderNav("", currentTag());
+      loadDoc(currentDocFromUrl());
+
+      var searchInput = $("searchInput");
+      if (searchInput){
+        searchInput.addEventListener("input", function(){ renderNav(searchInput.value || "", currentTag()); });
+      }
+      if (tagFilter){
+        tagFilter.addEventListener("change", function(){
+          renderNav((searchInput && searchInput.value) ? searchInput.value : "", currentTag());
+        });
+      }
+      var clearBtn = $("clearBtn");
+      if (clearBtn){
+        clearBtn.addEventListener("click", function(){
+          try { if (searchInput) searchInput.value = ""; } catch (e) {}
+          try { if (tagFilter) tagFilter.value = "all"; } catch (e) {}
+          renderNav("", currentTag());
+          if (searchInput) searchInput.focus();
+        });
+      }
+      window.addEventListener("keydown", function(e){
+        if (!e) return;
+        if (e.key === "/" && document.activeElement !== searchInput){
+          e.preventDefault();
+          if (searchInput) searchInput.focus();
+        }
+        if (e.key === "Escape"){
+          if (document.activeElement === searchInput) searchInput.blur();
+        }
+      });
+
+      var copyLinkBtn = $("copyLinkBtn");
+      if (copyLinkBtn){
+        copyLinkBtn.addEventListener("click", function(){
+          try {
+            var u = new URL(window.location.href);
+            var doc = currentDocFromUrl();
+            u.searchParams.set("doc", doc);
+            var text = u.toString();
+            Promise.resolve(navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(text) : null)
+              .catch(function(){})
+              .finally(function(){
+                copyLinkBtn.textContent = "Copied";
+                setTimeout(function(){ copyLinkBtn.textContent = "Copy Link"; }, 900);
+              });
+          } catch (e) {}
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,65 @@
+{
+  "_format": "hh3-artifact-1",
+  "contractName": "MockTarget",
+  "sourceName": "contracts/MockTarget.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "x",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Pinged",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "x",
+          "type": "bytes32"
+        }
+      ],
+      "name": "ping",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "willRevert",
+      "outputs": [],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608080604052346100165761013c908161001b8239f35b5f80fdfe60806040908082526004361015610014575f80fd5b5f3560e01c90816333d425c41461007257506373ee93b314610034575f80fd5b3461006e575f36600319011261006e576064905162461bcd60e51b81526020600482015260046024820152636e6f706560e01b6044820152fd5b5f80fd5b9050602036600319011261006e57600435908181523460208201527fe746d2ce71b3be311bc2d65f70141b958f7aa5a85471394fd80acb080879c8b9833392a2815190602082019081523360601b8383015234605483015260548252608082019180831067ffffffffffffffff8411176100f25782602094525190208152f35b634e487b7160e01b5f52604160045260245ffdfea2646970667358221220b27bf1c2162b446bd0c554b18f5a2ea0375d332aacc95e62e256b05e3b9888b364736f6c63430008180033",
+  "deployedBytecode": "0x60806040908082526004361015610014575f80fd5b5f3560e01c90816333d425c41461007257506373ee93b314610034575f80fd5b3461006e575f36600319011261006e576064905162461bcd60e51b81526020600482015260046024820152636e6f706560e01b6044820152fd5b5f80fd5b9050602036600319011261006e57600435908181523460208201527fe746d2ce71b3be311bc2d65f70141b958f7aa5a85471394fd80acb080879c8b9833392a2815190602082019081523360601b8383015234605483015260548252608082019180831067ffffffffffffffff8411176100f25782602094525190208152f35b634e487b7160e01b5f52604160045260245ffdfea2646970667358221220b27bf1c2162b446bd0c554b18f5a2ea0375d332aacc95e62e256b05e3b9888b364736f6c63430008180033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "immutableReferences": {},
+  "inputSourceName": "project/contracts/MockTarget.sol",
+  "buildInfoId": "solc-0_8_24-11b576e7240c0a69fa896295a41159eaba2fd2b6"
+}

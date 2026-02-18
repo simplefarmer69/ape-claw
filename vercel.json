@@ -4,6 +4,10 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/favicon-lobster.png", "destination": "/ui/favicon-lobster.png" },
-    { "source": "/ui", "destination": "/ui/index.html" }
+    { "source": "/ui", "destination": "/ui/index.html" },
+    { "source": "/app", "destination": "/ui/index.html" },
+    { "source": "/docs", "destination": "/ui/docs.html" },
+    { "source": "/pod", "destination": "/ui/pod.html" },
+    { "source": "/skills", "destination": "/ui/skills.html" }
   ]
 }

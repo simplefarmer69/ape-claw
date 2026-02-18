@@ -1,0 +1,60 @@
+{
+  "name": "ApeClaw NFT Autobuy",
+  "slug": "apeclaw-nft-autobuy",
+  "description": "Plan and (optionally) execute multi-collection NFT buys on ApeChain within strict policy gates. Designed for agents that collect NFTs while you sleep.",
+  "version": "1.0.0",
+  "inputs_schema": {
+    "type": "object",
+    "required": ["count", "minPrice", "maxPrice", "currency", "execute", "autonomous"],
+    "properties": {
+      "count": { "type": "integer", "minimum": 1, "maximum": 25 },
+      "scan": { "type": "integer", "minimum": 1, "maximum": 500 },
+      "minPrice": { "type": "number", "minimum": 0 },
+      "maxPrice": { "type": "number", "exclusiveMinimum": 0 },
+      "budget": { "type": ["number", "null"], "minimum": 0 },
+      "currency": { "type": "string", "enum": ["APE"] },
+      "execute": { "type": "boolean" },
+      "autonomous": { "type": "boolean" }
+    }
+  },
+  "outputs_schema": {
+    "type": "object",
+    "required": ["ok", "planned", "selectedCount"],
+    "properties": {
+      "ok": { "type": "boolean" },
+      "selectedCount": { "type": "integer" },
+      "planned": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["quoteId", "collection", "tokenId", "priceApe"],
+          "properties": {
+            "quoteId": { "type": "string" },
+            "collection": { "type": "string" },
+            "tokenId": { "type": "string" },
+            "priceApe": { "type": "number" }
+          }
+        }
+      }
+    }
+  },
+  "bindings": [
+    {
+      "type": "cli",
+      "command": "ape-claw nft autobuy --count <count> --minPrice <minPrice> --maxPrice <maxPrice> [--scan <scan>] [--budget <budget>] [--execute] [--autonomous] --json"
+    }
+  ],
+  "constraints": {
+    "notes": [
+      "ApeClaw enforces allowlists, currency allowlist, spend caps, confirm phrases, simulation requirements, and replay protection at the CLI layer."
+    ]
+  },
+  "required_permissions": ["onchain_execute", "market_data"],
+  "examples": [],
+  "eval_packs": [],
+  "provenance": {
+    "publisher": "apeclaw",
+    "signed": false
+  }
+}
+

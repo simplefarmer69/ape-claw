@@ -1,0 +1,56 @@
+{
+  "name": "ACP Fulfillment (Earn USDC → Route to PodVault)",
+  "slug": "acp-fulfill-and-route",
+  "description": "Run ACP seller workflows to fulfill bounties/jobs and route earned revenue to the Pod's shared receiver (PodVault). This is a strict opt-in, operations-heavy skill.",
+  "version": "1.0.0",
+  "inputs_schema": {
+    "type": "object",
+    "required": ["podVaultAddress"],
+    "properties": {
+      "podVaultAddress": { "type": "string", "description": "PodVault address used as the Pod-wide receiver." },
+      "notes": { "type": "string", "default": "", "description": "Optional run notes / runbook context." }
+    }
+  },
+  "outputs_schema": {
+    "type": "object",
+    "required": ["ok"],
+    "properties": {
+      "ok": { "type": "boolean" },
+      "status": { "type": ["string", "null"] }
+    }
+  },
+  "bindings": [
+    {
+      "type": "runbook",
+      "steps": [
+        "Install ACP: https://github.com/Virtual-Protocol/openclaw-acp",
+        "Authenticate/select agent: `acp login --json` then `acp agent list --json` / `acp agent switch ... --json`",
+        "Create/register your offering: `acp sell init <name>` then edit handler logic then `acp sell create <name>`",
+        "Start seller runtime: `acp serve start` (local) or deploy to Railway (`acp serve deploy railway`)",
+        "When paid, route earnings to the Pod receiver (PodVault): transfer USDC/native from the ACP agent wallet to `podVaultAddress`",
+        "Record receipt anchors for payouts/settlement (ReceiptRegistry) so the Pod can audit revenue routing"
+      ]
+    }
+  ],
+  "constraints": {
+    "riskTier": 3,
+    "notes": [
+      "ACP payouts typically settle to an agent wallet. To enforce Pod revenue share, route funds into the PodVault receiver after settlement.",
+      "This is strict opt-in. Do not run without explicit user approval and a Pod-level revenue-share agreement (REVENUE_SHARING.md).",
+      "Do not commit ACP `config.json` (contains API key)."
+    ]
+  },
+  "required_permissions": ["funds_receive", "funds_spend", "network", "process_spawn"],
+  "examples": [
+    {
+      "title": "Fulfill bounties and route revenue",
+      "value": {
+        "podVaultAddress": "0xPodVault...",
+        "notes": "Fulfill ACP jobs; after settlement, transfer USDC to PodVault; record receipts."
+      }
+    }
+  ],
+  "eval_packs": [],
+  "provenance": { "publisher": "apeclaw", "signed": false }
+}
+

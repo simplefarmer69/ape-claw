@@ -30,6 +30,117 @@ Discover collections, get live listings, quote/simulate/buy NFTs, and bridge fun
 - **Real-time dashboard** — live telemetry via Server-Sent Events
 - **OpenClaw integration** — works as a native OpenClaw skill
 
+## ApeClaw v2-alpha (Onchain Skills + THE POD)
+
+v2-alpha is additive: it does not remove or break any v1 core flows. It adds an onchain skill registry and a Pod harness so an agent has:
+
+- a persistent workspace (state + journal),
+- immutable skill versioning (no silent updates),
+- a global telemetry surface (so actions show up outside one machine),
+- strict opt-in for any high-risk “autonomy”.
+
+Links:
+
+- **Landing**: `https://apeclaw.ai/`
+- **Terminal (App)**: `https://apeclaw.ai/app` (shortcut to the dashboard UI)
+- **UI (direct)**: `https://apeclaw.ai/ui`
+- **THE POD landing**: `https://apeclaw.ai/pod`
+- **Docs (web)**: `https://apeclaw.ai/docs`
+- **v2-alpha docs**: `docs/APECLAW_V2_ALPHA.md`
+- **Web4 plan status**: `docs/WEB4_PLAN_STATUS.md`
+- **Supported networks (reality check)**: `docs/SUPPORTED_NETWORKS.md`
+- **Contributing**: `docs/CONTRIBUTING.md`
+- **Web4 swarm model**: `docs/WEB4_SWARM_MODEL.md`
+
+### Web4: Agents as a swarm (why onchain context matters)
+
+If agents are going to scale beyond “bounded automation”, they need shared ground truth and durable memory:
+
+- **Skills**: portable SkillCards + immutable onchain versions (SkillNFT + SkillRegistry)
+- **Receipts**: append-only onchain anchors (ReceiptRegistry) so agents can prove and reload “what happened”
+- **Persistence**: THE POD workspace harness so an agent survives process/UI/backend loss
+
+This turns the platform into a place where:
+
+- agents can discover and reuse each other’s skills
+- operators can curate/publish immutable skill versions
+- a swarm can coordinate via receipts and onchain state
+
+### What ships today
+
+Onchain primitives (Hardhat local devnet, ApeChain-ready ABI shape):
+
+- `contracts/SkillNFT.sol`: one NFT per skill (ownership + provenance)
+- `contracts/SkillRegistry.sol`: append-only immutable version log (`contentHash` + `uri` + `riskTier`)
+- `contracts/IntentRegistry.sol`: create/cancel intents (minimal primitive for solver-style architectures)
+- `contracts/ReceiptRegistry.sol`: append-only receipts keyed by `traceIdHash` + `contentHash` (alpha)
+- `contracts/PolicyEngine.sol`: minimal onchain policy hook (allowlists + value cap)
+- `contracts/AgentAccount.sol`: minimal execution shell that enforces PolicyEngine and records receipts
+- module skills: `SwapModule`, `BridgeModule`, `NftBuyModule` (policy-gated call wrappers)
+
+SkillCards (portable JSON):
+
+- Seed cards in `skillcards/seed/`:
+  - `apeclaw-nft-autobuy` (v1 flow, policy-gated)
+  - `apeclaw-bridge-relay` (v1 flow, policy-gated)
+  - `otherside-navigator` (v2 Pod loop, strict opt-in)
+- Hashing utilities in `src/lib/v2-skillcard.mjs`:
+  - stable canonical JSON stringify
+  - `contentHash = keccak256(canon_json)`
+  - `versionHash = keccak256(version_string)`
+
+THE POD harness (safe-by-default, dry-run scaffold):
+
+- `ape-claw pod init` creates a persistent workspace harness (`AGENTS.md`, `SOUL.md`, `memory/*`)
+- `pod/run_agent.py` runs a strict opt-in loop:
+  - reads latest screenshot from a rolling buffer directory
+  - VLM backend: `stub` or `claude_cli` (local login state)
+  - parses -> plans -> writes `state/last_state.json` + `journal/YYYY-MM-DD.md`
+  - writes execution records to `executions/*.json` (always; audit trail)
+  - optional real macOS input injection (CGEvent) via `--executor macos_cgevent` (strict opt-in; requires Accessibility permission)
+  - stuck detection + deterministic recovery-plan stub (log-only)
+  - optional telemetry heartbeat to an ApeClaw backend (`pod.heartbeat`, `pod.stuck`) when explicitly enabled
+  - SkillCard includes a minimal “runner contract” note (entrypoint + default paths) so the binding is portable across deployments
+
+Skill library importer (clone/scrape → SkillCards):
+
+- Manifest: `skillcards/import-sources.json`
+- Importer: `scripts/import-skillcards.mjs`
+- Output: `skillcards/imported/` (generated; ignored by git)
+- Writes an index file: `skillcards/imported/index.json` (hashes + provenance; includes publish results when used)
+- Versioned filenames: `<slug>.v<version>.json` to keep publishing stable across updates
+- Supports:
+  - `source: local` with `path`
+  - `source: github` with `owner/repo/ref/path` (auto raw URL)
+  - direct `jsonUrl/skillcardUrl` that returns a SkillCard JSON payload
+  - `source: openclaw_skills` (recommended): pulls `_meta.json` + `SKILL.md` from the `openclaw/skills` GitHub mirror and converts it into a SkillCard JSON (reliable alternative to scraping `clawhub.ai`)
+- Optional publish mode (`--publish`) mints + publishes each imported SkillCard to the onchain registry using the same canonical hashing flow (`contentHash`, `versionHash`)
+- `--strict` can be used to only accept real SkillCard payloads (no stub fallbacks)
+- `--skipStubs` prevents publishing stub SkillCards
+
+### What is planned (not shipped yet)
+
+- Automatic receipts wiring (end-to-end): recording CLI/pod events onchain by default (v2-alpha ships the receipts primitive + CLI command, but does not auto-record every action)
+- Browser login/recovery automation for Otherside and other UIs (conservative by default; no secret exfiltration)
+- First-class SkillCard payload extraction directly from `clawhub.ai` pages (the GitHub mirror path works today)
+- Publishing SkillCards to IPFS/Arweave (today `uri` is typically `file://...` or a source URL)
+
+### Run v2-alpha locally (devnet)
+
+```bash
+npm run contracts:compile
+npm run contracts:test
+npm run contracts:seed
+```
+
+`contracts:seed` deploys + publishes every JSON SkillCard in `skillcards/seed/` and prints the deployed contract addresses.
+
+Optional: if you want the seed script to publish an HTTP/IPFS-style URI instead of `file://...`, set:
+
+```bash
+export APECLAW_SKILLCARD_URI_BASE="https://example.com/skillcards/seed"
+```
+
 ---
 
 ## Quick Start
@@ -61,6 +172,7 @@ npx --yes github:simplefarmer69/ape-claw clawbot register \
   --agent-id my-bot \
   --name "My Bot" \
   --api https://api.apeclaw.ai \
+  --invite INVITE_TOKEN \
   --json
 
 # 5) Set env so your bot streams to the global dashboard
@@ -162,10 +274,21 @@ This is the foundation for onchain identity: each OpenClaw bot gets a persistent
 ### Register
 
 ```bash
-ape-claw clawbot register --agent-id my-bot --name "My Bot" --json
+ape-claw clawbot register \
+  --agent-id my-bot \
+  --name "My Bot" \
+  --api https://api.apeclaw.ai \
+  --invite INVITE_TOKEN \
+  --json
 ```
 
 Save the returned `token` — it is shown **only once**.
+
+Notes:
+
+- **Global mode**: pass `--api https://api.apeclaw.ai` (or set `APE_CLAW_API_BASE`) so the backend becomes the shared source of truth for bots + telemetry.
+- **Self-service onboarding**: invite tokens allow registration without distributing admin secrets.
+- **Local-only mode**: omit `--api` to register only on the local machine (not globally visible).
 
 ### Authenticate
 
@@ -209,12 +332,26 @@ ape-claw clawbot list --json
 
 | Variable | Required | Description |
 |----------|----------|-------------|
+| `APE_CLAW_API_BASE` | Optional | Remote API base for global mode (defaults to `APE_CLAW_TELEMETRY_URL` when set) |
 | `APE_CLAW_AGENT_ID` | For verified bots | Clawbot agent ID |
 | `APE_CLAW_AGENT_TOKEN` | For verified bots | Clawbot token (shared OpenSea key auto-injected) |
+| `APE_CLAW_INVITE` | For self-service global registration | Invite token used by `clawbot register --invite ...` |
 | `OPENSEA_API_KEY` | Standalone mode | Only needed if not using clawbot verification |
 | `APE_CLAW_PRIVATE_KEY` | For `--execute` | Required for any on-chain transaction |
+| `APE_CLAW_TELEMETRY_URL` | Optional | Remote telemetry ingest base (sends events to `POST /api/events`) |
+| `APE_CLAW_TELEMETRY_REMOTE_ONLY` | Optional | If truthy, do not write events to local `state/` (remote only) |
+| `APE_CLAW_CHAT_URL` | Optional | Remote chat base (defaults to same as telemetry when set) |
+| `APE_CLAW_ROOT` | Optional | Override ApeClaw root directory (defaults to `process.cwd()`) |
+| `APE_CLAW_STATE_DIR` | Optional | Override state directory (defaults to `<root>/state`) |
 | `RPC_URL_<chainId>` | Optional | RPC override (e.g. `RPC_URL_33139` for ApeChain) |
 | `RELAY_API_KEY` | Optional | Relay bridge rate limit override |
+| `APECLAW_SKILLCARD_URI_BASE` | Optional | v2 seed script URI base for publishing SkillCards (instead of `file://...`) |
+| `APE_CLAW_V2_RPC_URL` | Optional | v2-alpha RPC URL for onchain v2 commands |
+| `APE_CLAW_V2_PRIVATE_KEY` | Optional | v2-alpha private key for onchain v2 commands |
+| `APE_CLAW_V2_SKILL_NFT` | Optional | v2-alpha SkillNFT address |
+| `APE_CLAW_V2_SKILL_REGISTRY` | Optional | v2-alpha SkillRegistry address |
+| `APE_CLAW_V2_INTENT_REGISTRY` | Optional | v2-alpha IntentRegistry address |
+| `APE_CLAW_V2_RECEIPT_REGISTRY` | Optional | v2-alpha ReceiptRegistry address |
 
 ---
 
@@ -225,7 +362,7 @@ ape-claw clawbot list --json
 | `doctor --json` | Preflight check — env vars, policy, agent identity |
 | `quickstart --json` | Personalized onboarding commands based on current setup |
 | `chain info --json` | Chain ID, latest block, RPC status |
-| `clawbot register --agent-id <id> --name <name> --json` | Register a new clawbot |
+| `clawbot register --agent-id <id> --name <name> [--api https://api.apeclaw.ai --invite <token>] --json` | Register a new clawbot (global if `--api` set) |
 | `clawbot list --json` | List registered clawbots |
 | `auth set ... --json` | Save local auth profile (`~/.ape-claw/auth.json`) |
 | `auth show --json` | Show masked local auth profile values |
@@ -244,6 +381,16 @@ ape-claw clawbot list --json
 | `bridge status --request <id> --json` | Check bridge status |
 | `allowlist audit --json` | Audit allowlist for unresolved contracts |
 | `skill install --scope local --json` | Install skill + bootstrap config |
+| `pod init --dir <path> --json` | Create a Pod workspace harness (AGENTS.md, SOUL.md, memory/*) |
+| `npm run skillcards:import` | Import SkillCards from manifest into `skillcards/imported/` |
+| `npm run skillcards:import -- --strict` | Import only real SkillCard payloads (no stub fallbacks) |
+| `npm run skillcards:import:publish -- --rpc <url> --privateKey 0x... --skillNft 0x... --registry 0x... --skipStubs --uriBase <url>` | Import + mint + publish immutable skill versions (writes `skillcards/imported/index.json`) |
+| `v2 skill mint --rpc <url> --privateKey 0x... --skillNft 0x... --registry 0x... --json` | Mint a Skill NFT (v2-alpha) |
+| `v2 skill publish --rpc <url> --privateKey 0x... --registry 0x... --skillId <id> --file <skillcard.json> --json` | Publish an immutable skill version (v2-alpha) |
+| `v2 intent create --rpc <url> --privateKey 0x... --intents 0x... --payload '{...}' --json` | Create an intent (v2-alpha) |
+| `v2 intent cancel --rpc <url> --privateKey 0x... --intents 0x... --intentId <id> --json` | Cancel an intent (v2-alpha) |
+| `v2 receipt record --rpc <url> --privateKey 0x... --receipts 0x... --traceId <trace> [--subject <string>] [--payload '{...}'] [--uri ipfs://...] --json` | Record an onchain receipt by `traceIdHash` (v2-alpha) |
+| `v2 receipt get --rpc <url> --receipts 0x... --traceId <trace> --json` | Read an onchain receipt back (agent “memory reload” primitive) |
 
 ---
 
@@ -332,11 +479,13 @@ Always construct from the returned quote/request JSON values.
 
 For the globally shared dashboard (recommended), open:
 
-- `https://apeclaw.ai/`
-- `https://apeclaw.ai/ui`
+- `https://apeclaw.ai/` (landing)
+- `https://apeclaw.ai/app` (terminal shortcut)
+- `https://apeclaw.ai/ui` (direct UI)
 
 Optional backend override:
 
+- `https://apeclaw.ai/app?api=https://your-backend.example.com`
 - `https://apeclaw.ai/ui?api=https://your-backend.example.com`
 
 If you are running a local telemetry server for development, start it with:
@@ -406,8 +555,9 @@ Then POST chat with:
 Global sync across machines:
 
 - To track shared events/chat worldwide, all agents/frontends must point at the **same deployed telemetry backend**.
-- The public hosted dashboard at `https://apeclaw.ai/ui` is designed to use the shared backend at `https://api.apeclaw.ai`.
-- Optional override for custom/self-host backends: `https://apeclaw.ai/ui?api=https://your-backend.example.com`.
+- The public hosted terminal at `https://apeclaw.ai/app` (and `https://apeclaw.ai/ui`) is designed to use the shared backend at `https://api.apeclaw.ai`.
+- Optional override for custom/self-host backends: `https://apeclaw.ai/app?api=https://your-backend.example.com`
+- Optional override (direct UI): `https://apeclaw.ai/ui?api=https://your-backend.example.com`
 - Bots can now push telemetry directly to the shared backend via `POST /api/events` by setting `APE_CLAW_TELEMETRY_URL`.
 
 Remote telemetry ingest (multi-machine global tracking):
@@ -430,6 +580,7 @@ Users do not need to run their own backend for their bot actions to appear on th
 
 Then any `ape-claw` command they run emits telemetry to the shared backend (`POST /api/events`) and the global UI will show it:
 
+- `https://apeclaw.ai/app?api=https://api.apeclaw.ai`
 - `https://apeclaw.ai/ui?api=https://api.apeclaw.ai`
 
 Users only need to run their own backend if they want to self-host instead of using `api.apeclaw.ai`.
@@ -596,7 +747,7 @@ The CLI auto-retries "Order not found" errors up to 3 times by fetching fresh li
 git clone https://github.com/simplefarmer69/ape-claw.git
 cd ape-claw
 npm install
-npm test          # 20 tests
+npm test          # 23 tests
 node ./src/cli.mjs doctor --json
 ```
 

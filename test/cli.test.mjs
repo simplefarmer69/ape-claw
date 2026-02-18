@@ -31,6 +31,22 @@ function runFail(cmd) {
   }
 }
 
+function runFailWithEnv(cmd, extraEnv = {}) {
+  try {
+    execSync(cmd, {
+      cwd: process.cwd(),
+      encoding: "utf8",
+      stdio: "pipe",
+      env: { ...process.env, ...extraEnv },
+    });
+    return "";
+  } catch (err) {
+    const stdout = String(err.stdout || "");
+    const stderr = String(err.stderr || "");
+    return `${stdout}\n${stderr}`.trim();
+  }
+}
+
 function runFailJson(cmd) {
   const raw = runFail(cmd);
   // The JSON error is on stdout — extract first JSON object
@@ -115,9 +131,40 @@ test("quote-buy creates quote", () => {
   assert.match(msg, /Live listing lookup failed|OpenSea data source selected but OPENSEA_API_KEY is missing/);
 });
 
-test("nft autobuy requires OpenSea key when using OpenSea data source", () => {
-  const msg = runFail("node ./src/cli.mjs nft autobuy --count 1 --maxPrice 40 --json");
-  assert.match(msg, /OPENSEA_API_KEY is required for nft autobuy/);
+test("nft autobuy availability depends on OpenSea key source", () => {
+  // Autobuy can run if either:
+  // - OPENSEA_API_KEY is set, OR
+  // - a shared OpenSea key is configured in config/clawbots.json (global install setups)
+  // This test is resilient across local dev and CI environments.
+  let sharedKeyConfigured = false;
+  try {
+    const p = path.join(process.cwd(), "config", "clawbots.json");
+    if (fs.existsSync(p)) {
+      const j = JSON.parse(fs.readFileSync(p, "utf8"));
+      sharedKeyConfigured = Boolean(j?.sharedOpenSeaApiKey || j?.sharedOpenseaApiKey);
+    }
+  } catch {}
+
+  if (sharedKeyConfigured) {
+    const out = runFailWithEnv(
+      "node ./src/cli.mjs nft autobuy --count 1 --maxPrice 40 --json",
+      { OPENSEA_API_KEY: "", APE_CLAW_AGENT_TOKEN: "", APE_CLAW_AGENT_ID: "" },
+    );
+    // If execution succeeds, runFailWithEnv returns empty string, so call run() instead.
+    const okOut = out ? out : runWithEnv(
+      "node ./src/cli.mjs nft autobuy --count 1 --maxPrice 40 --json",
+      { OPENSEA_API_KEY: "", APE_CLAW_AGENT_TOKEN: "", APE_CLAW_AGENT_ID: "" },
+    );
+    const data = JSON.parse(okOut);
+    assert.equal(data.ok, true);
+    assert.ok(Array.isArray(data.planned));
+  } else {
+    const msg = runFailWithEnv(
+      "node ./src/cli.mjs nft autobuy --count 1 --maxPrice 40 --json",
+      { OPENSEA_API_KEY: "", APE_CLAW_AGENT_TOKEN: "", APE_CLAW_AGENT_ID: "" },
+    );
+    assert.match(msg, /OPENSEA_API_KEY is required for nft autobuy/);
+  }
 });
 
 test("nft buy execute requires simulation first", () => {

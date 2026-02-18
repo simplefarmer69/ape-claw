@@ -8,38 +8,39 @@
 <link rel="apple-touch-icon" href="/favicon-lobster.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 /* ── Reset & base ─────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#07070d;--surface:#121226;--surface2:#171731;--surface3:#232349;
-  --border:#2d2d58;--text:#edeefe;--dim:#8a8eb4;--accent:#ff5a1f;
-  --accent2:#ff7033;--accent-glow:rgba(255,77,0,.35);
-  --neon-cyan:#00f0ff;--neon-green:#39ff14;--neon-pink:#ff2d95;
-  --neon-purple:#b026ff;--gold:#ffd700;
-  --font-display:'Syne','Avenir Next','Segoe UI',sans-serif;
-  --font-mono:'JetBrains Mono',Consolas,monospace;
-  --font-sans:'Work Sans','Avenir Next','Segoe UI',sans-serif;
-  --radius:12px;
+  /* Terminal theme (match /pod, /skills, /docs, / landing). */
+  --bg:#111111;--surface:#1c1c1c;--surface2:#232323;--surface3:#2a2a2a;
+  --border:rgba(207,255,4,.35);--text:#e6e6e6;--dim:#a6a6a6;--accent:#cfff04;
+  --accent2:#ff9f1a;--accent-glow:rgba(255,159,26,.35);
+  --neon-cyan:#63d7ff;--neon-green:#00ff00;--neon-pink:#ff3333;
+  --neon-purple:#b026ff;--gold:#cfff04;
+  --font-display:'Inter','Segoe UI',sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+  --font-sans:'Inter','Segoe UI',sans-serif;
+  --radius:2px;
   --panel-shadow:0 10px 28px rgba(0,0,0,.34);
 }
  .skip-link{
   position:absolute;left:12px;top:-40px;z-index:99;
-  background:#111827;color:#fff;padding:8px 10px;border-radius:8px;border:1px solid var(--border);
+  background:#0b1622;color:#d4e6fa;padding:8px 10px;border-radius:2px;border:1px solid #2a4056;
   font-size:.72rem;text-decoration:none;transition:top .15s;
  }
  .skip-link:focus{top:10px}
  .panel-actions{margin-left:auto;display:flex;gap:6px;align-items:center}
  .mini-btn{
   border:1px solid var(--border);background:rgba(255,255,255,.02);color:var(--dim);
-  border-radius:8px;padding:3px 7px;font-size:.65rem;cursor:pointer
+  border-radius:2px;padding:3px 7px;font-size:.65rem;cursor:pointer
  }
  .mini-btn:hover{color:var(--text);border-color:var(--neon-cyan)}
 .shortcut-popover{position:relative}
 .shortcut-panel{
   position:absolute;right:0;top:30px;z-index:20;min-width:260px;
-  padding:10px;border-radius:12px;border:1px solid var(--border);
+  padding:10px;border-radius:2px;border:1px solid var(--border);
   background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.3)), var(--surface2);
   box-shadow:var(--panel-shadow);display:none
 }
@@ -49,7 +50,7 @@
 .shortcut-keys{display:flex;gap:4px;flex-wrap:wrap}
 .toast-stack{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:55;max-width:320px}
 .toast{
-  border:1px solid var(--border);border-radius:12px;padding:8px 10px;font-size:.68rem;line-height:1.4;
+  border:1px solid var(--border);border-radius:2px;padding:8px 10px;font-size:.68rem;line-height:1.4;
   background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.25)), var(--surface2);
   box-shadow:var(--panel-shadow);animation:revealUp .25s ease-out both
 }
@@ -82,7 +83,7 @@
  }
  .chat-input-meta{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
  .chat-counter{font-size:.62rem;color:var(--dim)}
- .kbd{font-family:var(--font-mono);font-size:.62rem;border:1px solid var(--border);border-radius:5px;padding:1px 4px;color:var(--dim)}
+ .kbd{font-family:var(--font-mono);font-size:.62rem;border:1px solid var(--border);border-radius:2px;padding:1px 4px;color:var(--dim)}
 html{font-size:14px;scroll-behavior:smooth}
 body{
   background:var(--bg);color:var(--text);font-family:var(--font-sans);
@@ -110,8 +111,37 @@ body::after{
   opacity:.2;
 }
 
+/* Terminal background: collage + fade (disable legacy grid/grain). */
+body::before, body::after{display:none !important}
+.bg-collage{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  opacity:0.12;
+  pointer-events:none;
+  display:grid;
+  grid-template-columns:repeat(10,1fr);
+  gap:5px;
+  padding:5px;
+}
+.bg-collage img{
+  width:100%;
+  aspect-ratio:1/1;
+  object-fit:cover;
+  border-radius:3px;
+  image-rendering:pixelated;
+  filter:saturate(0.7) contrast(0.85) brightness(0.9);
+  transform:rotate(var(--r));
+}
+.bg-fade{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:
+    radial-gradient(ellipse 90% 50% at 50% 0%, rgba(2,3,5,0.15) 0%, rgba(2,3,5,0.95) 100%),
+    linear-gradient(180deg, rgba(2,3,5,0.1) 0%, rgba(2,3,5,0.7) 40%, rgba(2,3,5,1) 100%);
+}
+
 /* ── Layout ───────────────────────────────────────── */
-.app{position:relative;z-index:1;display:flex;flex-direction:column;min-height:100vh}
+.app{position:relative;z-index:2;display:flex;flex-direction:column;min-height:100vh}
 header{
   display:flex;align-items:center;gap:16px;padding:14px 24px;
   border-bottom:1px solid var(--border);background:rgba(18,18,28,.92);
@@ -119,33 +149,54 @@ header{
   box-shadow:0 8px 24px rgba(0,0,0,.28);
 }
 .logo{display:flex;align-items:center;gap:10px}
-.logo-icon{font-size:2rem;filter:drop-shadow(0 0 12px var(--accent-glow))}
-.logo h1{
-  font-size:1.52rem;font-family:var(--font-display);font-weight:800;letter-spacing:.08em;text-transform:uppercase;
-  background:linear-gradient(135deg,var(--accent),var(--accent2),var(--gold));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+.logo-icon{
+  width:36px;height:36px;border-radius:8px;border:2px solid rgba(255,159,26,0.3);
+  overflow:hidden;flex-shrink:0;background:#02070d;
+  display:inline-block;
 }
-.logo sub{font-size:.65rem;color:var(--dim);letter-spacing:.15em;text-transform:uppercase;display:block;margin-top:-2px}
+.logo-icon img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated;display:block}
+.logo h1{
+  font-size:1.15rem;font-family:var(--font-display);font-weight:900;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);
+  text-shadow:0 0 24px rgba(255,159,26,0.2);
+}
+.logo sub{font-size:.65rem;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;display:block;margin-top:-2px}
 .header-right{display:flex;gap:16px;margin-left:auto;align-items:center}
 .header-stats{display:flex;gap:20px;align-items:center}
 .stat{text-align:center}
-.stat-value{font-size:1.2rem;font-weight:600;font-family:var(--font-mono);color:var(--neon-cyan);text-shadow:0 0 8px rgba(0,240,255,.4)}
+.stat-value{font-size:1.2rem;font-weight:900;font-family:var(--font-mono);color:var(--accent)}
 .stat-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;color:var(--dim)}
 .chain-badge{
-  display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;
-  background:linear-gradient(120deg, rgba(255,90,31,.18), rgba(255,112,51,.09));
-  border:1px solid rgba(255,77,0,.28);font-size:.75rem;
-  font-weight:600;color:var(--accent2);
+  display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:2px;
+  background:rgba(9,13,18,0.7);
+  border:1px solid var(--border);font-size:.75rem;
+  font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;
 }
-.chain-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--neon-green);box-shadow:0 0 8px var(--neon-green);animation:pulse 2s infinite}
+.chain-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px rgba(255,159,26,0.35);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .header-links{display:flex;gap:10px;align-items:center}
 .header-links a{
-  display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:16px;
-  font-size:.7rem;font-weight:600;border:1px solid var(--border);
+  display:flex;align-items:center;gap:5px;padding:8px 10px;border-radius:2px;
+  font-size:.7rem;font-weight:700;border:1px solid var(--border);
+  background:rgba(9,13,18,0.7);
   color:var(--dim);transition:all .2s;
+  letter-spacing:.04em;text-transform:uppercase;
 }
-.header-links a:hover{border-color:var(--neon-cyan);color:var(--neon-cyan);text-decoration:none;background:rgba(0,240,255,.06)}
+.header-links a:hover{border-color:var(--neon-cyan);color:var(--text);text-decoration:none;background:#1b1f24}
+.header-links a[aria-current="page"]{
+  border-color:rgba(207,255,4,.55);
+  color:var(--text);
+  background:linear-gradient(180deg,var(--surface2) 0%, var(--surface) 100%);
+  box-shadow:inset 0 0 0 1px rgba(207,255,4,.10);
+}
+.header-links a.openclaw{
+  border-color:rgba(255,159,26,.35);
+  color:rgba(255,159,26,.95);
+}
+.header-links a.openclaw:hover{
+  border-color:var(--neon-cyan);
+  color:var(--text);
+}
 .connection-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
 .connection-dot.connected{background:var(--neon-green);box-shadow:0 0 6px var(--neon-green)}
 .connection-dot.disconnected{background:var(--neon-pink);box-shadow:0 0 6px var(--neon-pink);animation:pulse 1s infinite}
@@ -170,6 +221,28 @@ header{
   background:rgba(0,240,255,.1);border:1px solid rgba(0,240,255,.3);color:var(--neon-cyan);
   font-weight:700;font-family:var(--font-mono);
 }
+.panel-toolbar{
+  display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  padding:10px 12px;margin-bottom:10px;
+  background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:12px;
+}
+.mini-input,.mini-select{
+  background:rgba(0,0,0,.35);border:1px solid var(--border);color:var(--text);
+  padding:6px 8px;border-radius:10px;font-size:.68rem
+}
+.mini-input::placeholder{color:rgba(138,142,180,.9)}
+.mini-btn[disabled],.mini-select[disabled]{opacity:.55;cursor:not-allowed}
+.segmented{
+  display:inline-flex;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;
+  background:rgba(0,0,0,.25)
+}
+.seg-btn{
+  border:0;background:transparent;color:var(--dim);
+  padding:6px 10px;font-size:.66rem;cursor:pointer
+}
+.seg-btn + .seg-btn{border-left:1px solid rgba(45,45,88,.7)}
+.seg-btn.active{color:var(--text);background:rgba(0,240,255,.08)}
+.hint-row{font-size:.62rem;color:var(--dim);line-height:1.5}
 .panel-body{padding:16px;flex:1;overflow-y:auto;max-height:480px}
 .panel-body::-webkit-scrollbar{width:4px}
 .panel-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
@@ -558,6 +631,9 @@ header{animation:headerSlide .5s cubic-bezier(.22,1,.36,1) both}
   filter:blur(60px);
 }
 
+/* Terminal theme uses collage+fade background. */
+.ambient-layer{display:none}
+
 /* ── Header accent underline ────────────────────── */
 header::after{
   content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;
@@ -731,6 +807,8 @@ footer::before{
 </head>
 <body>
 <a href="#mainContent" class="skip-link">Skip to dashboard content</a>
+<div class="bg-collage" aria-hidden="true" id="bgCollage"></div>
+<div class="bg-fade" aria-hidden="true"></div>
 <div class="app">
 <div class="ambient-layer" aria-hidden="true"></div>
 <div id="srStatus" aria-live="polite" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden"></div>
@@ -739,10 +817,10 @@ footer::before{
 <!-- ═══════ HEADER ═══════ -->
 <header>
   <div class="logo">
-    <span class="logo-icon">🦞</span>
+    <span class="logo-icon" aria-hidden="true"><img src="/favicon-lobster.png" alt=""></span>
     <div>
       <h1>ApeClaw</h1>
-      <sub>ApeChain NFT Operations</sub>
+      <sub>The Clawbot Terminal</sub>
     </div>
   </div>
   <div class="header-right">
@@ -755,9 +833,12 @@ footer::before{
       <div class="stat"><div class="stat-value" id="totalSpent">0</div><div class="stat-label">Spent</div></div>
     </div>
     <div class="header-links">
-      <a href="https://openclaw.ai" target="_blank" rel="noopener" style="border-color:rgba(255,77,0,.4);color:var(--accent2)">OpenClaw</a>
+      <a href="/ui" data-keep-query="1" aria-current="page">Dashboard</a>
+      <a href="/pod" data-keep-query="1">THE POD</a>
+      <a href="/skills" data-keep-query="1">Skills</a>
+      <a href="/docs" data-keep-query="1">Docs</a>
       <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://github.com/simplefarmer69/ape-claw#commands" target="_blank" rel="noopener">Docs</a>
+      <a class="openclaw" href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a>
       <div class="shortcut-popover">
         <button class="mini-btn" id="shortcutsBtn" type="button" title="Keyboard shortcuts">Shortcuts</button>
         <div class="shortcut-panel" id="shortcutsPanel">
@@ -826,20 +907,28 @@ footer::before{
         <button type="button" id="toggleMotionBtn" style="font-size:.64rem;border-radius:8px;border:1px solid var(--border);background:#0f1120;color:var(--text);padding:5px 7px">Low Motion</button>
         <button type="button" id="themeResetBtn" style="font-size:.64rem;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--dim);padding:5px 7px">Reset</button>
       </div>
+      <div class="panel-toolbar" style="margin-bottom:16px">
+        <strong style="font-size:.7rem;color:var(--dim)">Setup Mode</strong>
+        <div class="segmented" role="tablist" aria-label="Setup mode">
+          <button type="button" class="seg-btn" id="setupModeQuickBtn" role="tab" aria-selected="true">Quick Start</button>
+          <button type="button" class="seg-btn" id="setupModePodBtn" role="tab" aria-selected="false">Pod + v2</button>
+        </div>
+        <span class="hint-row" style="width:100%">Quick Start is for collecting NFTs and bridging. Pod + v2 is for the Library of Alexandria and Otherside automation.</span>
+      </div>
       <div class="setup-grid">
-        <div class="setup-step">
+        <div class="setup-step" data-setup-mode="quick">
           <div class="setup-step-num">1</div>
           <h3>Install OpenClaw</h3>
           <pre>curl -fsSL https://openclaw.ai/install.sh | bash</pre>
           <p class="note">Or <code>npm i -g openclaw && openclaw onboard</code></p>
         </div>
-        <div class="setup-step">
+        <div class="setup-step" data-setup-mode="quick">
           <div class="setup-step-num">2</div>
           <h3>Install ApeClaw</h3>
           <pre>curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh | bash</pre>
           <p class="note">OpenClaw skill install: <code>npx --yes github:simplefarmer69/ape-claw skill install --scope local --json</code></p>
         </div>
-        <div class="setup-step">
+        <div class="setup-step" data-setup-mode="quick">
           <div class="setup-step-num">3</div>
           <h3>Register (global)</h3>
           <pre>npx --yes github:simplefarmer69/ape-claw clawbot register \
@@ -848,7 +937,7 @@ footer::before{
   --api https://api.apeclaw.ai --json</pre>
           <p class="note">Save the <code>claw_...</code> token — shown only once. Optional: redeem invite with <code>--invite inv_...</code>.</p>
         </div>
-        <div class="setup-step">
+        <div class="setup-step" data-setup-mode="quick">
           <div class="setup-step-num">4</div>
           <h3>Set env (global telemetry)</h3>
           <pre>export APE_CLAW_AGENT_ID=my-bot
@@ -857,14 +946,14 @@ export APE_CLAW_TELEMETRY_URL=https://api.apeclaw.ai
 export APE_CLAW_CHAT_URL=https://api.apeclaw.ai</pre>
           <p class="note">Optional: persist locally with <code>auth set --agent-id my-bot --agent-token claw_... --json</code>.</p>
         </div>
-        <div class="setup-step">
+        <div class="setup-step" data-setup-mode="quick">
           <div class="setup-step-num">5</div>
           <h3>Verify</h3>
           <pre>npx --yes github:simplefarmer69/ape-claw quickstart --json
 npx --yes github:simplefarmer69/ape-claw doctor --json</pre>
           <p class="note">Should return <code>"ok": true</code>.</p>
         </div>
-        <div class="setup-step">
+        <div class="setup-step" data-setup-mode="quick">
           <div class="setup-step-num">6</div>
           <h3>Collect (while you sleep)</h3>
           <pre>npx --yes github:simplefarmer69/ape-claw market collections --recommended --json
@@ -873,6 +962,44 @@ npx --yes github:simplefarmer69/ape-claw nft autobuy \
   --count 1 --minPrice 50 --maxPrice 100 \
   --execute --autonomous --json</pre>
           <p class="note">Open the live dashboard at <code>https://apeclaw.ai/?api=https://api.apeclaw.ai</code> (or <code>/ui</code>).</p>
+        </div>
+        <div class="setup-step" data-setup-mode="pod">
+          <div class="setup-step-num">7</div>
+          <h3>Init THE POD (workspace harness)</h3>
+          <pre>npx --yes github:simplefarmer69/ape-claw pod init \
+  --dir ./pod-workspace --json</pre>
+          <p class="note">Creates <code>AGENTS.md</code>, <code>SOUL.md</code>, <code>memory/active-tasks.md</code>, and more for crash recovery.</p>
+        </div>
+        <div class="setup-step" data-setup-mode="pod">
+          <div class="setup-step-num">8</div>
+          <h3>Seed v2 onchain skill library</h3>
+          <pre>npm run contracts:compile
+npm run contracts:test
+npm run contracts:seed</pre>
+          <p class="note">Mints Skill NFTs + publishes immutable versions (Library of Alexandria v0).</p>
+        </div>
+        <div class="setup-step" data-setup-mode="pod">
+          <div class="setup-step-num">9</div>
+          <h3>Run Otherside loop (dry mode)</h3>
+          <pre>mkdir -p "$HOME/pod/screens"
+python3 pod/run_agent.py \
+  --enabled \
+  --screenshot-dir "$HOME/pod/screens" \
+  --backend stub --dry-run</pre>
+          <p class="note">Strict opt-in and safe by default. Add <code>--backend claude_cli</code> after <code>claude /login</code>.</p>
+        </div>
+        <div class="setup-step" data-setup-mode="pod">
+          <div class="setup-step-num">10</div>
+          <h3>Optional: record onchain receipts</h3>
+          <pre>python3 pod/run_agent.py \
+  --enabled \
+  --screenshot-dir "$HOME/pod/screens" \
+  --backend stub --dry-run \
+  --onchain-receipts-enabled \
+  --onchain-receipts-rpc http://127.0.0.1:8545 \
+  --onchain-receipts-registry 0x... \
+  --onchain-receipts-private-key 0x...</pre>
+          <p class="note">Strict opt-in. Writes <code>pod.heartbeat</code> (low frequency) and <code>pod.stuck</code> receipts to <code>ReceiptRegistry</code>.</p>
         </div>
       </div>
     </div>
@@ -883,6 +1010,7 @@ npx --yes github:simplefarmer69/ape-claw nft autobuy \
 <div class="reveal reveal-2" style="padding:12px 24px 0;position:relative;z-index:1">
   <div class="collections-tools">
     <input id="collectionsSearch" type="search" placeholder="Search collections..." aria-label="Search collections">
+  <button type="button" class="mini-btn" id="collectionsClearBtn" title="Clear search" disabled>Clear</button>
     <select id="collectionsSort" aria-label="Sort collections">
       <option value="rank">Sort: rank</option>
       <option value="name">Sort: name</option>
@@ -901,7 +1029,17 @@ npx --yes github:simplefarmer69/ape-claw nft autobuy \
 
   <!-- ── Agents panel ── -->
   <div class="panel reveal reveal-3">
-    <div class="panel-header"><span class="icon">🦞</span> Clawllectors <span class="badge" id="agentCountBadge">0</span></div>
+    <div class="panel-header"><span class="icon">🦞</span> Clawllectors <span class="badge" id="agentCountBadge">0</span>
+      <span class="panel-actions">
+        <input class="mini-input" id="agentFilterInput" type="search" placeholder="Filter…" aria-label="Filter Clawllectors">
+        <select class="mini-select" id="agentStatusSel" aria-label="Filter status">
+          <option value="all">All</option>
+          <option value="active">Active</option>
+          <option value="idle">Idle</option>
+          <option value="offline">Offline</option>
+        </select>
+      </span>
+    </div>
     <div class="panel-body">
       <div class="agents-grid" id="agentsGrid"></div>
     </div>
@@ -911,6 +1049,15 @@ npx --yes github:simplefarmer69/ape-claw nft autobuy \
   <div class="panel reveal reveal-3">
     <div class="panel-header"><span class="icon">📡</span> Live Activity <span class="badge" id="eventCountBadge">0</span>
       <span class="panel-actions">
+        <select class="mini-select" id="feedFilterSel" aria-label="Filter feed">
+          <option value="all">All</option>
+          <option value="nft">NFT</option>
+          <option value="bridge">Bridge</option>
+          <option value="chat">Chat</option>
+          <option value="policy">Policy</option>
+          <option value="receipts">Receipts</option>
+          <option value="v2">v2</option>
+        </select>
         <button class="mini-btn" id="feedPauseBtn" type="button">Pause</button>
         <button class="mini-btn" id="feedClearBtn" type="button">Clear</button>
         <button class="mini-btn" id="feedExportBtn" type="button">Export</button>
@@ -1007,8 +1154,38 @@ npx --yes github:simplefarmer69/ape-claw nft autobuy \
 //  Real-time event stream from ape-claw CLI telemetry.
 // ═══════════════════════════════════════════════════════════
 
+// Lightweight collage background to match the Stonk terminal feel.
+try {
+  const c = document.getElementById('bgCollage');
+  if (c && !c.hasChildNodes()) {
+    const N = 80;
+    for (let i = 0; i < N; i++) {
+      const img = document.createElement('img');
+      img.src = '/favicon-lobster.png';
+      img.alt = '';
+      img.style.setProperty('--r', `${Math.round((Math.random() * 10 - 5) * 10) / 10}deg`);
+      c.appendChild(img);
+    }
+  }
+} catch {}
+
 const APESCAN_TX = 'https://apescan.io/tx/';
 const APESCAN_ADDR = 'https://apescan.io/address/';
+
+// Terminal collage background (match /pod, /skills, /docs, / landing).
+try {
+  const c = document.getElementById('bgCollage');
+  if (c && !c.hasChildNodes()) {
+    const N = 80;
+    for (let i = 0; i < N; i++) {
+      const img = document.createElement('img');
+      img.src = '/favicon-lobster.png';
+      img.alt = '';
+      img.style.setProperty('--r', `${Math.round((Math.random() * 10 - 5) * 10) / 10}deg`);
+      c.appendChild(img);
+    }
+  }
+} catch {}
 
 let COLLECTIONS = [];
 let REGISTERED_CLAWBOTS = [];
@@ -1197,7 +1374,7 @@ function pushFeedEvent(evt, { trim = true } = {}) {
   if (k && seenFeedKeys.has(k)) return false;
 
   const html = processEvent(evt);
-  feedItems.push({ html });
+  feedItems.push({ html, et: String(evt?.eventType || '') });
   feedRawEvents.push(evt);
   feedKeys.push(k || '');
   if (k) seenFeedKeys.add(k);
@@ -1284,6 +1461,35 @@ async function ensureBackendReachableWithFallback() {
 }
 
 function initSetupEnhancements() {
+  // Setup mode toggles (Quick Start vs Pod + v2)
+  function applySetupMode(mode) {
+    const m = (mode === 'pod') ? 'pod' : 'quick';
+    try { localStorage.setItem('apeclaw_setup_mode', m); } catch {}
+    const quickBtn = document.getElementById('setupModeQuickBtn');
+    const podBtn = document.getElementById('setupModePodBtn');
+    if (quickBtn) {
+      quickBtn.classList.toggle('active', m === 'quick');
+      quickBtn.setAttribute('aria-selected', m === 'quick' ? 'true' : 'false');
+    }
+    if (podBtn) {
+      podBtn.classList.toggle('active', m === 'pod');
+      podBtn.setAttribute('aria-selected', m === 'pod' ? 'true' : 'false');
+    }
+    document.querySelectorAll('.setup-step').forEach((step) => {
+      const sm = step.getAttribute('data-setup-mode') || 'quick';
+      step.style.display = (sm === m) ? '' : 'none';
+    });
+  }
+  const quickBtn = document.getElementById('setupModeQuickBtn');
+  const podBtn = document.getElementById('setupModePodBtn');
+  if (quickBtn && podBtn) {
+    quickBtn.addEventListener('click', () => applySetupMode('quick'));
+    podBtn.addEventListener('click', () => applySetupMode('pod'));
+    let initial = 'quick';
+    try { initial = localStorage.getItem('apeclaw_setup_mode') || 'quick'; } catch {}
+    applySetupMode(initial);
+  }
+
   document.querySelectorAll('.setup-step').forEach((step, idx) => {
     const title = step.querySelector('h3');
     if (title && !step.querySelector('.setup-check')) {
@@ -1326,9 +1532,28 @@ function initSetupEnhancements() {
 function initCollectionControls() {
   const search = document.getElementById('collectionsSearch');
   const sort = document.getElementById('collectionsSort');
+  const clearBtn = document.getElementById('collectionsClearBtn');
   if (!search || !sort) return;
-  search.addEventListener('input', () => { collectionQuery = search.value.toLowerCase().trim(); renderCollectionsBar(); });
+  function applyQueryFromUi() {
+    collectionQuery = (search.value || '').toLowerCase().trim();
+    if (clearBtn) clearBtn.disabled = !collectionQuery;
+    renderCollectionsBar();
+  }
+  search.addEventListener('input', applyQueryFromUi);
+  search.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      search.value = '';
+      applyQueryFromUi();
+      search.blur();
+    }
+  });
+  if (clearBtn) clearBtn.addEventListener('click', () => {
+    search.value = '';
+    applyQueryFromUi();
+    search.focus();
+  });
   sort.addEventListener('change', () => { collectionSort = sort.value; renderCollectionsBar(); });
+  applyQueryFromUi();
 }
 
 function initPanelControls() {
@@ -1340,6 +1565,28 @@ function initPanelControls() {
   const terminalAutoBtn = document.getElementById('terminalAutoBtn');
   const chatReconnectBtn = document.getElementById('chatReconnectBtn');
   const chatExportBtn = document.getElementById('chatExportBtn');
+  const feedFilterSel = document.getElementById('feedFilterSel');
+  const agentFilterInput = document.getElementById('agentFilterInput');
+  const agentStatusSel = document.getElementById('agentStatusSel');
+
+  if (feedFilterSel) {
+    // Allow URL override: ?feed=v2 or ?filter=receipts (useful for sharing).
+    let initial = '';
+    try {
+      const u = new URL(window.location.href);
+      initial = (u.searchParams.get('feed') || u.searchParams.get('filter') || '').trim().toLowerCase();
+    } catch {}
+    if (!initial) {
+      try { initial = localStorage.getItem('apeclaw_feed_filter') || 'all'; } catch {}
+    }
+    feedFilterSel.value = initial || 'all';
+    feedFilterSel.addEventListener('change', () => {
+      try { localStorage.setItem('apeclaw_feed_filter', feedFilterSel.value); } catch {}
+      renderFeed();
+    });
+  }
+  if (agentFilterInput) agentFilterInput.addEventListener('input', () => renderAgents());
+  if (agentStatusSel) agentStatusSel.addEventListener('change', () => renderAgents());
 
   if (feedPauseBtn) feedPauseBtn.addEventListener('click', () => {
     feedPaused = !feedPaused;
@@ -1495,6 +1742,8 @@ function startCollectionsCarousel() {
 
 function renderAgents() {
   const el = document.getElementById('agentsGrid');
+  const q = (document.getElementById('agentFilterInput')?.value || '').toLowerCase().trim();
+  const statusSel = (document.getElementById('agentStatusSel')?.value || 'all').toLowerCase().trim();
 
   // Merge registered clawbots that haven't sent events yet
   for (const reg of REGISTERED_CLAWBOTS) {
@@ -1533,7 +1782,12 @@ function renderAgents() {
     if (diff !== 0) return diff;
     return b.lastSeen - a.lastSeen;
   });
-  el.innerHTML = sorted.map(a => {
+  const filtered = sorted.filter((a) => {
+    if (statusSel !== 'all' && a.status !== statusSel) return false;
+    if (!q) return true;
+    return String(a.name || '').toLowerCase().includes(q) || String(a.id || '').toLowerCase().includes(q);
+  });
+  el.innerHTML = filtered.map(a => {
     const badge = a.verified ? '<span class="verified-badge">Clawllector</span>' : '';
     const cardClass = a.verified ? 'agent-card verified-card' : 'agent-card';
     return `<div class="${cardClass}">
@@ -1596,6 +1850,18 @@ function renderBridge() {
 
 function renderFeed() {
   const el = document.getElementById('activityFeed');
+  const filter = (document.getElementById('feedFilterSel')?.value || 'all').toLowerCase().trim();
+  function categoryForEventType(et) {
+    const t = String(et || '');
+    if (!t) return 'other';
+    if (t.startsWith('v2.receipt.') || t.includes('receipt')) return 'receipts';
+    if (t.startsWith('nft.') || t.includes('nft')) return 'nft';
+    if (t.startsWith('bridge.') || t.includes('bridge')) return 'bridge';
+    if (t.startsWith('chat.') || t.includes('chat')) return 'chat';
+    if (t.startsWith('policy.')) return 'policy';
+    if (t.startsWith('v2.')) return 'v2';
+    return 'other';
+  }
   const pausedBanner = feedPaused
     ? `<div style="font-size:.66rem;color:var(--gold);margin-bottom:8px">Feed paused — live events continue in background.</div>`
     : '';
@@ -1606,7 +1872,17 @@ function renderFeed() {
     </div>`;
     return;
   }
-  el.innerHTML = pausedBanner + feedItems.slice(-50).reverse().map(f => f.html).join('');
+  const visible = (filter === 'all')
+    ? feedItems
+    : feedItems.filter((f) => {
+      const c = categoryForEventType(f.et);
+      if (filter === 'v2') return c === 'v2' || c === 'receipts';
+      return c === filter;
+    });
+  const note = (filter !== 'all')
+    ? `<div style="font-size:.66rem;color:var(--dim);margin-bottom:8px">Filter: <code>${escapeHtml(filter)}</code> • showing ${visible.length}/${feedItems.length}</div>`
+    : '';
+  el.innerHTML = pausedBanner + note + visible.slice(-50).reverse().map(f => f.html).join('');
 }
 
 function renderTerminal() {
@@ -1778,6 +2054,34 @@ function processEvent(evt) {
   // ── Skill install
   if (et === 'skill.install.ran') {
     return feedItem(t,'📦',`<strong>${escapeHtml(ag)}</strong> installed skill at <code>${escapeHtml(result.skillPath||'?')}</code>`);
+  }
+  // ── v2 (onchain primitives)
+  if (et === 'v2.skill.minted') {
+    const sid = result.skillId || '?';
+    const tx = result.txHash || '';
+    return feedItem(t,'🧬',`<strong>${escapeHtml(ag)}</strong> minted SkillNFT #${escapeHtml(sid)} <span class="hash">${escapeHtml(shortAddr(tx))}</span>`);
+  }
+  if (et === 'v2.skill.version.published') {
+    const sid = result.skillId || '?';
+    const vh = result.versionHash ? shortAddr(String(result.versionHash)) : '';
+    const ch = result.contentHash ? shortAddr(String(result.contentHash)) : '';
+    const uri = result.uri || '';
+    return feedItem(t,'📚',`<strong>${escapeHtml(ag)}</strong> published v2 skill version for #${escapeHtml(sid)} <span class="hash">${escapeHtml(vh)}</span> <span class="hash">${escapeHtml(ch)}</span> ${uri ? `<span class="hash">${escapeHtml(uri)}</span>` : ''}`);
+  }
+  if (et === 'v2.intent.created') {
+    const ih = result.intentHash ? shortAddr(String(result.intentHash)) : '';
+    const exp = result.expiresAt ? ` expires ${escapeHtml(String(result.expiresAt))}` : '';
+    return feedItem(t,'🎯',`<strong>${escapeHtml(ag)}</strong> created v2 intent <span class="hash">${escapeHtml(ih)}</span>${exp}`);
+  }
+  if (et === 'v2.intent.cancelled') {
+    const id = result.intentId || '?';
+    return feedItem(t,'🧹',`<strong>${escapeHtml(ag)}</strong> cancelled v2 intent #${escapeHtml(String(id))}`);
+  }
+  if (et === 'v2.receipt.recorded') {
+    const subj = result.subject || payload.subject || 'agent:unknown';
+    const th = result.traceIdHash ? shortAddr(String(result.traceIdHash)) : '';
+    const ch = result.contentHash ? shortAddr(String(result.contentHash)) : '';
+    return feedItem(t,'🧾',`<strong>${escapeHtml(ag)}</strong> recorded receipt <span class="collection-tag">${escapeHtml(subj)}</span> <span class="hash">${escapeHtml(th)}</span> <span class="hash">${escapeHtml(ch)}</span>`);
   }
   // ── Clawbot registered
   if (et === 'clawbot.registered') {
@@ -2344,10 +2648,28 @@ function initChat() {
 // ═══════════════════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════════════════
+function initKeepQueryLinks() {
+  // Preserve ?api=... across internal navigation (matches pod/docs/skills pages).
+  try {
+    const cur = new URL(window.location.href);
+    const api = (cur.searchParams.get('api') || '').trim();
+    if (!api) return;
+    const as = document.querySelectorAll('a[data-keep-query="1"]');
+    for (let i = 0; i < as.length; i++) {
+      const raw = String(as[i].getAttribute('href') || '');
+      if (!raw || raw.startsWith('http') || raw.startsWith('#')) continue;
+      const u = new URL(raw, window.location.origin);
+      if (!u.searchParams.has('api')) u.searchParams.set('api', api);
+      as[i].setAttribute('href', u.pathname + (u.search ? u.search : '') + (u.hash ? u.hash : ''));
+    }
+  } catch {}
+}
+
 async function boot() {
   loadUiPrefs();
   applyUiPrefs();
   initApiBase();
+  initKeepQueryLinks();
   initBackendConfigUi();
   await ensureBackendReachableWithFallback();
   initSetupEnhancements();

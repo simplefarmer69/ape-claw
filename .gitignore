@@ -5,6 +5,7 @@ node_modules/
 state/
 config/policy.json
 config/clawbots.json
+skillcards/imported/
 
 # Environment & secrets
 .env
@@ -23,6 +24,8 @@ Thumbs.db
 research/
 assets/launch/
 ARTICLE_LAUNCH.md
+pod-workspace/
+_pod_tmp_test/
 *.pdf
 apechain_collections.json
 ape-claw_build_plan_audited.md
