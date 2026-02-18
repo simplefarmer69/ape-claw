@@ -12,6 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/ui/shared/sidebar-nav.css">
   <script defer src="/ui/shared/sidebar-nav.js"></script>
+  <link rel="stylesheet" href="/ui/shared/motion.css">
+  <script defer src="/ui/shared/motion.js"></script>
   <style>
     :root{
       --bg:#111111;
@@ -101,31 +103,6 @@
     }
 
     .wrap{position:relative;z-index:3;max-width:1260px;margin:0 auto;padding:20px 20px 28px}
-    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:22px}
-    .brand{display:flex;align-items:center;gap:12px}
-    .logo{
-      width:36px;height:36px;border-radius:8px;border:2px solid rgba(255,159,26,0.3);
-      overflow:hidden;flex-shrink:0;background:#02070d;
-    }
-    .logo img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
-    .brand strong{
-      font-size:18px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);
-      text-shadow:0 0 24px rgba(255,159,26,0.2);
-    }
-    .links{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .link{
-      font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
-      border:1px solid var(--panel-border);background:rgba(9,13,18,0.7);
-      padding:8px 10px;border-radius:2px;color:var(--muted);transition:all .2s ease;
-    }
-    .link:hover{border-color:var(--cyan);background:#1b1f24;color:var(--text);text-decoration:none}
-    .link[aria-current="page"]{
-      border-color:rgba(207,255,4,.55);
-      color:var(--text);
-      background:linear-gradient(180deg,var(--panel-2) 0%,var(--panel) 100%);
-      box-shadow:inset 0 0 0 1px rgba(207,255,4,.10);
-      text-decoration:none;
-    }
 
     .layout{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
     @media(min-width:980px){.layout{grid-template-columns:320px 1fr}}
@@ -211,6 +188,20 @@
       background:rgba(9,13,18,0.6);color:#d4e6fa;white-space:nowrap;margin-top:1px;
       text-transform:uppercase;letter-spacing:.04em;
     }
+    .sidebar-section{margin-top:16px}
+    .sidebar-section:first-child{margin-top:0}
+    .sidebar-section h3{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent,#cff004);margin:16px 0 6px;padding:0 12px}
+    .sidebar-section .doc-link{
+      display:block;padding:8px 12px;color:var(--text);text-decoration:none;font-size:13px;border-radius:2px;margin:2px 0;
+      border:1px solid transparent;transition:border-color 0.2s;
+    }
+    .sidebar-section .doc-link:hover{border-color:var(--cyan);text-decoration:none;background:rgba(255,255,255,.02)}
+    .sidebar-section .doc-link.active{
+      border-color:rgba(207,255,4,.55);
+      box-shadow:inset 0 0 0 1px rgba(207,255,4,.10);
+      background:linear-gradient(180deg,var(--panel-2) 0%,var(--panel) 100%);
+      color:var(--amber-soft);
+    }
 
     .toolbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
     .crumbs{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
@@ -280,23 +271,8 @@
   <div class="noise" aria-hidden="true"></div>
   <div id="sbNavMount"></div>
   <div class="wrap sb-content-offset">
-    <div class="top">
-      <a class="brand" href="/" aria-label="ApeClaw">
-        <div class="logo" aria-hidden="true"><img src="/favicon-lobster.png" alt=""></div>
-        <strong>ApeClaw</strong>
-      </a>
-      <div class="links">
-        <a class="link" href="/ui" data-keep-query="1">Dashboard</a>
-        <a class="link" href="/pod" data-keep-query="1">THE POD</a>
-        <a class="link" href="/skills" data-keep-query="1">Skills</a>
-        <a class="link" href="/docs" data-keep-query="1" aria-current="page">Docs</a>
-        <a class="link" href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
-        <a class="link" href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a>
-      </div>
-    </div>
-
     <div class="layout">
-      <div class="panel sidebar">
+      <div class="panel sidebar ac-observe">
         <div class="eyebrow">Documentation</div>
         <div class="title">Everything, in one place.</div>
         <p class="subtitle">
@@ -322,10 +298,10 @@
         <div class="mini-note" id="statsNote">Docs: <code id="docsCount">0</code> · Showing: <code id="docsShowing">0</code></div>
 
         <div id="docNav"></div>
-        <div class="foot">Tip: press <code>/</code> to focus search.</div>
+        <div class="foot ac-observe">Tip: press <code>/</code> to focus search.</div>
       </div>
 
-      <div class="panel main">
+      <div class="panel main ac-observe">
         <div class="toolbar">
           <div class="crumbs" id="crumbs">Loading…</div>
           <div class="btns">
@@ -362,25 +338,23 @@
       } catch (e) {}
 
       var DOCS = [
-        { section: "Start Here", file: "README.md", title: "Docs Index", desc: "Operator-focused docs index (manual first).", tag: "manual" },
-        { section: "Start Here", file: "CONTRIBUTING.md", title: "Contributing", desc: "How users + agents add skills, run Pods, and publish onchain.", tag: "manual" },
-        { section: "Product Manual", file: "PRODUCT_OVERVIEW.md", title: "Product Overview", desc: "What ApeClaw is, what pages do, how the parts connect.", tag: "manual" },
-        { section: "Product Manual", file: "DASHBOARD_GUIDE.md", title: "Dashboard Guide", desc: "How to use /ui: feed, filters, setup panel, chat, debug.", tag: "ui" },
-        { section: "Product Manual", file: "CLI_GUIDE.md", title: "CLI Guide", desc: "How bots run: install patterns, identity, safety posture, common flows.", tag: "cli" },
-        { section: "Product Manual", file: "GLOBAL_BACKEND.md", title: "Global Backend", desc: "Persistence, CORS, routing, deployments, troubleshooting.", tag: "ops" },
-        { section: "Product Manual", file: "CLAWBOTS_AND_INVITES.md", title: "Clawbots + Invites", desc: "Global onboarding, verification, security model.", tag: "id" },
-        { section: "Product Manual", file: "TELEMETRY_AND_EVENTS.md", title: "Telemetry + Events", desc: "Event envelope, remote ingest, SSE streams, dedupe.", tag: "telemetry" },
-        { section: "Product Manual", file: "V1_WORKFLOWS.md", title: "v1 Workflows", desc: "NFT buy/autobuy + bridge flows, confirm phrases, safety gates.", tag: "v1" },
-        { section: "Product Manual", file: "SUPPORTED_NETWORKS.md", title: "Supported Networks", desc: "Reality check: what works today vs planned (no overclaiming).", tag: "nets" },
-        { section: "v2-alpha (Onchain)", file: "ONCHAIN_V2_GUIDE.md", title: "v2-alpha Onchain Guide", desc: "Operator flow for skills + receipts; how to seed/mint/publish/record.", tag: "onchain" },
-        { section: "v2-alpha (Onchain)", file: "APECLAW_V2_ALPHA.md", title: "v2-alpha Overview", desc: "Onchain primitives, SkillCards, THE POD, compatibility guardrails.", tag: "v2" },
-        { section: "v2-alpha (Onchain)", file: "V2_ONCHAIN_SKILLS.md", title: "v2 Onchain Skills", desc: "Contracts, hashing, seeding, risk tiers, URI strategy.", tag: "v2" },
-        { section: "v2-alpha (Onchain)", file: "SKILLCARDS_AND_IMPORTER.md", title: "SkillCards + Importer", desc: "Manifest → import → optional mint/publish; openclaw mirror support.", tag: "library" },
-        { section: "v2-alpha (Onchain)", file: "THE_POD_RUNNER.md", title: "THE POD Runner", desc: "Workspace scaffold, runner loop, kill switch, heartbeats.", tag: "pod" },
-        { section: "Market", file: "ACP_BOUNTIES.md", title: "ACP Bounties", desc: "Hire skills on demand (bounties), safety posture, receipts, revenue share.", tag: "market" },
-        { section: "Theory", file: "AUTONOMY_AND_SUBSTRATE.md", title: "Autonomy + Substrate", desc: "Why the chain matters: persistence, receipts, onchain source-of-truth.", tag: "thesis" },
-        { section: "Theory", file: "WEB4_SWARM_MODEL.md", title: "Web4 Swarm Model", desc: "How agents scale as a swarm with onchain skills + receipts + persistence.", tag: "thesis" },
-        { section: "Roadmap", file: "WEB4_PLAN_STATUS.md", title: "Web4 Plan Status", desc: "Plan mapping: what shipped vs what is still planned (no overclaiming).", tag: "plan" }
+        { section: "Operator Guide", file: "operator/01-quickstart.md", title: "Quickstart", desc: "Get started with ApeClaw", tag: "operator" },
+        { section: "Operator Guide", file: "operator/02-dashboard.md", title: "Dashboard Guide", desc: "How to use the dashboard interface", tag: "operator" },
+        { section: "Operator Guide", file: "operator/03-cli-reference.md", title: "CLI Reference", desc: "Command-line interface documentation", tag: "operator" },
+        { section: "Operator Guide", file: "operator/04-skills-library.md", title: "Skills Library", desc: "Available skills and how to use them", tag: "operator" },
+        { section: "Operator Guide", file: "operator/05-pod-operations.md", title: "Pod Operations", desc: "Running and managing Pods", tag: "operator" },
+        { section: "Operator Guide", file: "operator/06-deployment.md", title: "Deployment", desc: "Deployment guides and best practices", tag: "operator" },
+        { section: "Operator Guide", file: "operator/07-safety-and-policy.md", title: "Safety & Policy", desc: "Safety measures and policy guidelines", tag: "operator" },
+        { section: "Operator Guide", file: "operator/08-troubleshooting.md", title: "Troubleshooting", desc: "Common issues and solutions", tag: "operator" },
+        { section: "Operator Guide", file: "operator/09-env-reference.md", title: "Environment Variables", desc: "Configuration via environment variables", tag: "operator" },
+        { section: "Developer Guide", file: "developer/01-architecture.md", title: "Architecture", desc: "System architecture and design", tag: "developer" },
+        { section: "Developer Guide", file: "developer/02-contracts.md", title: "Smart Contracts", desc: "Smart contract documentation", tag: "developer" },
+        { section: "Developer Guide", file: "developer/03-writing-modules.md", title: "Writing Modules", desc: "How to write and extend modules", tag: "developer" },
+        { section: "Developer Guide", file: "developer/04-skillcard-spec.md", title: "SkillCard Spec", desc: "SkillCard specification and format", tag: "developer" },
+        { section: "Developer Guide", file: "developer/05-backend-api.md", title: "Backend API", desc: "Backend API documentation", tag: "developer" },
+        { section: "Developer Guide", file: "developer/06-telemetry.md", title: "Telemetry", desc: "Telemetry system and events", tag: "developer" },
+        { section: "Developer Guide", file: "developer/07-testing.md", title: "Testing", desc: "Testing strategies and tools", tag: "developer" },
+        { section: "Developer Guide", file: "developer/08-contributing.md", title: "Contributing", desc: "How to contribute to the project", tag: "developer" }
       ];
 
       function $(id){ return document.getElementById(id); }
@@ -554,7 +528,7 @@
           var d = (u.searchParams.get("doc") || "").trim();
           if (d) return d;
         } catch (e) {}
-        return "README.md";
+        return "operator/01-quickstart.md";
       }
 
       function setDocInUrl(doc){
@@ -630,32 +604,24 @@
         } catch (e) {}
 
         var groups = groupDocs(filtered);
-        var sectionOrder = [];
-        var seen = {};
-        for (var i = 0; i < filtered.length; i++){
-          var s = filtered[i].section;
-          if (!seen[s]) { seen[s] = true; sectionOrder.push(s); }
-        }
+        var sectionOrder = ["Operator Guide", "Developer Guide"];
         var html = [];
         var curDoc = currentDocFromUrl();
         var apiBase = currentApiBase();
+        
         sectionOrder.forEach(function(section){
           var items = groups[section] || [];
           if (!items.length) return;
-          html.push("<div class=\"section-h\">" + escapeHtml(section) + " (" + items.length + ")" + "</div>");
-          html.push("<div class=\"doclist\">");
+          html.push("<div class=\"sidebar-section\">");
+          html.push("<h3>" + escapeHtml(section) + "</h3>");
           items.forEach(function(d){
             // Keep current query params (e.g. ?api=...) when deep-linking to docs.
             var href = "/docs?doc=" + encodeURIComponent(d.file) + "&api=" + encodeURIComponent(apiBase);
             var active = (d.file === curDoc) ? " active" : "";
             var currentAttr = (d.file === curDoc) ? " aria-current=\"page\"" : "";
             html.push(
-              "<a class=\"doclink" + active + "\" href=\"" + href + "\" data-doc=\"" + escapeHtml(d.file) + "\"" + currentAttr + ">" +
-                "<div>" +
-                  "<div class=\"docname\">" + escapeHtml(d.title) + "</div>" +
-                  "<div class=\"docdesc\">" + escapeHtml(d.desc) + "</div>" +
-                "</div>" +
-                "<div class=\"tag\">" + escapeHtml(d.tag || "") + "</div>" +
+              "<a class=\"doc-link" + active + "\" href=\"" + href + "\" data-doc=\"" + escapeHtml(d.file) + "\"" + currentAttr + ">" +
+                escapeHtml(d.title) +
               "</a>"
             );
           });
@@ -670,7 +636,7 @@
           for (var i = 0; i < links.length; i++){
             links[i].addEventListener("click", function(ev){
               ev.preventDefault();
-              var doc = this.getAttribute("data-doc") || "README.md";
+              var doc = this.getAttribute("data-doc") || "operator/01-quickstart.md";
               loadDoc(doc);
             });
           }
@@ -719,6 +685,7 @@
         var meta = DOCS.find(function(d){ return d.file === doc; }) || null;
         setToolbar(doc, meta ? meta.title : "");
 
+        // Handle both old flat structure and new subdirectory structure
         var url = "/docs/" + encodeURIComponent(doc);
         var ghRaw = "https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/docs/" + encodeURIComponent(doc);
 

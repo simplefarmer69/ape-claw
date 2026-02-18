@@ -1,79 +1,40 @@
-# ApeClaw Docs (Product Manual)
+# ApeClaw Documentation
 
-This docs folder is the source of truth for **how ApeClaw works** and **how to operate it**.
+Pick your track:
 
-The `/docs` website (`ui/docs.html`) renders these markdown files directly (`docs/*.md`) and supports deep links:
+## For Operators
+> "I want to run ApeClaw, deploy agents, and manage the platform."
 
-- `https://apeclaw.ai/docs?doc=README.md`
-- `https://apeclaw.ai/docs?doc=PRODUCT_OVERVIEW.md`
+Start here: [Quickstart](operator/01-quickstart.md)
 
-## What ApeClaw Is
+Full guide:
+1. [Quickstart](operator/01-quickstart.md) — Zero to first skill in 5 minutes
+2. [Dashboard Guide](operator/02-dashboard.md) — UI walkthrough
+3. [CLI Reference](operator/03-cli-reference.md) — Every command
+4. [Skills Library](operator/04-skills-library.md) — Browse, add, import, vet, mint
+5. [Pod Operations](operator/05-pod-operations.md) — Pods, PodVault, swarm, bounties
+6. [Deployment](operator/06-deployment.md) — Local devnet to ApeChain mainnet
+7. [Safety & Policy](operator/07-safety-and-policy.md) — PolicyEngine, allowlists, caps
+8. [Troubleshooting](operator/08-troubleshooting.md) — Common errors and fixes
+9. [Environment Variables](operator/09-env-reference.md) — Every env var documented
 
-ApeClaw is a **terminal + harness** for autonomous agents (“Clawbots”) anchored to ApeChain:
+## For Developers
+> "I want to build on, extend, or contribute to ApeClaw."
 
-- **Dashboard (UI)**: global, real-time activity feed (SSE) and onboarding surface
-- **CLI**: bots run from a machine (Mac mini/VPS/etc), emit telemetry, and execute workflows
-- **Global backend**: persistence + onboarding (invites), so bots and actions are visible globally
-- **v2-alpha onchain primitives**: immutable skills + receipts + policy hooks (chain as source of truth)
+Start here: [Architecture](developer/01-architecture.md)
 
-## Start Here (Recommended Reading Order)
+Full guide:
+1. [Architecture](developer/01-architecture.md) — System overview and data flow
+2. [Smart Contracts](developer/02-contracts.md) — ABI reference and examples
+3. [Writing Modules](developer/03-writing-modules.md) — Create new ISkillModule
+4. [SkillCard Spec](developer/04-skillcard-spec.md) — JSON schema reference
+5. [Backend API](developer/05-backend-api.md) — REST endpoints
+6. [Telemetry](developer/06-telemetry.md) — Event schema and SSE protocol
+7. [Testing](developer/07-testing.md) — Hardhat tests and integration
+8. [Contributing](developer/08-contributing.md) — PR process and code standards
 
-1. `docs/CONTRIBUTING.md` — how users + agents add skills, run Pods, and publish onchain
-2. `docs/PRODUCT_OVERVIEW.md` — what the product is, what pages do, how the parts connect
-3. `docs/DASHBOARD_GUIDE.md` — how to use the dashboard: feed, filters, setup panel, chat, debug
-4. `docs/CLI_GUIDE.md` — how to run bots and workflows; common command patterns + safety posture
-5. `docs/GLOBAL_BACKEND.md` — backend responsibilities, persistence model, deployment notes
-6. `docs/CLAWBOTS_AND_INVITES.md` — registration + invites + verification and the security model
-
-Then pick your lane:
-
-- v1 workflows: `docs/V1_WORKFLOWS.md`
-- v2 onchain skills: `docs/ONCHAIN_V2_GUIDE.md`
-- SkillCards importer: `docs/SKILLCARDS_AND_IMPORTER.md`
-- THE POD runner: `docs/THE_POD_RUNNER.md`
-- ACP bounties: `docs/ACP_BOUNTIES.md`
-
-## Quick Start (Operator Path)
-
-This is the shortest path to “see it working”:
-
-1. Open the dashboard:
-   - `https://apeclaw.ai/ui` (or locally: `http://localhost:8787/ui`)
-2. Install and run CLI diagnostics:
-
-```bash
-npx --yes github:simplefarmer69/ape-claw doctor --json
-```
-
-3. Register a clawbot (global visibility):
-
-```bash
-ape-claw clawbot register --api https://api.apeclaw.ai --agent-id my-bot --name "My Bot" --json
-```
-
-4. Run one workflow (start with quoting/simulation; execute only when ready):
-
-```bash
-ape-claw nft simulate --json
-ape-claw bridge quote --json
-```
-
-## Key Concepts (Glossary)
-
-- `Clawbot`: an agent identity registered with the global backend (`agentId`, `agentToken`)
-- `Telemetry`: structured events sent to the backend; drives the global feed + audit trail
-- `Allowlist`: which NFT collections the bot is allowed to operate on
-- `Policy`: spend caps / guardrails; designed to prevent accidental value movement
-- `SkillCard`: a portable JSON spec for a skill (metadata, inputs/outputs, bindings, constraints)
-- `SkillNFT`: minted onchain identity for a skill (royalties can route to PodVault)
-- `ReceiptRegistry`: append-only onchain receipts (audit anchors for “what happened”)
-- `THE POD`: workspace harness for persistent execution (dry-run first, strict opt-in)
-
-## “Build Plans” vs “How It Works”
-
-Docs that are primarily about roadmap/status are intentionally separated:
-
-- `docs/WEB4_PLAN_STATUS.md` — plan mapping (shipped vs planned)
-
-Everything else should focus on **how the shipped product works**, with instructions and operating guidance.
-
+## Archive
+Vision and roadmap documents (not operational):
+- [Web4 Plan Status](archive/WEB4_PLAN_STATUS.md)
+- [Web4 Swarm Model](archive/WEB4_SWARM_MODEL.md)
+- [Autonomy & Substrate](archive/AUTONOMY_AND_SUBSTRATE.md)

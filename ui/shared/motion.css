@@ -1,0 +1,144 @@
+/* ══════════════════════════════════════════════════
+   ApeClaw motion primitives
+   Ported from stonkbrokers.cash landing animations
+   ══════════════════════════════════════════════════ */
+
+/* Section reveal — slides up and fades in */
+@keyframes acRevealUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Counter number "pop" on arrival */
+@keyframes acCounterPop {
+  0%   { transform: scale(0.8); opacity: 0; }
+  60%  { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Horizontal divider sweep */
+@keyframes acLineSweep {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* Progress bar shimmer sweep */
+@keyframes acShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Scale in from center */
+@keyframes acScaleIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* Gentle bounce for scroll hints */
+@keyframes acBounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(6px); }
+}
+
+/* CTA glow pulse */
+@keyframes acGlowPulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(207,255,4,0.10); }
+  50%      { box-shadow: 0 0 24px rgba(207,255,4,0.20), 0 0 48px rgba(207,255,4,0.06); }
+}
+
+/* ── States ─────────────────────────────── */
+
+/* .ac-observe: hidden by default, revealed when IntersectionObserver fires */
+.ac-observe {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ac-observe.ac-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger children inside a revealed container */
+.ac-stagger > .ac-observe {
+  transition-delay: calc(var(--ac-i, 0) * 80ms);
+}
+
+/* Counter pop class (applied by JS after count-up starts) */
+.ac-counter-pop {
+  animation: acCounterPop 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Section divider line that sweeps in */
+.ac-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(207,255,4,0.25), transparent);
+  transform: scaleX(0);
+  opacity: 1 !important;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ac-visible > .ac-divider,
+.ac-divider.ac-visible {
+  transform: scaleX(1);
+}
+
+/* Progress bar shimmer overlay */
+.ac-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.ac-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.12) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: acShimmer 2s ease-in-out infinite;
+}
+
+/* Stat shimmer bar (under the number while loading) */
+.ac-stat-shimmer {
+  height: 3px;
+  margin-top: 6px;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(207,255,4,0.0) 0%,
+    rgba(207,255,4,0.25) 50%,
+    rgba(207,255,4,0.0) 100%
+  );
+  background-size: 200% 100%;
+  animation: acShimmer 1.8s ease-in-out infinite;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.ac-stat-shimmer.ac-active {
+  opacity: 1;
+}
+
+/* Scroll hint bounce */
+.ac-bounce {
+  animation: acBounce 2s ease-in-out infinite;
+}
+
+/* CTA glow pulse */
+.ac-glow-pulse {
+  animation: acGlowPulse 3s ease-in-out infinite;
+}
+
+/* ── Reduced motion ────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .ac-observe { transition-duration: 0.01ms !important; }
+  .ac-counter-pop { animation-duration: 0.01ms !important; }
+  .ac-shimmer::after { animation: none !important; }
+  .ac-stat-shimmer { animation: none !important; }
+  .ac-bounce { animation: none !important; }
+  .ac-glow-pulse { animation: none !important; }
+  .ac-divider { transition-duration: 0.01ms !important; }
+}

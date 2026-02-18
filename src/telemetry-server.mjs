@@ -89,6 +89,131 @@ if (!fs.existsSync(SKILLCARDS_USER_INDEX_PATH)) {
   fs.writeFileSync(SKILLCARDS_USER_INDEX_PATH, JSON.stringify({ skills: [] }, null, 2));
 }
 
+// SkillCards paths
+const SKILLCARDS_SEED_DIR = path.join(ROOT, "skillcards", "seed");
+const SKILLCARDS_IMPORTED_INDEX_PATH = path.join(ROOT, "skillcards", "imported", "index.json");
+
+// Cache for merged skill index (60 seconds TTL)
+let mergedSkillIndexCache = { data: null, expiresAt: 0 };
+const MERGED_INDEX_CACHE_TTL_MS = 60 * 1000;
+
+function buildMergedSkillIndex() {
+  const merged = [];
+
+  // 1. Read seed skills from skillcards/seed/*.json
+  try {
+    if (fs.existsSync(SKILLCARDS_SEED_DIR)) {
+      const seedFiles = fs.readdirSync(SKILLCARDS_SEED_DIR).filter((f) => f.endsWith(".json"));
+      for (const fileName of seedFiles) {
+        try {
+          const filePath = path.join(SKILLCARDS_SEED_DIR, fileName);
+          const raw = fs.readFileSync(filePath, "utf8");
+          const skill = JSON.parse(raw);
+          if (skill && typeof skill === "object" && skill.name && skill.slug) {
+            merged.push({
+              name: String(skill.name || "").trim(),
+              slug: String(skill.slug || "").trim(),
+              description: String(skill.description || "").trim(),
+              source: "seed",
+              vettedOk: true, // Seed skills are trusted
+              importOk: true,
+              riskTier: Number(skill?.constraints?.riskTier ?? skill?.riskTier ?? 2),
+              sourceUrl: String(skill?.provenance?.sourceUrl || "").trim() || null,
+              provenance: skill.provenance || { publisher: "apeclaw", signed: false },
+            });
+          }
+        } catch {
+          // Skip malformed seed files
+        }
+      }
+    }
+  } catch {
+    // Skip if seed directory doesn't exist or can't be read
+  }
+
+  // 2. Read imported skills from skillcards/imported/index.json
+  try {
+    if (fs.existsSync(SKILLCARDS_IMPORTED_INDEX_PATH)) {
+      const raw = fs.readFileSync(SKILLCARDS_IMPORTED_INDEX_PATH, "utf8");
+      const index = JSON.parse(raw);
+      const imported = Array.isArray(index?.imported) ? index.imported : [];
+      const importedDir = path.join(ROOT, "skillcards", "imported");
+      for (const item of imported) {
+        if (item && typeof item === "object" && item.name && item.slug) {
+          // Try to read description from the actual JSON file if not in index
+          let description = String(item.description || "").trim();
+          if (!description && item.fileName) {
+            try {
+              const filePath = path.join(importedDir, item.fileName);
+              if (fs.existsSync(filePath)) {
+                const fileRaw = fs.readFileSync(filePath, "utf8");
+                const fileSkill = JSON.parse(fileRaw);
+                description = String(fileSkill?.description || "").trim();
+              }
+            } catch {
+              // Fall back to empty description
+            }
+          }
+          merged.push({
+            name: String(item.name || "").trim(),
+            slug: String(item.slug || "").trim(),
+            description,
+            source: "imported",
+            vettedOk: Boolean(item.vettedOk),
+            importOk: Boolean(item.importOk),
+            riskTier: Number(item.riskTier ?? 2),
+            sourceUrl: String(item.sourceUrl || "").trim() || null,
+            provenance: item.provenance || { publisher: "imported", signed: false },
+          });
+        }
+      }
+    }
+  } catch {
+    // Skip if imported index doesn't exist or can't be read
+  }
+
+  // 3. Read user skills from state/skillcards-user/*.json files
+  try {
+    if (fs.existsSync(SKILLCARDS_USER_INDEX_PATH)) {
+      const raw = fs.readFileSync(SKILLCARDS_USER_INDEX_PATH, "utf8");
+      const index = JSON.parse(raw);
+      const userSkills = Array.isArray(index?.skills) ? index.skills : [];
+      for (const item of userSkills) {
+        if (item && typeof item === "object" && item.name && item.slug) {
+          merged.push({
+            name: String(item.name || "").trim(),
+            slug: String(item.slug || "").trim(),
+            description: String(item.description || "").trim(),
+            source: "user",
+            vettedOk: false, // User skills are not vetted by default
+            importOk: true,
+            riskTier: Number(item.riskTier ?? 2),
+            sourceUrl: String(item.sourceUrl || "").trim() || null,
+            provenance: { publisher: "user", signed: false, addedBy: item.addedBy, addedByAgentId: item.addedByAgentId },
+          });
+        }
+      }
+    }
+  } catch {
+    // Skip if user index doesn't exist or can't be read
+  }
+
+  return merged;
+}
+
+function getMergedSkillIndex() {
+  const now = Date.now();
+  if (mergedSkillIndexCache.data && mergedSkillIndexCache.expiresAt > now) {
+    return mergedSkillIndexCache.data;
+  }
+  const index = buildMergedSkillIndex();
+  mergedSkillIndexCache = {
+    data: index,
+    expiresAt: now + MERGED_INDEX_CACHE_TTL_MS,
+  };
+  return index;
+}
+
 function safeVersion(v) {
   const s = String(v || "").trim();
   if (!s) return "";
@@ -564,6 +689,68 @@ const CORS_HEADERS = {
   "access-control-allow-headers": "content-type, x-agent-id, x-agent-token, x-moltbook-identity, x-registration-key",
 };
 
+// ── Pod workspace helpers ────────────────────────────────────────
+
+function findPodWorkspaceDir() {
+  // Check paths in order: env var, ./pod-workspace, ./pod
+  const envDir = process.env.APE_CLAW_POD_DIR;
+  if (envDir) {
+    const p = path.resolve(envDir);
+    if (fs.existsSync(p) && fs.statSync(p).isDirectory()) return p;
+  }
+  const podWorkspace = path.join(ROOT, "pod-workspace");
+  if (fs.existsSync(podWorkspace) && fs.statSync(podWorkspace).isDirectory()) return podWorkspace;
+  const pod = path.join(ROOT, "pod");
+  if (fs.existsSync(pod) && fs.statSync(pod).isDirectory()) return pod;
+  return null;
+}
+
+function getPodStatus() {
+  const workspacePath = findPodWorkspaceDir();
+  if (!workspacePath) {
+    return {
+      ok: true,
+      status: "not-initialized",
+      workspacePath: null,
+    };
+  }
+
+  const agentsMdPath = path.join(workspacePath, "AGENTS.md");
+  const tasksPath = path.join(workspacePath, "memory", "active-tasks.md");
+  const stopFlagPath = path.join(workspacePath, "stop.flag");
+  const heartbeatPath = path.join(workspacePath, "state", "last-heartbeat.json");
+
+  const hasAgentsMd = fs.existsSync(agentsMdPath);
+  const hasTasks = fs.existsSync(tasksPath);
+  const stopped = fs.existsSync(stopFlagPath);
+
+  let lastHeartbeat = null;
+  if (fs.existsSync(heartbeatPath)) {
+    try {
+      const raw = fs.readFileSync(heartbeatPath, "utf8");
+      const data = JSON.parse(raw);
+      lastHeartbeat = data?.timestamp || data?.ts || null;
+    } catch {
+      // ignore parse errors
+    }
+  }
+
+  let status = "not-initialized";
+  if (hasAgentsMd) {
+    status = stopped ? "stopped" : "running";
+  }
+
+  return {
+    ok: true,
+    status,
+    workspacePath,
+    hasAgentsMd,
+    hasTasks,
+    stopped,
+    lastHeartbeat,
+  };
+}
+
 const server = http.createServer((req, res) => {
   if (!req.url) return res.end("bad request");
   const reqUrl = new URL(req.url, `http://localhost:${PORT}`);
@@ -615,6 +802,59 @@ const server = http.createServer((req, res) => {
     } catch (err) {
       res.writeHead(500, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
       return res.end(JSON.stringify({ ok: false, error: err.message || "failed to load index" }));
+    }
+  }
+  if (pathname === "/api/skills/search" && req.method === "GET") {
+    try {
+      const query = String(reqUrl.searchParams.get("q") || "").trim().toLowerCase();
+      const sourceFilter = String(reqUrl.searchParams.get("source") || "").trim().toLowerCase();
+      const vettedFilter = String(reqUrl.searchParams.get("vetted") || "").trim();
+      const page = Math.max(1, Number(reqUrl.searchParams.get("page") || 1));
+      const limit = Math.min(200, Math.max(1, Number(reqUrl.searchParams.get("limit") || 50)));
+
+      let results = getMergedSkillIndex();
+
+      // Filter by source
+      if (sourceFilter && ["seed", "imported", "user"].includes(sourceFilter)) {
+        results = results.filter((s) => s.source === sourceFilter);
+      }
+
+      // Filter by vetted
+      if (vettedFilter === "1") {
+        results = results.filter((s) => s.vettedOk === true);
+      }
+
+      // Filter by search query (case-insensitive substring match on name, slug, description)
+      if (query) {
+        results = results.filter((s) => {
+          const name = String(s.name || "").toLowerCase();
+          const slug = String(s.slug || "").toLowerCase();
+          const desc = String(s.description || "").toLowerCase();
+          return name.includes(query) || slug.includes(query) || desc.includes(query);
+        });
+      }
+
+      // Paginate
+      const total = results.length;
+      const pages = Math.ceil(total / limit);
+      const start = (page - 1) * limit;
+      const end = start + limit;
+      const paginatedResults = results.slice(start, end);
+
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(
+        JSON.stringify({
+          ok: true,
+          total,
+          page,
+          limit,
+          pages,
+          results: paginatedResults,
+        }),
+      );
+    } catch (err) {
+      res.writeHead(500, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: false, error: err.message || "search failed" }));
     }
   }
   if (pathname === "/api/skillcards/user/auth-check" && req.method === "GET") {
@@ -801,8 +1041,44 @@ const server = http.createServer((req, res) => {
       ok: true,
       deployment: rec,
       receiptsRead: v2Cfg,
+      // Include podVault and agentAccount at top level for convenience
+      podVault: rec?.podVault || null,
+      agentAccount: rec?.agentAccount || null,
+      // Also include as record for backward compatibility
+      record: rec,
       ts: new Date().toISOString(),
     }, (_k, v) => (typeof v === "bigint" ? v.toString() : v)));
+  }
+
+  // ── Pod status endpoint ────────────────────────────────────────
+  if (pathname === "/api/pod/status" && req.method === "GET") {
+    const status = getPodStatus();
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+    return res.end(JSON.stringify(status));
+  }
+
+  // ── Pod stop endpoint ─────────────────────────────────────────
+  if (pathname === "/api/pod/stop" && req.method === "POST") {
+    const auth = requireSkillWriteAuth(req);
+    if (!auth.ok) {
+      res.writeHead(401, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: false, error: "unauthorized (set x-registration-key or x-agent-id/x-agent-token)" }));
+    }
+    const workspacePath = findPodWorkspaceDir();
+    if (!workspacePath) {
+      res.writeHead(404, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: false, error: "pod workspace not found" }));
+    }
+    const stopFlagPath = path.join(workspacePath, "stop.flag");
+    try {
+      ensureDir(workspacePath);
+      fs.writeFileSync(stopFlagPath, new Date().toISOString() + "\n");
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: true, action: "stop", flagPath: stopFlagPath }));
+    } catch (err) {
+      res.writeHead(500, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      return res.end(JSON.stringify({ ok: false, error: err.message || "failed to create stop flag" }));
+    }
   }
 
   if (pathname === "/api/health") {

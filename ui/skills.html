@@ -12,6 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/ui/shared/sidebar-nav.css">
   <script defer src="/ui/shared/sidebar-nav.js"></script>
+  <link rel="stylesheet" href="/ui/shared/motion.css">
+  <script defer src="/ui/shared/motion.js"></script>
   <style>
     :root{
       --bg:#111111;
@@ -101,32 +103,6 @@
     a:hover{text-decoration:underline}
 
     .wrap{position:relative;z-index:3;max-width:1080px;margin:0 auto;padding:20px 20px 28px}
-    .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
-    .brand{display:flex;align-items:center;gap:12px}
-    .logo{
-      width:36px;height:36px;border-radius:8px;
-      border:2px solid rgba(255,159,26,0.3);
-      overflow:hidden;flex-shrink:0;background:#02070d;
-    }
-    .logo img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
-    .brand h1{
-      margin:0;font-size:18px;font-weight:900;letter-spacing:.08em;
-      text-transform:uppercase;color:var(--amber);
-      text-shadow:0 0 24px rgba(255,159,26,0.2);
-    }
-    .nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .nav a{
-      font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
-      padding:8px 10px;border-radius:2px;border:1px solid var(--panel-border);
-      background:rgba(9,13,18,0.7);color:var(--muted);transition:all .2s ease;
-    }
-    .nav a:hover{border-color:var(--cyan);background:#1b1f24;color:var(--text);text-decoration:none}
-    .nav a[aria-current="page"]{
-      border-color:rgba(207,255,4,.55);
-      color:var(--text);
-      background:linear-gradient(180deg,var(--panel-2) 0%,var(--panel) 100%);
-      box-shadow:inset 0 0 0 1px rgba(207,255,4,.10);
-    }
 
     .hero{
       background:linear-gradient(180deg,var(--panel-2) 0%,var(--panel) 100%);
@@ -203,7 +179,11 @@
       box-shadow:inset 0 0 0 1px #0f1d2c;
       transition:border-color .25s,box-shadow .25s;
     }
-    .card:hover{border-color:var(--cyan);box-shadow:0 6px 24px rgba(0,0,0,0.3)}
+    .card:hover{border-color:var(--cyan);box-shadow:0 0 20px rgba(207,255,4,.06),0 4px 16px rgba(0,0,0,.3)}
+    .card[data-risk="low"],.card.risk-low{border-left:3px solid #4caf50}
+    .card[data-risk="medium"],.card.risk-med{border-left:3px solid #ff9800}
+    .card[data-risk="high"],.card.risk-high{border-left:3px solid #f44336}
+    .card[data-risk="unknown"],.card.risk-unknown{border-left:3px solid #666}
     .cardhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
     .card h3{margin:0;font-size:13px;font-weight:700;color:var(--amber-soft);text-transform:uppercase;letter-spacing:.06em}
     .badge{
@@ -388,6 +368,12 @@
     .pill.off{border-color:rgba(207,255,4,.22);color:var(--amber-soft)}
     .skill-actions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
     .foot{margin-top:18px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;text-transform:uppercase;letter-spacing:.04em}
+    .tab-bar{display:flex;gap:2px;margin:20px 0 16px;border:1px solid var(--panel-border);border-radius:2px;overflow:hidden}
+    .tab-btn{flex:1;padding:10px 16px;border:none;background:var(--panel);color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+    .tab-btn:hover{background:var(--panel-2);color:var(--text)}
+    .tab-btn.active{background:rgba(207,255,4,.08);color:var(--amber);border-bottom:2px solid var(--amber)}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
   </style>
 </head>
 <body>
@@ -397,21 +383,6 @@
   <div class="noise" aria-hidden="true"></div>
   <div id="sbNavMount"></div>
   <div class="wrap sb-content-offset">
-    <div class="top">
-      <a class="brand" href="/" aria-label="ApeClaw">
-        <div class="logo" aria-hidden="true"><img src="/favicon-lobster.png" alt=""></div>
-        <h1>ApeClaw</h1>
-      </a>
-      <div class="nav" aria-label="Primary links">
-        <a href="/ui" data-keep-query="1">Dashboard</a>
-        <a href="/pod" data-keep-query="1">THE POD</a>
-        <a href="/skills" data-keep-query="1" aria-current="page">Skills</a>
-        <a href="/docs" data-keep-query="1">Docs</a>
-        <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a>
-      </div>
-    </div>
-
     <div class="hero">
       <div class="pill"><span class="dot" aria-hidden="true"></span> Library of Alexandria: seed + imported + onchain</div>
       <div class="eyebrow">Skills</div>
@@ -422,30 +393,34 @@
         to this library and publishing an immutable onchain version.
       </p>
       <div class="cta">
-        <a class="btn primary" href="/docs?doc=V2_ONCHAIN_SKILLS.md" data-keep-query="1">Read v2 Skills Doc</a>
+        <a class="btn primary ac-glow-pulse" href="/docs?doc=V2_ONCHAIN_SKILLS.md" data-keep-query="1">Read v2 Skills Doc</a>
         <a class="btn" href="/docs?doc=SKILLCARDS_AND_IMPORTER.md" data-keep-query="1">SkillCards + Importer</a>
         <a class="btn" href="/docs?doc=CONTRIBUTING.md" data-keep-query="1">Contribute</a>
         <a class="btn" href="#intents">Intents</a>
         <a class="btn" href="#receipts">Receipts</a>
         <a class="btn" href="/ui?filter=v2" data-keep-query="1">View v2 Feed</a>
       </div>
-      <a class="scroll" href="#getting-started"><span class="chev" aria-hidden="true">⌄</span> Getting started</a>
+      <a class="scroll ac-bounce" href="#getting-started"><span class="chev" aria-hidden="true">⌄</span> Getting started</a>
 
-      <div class="stats" aria-label="Library stats">
-        <div class="stat">
+      <div class="stats ac-stagger" aria-label="Library stats">
+        <div class="stat ac-observe">
           <div class="num" id="statSeed">—</div>
+          <div class="ac-stat-shimmer"></div>
           <div class="label">Seed skills (shipped)</div>
         </div>
-        <div class="stat">
+        <div class="stat ac-observe">
           <div class="num" id="statImported">—</div>
+          <div class="ac-stat-shimmer"></div>
           <div class="label">Imported skills (local)</div>
         </div>
-        <div class="stat">
+        <div class="stat ac-observe">
           <div class="num" id="statUser">—</div>
+          <div class="ac-stat-shimmer"></div>
           <div class="label">Your skills (submitted)</div>
         </div>
-        <div class="stat">
+        <div class="stat ac-observe">
           <div class="num" id="statPublished">—</div>
+          <div class="ac-stat-shimmer"></div>
           <div class="label">Published onchain (known)</div>
         </div>
       </div>
@@ -454,10 +429,18 @@
       </div>
     </div>
 
-    <div class="section" id="getting-started">
+    <div class="tab-bar" role="tablist">
+      <button class="tab-btn active" role="tab" data-tab="browse" aria-selected="true">Browse</button>
+      <button class="tab-btn" role="tab" data-tab="add" aria-selected="false">Add</button>
+      <button class="tab-btn" role="tab" data-tab="onchain" aria-selected="false">Onchain</button>
+    </div>
+
+    <div class="tab-panel active" data-panel="browse">
+    <div class="ac-divider"></div>
+    <div class="section ac-observe" id="getting-started">
       <h2>Getting Started</h2>
-      <div class="grid">
-        <div class="card">
+      <div class="grid ac-stagger">
+        <div class="card ac-observe">
           <div class="cardhead">
             <h3>1) Import a big library (optional)</h3>
             <span class="badge alpha">LOCAL</span>
@@ -470,7 +453,7 @@
             <a class="pill" href="#" data-copy="npm run skillcards:import -- --skipStubs">Copy command</a>
           </div>
         </div>
-        <div class="card">
+        <div class="card ac-observe">
           <div class="cardhead">
             <h3>2) Mint a SkillNFT (revenue share)</h3>
             <span class="badge live">LIVE</span>
@@ -478,12 +461,12 @@
           <p>
             Mint creates a persistent skill identity. Royalties can route into a Pod receiver (PodVault) for revenue share across the Pod.
           </p>
-          <div class="code"><span class="k">ape-claw</span> v2 skill mint --royalty-receiver 0xPodVault... --royalty-bps 500 --json</div>
+          <div class="code"><span class="k">ape-claw</span> v2 skill mint --royalty-receiver &lt;PodVault address&gt; --royalty-bps 500 --json</div>
           <div class="tools" aria-label="Copy mint command">
-            <a class="pill" href="#" data-copy="ape-claw v2 skill mint --rpc <url> --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --skillNft <addr> --registry <addr> --royalty-receiver 0xPodVault... --royalty-bps 500 --json">Copy command</a>
+            <a class="pill" href="#" data-copy="ape-claw v2 skill mint --rpc <url> --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --skillNft <addr> --registry <addr> --royalty-receiver <PodVault address> --royalty-bps 500 --json">Copy command</a>
           </div>
         </div>
-        <div class="card">
+        <div class="card ac-observe">
           <div class="cardhead">
             <h3>3) Publish immutable versions</h3>
             <span class="badge alpha">ALPHA</span>
@@ -498,11 +481,14 @@
         </div>
       </div>
     </div>
+    </div>
 
-    <div class="section" id="your-skills">
+    <div class="tab-panel" data-panel="add">
+    <div class="ac-divider"></div>
+    <div class="section ac-observe" id="your-skills">
       <h2>Your Skills</h2>
-      <div class="grid">
-        <div class="card">
+      <div class="grid ac-stagger">
+        <div class="card ac-observe">
           <div class="cardhead">
             <h3>Add a SkillCard (to this backend)</h3>
             <span class="badge live">READY</span>
@@ -551,7 +537,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="card ac-observe">
           <div class="cardhead">
             <h3>Submitted Skills</h3>
             <span class="badge alpha" id="userBadge">AUTO</span>
@@ -589,10 +575,11 @@
       </div>
     </div>
 
-    <div class="section" id="how-it-works">
+    <div class="ac-divider"></div>
+    <div class="section ac-observe" id="how-it-works">
       <h2>How Skills Work</h2>
-      <div class="grid">
-        <div class="card">
+      <div class="grid ac-stagger">
+        <div class="card ac-observe">
           <div class="cardhead">
             <h3>Immutable Versions (SkillRegistry)</h3>
             <span class="badge alpha">ALPHA</span>
@@ -606,7 +593,7 @@
             <a class="pill" href="#" data-copy="npm run contracts:seed">Copy seed</a>
           </div>
         </div>
-        <div class="card">
+        <div class="card ac-observe">
           <div class="cardhead">
             <h3>Pod Revenue Share (SkillNFT → PodVault)</h3>
             <span class="badge live">LIVE</span>
@@ -615,9 +602,9 @@
             When a skill is an NFT, royalty revenue can be routed to a Pod-wide receiver (a split vault).
             This is the onchain enforcement layer for “share revenue among all agents in the Pod”.
           </p>
-          <div class="code"><span class="k">ape-claw</span> v2 skill mint --royalty-receiver 0xPodVault... --royalty-bps 500 --json</div>
+          <div class="code"><span class="k">ape-claw</span> v2 skill mint --royalty-receiver &lt;PodVault address&gt; --royalty-bps 500 --json</div>
         </div>
-        <div class="card">
+        <div class="card ac-observe">
           <div class="cardhead">
             <h3>Receipts Primitive (ReceiptRegistry)</h3>
             <span class="badge live">LIVE</span>
@@ -630,7 +617,7 @@
             <a class="pill" href="#" data-copy="ape-claw v2 receipt record --rpc <url> --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --receipts <addr> --traceId \"...\" --subject \"agent:my-bot\" --payload '{...}' --json">Copy command</a>
           </div>
         </div>
-        <div class="card">
+        <div class="card ac-observe">
           <div class="cardhead">
             <h3>Safety Posture (Pod)</h3>
             <span class="badge alpha">ALPHA</span>
@@ -642,11 +629,14 @@
         </div>
       </div>
     </div>
+    </div>
 
-    <div class="section" id="intents">
+    <div class="tab-panel" data-panel="onchain">
+    <div class="ac-divider"></div>
+    <div class="section ac-observe" id="intents">
       <h2>Intents (v2-alpha)</h2>
-      <div class="grid">
-        <div class="card">
+      <div class="grid ac-stagger">
+        <div class="card ac-observe">
           <div class="cardhead">
             <h3>Create intent (command generator)</h3>
             <span class="badge alpha">SAFE</span>
@@ -663,7 +653,7 @@
           </div>
           <div class="code" id="intentCreatePreview"><span class="k">ape-claw</span> v2 intent create --rpc &lt;url&gt; --privateKey "$APE_CLAW_V2_PRIVATE_KEY" --intents &lt;addr&gt; --payload '{...}' --json</div>
         </div>
-        <div class="card">
+        <div class="card ac-observe">
           <div class="cardhead">
             <h3>Cancel intent (command generator)</h3>
             <span class="badge alpha">SAFE</span>
@@ -688,10 +678,11 @@
       </div>
     </div>
 
-    <div class="section" id="receipts">
+    <div class="ac-divider"></div>
+    <div class="section ac-observe" id="receipts">
       <h2>Receipts (v2-alpha)</h2>
-      <div class="grid">
-        <div class="card">
+      <div class="grid ac-stagger">
+        <div class="card ac-observe">
           <div class="cardhead">
             <h3>Receipt explorer (read-only)</h3>
             <span class="badge alpha">SAFE</span>
@@ -716,10 +707,13 @@
         <a class="pill" href="/docs?doc=WEB4_SWARM_MODEL.md" data-keep-query="1">Swarm model</a>
       </div>
     </div>
+    </div>
 
-    <div class="section" id="seed-library">
+    <div class="tab-panel active" data-panel="browse">
+    <div class="ac-divider"></div>
+    <div class="section ac-observe" id="seed-library">
       <h2>Seed Skill Library</h2>
-      <div class="card">
+      <div class="card ac-observe">
         <div class="cardhead">
           <h3>Shipped Seed Skills (SkillCards)</h3>
           <span class="badge live" id="seedBadge">READY</span>
@@ -736,9 +730,10 @@
       </div>
     </div>
 
-    <div class="section" id="imported-library">
+    <div class="ac-divider"></div>
+    <div class="section ac-observe" id="imported-library">
       <h2>Imported Skill Library</h2>
-      <div class="card">
+      <div class="card ac-observe">
         <div class="cardhead">
           <h3>Imported Skills (optional)</h3>
           <span class="badge alpha" id="importedBadge">AUTO</span>
@@ -781,8 +776,9 @@
         </div>
       </div>
     </div>
+    </div>
 
-    <div class="foot">
+    <div class="foot ac-observe">
       <div>Skill library is permissionless · UI is optional</div>
       <div id="apiNote">Backend: auto</div>
     </div>
@@ -999,7 +995,15 @@
       var statImported = document.getElementById('statImported');
       var statPublished = document.getElementById('statPublished');
       var statUser = document.getElementById('statUser');
-      if (statSeed) statSeed.textContent = fmtInt(seed.length);
+
+      function setStatCountUp(el, val) {
+        if (!el) return;
+        el.removeAttribute('data-countup-started');
+        el.setAttribute('data-countup', String(val));
+        el.textContent = '0';
+        if (window.acTriggerCountUp) window.acTriggerCountUp(el);
+      }
+      setStatCountUp(statSeed, seed.length);
       if (statImported) statImported.textContent = '0';
       if (statUser) statUser.textContent = '0';
       if (statPublished) statPublished.textContent = '0';
@@ -1367,8 +1371,8 @@
               if (p0 && p0.txs && p0.txs.publish) publishedTotal++;
             }
           } catch (e) {}
-          if (statImported) statImported.textContent = fmtInt(importedAll.length);
-          if (statPublished) statPublished.textContent = fmtInt(publishedTotal);
+          setStatCountUp(statImported, importedAll.length);
+          setStatCountUp(statPublished, publishedTotal);
           applyImportedFilters();
         })
         .catch(function () {
@@ -1532,11 +1536,13 @@
             if (!out.ok || !out.json || !out.json.ok) return;
             var dep = out.json.deployment || {};
             var rr = out.json.receiptsRead || {};
+            var podVaultAddr = out.json.podVault || out.json.record?.podVault || dep?.podVault || null;
             if (v2RpcUrl && !String(v2RpcUrl.value || '').trim() && rr && rr.rpcUrl) v2RpcUrl.value = String(rr.rpcUrl);
             if (v2SkillNft && !String(v2SkillNft.value || '').trim() && dep && dep.skillNft) v2SkillNft.value = String(dep.skillNft);
             if (v2Registry && !String(v2Registry.value || '').trim() && dep && dep.registry) v2Registry.value = String(dep.registry);
             if (v2Intents && !String(v2Intents.value || '').trim() && dep && dep.intents) v2Intents.value = String(dep.intents);
             if (v2Receipts && !String(v2Receipts.value || '').trim() && (rr && rr.receiptsAddress)) v2Receipts.value = String(rr.receiptsAddress);
+            if (royaltyReceiver && !String(royaltyReceiver.value || '').trim() && podVaultAddr) royaltyReceiver.value = String(podVaultAddr);
             // Persist if anything was filled.
             saveV2Settings();
             renderIntentPreviews();
@@ -2018,6 +2024,28 @@
           markOnchain(mark);
         }
       });
+
+      (function(){
+        var tabs = document.querySelectorAll('.tab-btn');
+        var panels = document.querySelectorAll('.tab-panel');
+        function switchTab(name) {
+          for (var i = 0; i < tabs.length; i++) {
+            tabs[i].classList.toggle('active', tabs[i].getAttribute('data-tab') === name);
+            tabs[i].setAttribute('aria-selected', tabs[i].getAttribute('data-tab') === name ? 'true' : 'false');
+          }
+          for (var j = 0; j < panels.length; j++) {
+            panels[j].classList.toggle('active', panels[j].getAttribute('data-panel') === name);
+          }
+          history.replaceState(null, '', '#' + name);
+        }
+        for (var i = 0; i < tabs.length; i++) {
+          tabs[i].addEventListener('click', function() { switchTab(this.getAttribute('data-tab')); });
+        }
+        var hash = (location.hash || '').replace('#', '');
+        if (hash === 'add' || hash === 'onchain') switchTab(hash);
+        else if (hash === 'intents' || hash === 'receipts') switchTab('onchain');
+        else if (hash === 'your-skills') switchTab('add');
+      })();
     })();
   </script>
 </body>

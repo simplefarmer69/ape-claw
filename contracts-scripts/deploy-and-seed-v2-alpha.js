@@ -73,18 +73,51 @@ async function main() {
   console.log("[v2-alpha] BridgeModule:", bridgeModule.address);
   console.log("[v2-alpha] NftBuyModule:", nftBuyModule.address);
 
+  // ── Phase 0a: Deploy PodVault ──
+  const deployer = (await viem.getWalletClients())[0].account.address;
+  console.log("[v2-alpha] Deploying PodVault (sole member = deployer)...");
+  const podVault = await viem.deployContract("PodVault", [
+    [deployer],
+    [10000n],
+  ]);
+  console.log("[v2-alpha] PodVault:", podVault.address);
+
+  // ── Phase 0b: Configure PolicyEngine ──
+  console.log("[v2-alpha] Configuring PolicyEngine...");
+  const { parseEther } = await import("viem");
+  await policy.write.setMaxValuePerTx([parseEther("1")]);
+  console.log("[v2-alpha]   maxValuePerTx = 1 ETH");
+
+  await policy.write.setModuleAllowed([swapModule.address, true]);
+  await policy.write.setModuleAllowed([bridgeModule.address, true]);
+  await policy.write.setModuleAllowed([nftBuyModule.address, true]);
+  console.log("[v2-alpha]   Allowlisted 3 modules (Swap, Bridge, NftBuy)");
+
+  let mockTargetAddr = null;
+  try {
+    const mockTarget = await viem.deployContract("MockTarget");
+    mockTargetAddr = mockTarget.address;
+    await policy.write.setTargetAllowed([mockTarget.address, true]);
+    const mockSelector = "0x12345678";
+    await policy.write.setSelectorAllowed([mockTarget.address, mockSelector, true]);
+    console.log("[v2-alpha]   MockTarget deployed + allowlisted:", mockTarget.address);
+  } catch (e) {
+    console.log("[v2-alpha]   MockTarget skipped (may not exist on this network):", e.message?.slice(0, 80));
+  }
+
+  // ── Phase 0c: Seed skills with PodVault royalty ──
   const seedDir = path.join(process.cwd(), "skillcards", "seed");
   const seedFiles = fs.existsSync(seedDir)
     ? fs.readdirSync(seedDir).filter((f) => f.endsWith(".json")).sort()
     : [];
 
-  console.log(`[v2-alpha] Seeding ${seedFiles.length} skillcards from ${seedDir}`);
+  console.log(`[v2-alpha] Seeding ${seedFiles.length} skillcards (royalty → PodVault @ 5%)...`);
 
   for (const f of seedFiles) {
     const p = path.join(seedDir, f);
     const skillcard = readSkillcardJson(p);
 
-    const mintTx = await skillNft.write.mintSkill([0n]);
+    const mintTx = await skillNft.write.mintSkillWithRoyalty([0n, podVault.address, 500]);
     await publicClient.waitForTransactionReceipt({ hash: mintTx });
     const skillId = (await skillNft.read.nextSkillId()) - 1n;
 
@@ -115,18 +148,24 @@ async function main() {
     receipts: receipts.address,
     policy: policy.address,
     agentAccount: agent.address,
+    podVault: podVault.address,
     modules: {
       swap: swapModule.address,
       bridge: bridgeModule.address,
       nftBuy: nftBuyModule.address,
     },
+    mockTarget: mockTargetAddr,
     seeded: seedFiles.length,
     network: netName,
     chainId: Number(await publicClient.getChainId()),
+    policyConfig: {
+      maxValuePerTx: "1000000000000000000",
+      allowlistedModules: [swapModule.address, bridgeModule.address, nftBuyModule.address],
+    },
+    royaltyReceiver: podVault.address,
+    royaltyBps: 500,
   };
 
-  // Write to state/ so you can point the CLI without copy-pasting.
-  // (state/ is gitignored)
   try {
     const outDir = path.join(process.cwd(), "state", "v2-deployments");
     fs.mkdirSync(outDir, { recursive: true });
@@ -135,8 +174,6 @@ async function main() {
 
   console.log(JSON.stringify(out, null, 2));
 
-  // Convenience: shell export snippet.
-  // Intentionally does NOT print private keys.
   console.log("");
   console.log("[v2-alpha] Export these env vars:");
   console.log(`export APE_CLAW_V2_SKILL_NFT=${out.skillNft}`);
@@ -145,6 +182,7 @@ async function main() {
   console.log(`export APE_CLAW_V2_RECEIPT_REGISTRY=${out.receipts}`);
   console.log(`export APE_CLAW_V2_POLICY_ENGINE=${out.policy}`);
   console.log(`export APE_CLAW_V2_AGENT_ACCOUNT=${out.agentAccount}`);
+  console.log(`export APE_CLAW_V2_POD_VAULT=${out.podVault}`);
   console.log(`export APE_CLAW_V2_SWAP_MODULE=${out.modules.swap}`);
   console.log(`export APE_CLAW_V2_BRIDGE_MODULE=${out.modules.bridge}`);
   console.log(`export APE_CLAW_V2_NFT_BUY_MODULE=${out.modules.nftBuy}`);

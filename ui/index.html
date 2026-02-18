@@ -11,6 +11,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/ui/shared/sidebar-nav.css">
 <script defer src="/ui/shared/sidebar-nav.js"></script>
+<link rel="stylesheet" href="/ui/shared/motion.css">
+<script defer src="/ui/shared/motion.js"></script>
 <style>
 /* ── Reset & base ─────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -144,61 +146,10 @@ body::before, body::after{display:none !important}
 
 /* ── Layout ───────────────────────────────────────── */
 .app{position:relative;z-index:2;display:flex;flex-direction:column;min-height:100vh}
-header{
-  display:flex;align-items:center;gap:16px;padding:14px 24px;
-  border-bottom:1px solid var(--border);background:rgba(18,18,28,.92);
-  backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;
-  box-shadow:0 8px 24px rgba(0,0,0,.28);
-}
-.logo{display:flex;align-items:center;gap:10px}
-.logo-icon{
-  width:36px;height:36px;border-radius:8px;border:2px solid rgba(255,159,26,0.3);
-  overflow:hidden;flex-shrink:0;background:#02070d;
-  display:inline-block;
-}
-.logo-icon img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated;display:block}
-.logo h1{
-  font-size:1.15rem;font-family:var(--font-display);font-weight:900;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--accent);
-  text-shadow:0 0 24px rgba(255,159,26,0.2);
-}
-.logo sub{font-size:.65rem;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;display:block;margin-top:-2px}
-.header-right{display:flex;gap:16px;margin-left:auto;align-items:center}
-.header-stats{display:flex;gap:20px;align-items:center}
 .stat{text-align:center}
 .stat-value{font-size:1.2rem;font-weight:900;font-family:var(--font-mono);color:var(--accent)}
 .stat-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;color:var(--dim)}
-.chain-badge{
-  display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:2px;
-  background:rgba(9,13,18,0.7);
-  border:1px solid var(--border);font-size:.75rem;
-  font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;
-}
-.chain-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px rgba(255,159,26,0.35);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.header-links{display:flex;gap:10px;align-items:center}
-.header-links a{
-  display:flex;align-items:center;gap:5px;padding:8px 10px;border-radius:2px;
-  font-size:.7rem;font-weight:700;border:1px solid var(--border);
-  background:rgba(9,13,18,0.7);
-  color:var(--dim);transition:all .2s;
-  letter-spacing:.04em;text-transform:uppercase;
-}
-.header-links a:hover{border-color:var(--neon-cyan);color:var(--text);text-decoration:none;background:#1b1f24}
-.header-links a[aria-current="page"]{
-  border-color:rgba(207,255,4,.55);
-  color:var(--text);
-  background:linear-gradient(180deg,var(--surface2) 0%, var(--surface) 100%);
-  box-shadow:inset 0 0 0 1px rgba(207,255,4,.10);
-}
-.header-links a.openclaw{
-  border-color:rgba(255,159,26,.35);
-  color:rgba(255,159,26,.95);
-}
-.header-links a.openclaw:hover{
-  border-color:var(--neon-cyan);
-  color:var(--text);
-}
 .connection-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
 .connection-dot.connected{background:var(--neon-green);box-shadow:0 0 6px var(--neon-green)}
 .connection-dot.disconnected{background:var(--neon-pink);box-shadow:0 0 6px var(--neon-pink);animation:pulse 1s infinite}
@@ -817,74 +768,6 @@ footer::before{
 <div id="srStatus" aria-live="polite" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden"></div>
 <div class="toast-stack" id="toastStack"></div>
 
-<!-- ═══════ HEADER ═══════ -->
-<header>
-  <div class="logo">
-    <span class="logo-icon" aria-hidden="true"><img src="/favicon-lobster.png" alt=""></span>
-    <div>
-      <h1>ApeClaw</h1>
-      <sub>The Clawbot Terminal</sub>
-    </div>
-  </div>
-  <div class="header-right">
-    <div class="chain-badge"><span class="dot"></span> ApeChain <span id="chainBlock" style="font-family:var(--font-mono);font-size:.65rem;margin-left:4px"></span> <span id="utcClock" style="font-family:var(--font-mono);font-size:.62rem;color:var(--dim);margin-left:6px">--:--:--Z</span></div>
-    <div class="header-stats">
-      <div class="stat"><div class="stat-value" id="totalAgents">0</div><div class="stat-label">Clawllectors</div></div>
-      <div class="stat"><div class="stat-value" id="totalEvents">0</div><div class="stat-label">Events</div></div>
-      <div class="stat"><div class="stat-value" id="totalNfts">0</div><div class="stat-label">NFTs</div></div>
-      <div class="stat"><div class="stat-value" id="totalBridged">0</div><div class="stat-label">Bridged</div></div>
-      <div class="stat"><div class="stat-value" id="totalSpent">0</div><div class="stat-label">Spent</div></div>
-    </div>
-    <div class="header-links">
-      <a href="/ui" data-keep-query="1" aria-current="page">Dashboard</a>
-      <a href="/pod" data-keep-query="1">THE POD</a>
-      <a href="/skills" data-keep-query="1">Skills</a>
-      <a href="/docs" data-keep-query="1">Docs</a>
-      <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
-      <a class="openclaw" href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a>
-      <div class="shortcut-popover">
-        <button class="mini-btn" id="shortcutsBtn" type="button" title="Keyboard shortcuts">Shortcuts</button>
-        <div class="shortcut-panel" id="shortcutsPanel">
-          <div class="shortcut-title">Keyboard Shortcuts</div>
-          <div class="shortcut-row">
-            <span>Focus collection search</span>
-            <span class="shortcut-keys"><span class="kbd">Cmd/Ctrl</span><span class="kbd">K</span></span>
-          </div>
-          <div class="shortcut-row">
-            <span>Focus chat input</span>
-            <span class="shortcut-keys"><span class="kbd">Cmd/Ctrl</span><span class="kbd">/</span></span>
-          </div>
-          <div class="shortcut-row">
-            <span>Send chat message</span>
-            <span class="shortcut-keys"><span class="kbd">Enter</span></span>
-          </div>
-          <div class="shortcut-row">
-            <span>New line in chat</span>
-            <span class="shortcut-keys"><span class="kbd">Shift</span><span class="kbd">Enter</span></span>
-          </div>
-          <div class="shortcut-row">
-            <span>Close this panel</span>
-            <span class="shortcut-keys"><span class="kbd">Esc</span></span>
-          </div>
-          <div class="shortcut-row">
-            <span>Toggle Focus mode</span>
-            <span class="shortcut-keys"><span class="kbd">Cmd/Ctrl</span><span class="kbd">Shift</span><span class="kbd">F</span></span>
-          </div>
-          <div class="shortcut-row">
-            <span>Toggle Dense mode</span>
-            <span class="shortcut-keys"><span class="kbd">Cmd/Ctrl</span><span class="kbd">Shift</span><span class="kbd">D</span></span>
-          </div>
-          <div class="shortcut-row">
-            <span>Toggle Motion mode</span>
-            <span class="shortcut-keys"><span class="kbd">Cmd/Ctrl</span><span class="kbd">Shift</span><span class="kbd">M</span></span>
-          </div>
-        </div>
-      </div>
-      <a id="connectionStatus" href="#" onclick="return false" style="cursor:default"><span class="connection-dot disconnected" id="connectionDot"></span> <span id="connectionLabel">Connecting</span></a>
-    </div>
-  </div>
-</header>
-
 <!-- ═══════ SETUP / ONBOARDING ═══════ -->
 <div class="reveal reveal-1" style="padding:12px 24px 0;position:relative;z-index:1">
   <div class="setup-panel">
@@ -1031,7 +914,7 @@ python3 pod/run_agent.py \
 <div class="main" id="mainContent">
 
   <!-- ── Agents panel ── -->
-  <div class="panel reveal reveal-3">
+  <div class="panel reveal reveal-3 ac-observe">
     <div class="panel-header"><span class="icon">🦞</span> Clawllectors <span class="badge" id="agentCountBadge">0</span>
       <span class="panel-actions">
         <input class="mini-input" id="agentFilterInput" type="search" placeholder="Filter…" aria-label="Filter Clawllectors">
@@ -1049,7 +932,7 @@ python3 pod/run_agent.py \
   </div>
 
   <!-- ── Activity feed ── -->
-  <div class="panel reveal reveal-3">
+  <div class="panel reveal reveal-3 ac-observe">
     <div class="panel-header"><span class="icon">📡</span> Live Activity <span class="badge" id="eventCountBadge">0</span>
       <span class="panel-actions">
         <select class="mini-select" id="feedFilterSel" aria-label="Filter feed">
@@ -1070,7 +953,7 @@ python3 pod/run_agent.py \
   </div>
 
   <!-- ── NFT gallery ── -->
-  <div class="panel reveal reveal-4">
+  <div class="panel reveal reveal-4 ac-observe">
     <div class="panel-header"><span class="icon">🖼️</span> Collected NFTs <span class="badge" id="nftCountBadge">0</span></div>
     <div class="panel-body">
       <div class="nft-grid" id="nftGrid"></div>
@@ -1078,13 +961,13 @@ python3 pod/run_agent.py \
   </div>
 
   <!-- ── Bridge status ── -->
-  <div class="panel reveal reveal-4">
+  <div class="panel reveal reveal-4 ac-observe">
     <div class="panel-header"><span class="icon">🌉</span> Bridge Operations <span class="badge" id="bridgeCountBadge">0</span></div>
     <div class="panel-body" id="bridgePanel"></div>
   </div>
 
   <!-- ── Clawllector Chat ── -->
-  <div class="panel chat-panel reveal reveal-5">
+  <div class="panel chat-panel reveal reveal-5 ac-observe">
     <div class="panel-header"><span class="icon">💬</span> Clawllector Chat <span class="badge" id="chatCountBadge">0</span>
       <span class="panel-actions">
         <button class="mini-btn" id="chatReconnectBtn" type="button">Reconnect</button>

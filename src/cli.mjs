@@ -28,7 +28,7 @@ import { resolveRpcUrl } from "./lib/rpc.mjs";
 import { verifyClawbot, registerClawbot, listClawbots, loadClawbotsConfig } from "./lib/clawbots.mjs";
 import { createPublicClient, createWalletClient, http, getContract, keccak256, toHex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { SkillNFT_ABI, SkillRegistry_ABI, IntentRegistry_ABI, ReceiptRegistry_ABI } from "./lib/v2-onchain-abi.mjs";
+import { SkillNFT_ABI, SkillRegistry_ABI, IntentRegistry_ABI, ReceiptRegistry_ABI, PodVault_ABI, AgentAccount_ABI } from "./lib/v2-onchain-abi.mjs";
 import { computeSkillcardContentHash, computeSkillVersionHash, readSkillcardJson, stableJsonStringify } from "./lib/v2-skillcard.mjs";
 import { initPodWorkspace } from "./lib/pod-init.mjs";
 
@@ -1510,6 +1510,99 @@ async function main() {
     return fail("Unknown v2 receipt action. Use: ape-claw v2 receipt record|get", command, args);
   }
 
+  // ── v2 vault (PodVault) ──
+  if (group === "v2" && sub === "vault") {
+    const action = String(args._[2] || "").toLowerCase();
+    const rpcUrl = String(args.rpc || args.rpcUrl || process.env.APE_CLAW_V2_RPC_URL || "").trim();
+    const vaultAddr = String(args.vault || args.podVault || process.env.APE_CLAW_V2_POD_VAULT || "").trim();
+    if (!rpcUrl) return fail("Missing --rpc <url> or APE_CLAW_V2_RPC_URL", command, args);
+    if (!vaultAddr) return fail("Missing --vault <address> or APE_CLAW_V2_POD_VAULT", command, args);
+
+    const publicVault = createPublicClient({ transport: http(rpcUrl) });
+    const vault = getContract({ address: vaultAddr, abi: PodVault_ABI, client: publicVault });
+
+    if (action === "status") {
+      const totalShares = await vault.read.totalShares();
+      const totalReleased = await vault.read.totalReleasedNative();
+      const mCount = await vault.read.memberCount();
+      const balance = await publicVault.getBalance({ address: vaultAddr });
+      const members = [];
+      for (let i = 0n; i < mCount; i++) {
+        const addr = await vault.read.memberAt([i]);
+        const sh = await vault.read.shares([addr]);
+        const pending = await vault.read.pendingNative([addr]);
+        members.push({ address: addr, shares: sh.toString(), pendingNative: pending.toString() });
+      }
+      return print({
+        ok: true,
+        podVault: vaultAddr,
+        totalShares: totalShares.toString(),
+        totalReleasedNative: totalReleased.toString(),
+        balance: balance.toString(),
+        memberCount: Number(mCount),
+        members,
+      }, asJson);
+    }
+
+    if (action === "release") {
+      const pk = String(args.privateKey || process.env.APE_CLAW_V2_PRIVATE_KEY || "").trim();
+      const member = String(args.member || "").trim();
+      if (!pk) return fail("Missing --privateKey or APE_CLAW_V2_PRIVATE_KEY", command, args);
+      if (!member) return fail("Missing --member <address>", command, args);
+      const account = privateKeyToAccount(pk.startsWith("0x") ? pk : `0x${pk}`);
+      const walletVault = createWalletClient({ account, transport: http(rpcUrl) });
+      const wVault = getContract({ address: vaultAddr, abi: PodVault_ABI, client: walletVault });
+      const tx = await wVault.write.releaseNative([member]);
+      await publicVault.waitForTransactionReceipt({ hash: tx });
+      emitEvent({ eventType: "v2.vault.release", agentId: _agentId, command, result: { tx, member } });
+      return print({ ok: true, tx, member, action: "releaseNative" }, asJson);
+    }
+
+    return fail("Unknown v2 vault action. Use: ape-claw v2 vault status|release", command, args);
+  }
+
+  // ── v2 agent (AgentAccount) ──
+  if (group === "v2" && sub === "agent") {
+    const action = String(args._[2] || "").toLowerCase();
+    if (action === "execute") {
+      const rpcUrl = String(args.rpc || args.rpcUrl || process.env.APE_CLAW_V2_RPC_URL || "").trim();
+      const pk = String(args.privateKey || process.env.APE_CLAW_V2_PRIVATE_KEY || "").trim();
+      const agentAddr = String(args.agentAccount || process.env.APE_CLAW_V2_AGENT_ACCOUNT || "").trim();
+      const moduleAddr = String(args.module || "").trim();
+      const inputData = String(args.input || "0x").trim();
+      const value = String(args.value || "0").trim();
+      const traceId = String(args.traceId || `agent_exec_${Date.now()}`).trim();
+      const subject = String(args.subject || `agent:${_agentId}`).trim();
+      const uri = String(args.uri || "").trim();
+
+      if (!rpcUrl) return fail("Missing --rpc", command, args);
+      if (!pk) return fail("Missing --privateKey", command, args);
+      if (!agentAddr) return fail("Missing --agentAccount or APE_CLAW_V2_AGENT_ACCOUNT", command, args);
+      if (!moduleAddr) return fail("Missing --module <address>", command, args);
+
+      const account = privateKeyToAccount(pk.startsWith("0x") ? pk : `0x${pk}`);
+      const pub = createPublicClient({ transport: http(rpcUrl) });
+      const wallet = createWalletClient({ account, transport: http(rpcUrl) });
+      const agentContract = getContract({ address: agentAddr, abi: AgentAccount_ABI, client: wallet });
+
+      const traceIdHash = keccak256(toHex(traceId));
+      const subjectHash = keccak256(toHex(subject));
+
+      const tx = await agentContract.write.executeSkill([
+        moduleAddr,
+        inputData,
+        BigInt(value),
+        traceIdHash,
+        subjectHash,
+        uri,
+      ], { value: BigInt(value) });
+      await pub.waitForTransactionReceipt({ hash: tx });
+      emitEvent({ eventType: "v2.agent.execute", agentId: _agentId, command, result: { tx, module: moduleAddr, traceId } });
+      return print({ ok: true, tx, module: moduleAddr, traceId, traceIdHash, subjectHash }, asJson);
+    }
+    return fail("Unknown v2 agent action. Use: ape-claw v2 agent execute", command, args);
+  }
+
   if (group === "pod" && sub === "init") {
     const target = String(args.dir || "./pod-workspace").trim();
     const templatesDir = path.join(process.cwd(), "pod", "templates");
@@ -1554,6 +1647,9 @@ async function main() {
       "v2 intent cancel": "ape-claw v2 intent cancel --rpc <url> --privateKey 0x... --intents 0x... --intentId <id> --json",
       "v2 receipt record": "ape-claw v2 receipt record --rpc <url> --privateKey 0x... --receipts 0x... --traceId <trace> [--subject <string>] [--payload '{...}'] [--uri ipfs://...] --json",
       "v2 receipt get": "ape-claw v2 receipt get --rpc <url> --receipts 0x... --traceId <trace> --json",
+      "v2 vault status": "ape-claw v2 vault status --rpc <url> --vault 0x... --json",
+      "v2 vault release": "ape-claw v2 vault release --rpc <url> --privateKey 0x... --vault 0x... --member 0x... --json",
+      "v2 agent execute": "ape-claw v2 agent execute --rpc <url> --privateKey 0x... --agentAccount 0x... --module 0x... [--input 0x...] [--value 0] [--traceId ...] --json",
       "pod init": "ape-claw pod init --dir ./pod-workspace --json",
     },
     globalFlags: {
