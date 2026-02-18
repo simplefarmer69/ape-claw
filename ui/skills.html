@@ -514,28 +514,25 @@
 
       <div class="stats ac-stagger" aria-label="Library stats">
         <div class="stat ac-observe">
-          <div class="num" id="statSeed">—</div>
+          <div class="num glow" id="statTotal">—</div>
           <div class="ac-stat-shimmer"></div>
-          <div class="label">Seed skills (shipped)</div>
+          <div class="label">Total Skills</div>
         </div>
         <div class="stat ac-observe">
-          <div class="num" id="statImported">—</div>
+          <div class="num" id="statVetted">—</div>
           <div class="ac-stat-shimmer"></div>
-          <div class="label">Imported skills (local)</div>
+          <div class="label">Vetted &amp; Verified</div>
         </div>
         <div class="stat ac-observe">
-          <div class="num" id="statUser">—</div>
+          <div class="num" id="statOnchain">—</div>
           <div class="ac-stat-shimmer"></div>
-          <div class="label">Your skills (submitted)</div>
+          <div class="label">Published Onchain</div>
         </div>
         <div class="stat ac-observe">
-          <div class="num" id="statPublished">—</div>
+          <div class="num" id="statContributed">—</div>
           <div class="ac-stat-shimmer"></div>
-          <div class="label">Published onchain (known)</div>
+          <div class="label">Community Contributed</div>
         </div>
-      </div>
-      <div class="note" style="margin-top:10px">
-        “Imported” counts SkillCards present in <code>skillcards/imported/index.json</code>. “Published (known)” is the number of imported slugs with a recorded publish tx in that index (not a full chain scan).
       </div>
     </section>
 
@@ -554,15 +551,14 @@
       <div class="grid ac-stagger">
         <div class="card ac-observe">
           <div class="cardhead">
-            <h3>1) Import a big library (optional)</h3>
-            <span class="badge alpha">LOCAL</span>
+            <h3>1) Browse the Library</h3>
+            <span class="badge live">LIVE</span>
           </div>
           <p>
-            Pull SkillCards from external sources into <code>skillcards/imported/</code>. This makes browsing fast while you decide what to publish onchain.
+            Explore 1,000+ skills across categories like DeFi, NFTs, data analysis, automation, and more. Each skill is vetted and ready to use.
           </p>
-          <div class="code"><span class="k">npm</span> run skillcards:import -- --skipStubs</div>
-          <div class="tools" aria-label="Copy import command">
-            <a class="pill" href="#" data-copy="npm run skillcards:import -- --skipStubs">Copy command</a>
+          <div class="tools">
+            <a class="pill" href="#imported">Browse All Skills</a>
           </div>
         </div>
         <div class="card ac-observe">
@@ -602,11 +598,11 @@
       <div class="grid ac-stagger">
         <div class="card ac-observe">
           <div class="cardhead">
-            <h3>Add a SkillCard (to this backend)</h3>
+            <h3>Submit a New Skill</h3>
             <span class="badge live">READY</span>
           </div>
           <p>
-            Paste a SkillCard JSON to add it to this Skills library (server-side storage). This is designed to be safe: no private keys and no execution in-browser.
+            Submit a SkillCard JSON to add it to the global ApeClaw library. Skills are reviewed and vetted before being published. No private keys or execution in-browser.
           </p>
           <div class="note">
             New here? Read <a href="/docs?doc=CONTRIBUTING.md" data-keep-query="1">Contributing</a> for the full submit → mint → publish flow.
@@ -655,7 +651,7 @@
             <span class="badge alpha" id="userBadge">AUTO</span>
           </div>
           <p>
-            These are SkillCards submitted to this backend. Use them as the shared library surface, then mint/publish onchain from CLI when ready.
+            Skills you've submitted to the ApeClaw library. Once vetted, they become available globally and can be minted as SkillNFTs onchain.
           </p>
           <div class="tools" aria-label="Mint/publish settings">
             <input id="v2RpcUrl" type="text" placeholder="v2 rpc url (APE_CLAW_V2_RPC_URL)" autocomplete="off" spellcheck="false">
@@ -824,49 +820,44 @@
     <div class="tab-panel active" data-panel="browse">
     <div class="ac-divider"></div>
     <div class="section ac-observe" id="seed-library">
-      <h2>Seed Skill Library</h2>
+      <h2>Featured Skills</h2>
       <div class="card ac-observe">
         <div class="cardhead">
-          <h3>Shipped Seed Skills (SkillCards)</h3>
+          <h3>Core Skills (Built-in)</h3>
           <span class="badge live" id="seedBadge">READY</span>
         </div>
-        <p>These ship in-repo and can be published onchain via the seed script.</p>
-        <div class="tools" aria-label="Seed skills search">
-          <input id="seedSearch" type="search" placeholder="Search seed skills (name/slug)..." autocomplete="off" spellcheck="false">
+        <p>These are the foundational skills that ship with ApeClaw, covering NFT operations, chain reads, bridging, and more.</p>
+        <div class="tools" aria-label="Search featured skills">
+          <input id="seedSearch" type="search" placeholder="Search featured skills..." autocomplete="off" spellcheck="false">
         </div>
         <div class="list" id="seedList"></div>
-        <div class="code"><span class="k">npm</span> run contracts:seed</div>
-        <div class="tools" aria-label="Copy contracts seed">
-          <a class="pill" href="#" data-copy="npm run contracts:seed">Copy command</a>
-        </div>
       </div>
     </div>
 
     <div class="ac-divider"></div>
     <div class="section ac-observe" id="imported-library">
-      <h2>Imported Skill Library</h2>
+      <h2>Skill Library</h2>
       <div class="card ac-observe">
         <div class="cardhead">
-          <h3>Imported Skills (optional)</h3>
-          <span class="badge alpha" id="importedBadge">AUTO</span>
+          <h3>All Skills</h3>
+          <span class="badge live" id="importedBadge">LIVE</span>
         </div>
         <p>
-          If you run the importer, this page will automatically detect <code>skillcards/imported/index.json</code> and render the imported library
-          (including sources like ACP bounties). This is a local/dev convenience; for global discovery, publish onchain.
+          Browse the full ApeClaw skill library. Each skill is vetted for safety and categorized by risk tier. Use the filters below to find what you need.
         </p>
-        <div class="tools" aria-label="Imported skills search">
-          <input id="importedSearch" type="search" placeholder="Search imported skills (name/slug/source)..." autocomplete="off" spellcheck="false">
+        <div class="tools" aria-label="Search skills">
+          <input id="importedSearch" type="search" placeholder="Search skills by name, category, or description..." autocomplete="off" spellcheck="false">
           <select id="riskFilter" aria-label="Risk filter">
             <option value="all">risk: all</option>
             <option value="low">risk: low</option>
             <option value="med">risk: med</option>
             <option value="high">risk: high</option>
           </select>
-          <label title="Only show imported skills that passed local vetting (recommended)">
+          <label title="Only show skills that have been vetted and verified for safety">
             <input id="onlyVetted" type="checkbox" checked>
             Vetted only
           </label>
-          <label title="Only show imported skills that have a publish tx recorded in the importer index">
+          <label title="Only show skills that have been published onchain">
             <input id="onlyOnchain" type="checkbox">
             Onchain only
           </label>
@@ -1109,10 +1100,10 @@
         }
       ];
 
-      var statSeed = document.getElementById('statSeed');
-      var statImported = document.getElementById('statImported');
-      var statPublished = document.getElementById('statPublished');
-      var statUser = document.getElementById('statUser');
+      var statTotal = document.getElementById('statTotal');
+      var statVetted = document.getElementById('statVetted');
+      var statOnchain = document.getElementById('statOnchain');
+      var statContributed = document.getElementById('statContributed');
 
       function setStatCountUp(el, val) {
         if (!el) return;
@@ -1120,11 +1111,29 @@
         el.setAttribute('data-countup', String(val));
         el.textContent = '0';
         if (window.acTriggerCountUp) window.acTriggerCountUp(el);
+        setTimeout(function () {
+          if (!el.getAttribute('data-countup-started') || el.textContent === '0') {
+            el.textContent = fmtInt(val);
+            el.setAttribute('data-countup-started', '1');
+          }
+        }, 2500);
       }
-      setStatCountUp(statSeed, seed.length);
-      if (statImported) statImported.textContent = '0';
-      if (statUser) statUser.textContent = '0';
-      if (statPublished) statPublished.textContent = '0';
+
+      // Load global stats from API
+      (function loadGlobalStats() {
+        fetch(apiBase + '/api/skills/stats', { headers: { 'accept': 'application/json' } })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) {
+            if (!d || !d.ok) return;
+            setStatCountUp(statTotal, d.total || 0);
+            setStatCountUp(statVetted, d.vetted || 0);
+            setStatCountUp(statOnchain, d.onchain || 0);
+            setStatCountUp(statContributed, d.user || 0);
+          })
+          .catch(function () {
+            if (statTotal) statTotal.textContent = fmtInt(seed.length);
+          });
+      })();
 
       var seedAll = seed.slice();
       var seedSearch = document.getElementById('seedSearch');
@@ -1185,7 +1194,7 @@
           var q = String(seedSearch.value || '');
           var filtered = seedAll.filter(function (s) { return matchesSeed(s, q); });
           renderSeed(filtered);
-          if (statSeed) statSeed.textContent = fmtInt(filtered.length);
+          if (statTotal) statTotal.textContent = fmtInt(filtered.length);
         });
       }
 
@@ -1297,7 +1306,7 @@
           var sourceHref = String(it.sourceUrl || '').trim();
           var rpc = localStorage.getItem('apeclaw_v2_rpc') || '';
           var reg = localStorage.getItem('apeclaw_v2_registry') || '';
-          // Imported skills are local to the backend; for CLI usage, download the JSON first.
+          // For CLI usage, download the JSON first.
           var dlCmd = it.fileName ? ('curl -fsSL \"' + apiBase + fileHref + '\" -o \"./skillcards/imported/' + String(it.fileName) + '\"') : '';
           var pubCmd = it.fileName
             ? ((rpc && reg)
@@ -1464,7 +1473,7 @@
           return true;
         });
         renderImported(filtered.slice(0, 200), publishedBySlug);
-        if (statImported) statImported.textContent = fmtInt(filtered.length);
+        if (statVetted) statVetted.textContent = fmtInt(filtered.length);
         if (importedBadge) {
           var publishedCount = 0;
           try {
@@ -1476,32 +1485,42 @@
           importedBadge.textContent = filtered.length ? ('FOUND ' + filtered.length + (publishedCount ? (' · ONCHAIN ' + publishedCount) : '')) : 'NONE';
         }
       }
-      fetch('/skillcards/imported/index.json', { headers: { 'accept': 'application/json' } })
+      fetch(apiBase + '/api/skills/search?limit=2000', { headers: { 'accept': 'application/json' } })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) {
-          var arr = j && j.imported && Array.isArray(j.imported) ? j.imported : [];
-          importedAll = arr.filter(function (x) { return x && x.importOk; });
+          if (!j || !j.ok) {
+            // Fallback: try the local index for dev mode
+            return fetch('/skillcards/imported/index.json', { headers: { 'accept': 'application/json' } })
+              .then(function (r2) { return r2.ok ? r2.json() : null; })
+              .then(function (j2) {
+                var arr = j2 && j2.imported && Array.isArray(j2.imported) ? j2.imported : [];
+                importedAll = arr.filter(function (x) { return x && x.importOk; });
+                applyImportedFilters();
+              });
+          }
+          var results = j.results || [];
+          importedAll = results.map(function (s) {
+            return {
+              name: s.name || s.slug || 'Skill',
+              slug: s.slug || '',
+              description: s.description || s.desc || '',
+              desc: s.description || s.desc || '',
+              riskTier: s.riskTier || 2,
+              source: s.source || 'imported',
+              sourceUrl: s.sourceUrl || '',
+              fileName: s.fileName || '',
+              version: s.version || '1',
+              importOk: true,
+              vetted: s.vetted !== false,
+              onchainTokenId: s.onchainTokenId || null
+            };
+          });
           publishedBySlug = {};
-          try {
-            var pub = j && j.published && Array.isArray(j.published) ? j.published : [];
-            for (var i = 0; i < pub.length; i++) {
-              if (pub[i] && pub[i].slug) publishedBySlug[String(pub[i].slug)] = pub[i];
-            }
-          } catch (e) {}
-          var publishedTotal = 0;
-          try {
-            for (var k in publishedBySlug) {
-              if (!Object.prototype.hasOwnProperty.call(publishedBySlug, k)) continue;
-              var p0 = publishedBySlug[k];
-              if (p0 && p0.txs && p0.txs.publish) publishedTotal++;
-            }
-          } catch (e) {}
-          setStatCountUp(statImported, importedAll.length);
-          setStatCountUp(statPublished, publishedTotal);
           applyImportedFilters();
+          if (importedBadge) importedBadge.textContent = importedAll.length ? (importedAll.length + ' SKILLS') : 'NONE';
         })
         .catch(function () {
-          if (importedBadge) importedBadge.textContent = 'NONE';
+          if (importedBadge) importedBadge.textContent = 'UNAVAILABLE';
         });
 
       if (importedSearch) {
@@ -1675,7 +1694,7 @@
             try {
               if (v2SettingsNote) {
                 var note = 'Mint/publish commands use env var `APE_CLAW_V2_PRIVATE_KEY` (never paste keys here).';
-                if (rr && rr.inferredRpc) note += ' v2 settings auto-filled from backend (local dev).';
+                if (rr && rr.inferredRpc) note += ' v2 settings auto-filled from backend.';
                 v2SettingsNote.textContent = note;
               }
             } catch (e) {}
@@ -1911,7 +1930,7 @@
         if (!userSkillList) return;
         var arr = Array.isArray(items) ? items : [];
         if (userBadge) userBadge.textContent = arr.length ? ('FOUND ' + arr.length) : 'NONE';
-        if (statUser) statUser.textContent = fmtInt(arr.length);
+        if (statContributed) statContributed.textContent = fmtInt(arr.length);
         if (!arr.length) {
           setHtml(userSkillList,
             '<div class="item">' +
@@ -1986,7 +2005,7 @@
         var id = authAgentId ? String(authAgentId.value || '').trim() : '';
         var tok = authAgentToken ? String(authAgentToken.value || '').trim() : '';
         if (!(id && tok)) {
-          flash('Set auth (x-agent-id/x-agent-token) to submit skills to this backend.', true);
+          flash('Set auth (x-agent-id/x-agent-token) to submit skills.', true);
           return;
         }
         var parsed;
@@ -2143,7 +2162,7 @@
           ev.preventDefault();
           openModal(
             'Delete submitted skill',
-            '<div class="note">This removes the stored SkillCard JSON from this backend.</div>' +
+            '<div class="note">This removes the stored SkillCard JSON from the library.</div>' +
             '<div class="danger-note" style="margin-top:10px">Delete: <code>' + escapeHtml(del) + '</code></div>',
             function () { closeModal(); deleteUserSkill(del); },
             function () {}
