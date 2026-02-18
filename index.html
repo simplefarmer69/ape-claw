@@ -304,7 +304,7 @@
           <div class="sub" id="statPublishedSub">published: —</div>
         </div>
         <div class="stat ac-observe">
-          <div class="num glow" id="statContracts">6</div>
+          <div class="num glow" id="statContracts">13</div>
           <div class="ac-stat-shimmer"></div>
           <div class="label">Smart Contracts</div>
           <div class="sub">Deployed</div>
@@ -586,25 +586,19 @@
         setCountUp($('statClawbots'), botCount);
       }).catch(function () { setOnline(false); });
 
-      setCountUp($('statContracts'), 10);
+      setCountUp($('statContracts'), 13);
 
       (function () {
-        var SEED_COUNT = 8;
         var elS = $('statSkills');
         var elP = $('statPublishedSub');
         if (elS) elS.textContent = '0';
         if (elP) elP.textContent = 'published: —';
-        fetch('/skillcards/imported/index.json', { headers: { 'accept': 'application/json' } })
-          .then(function (r) { return r.ok ? r.json() : null; })
-          .then(function (j) {
-            var arr = j && j.imported && Array.isArray(j.imported) ? j.imported : [];
-            var importedOk = arr.filter(function (x) { return x && x.importOk; });
-            var pub = j && j.published && Array.isArray(j.published) ? j.published : [];
-            var published = 0;
-            for (var i = 0; i < pub.length; i++) { if (pub[i] && pub[i].txs && pub[i].txs.publish) published++; }
-            var total = SEED_COUNT + importedOk.length;
-            setCountUp(elS, total);
-            if (elP) elP.textContent = 'published: ' + fmtInt(published);
+        fetchJson('/api/skills/stats')
+          .then(function (res) {
+            if (!res || !res.ok || !res.json || !res.json.ok) return;
+            var d = res.json;
+            setCountUp(elS, d.total || 0);
+            if (elP) elP.textContent = 'onchain: ' + fmtInt(d.onchain || 0) + ' · vetted: ' + fmtInt(d.vetted || 0);
           })
           .catch(function () {});
       })();

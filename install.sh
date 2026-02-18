@@ -14,7 +14,7 @@ echo "→ Source: ${REPO_REF}"
 
 if ! command -v node >/dev/null 2>&1; then
   echo "❌ Node.js is required but not found in PATH."
-  echo "Install Node.js (>=20): https://nodejs.org/en/download"
+  echo "Install Node.js (>=22.10.0): https://nodejs.org/en/download"
   exit 1
 fi
 
@@ -24,8 +24,9 @@ if ! command -v npm >/dev/null 2>&1; then
 fi
 
 NODE_MAJOR="$(node -p "process.versions.node.split('.')[0]")"
-if [ "${NODE_MAJOR}" -lt 20 ]; then
-  echo "❌ ApeClaw requires Node >=20."
+NODE_MINOR="$(node -p "process.versions.node.split('.')[1]")"
+if [ "${NODE_MAJOR}" -lt 22 ] || { [ "${NODE_MAJOR}" -eq 22 ] && [ "${NODE_MINOR}" -lt 10 ]; }; then
+  echo "❌ ApeClaw requires Node >=22.10.0 (Hardhat 3 requirement)."
   echo "Detected Node: $(node -v)"
   echo "Upgrade Node, then rerun:"
   echo "  curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh | bash"
@@ -33,12 +34,6 @@ if [ "${NODE_MAJOR}" -lt 20 ]; then
 fi
 
 OPENCLAW_SUPPORTED=true
-if [ "${NODE_MAJOR}" -lt 22 ]; then
-  OPENCLAW_SUPPORTED=false
-  echo "⚠️  Node $(node -v) detected. OpenClaw requires Node >=22."
-  echo "   Continuing with ApeClaw skill + CLI install."
-  echo "   Upgrade Node to 22+ later, then run: npm i -g openclaw"
-fi
 
 if [ "${OPENCLAW_SUPPORTED}" = true ] && ! command -v openclaw >/dev/null 2>&1; then
   echo "📦 OpenClaw not found. Installing OpenClaw CLI..."
@@ -121,7 +116,7 @@ if [ "${OPENCLAW_READY}" = true ]; then
   echo "  - openclaw skills check"
 else
   if [ "${OPENCLAW_SUPPORTED}" = false ]; then
-    echo "  - Upgrade Node to >=22 and install OpenClaw: npm i -g openclaw"
+    echo "  - Upgrade Node to >=22.10.0 and install OpenClaw: npm i -g openclaw"
   fi
 fi
 if [ "${CLI_READY}" = true ]; then

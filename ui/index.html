@@ -2881,11 +2881,17 @@ async function fetchSkillsStats() {
     }
   } catch (err) {
     console.warn('[skills-stats]', err.message);
+    const grid = document.getElementById('skillsPanelGrid');
+    if (grid && grid.innerHTML.includes('Loading')) {
+      grid.innerHTML = '<div style="color:var(--dim);font-size:.7rem;padding:20px;text-align:center;grid-column:1/-1">Could not load skills. <button onclick="fetchSkillsStats()" style="background:none;border:1px solid var(--border);color:var(--accent);padding:3px 8px;border-radius:4px;cursor:pointer;font-size:.65rem">Retry</button></div>';
+    }
   }
 }
 
 async function fetchSkillsSearch(query, source) {
   try {
+    const grid = document.getElementById('skillsPanelGrid');
+    if (grid) grid.innerHTML = '<div style="color:var(--dim);font-size:.7rem;padding:20px;text-align:center;grid-column:1/-1">Searching…</div>';
     const params = new URLSearchParams({ limit: '50' });
     if (query) params.set('q', query);
     if (source) params.set('source', source);
@@ -2900,6 +2906,8 @@ async function fetchSkillsSearch(query, source) {
     if (badge && skillsCache.stats) badge.textContent = skillsCache.stats.total.toLocaleString();
   } catch (err) {
     console.warn('[skills-search]', err.message);
+    const grid = document.getElementById('skillsPanelGrid');
+    if (grid) grid.innerHTML = '<div style="color:var(--dim);font-size:.7rem;padding:20px;text-align:center;grid-column:1/-1">Search failed. Try again.</div>';
   }
 }
 

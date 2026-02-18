@@ -261,9 +261,10 @@
   .sb-sidebar:hover .sb-footer-links{ opacity:1; }
 }
 
-/* Page content spacing when sidebar is present on desktop */
+/* Page content spacing when sidebar is present on desktop.
+   Applied to body so .wrap { margin:0 auto } centering is preserved. */
 @media (min-width: 980px){
-  body[data-has-sidebar="1"] .sb-content-offset{
+  body[data-has-sidebar="1"]{
     margin-left: var(--sb-side-collapsed);
   }
 }
