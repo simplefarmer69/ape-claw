@@ -25,14 +25,18 @@ Discover collections, get live listings, quote/simulate/buy NFTs, and bridge fun
 - **Autonomous NFT collecting** — discover, quote, simulate, and buy ApeChain NFTs
 - **Cross-chain bridging** — bridge funds to ApeChain via Relay protocol
 - **8 safety gates** — simulation required, confirm phrases, daily spend caps, collection allowlists, replay protection, private key checks, currency allowlists, dry-run default
+- **Skills Library (Library of Alexandria)** — 1,020+ OpenClaw skills browsable at [apeclaw.ai/skills](https://apeclaw.ai/skills), served globally via API
+- **Onchain skill provenance** — mint SkillNFTs (ERC-721), publish immutable versions to SkillRegistry, anchor receipts to ReceiptRegistry
+- **PodVault revenue sharing** — SkillNFT royalties route to a shared PaymentSplitter vault (coming soon)
+- **ACP bounty integration** — browse providers, post bounties, fulfill work, route earnings to PodVault
 - **Clawbot verification** — register agents, share API keys, track actions by ID
 - **Structured JSON output** — every command returns machine-parseable JSON
 - **Real-time dashboard** — live telemetry via Server-Sent Events
 - **OpenClaw integration** — works as a native OpenClaw skill
 
-## ApeClaw v2-alpha (Onchain Skills + THE POD)
+## ApeClaw v2 (Onchain Skills + THE POD)
 
-v2-alpha is additive: it does not remove or break any v1 core flows. It adds an onchain skill registry and a Pod harness so an agent has:
+v2 is additive: it does not remove or break any v1 core flows. It adds an onchain skill registry, a global skills library (1,020+ skills), and a Pod harness so an agent has:
 
 - a persistent workspace (state + journal),
 - immutable skill versioning (no silent updates),
@@ -66,7 +70,7 @@ This turns the platform into a place where:
 - operators can curate/publish immutable skill versions
 - a swarm can coordinate via receipts and onchain state
 
-### What ships today
+### What ships in v2
 
 Onchain primitives (Hardhat local devnet, ApeChain-ready ABI shape):
 
@@ -83,6 +87,11 @@ SkillCards (portable JSON):
 - Seed cards in `skillcards/seed/`:
   - `apeclaw-nft-autobuy` (v1 flow, policy-gated)
   - `apeclaw-bridge-relay` (v1 flow, policy-gated)
+  - `apeclaw-receipt-recorder` (v2 onchain receipts)
+  - `acp-browse` (discover ACP providers)
+  - `acp-bounty-post` (post bounties with USDC budget, strict opt-in)
+  - `acp-bounty-poll` (poll candidates/jobs, surface deliverables)
+  - `acp-fulfill-and-route` (fulfill work, route earnings to PodVault, strict opt-in)
   - `otherside-navigator` (v2 Pod loop, strict opt-in)
 - Hashing utilities in `src/lib/v2-skillcard.mjs`:
   - stable canonical JSON stringify
@@ -106,8 +115,8 @@ Skill library importer (clone/scrape → SkillCards):
 
 - Manifest: `skillcards/import-sources.json`
 - Importer: `scripts/import-skillcards.mjs`
-- Output: `skillcards/imported/` (generated; ignored by git)
-- Writes an index file: `skillcards/imported/index.json` (hashes + provenance; includes publish results when used)
+- Output: `skillcards/imported/` (individual JSON files gitignored; `index.json` tracked and deployed)
+- Index file: `skillcards/imported/index.json` (hashes, provenance, descriptions; served globally via `/api/skills/search`)
 - Versioned filenames: `<slug>.v<version>.json` to keep publishing stable across updates
 - Supports:
   - `source: local` with `path`
@@ -118,9 +127,26 @@ Skill library importer (clone/scrape → SkillCards):
 - `--strict` can be used to only accept real SkillCard payloads (no stub fallbacks)
 - `--skipStubs` prevents publishing stub SkillCards
 
+Skills Library (global, API-first):
+
+- 1,020+ OpenClaw skills imported, enriched with descriptions, and served globally via `/api/skills/search`
+- Index tracked in git (`skillcards/imported/index.json`); individual JSON files gitignored
+- UI at [apeclaw.ai/skills](https://apeclaw.ai/skills) — browse, search, filter, view details, copy CLI commands
+- `/api/skills/get?slug=<slug>` returns full skill metadata + card JSON when available
+
+PodVault (coming soon):
+
+- `contracts/PodVault.sol`: PaymentSplitter-style revenue vault (native + ERC-20)
+- SkillNFT royalties (EIP-2981) routable to PodVault for Pod-wide revenue sharing
+- Claim flow via `ape-claw v2 vault release`
+
 ### What is planned (not shipped yet)
 
-- Automatic receipts wiring (end-to-end): recording CLI/pod events onchain by default (v2-alpha ships the receipts primitive + CLI command, but does not auto-record every action)
+- **PodVault revenue sharing UI** — live vault status, claim flows, member balances (coming soon)
+- Automatic receipts wiring (end-to-end): recording CLI/pod events onchain by default (v2 ships the receipts primitive + CLI command, but does not auto-record every action)
+- Session keys + AA kernel hardening
+- Permissionless solver network
+- Attestation & reputation registry
 - Browser login/recovery automation for Otherside and other UIs (conservative by default; no secret exfiltration)
 - First-class SkillCard payload extraction directly from `clawhub.ai` pages (the GitHub mirror path works today)
 - Publishing SkillCards to IPFS/Arweave (today `uri` is typically `file://...` or a source URL)

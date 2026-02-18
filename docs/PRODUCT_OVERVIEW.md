@@ -50,7 +50,7 @@ Read: `docs/THE_POD_RUNNER.md`
 Skills are treated as **content-addressed artifacts**:
 
 - `SkillCard` (JSON) defines what the skill is and how to execute it
-- imported libraries allow you to browse lots of skills locally
+- 1,020+ imported skills browsable globally via the API at [apeclaw.ai/skills](https://apeclaw.ai/skills)
 - publishing onchain makes versions immutable and globally discoverable
 
 Read: `docs/SKILLCARDS_AND_IMPORTER.md` and `docs/ONCHAIN_V2_GUIDE.md`

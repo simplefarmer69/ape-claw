@@ -321,7 +321,7 @@
 
     <div class="ac-divider"></div>
     <div class="section ac-observe" id="vault-dashboard">
-      <h2>PodVault Revenue</h2>
+      <h2>PodVault Revenue <span class="badge alpha" style="font-size:10px;vertical-align:middle;margin-left:8px">COMING SOON</span></h2>
       <div class="grid ac-stagger">
         <div class="card ac-observe" id="vaultStatusCard">
           <div class="cardhead">
@@ -335,6 +335,7 @@
         <div class="card ac-observe">
           <div class="cardhead">
             <h3>Claim Revenue</h3>
+            <span class="badge alpha">COMING SOON</span>
           </div>
           <p style="margin-top:12px;font-size:13px;color:var(--muted);line-height:1.65">
             Pod members earn revenue when skills they contributed are used onchain. Revenue accumulates in the PodVault and can be claimed by members.
@@ -445,7 +446,7 @@
         <div class="card ac-observe">
           <div class="cardhead">
             <h3>Pod Revenue Share (Royalties → PodVault)</h3>
-            <span class="badge alpha">ALPHA</span>
+            <span class="badge alpha">COMING SOON</span>
           </div>
           <p>
             When skills are NFTs, they can route royalty revenue to a shared Pod receiver. This is the onchain enforcement layer for
@@ -730,8 +731,8 @@
             var badge = document.getElementById('vaultBadge');
             var cmd = document.getElementById('vaultReleaseCmd');
             if (!vault) {
-              if (info) info.innerHTML = '<p>PodVault deployment is pending. Check back soon or visit the <a href="/docs" style="color:var(--accent)">documentation</a> for setup instructions.</p>';
-              if (badge) { badge.textContent = 'PENDING'; badge.className = 'badge'; }
+              if (info) info.innerHTML = '<p>PodVault revenue sharing is coming soon. Skill royalties will route to a shared vault for Pod members. Visit the <a href="/docs" style="color:var(--accent)">documentation</a> for details.</p>';
+              if (badge) { badge.textContent = 'COMING SOON'; badge.className = 'badge alpha'; }
               return;
             }
             if (badge) { badge.textContent = 'ACTIVE'; badge.className = 'badge live'; }
