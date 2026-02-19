@@ -1938,7 +1938,7 @@
         try { JSON.parse(payloadRaw); } catch (e) {}
         if (!rpc) rpc = '<url>';
         if (!intents) intents = '<addr>';
-        return 'ape-claw v2 intent create --rpc \"' + rpc + '\" --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --intents \"' + intents + '\" --payload \'' + payloadRaw.replace(/'/g, \"\\\\'\") + '\'' + exp + ' --json';
+        return 'ape-claw v2 intent create --rpc "' + rpc + '" --privateKey "$APE_CLAW_V2_PRIVATE_KEY" --intents "' + intents + '" --payload \'' + payloadRaw.replace(/'/g, "\\\\'") + '\'' + exp + ' --json';
       }
       function getIntentCancelCmd() {
         var rpc = v2RpcUrl ? String(v2RpcUrl.value || '').trim() : '';
@@ -2065,7 +2065,7 @@
         var slug = toSlug(obj.slug || name);
         if (!slug) throw new Error('skillcard.slug is required');
         var version = String(obj.version || '1.0.0').trim();
-        if (!/^[0-9]+(\\.[0-9]+){0,3}([\\-+][0-9A-Za-z._-]+)?$/.test(version)) throw new Error('skillcard.version must look like semver');
+        if (!/^[0-9]+(\.[0-9]+){0,3}([+\-][0-9A-Za-z._-]+)?$/.test(version)) throw new Error('skillcard.version must look like semver');
         var riskTier = Number(obj && obj.constraints && typeof obj.constraints.riskTier !== 'undefined' ? obj.constraints.riskTier : (obj.riskTier || 2));
         if (!isFinite(riskTier)) riskTier = 2;
         riskTier = Math.max(1, Math.min(3, Math.round(riskTier)));
