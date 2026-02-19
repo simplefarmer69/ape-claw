@@ -1,73 +1,71 @@
 {
   "ok": true,
-  "total": 10029,
-  "seed": 9,
+  "total": 10028,
+  "seed": 8,
   "imported": 10020,
   "user": 0,
-  "vetted": 10015,
-  "onchain": 9914,
+  "vetted": 10014,
+  "onchain": 10023,
   "recent": [
-    {
-      "name": "StonkBrokers — Full DeFi Suite (Robinhood Chain)",
-      "slug": "stonkbrokers-launcher",
-      "source": "seed",
-      "addedAt": "2026-02-19T19:00:00.000Z",
-      "riskTier": 2,
-      "description": "End-to-end onchain DeFi skill for Robinhood Chain testnet via the StonkBrokers protocol (Clutch Labs). Covers faucet claims, token launches, Uniswap v3 swaps, LP positions, and covered-call options."
-    },
     {
       "name": "Notify Forta 134",
       "slug": "ac-notify-forta-134",
       "source": "community_generated",
-      "importedAt": "2026-02-19T13:12:16.139Z"
+      "importedAt": "2026-02-19T15:46:46.054Z"
     },
     {
       "name": "Watch Chainjet 135",
       "slug": "ac-watch-chainjet-135",
       "source": "community_generated",
-      "importedAt": "2026-02-19T13:12:16.139Z"
+      "importedAt": "2026-02-19T15:46:46.060Z"
     },
     {
       "name": "Pager Tenderly Alerts Bsc 136",
       "slug": "ac-pager-tenderly-alerts-bsc-136",
       "source": "community_generated",
-      "importedAt": "2026-02-19T13:12:16.139Z"
+      "importedAt": "2026-02-19T15:46:46.060Z"
     },
     {
       "name": "Webhook Push Protocol 137",
       "slug": "ac-webhook-push-protocol-137",
       "source": "community_generated",
-      "importedAt": "2026-02-19T13:12:16.139Z"
+      "importedAt": "2026-02-19T15:46:46.060Z"
     },
     {
       "name": "Notify Hal.xyz 138",
       "slug": "ac-notify-hal-xyz-138",
       "source": "community_generated",
-      "importedAt": "2026-02-19T13:12:16.139Z"
+      "importedAt": "2026-02-19T15:46:46.060Z"
     },
     {
       "name": "Monitor Phalcon Ethereum 139",
       "slug": "ac-monitor-phalcon-ethereum-139",
       "source": "community_generated",
-      "importedAt": "2026-02-19T13:12:16.139Z"
+      "importedAt": "2026-02-19T15:46:46.060Z"
     },
     {
       "name": "Push Hal.xyz Base 140",
       "slug": "ac-push-hal-xyz-base-140",
       "source": "community_generated",
-      "importedAt": "2026-02-19T13:12:16.139Z"
+      "importedAt": "2026-02-19T15:46:46.060Z"
     },
     {
       "name": "Monitor Forta Optimism 141",
       "slug": "ac-monitor-forta-optimism-141",
       "source": "community_generated",
-      "importedAt": "2026-02-19T13:12:16.139Z"
+      "importedAt": "2026-02-19T15:46:46.060Z"
     },
     {
       "name": "Monitor Openzeppelin Sentinel Arbitrum 142",
       "slug": "ac-monitor-openzeppelin-sentinel-arbitrum-142",
       "source": "community_generated",
-      "importedAt": "2026-02-19T13:12:16.139Z"
+      "importedAt": "2026-02-19T15:46:46.060Z"
+    },
+    {
+      "name": "Monitor Tenderly Alerts Solana 143",
+      "slug": "ac-monitor-tenderly-alerts-solana-143",
+      "source": "community_generated",
+      "importedAt": "2026-02-19T15:46:46.060Z"
     }
   ]
 }
