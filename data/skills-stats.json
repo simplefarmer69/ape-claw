@@ -1,12 +1,20 @@
 {
   "ok": true,
-  "total": 10028,
-  "seed": 8,
+  "total": 10029,
+  "seed": 9,
   "imported": 10020,
   "user": 0,
-  "vetted": 10014,
+  "vetted": 10015,
   "onchain": 9914,
   "recent": [
+    {
+      "name": "StonkBrokers — Full DeFi Suite (Robinhood Chain)",
+      "slug": "stonkbrokers-launcher",
+      "source": "seed",
+      "addedAt": "2026-02-19T19:00:00.000Z",
+      "riskTier": 2,
+      "description": "End-to-end onchain DeFi skill for Robinhood Chain testnet via the StonkBrokers protocol (Clutch Labs). Covers faucet claims, token launches, Uniswap v3 swaps, LP positions, and covered-call options."
+    },
     {
       "name": "Notify Forta 134",
       "slug": "ac-notify-forta-134",
@@ -58,12 +66,6 @@
     {
       "name": "Monitor Openzeppelin Sentinel Arbitrum 142",
       "slug": "ac-monitor-openzeppelin-sentinel-arbitrum-142",
-      "source": "community_generated",
-      "importedAt": "2026-02-19T13:12:16.139Z"
-    },
-    {
-      "name": "Monitor Tenderly Alerts Solana 143",
-      "slug": "ac-monitor-tenderly-alerts-solana-143",
       "source": "community_generated",
       "importedAt": "2026-02-19T13:12:16.139Z"
     }
