@@ -534,6 +534,26 @@
     .skill-foot .pill.nft{border-color:rgba(0,255,0,.25);color:rgba(0,255,0,.85);background:rgba(0,255,0,.05)}
     .skill-foot .pill.nft:hover{border-color:rgba(0,255,0,.5);background:rgba(0,255,0,.12);color:#fff}
 
+    .pagination-bar{
+      display:flex;align-items:center;justify-content:center;gap:16px;
+      margin:28px auto 8px;padding:14px 20px;
+      background:rgba(11,22,34,.6);
+      border:1px solid rgba(207,255,4,.1);border-radius:8px;
+      max-width:400px;
+    }
+    .pg-btn{
+      padding:8px 18px;border-radius:6px;border:1px solid rgba(207,255,4,.2);
+      background:rgba(207,255,4,.04);color:var(--accent);
+      font-size:13px;font-weight:700;cursor:pointer;
+      transition:all .2s;font-family:inherit;
+    }
+    .pg-btn:hover:not(:disabled){border-color:var(--accent);background:rgba(207,255,4,.1);color:#fff}
+    .pg-btn:disabled{opacity:.3;cursor:default}
+    .pg-info{
+      font-size:12px;color:var(--muted);font-weight:600;
+      letter-spacing:.04em;min-width:120px;text-align:center;
+    }
+
     .skill-source-tag{
       font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
       padding:2px 6px;border-radius:3px;border:1px solid rgba(99,215,255,.18);
@@ -708,6 +728,11 @@
       </div>
       
       <div id="importedList" class="skill-grid" style="max-width:1200px;margin:0 auto"></div>
+      <div id="paginationBar" class="pagination-bar" style="display:none">
+        <button id="pgPrev" class="pg-btn" disabled>&lsaquo; Prev</button>
+        <span id="pgInfo" class="pg-info">Page 1 of 1</span>
+        <button id="pgNext" class="pg-btn">Next &rsaquo;</button>
+      </div>
     </div>
     </div>
 
@@ -1573,8 +1598,41 @@
       var importedBadge = document.getElementById('importedBadge');
       var importedAll = [];
       var publishedBySlug = {};
-      var importedRenderLimit = 120;
+      var PAGE_SIZE = 50;
+      var currentPage = 1;
       var lastFiltered = [];
+
+      var pgBar = document.getElementById('paginationBar');
+      var pgPrev = document.getElementById('pgPrev');
+      var pgNext = document.getElementById('pgNext');
+      var pgInfo = document.getElementById('pgInfo');
+
+      function totalPages() { return Math.max(1, Math.ceil(lastFiltered.length / PAGE_SIZE)); }
+
+      function renderPage() {
+        var start = (currentPage - 1) * PAGE_SIZE;
+        var pageItems = lastFiltered.slice(start, start + PAGE_SIZE);
+        renderImported(pageItems, publishedBySlug);
+
+        var tp = totalPages();
+        if (pgBar) pgBar.style.display = lastFiltered.length > PAGE_SIZE ? 'flex' : 'none';
+        if (pgInfo) pgInfo.textContent = 'Page ' + currentPage + ' of ' + tp + '  (' + lastFiltered.length + ' skills)';
+        if (pgPrev) pgPrev.disabled = currentPage <= 1;
+        if (pgNext) pgNext.disabled = currentPage >= tp;
+
+        var grid = document.getElementById('importedList');
+        if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      function goToPage(page) {
+        var tp = totalPages();
+        currentPage = Math.max(1, Math.min(page, tp));
+        renderPage();
+      }
+
+      if (pgPrev) pgPrev.addEventListener('click', function () { goToPage(currentPage - 1); });
+      if (pgNext) pgNext.addEventListener('click', function () { goToPage(currentPage + 1); });
+
       function applyImportedFilters() {
         var q = importedSearch ? String(importedSearch.value || '') : '';
         var bucket = riskFilter ? String(riskFilter.value || 'all') : 'all';
@@ -1595,8 +1653,8 @@
           return true;
         });
         lastFiltered = filtered;
-        renderImported(filtered.slice(0, importedRenderLimit), publishedBySlug);
-        updateLoadMoreBtn(filtered.length);
+        currentPage = 1;
+        renderPage();
         if (statVetted) statVetted.textContent = fmtInt(filtered.length);
         if (importedBadge) {
           var publishedCount = 0;
@@ -1608,24 +1666,6 @@
           } catch (e) {}
           importedBadge.textContent = filtered.length ? ('FOUND ' + filtered.length + (publishedCount ? (' · ONCHAIN ' + publishedCount) : '')) : 'NONE';
         }
-      }
-      function updateLoadMoreBtn(totalCount) {
-        var existing = document.getElementById('loadMoreBtn');
-        if (existing) existing.remove();
-        if (totalCount <= importedRenderLimit) return;
-        var out = document.getElementById('importedList');
-        if (!out) return;
-        var btn = document.createElement('button');
-        btn.id = 'loadMoreBtn';
-        btn.className = 'btn';
-        btn.style.cssText = 'display:block;margin:24px auto;padding:10px 32px;font-size:.8rem';
-        btn.textContent = 'Show more (' + importedRenderLimit + ' of ' + totalCount + ')';
-        btn.addEventListener('click', function () {
-          importedRenderLimit = Math.min(importedRenderLimit + 200, totalCount);
-          renderImported(lastFiltered.slice(0, importedRenderLimit), publishedBySlug);
-          updateLoadMoreBtn(totalCount);
-        });
-        out.parentNode.insertBefore(btn, out.nextSibling);
       }
       fetch(apiBase + '/api/skills/search?limit=5000', { headers: { 'accept': 'application/json' } })
         .then(function (r) { return r.ok ? r.json() : null; })
