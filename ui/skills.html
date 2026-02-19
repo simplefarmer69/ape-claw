@@ -412,6 +412,12 @@
     }
     @media(min-width:640px){.cards{grid-template-columns:repeat(2,1fr)}}
     @media(min-width:1000px){.cards{grid-template-columns:repeat(3,1fr)}}
+    @media(min-width:1000px){
+      .cards .skill-card:last-child:nth-child(3n+1){grid-column:1 / -1}
+    }
+    @media(min-width:640px) and (max-width:999px){
+      .cards .skill-card:last-child:nth-child(2n+1){grid-column:1 / -1}
+    }
 
     .skill-card{
       --glow-color:207,255,4;
@@ -840,7 +846,7 @@
         </div>
       </div>
       
-      <div id="importedList" class="skill-grid" style="max-width:1200px;margin:0 auto"></div>
+      <div id="importedList" class="cards" style="max-width:1200px;margin:0 auto"></div>
       <div id="paginationBar" class="pagination-bar" style="display:none">
         <button id="pgPrev" class="pg-btn" disabled>&lsaquo; Prev</button>
         <span id="pgInfo" class="pg-info">Page 1 of 1</span>
@@ -1607,20 +1613,33 @@
         }
 
         function showInstallModal(it) {
-          var slug = escapeHtml(it.slug || '');
-          var fileName = it.fileName || it.slug + '.json';
+          var rawSlug = String(it.slug || '');
+          var slug = escapeHtml(rawSlug);
+          var fileName = it.fileName || rawSlug + '.json';
+          var installCmd = 'curl -fsSL "' + (apiBase || 'https://apeclaw.ai') + '/api/skills/get?slug=' + rawSlug + '" | jq .card > ./' + fileName;
           var html = '';
           html += '<div style="margin-bottom:16px"><strong style="color:#cfff04;font-size:14px">' + escapeHtml(it.name || it.slug) + '</strong></div>';
           html += '<div class="note" style="margin-bottom:12px;color:var(--muted);font-size:12px">Copy the command below and run it in your terminal to install this skill.</div>';
           html += '<div style="position:relative;background:rgba(0,0,0,.5);border:1px solid rgba(207,255,4,.15);border-radius:6px;padding:14px 16px;margin-bottom:12px">';
-          html += '<code style="font-size:11px;color:var(--cyan);word-break:break-all;line-height:1.6;display:block" id="installCmd">';
-          html += 'curl -fsSL &quot;https://apeclaw.ai/api/skills/search&quot; | \\\n  jq \'[.results[] | select(.slug==&quot;' + slug + '&quot;)][0]\' \\\n  &gt; ./' + escapeHtml(fileName) + '</code>';
-          html += '<a href="#" data-copy="curl -fsSL &quot;https://apeclaw.ai/api/skills/search&quot; | jq \'[.results[] | select(.slug==&quot;' + slug + '&quot;)][0]\' > ./' + escapeHtml(fileName) + '" style="position:absolute;top:8px;right:8px;font-size:9px;color:var(--accent);border:1px solid rgba(207,255,4,.2);padding:3px 8px;border-radius:3px;text-decoration:none;background:rgba(207,255,4,.06)">COPY</a>';
+          html += '<code style="font-size:11px;color:var(--cyan);word-break:break-all;line-height:1.6;display:block">' + escapeHtml(installCmd) + '</code>';
           html += '</div>';
+          html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+          html += '<a class="pill install-btn" href="#" data-copy-raw="install" style="font-weight:800;font-size:11px;padding:8px 14px">Copy install command</a>';
           if (it.sourceUrl) {
-            html += '<div class="note" style="font-size:11px">Source: <a href="' + escapeHtml(it.sourceUrl) + '" target="_blank" rel="noopener" style="color:var(--cyan)">' + escapeHtml(it.sourceUrl) + '</a></div>';
+            html += '<a class="pill" href="' + escapeHtml(it.sourceUrl) + '" target="_blank" rel="noopener" style="font-size:11px;padding:8px 14px">View source</a>';
           }
+          html += '</div>';
           openModal('Install Skill', html, function () { closeModal(); }, function () {});
+          try {
+            var copyBtn = document.querySelector('[data-copy-raw="install"]');
+            if (copyBtn) {
+              copyBtn.addEventListener('click', function (ev) {
+                ev.preventDefault();
+                copyText(installCmd);
+                showToast('Copied to clipboard');
+              });
+            }
+          } catch (e) {}
         }
 
         function showJsonModal(it, pub) {
@@ -1642,10 +1661,20 @@
           var html = '';
           html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
           html += '<strong style="color:#cfff04;font-size:14px">' + escapeHtml(it.name || it.slug) + '</strong>';
-          html += '<a href="#" data-copy="' + escapeHtml(json) + '" style="font-size:9px;color:var(--accent);border:1px solid rgba(207,255,4,.2);padding:3px 8px;border-radius:3px;text-decoration:none;background:rgba(207,255,4,.06)">COPY JSON</a>';
+          html += '<a class="pill install-btn" href="#" data-copy-raw="json" style="font-size:9px;padding:5px 10px;font-weight:800">COPY JSON</a>';
           html += '</div>';
           html += '<pre style="background:rgba(0,0,0,.5);border:1px solid rgba(207,255,4,.12);border-radius:6px;padding:14px 16px;font-size:11px;color:var(--cyan);overflow-x:auto;max-height:400px;overflow-y:auto;line-height:1.6;margin:0">' + escapeHtml(json) + '</pre>';
           openModal('Skill JSON', html, function () { closeModal(); }, function () {});
+          try {
+            var copyBtn = document.querySelector('[data-copy-raw="json"]');
+            if (copyBtn) {
+              copyBtn.addEventListener('click', function (ev) {
+                ev.preventDefault();
+                copyText(json);
+                showToast('Copied to clipboard');
+              });
+            }
+          } catch (e) {}
         }
 
         out.innerHTML = items.map(function (it) {
@@ -1762,7 +1791,7 @@
       var importedBadge = document.getElementById('importedBadge');
       var importedAll = [];
       var publishedBySlug = {};
-      var PAGE_SIZE = 50;
+      var PAGE_SIZE = 51;
       var currentPage = 1;
       var lastFiltered = [];
 
@@ -2679,6 +2708,19 @@
       else if (hash === 'your-skills') switchTab('add');
     })();
   </script>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
+    <div class="modal">
+      <h3 id="modalTitle">Modal</h3>
+      <div class="body" id="modalBody"></div>
+      <div class="footer">
+        <a class="pill" href="#" id="modalCancelBtn">Close</a>
+        <a class="pill install-btn" href="#" id="modalOkBtn" style="display:none">OK</a>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
 

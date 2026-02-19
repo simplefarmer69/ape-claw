@@ -48,6 +48,19 @@ Read: `docs/AUTONOMY_AND_SUBSTRATE.md`
 
 - minimal lifecycle primitive for intent creation/cancel (v2)
 
+### PodVault
+
+- PaymentSplitter-style revenue vault (native + ERC-20)
+- deployed on ApeChain at `0xff20500637e5aa1a78e263475ca1d49b35c9ed0c`
+- SkillNFT royalties (EIP-2981) routable here for Pod-wide revenue sharing
+- members claim proportional shares via `ape-claw v2 vault release`
+
+### ClawllectorPass
+
+- signature-gated free mint ERC-721 pass for verified Clawllectors
+- freezeable metadata (auditable updates)
+- one mint per address
+
 ### AgentAccount + PolicyEngine (minimal)
 
 These are stepping stones toward "wallet as agent OS":
@@ -71,7 +84,7 @@ npx hardhat node --hostname 127.0.0.1 --port 8545
 npm run contracts:seed
 ```
 
-This prints deployed addresses (SkillNFT, SkillRegistry, ReceiptRegistry, PolicyEngine, AgentAccount, modules).
+This prints deployed addresses (SkillNFT, SkillRegistry, ReceiptRegistry, PolicyEngine, AgentAccount, PodVault, ClawllectorPass, and modules).
 
 3. Mint + publish a skill:
 
@@ -90,6 +103,12 @@ ape-claw v2 receipt record --rpc http://127.0.0.1:8545 --receipts 0x... --traceI
 
 ```bash
 ape-claw v2 receipt get --rpc http://127.0.0.1:8545 --receipts 0x... --traceId "demo_1" --json
+```
+
+6. Claim revenue from PodVault:
+
+```bash
+ape-claw v2 vault release --rpc http://127.0.0.1:8545 --privateKey 0x... --vault 0x... --json
 ```
 
 UI option (read-only, no signing in browser):

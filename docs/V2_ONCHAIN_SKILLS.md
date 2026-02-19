@@ -32,6 +32,9 @@ v2 introduces onchain primitives so skills can be versioned immutably and refere
   - policy-gated bridge call wrapper
 - `NftBuyModule` (`contracts/NftBuyModule.sol`)
   - policy-gated NFT buy call wrapper
+- `ClawllectorPass` (`contracts/ClawllectorPass.sol`)
+  - signature-gated free mint ERC-721 pass for Clawllectors
+  - freezeable metadata, one mint per address
 
 ## Hashing model
 

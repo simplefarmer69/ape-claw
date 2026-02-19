@@ -51,7 +51,7 @@ Critique response:
 
 ## What is NOT shipped yet (still part of the plan)
 
-The Web4 plan calls out these primitives as critical for full permissionless autonomy. ApeClaw now ships a minimal `AgentAccount` + `PolicyEngine`, but the full design is still not shipped:
+The Web4 plan calls out these primitives as critical for full permissionless autonomy. ApeClaw ships `AgentAccount` + `PolicyEngine` on ApeChain (allowlists + value caps enforced onchain), `PodVault` for revenue sharing, and `ClawllectorPass` for identity. The full design continues to evolve:
 
 - session keys / AA kernel hardening (ERC-4337 style)
 - richer policy constraints (token/time windows, slippage checks, approvals model)
@@ -62,13 +62,15 @@ The Web4 plan calls out these primitives as critical for full permissionless aut
 The current posture is deliberately "v2":
 
 - strong provenance + immutable versions + receipts primitive
+- onchain enforcement via AgentAccount + PolicyEngine (deployed on ApeChain)
+- revenue sharing via PodVault (deployed on ApeChain at `0xff20500637e5aa1a78e263475ca1d49b35c9ed0c`)
 - strict opt-in for high-risk automation
 - offchain execution remains bounded by the runner "box"
 
 ## Phase mapping (rough)
 
 - P0 (contracts + basic UI): partially shipped
-  - contracts shipped: yes (SkillNFT, SkillRegistry, IntentRegistry, ReceiptRegistry, PolicyEngine, AgentAccount, PodVault, SwapModule, BridgeModule, NftBuyModule)
+  - contracts shipped: yes (SkillNFT, SkillRegistry, IntentRegistry, ReceiptRegistry, PolicyEngine, AgentAccount, PodVault, SwapModule, BridgeModule, NftBuyModule, ClawllectorPass)
   - basic UI for discovery/install/intents: partially shipped
     - discovery: `/skills` (seed + imported + submitted SkillCards, onchain status visualization)
     - intents: `/skills#intents` ships a safe command-generator surface for `v2 intent create|cancel`

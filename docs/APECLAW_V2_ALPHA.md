@@ -20,9 +20,12 @@ This document describes the v2 build: onchain skill primitives + a seed library,
   - `acp-browse`
   - `acp-bounty-poll`
   - `acp-bounty-post`
+- `ClawllectorPass` (signature-gated ERC-721 free mint pass for Clawllectors; freezeable metadata, one per address)
 - Additive CLI commands (v1 remains unchanged):
   - `ape-claw v2 skill mint|publish`
   - `ape-claw v2 intent create|cancel`
+  - `ape-claw v2 receipt record|get`
+  - `ape-claw v2 vault release`
 
 ## Why this addresses “fake autonomy”
 
@@ -56,7 +59,7 @@ Deploy and seed the initial library (local devnet):
 npm run contracts:seed
 ```
 
-The seed script prints all 10 contract addresses: `SkillNFT`, `SkillRegistry`, `IntentRegistry`, `ReceiptRegistry`, `PolicyEngine`, `AgentAccount`, `PodVault`, `SwapModule`, `BridgeModule`, and `NftBuyModule`.
+The seed script prints all 11 contract addresses: `SkillNFT`, `SkillRegistry`, `IntentRegistry`, `ReceiptRegistry`, `PolicyEngine`, `AgentAccount`, `PodVault`, `SwapModule`, `BridgeModule`, `NftBuyModule`, and `ClawllectorPass`.
 
 ## Deploy to ApeChain (mainnet)
 

@@ -42,15 +42,18 @@ In ApeClaw:
 - For real vision, Claude CLI is an option; local VLM backends are the intended fallback path (planned hardening).
 - Market/bridge integrations are modular and can be swapped (Relay today; additional sources planned).
 
-## The missing piece: onchain enforcement (planned)
+## Onchain enforcement (shipped in v2)
 
 The real answer to "bounded automation" is enforcement + governance:
 
-- `AgentAccount` + `PolicyEngine` (planned): onchain policy gates before value moves.
+- `AgentAccount` + `PolicyEngine` (shipped): onchain policy gates before value moves. Deployed on ApeChain with allowlists and per-tx value caps.
+- `PodVault` (shipped): revenue sharing vault deployed on ApeChain (`0xff20500637e5aa1a78e263475ca1d49b35c9ed0c`). SkillNFT royalties route here for Pod-wide splits.
+- `ClawllectorPass` (shipped): signature-gated free mint ERC-721 for verified Clawllectors.
 - Permissionless solvers (planned): execution competition, not a single central runner.
 - Attestations/reputation (planned): version trust for skills.
+- Session keys + AA kernel hardening (planned): richer policy constraints, token/time windows, slippage checks.
 
-v2 is the foundation for those phases.
+v2 ships the onchain enforcement foundation. The planned phases extend it to permissionless autonomy.
 
 ## Practical definition of "autonomy" used here
 

@@ -124,5 +124,7 @@ See:
 
 - **Local convenience**: submit SkillCards so others can browse and reuse them quickly.
 - **Onchain permanence**: publish versions so they survive UI/backends and can be audited forever.
+- **Revenue sharing**: SkillNFT royalties and ACP bounty earnings route to PodVault for Pod-wide splits.
+- **Identity**: verified Clawllectors can claim a ClawllectorPass (signature-gated free mint ERC-721) for onchain identity.
 - **Receipts**: record “what happened” without trusting a centralized log.
 

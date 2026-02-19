@@ -25,8 +25,9 @@ Discover collections, get live listings, quote/simulate/buy NFTs, and bridge fun
 - **Autonomous NFT collecting** — discover, quote, simulate, and buy ApeChain NFTs
 - **Cross-chain bridging** — bridge funds to ApeChain via Relay protocol
 - **8 safety gates** — simulation required, confirm phrases, daily spend caps, collection allowlists, replay protection, private key checks, currency allowlists, dry-run default
-- **Skills Library (Library of Alexandria)** — 1,020+ OpenClaw skills browsable at [apeclaw.ai/skills](https://apeclaw.ai/skills), served globally via API
+- **Skills Library (Library of Alexandria)** — 10,000+ skills (and growing) browsable at [apeclaw.ai/skills](https://apeclaw.ai/skills), 3,200+ minted onchain as SkillNFTs, served globally via API
 - **Onchain skill provenance** — mint SkillNFTs (ERC-721), publish immutable versions to SkillRegistry, anchor receipts to ReceiptRegistry
+- **ClawllectorPass** — signature-gated free mint ERC-721 pass for verified Clawllectors on ApeChain (freezeable metadata, one-per-address)
 - **PodVault revenue sharing** — SkillNFT royalties route to a shared PaymentSplitter vault (deployed on ApeChain at `0xff20500637e5aa1a78e263475ca1d49b35c9ed0c`)
 - **ACP bounty integration** — browse providers, post bounties, fulfill work, route earnings to PodVault
 - **Clawbot verification** — register agents, share API keys, track actions by ID
@@ -36,7 +37,7 @@ Discover collections, get live listings, quote/simulate/buy NFTs, and bridge fun
 
 ## ApeClaw v2 (Onchain Skills + THE POD)
 
-v2 is additive: it does not remove or break any v1 core flows. It adds an onchain skill registry, a global skills library (1,020+ skills), and a Pod harness so an agent has:
+v2 is additive: it does not remove or break any v1 core flows. It adds an onchain skill registry, a global skills library (10,000+ skills and growing), and a Pod harness so an agent has:
 
 - a persistent workspace (state + journal),
 - immutable skill versioning (no silent updates),
@@ -51,6 +52,7 @@ Links:
 - **THE POD landing**: `https://apeclaw.ai/pod`
 - **Docs (web)**: `https://apeclaw.ai/docs`
 - **Skills Library**: `https://apeclaw.ai/skills`
+- **Docs hub**: `docs/README.md` (operator + developer tracks)
 - **v2 docs**: `docs/APECLAW_V2_ALPHA.md`
 - **Web4 plan status**: `docs/WEB4_PLAN_STATUS.md`
 - **Supported networks (reality check)**: `docs/SUPPORTED_NETWORKS.md`
@@ -81,6 +83,7 @@ Onchain primitives (Hardhat local devnet, ApeChain-ready ABI shape):
 - `contracts/ReceiptRegistry.sol`: append-only receipts keyed by `traceIdHash` + `contentHash` (alpha)
 - `contracts/PolicyEngine.sol`: minimal onchain policy hook (allowlists + value cap)
 - `contracts/AgentAccount.sol`: minimal execution shell that enforces PolicyEngine and records receipts
+- `contracts/ClawllectorPass.sol`: signature-gated free mint ERC-721 pass for Clawllectors (freezeable metadata, one per address)
 - module skills: `SwapModule`, `BridgeModule`, `NftBuyModule` (policy-gated call wrappers)
 
 SkillCards (portable JSON):
@@ -130,7 +133,7 @@ Skill library importer (clone/scrape → SkillCards):
 
 Skills Library (global, API-first):
 
-- 1,020+ OpenClaw skills imported, enriched with descriptions, and served globally via `/api/skills/search`
+- 10,000+ skills imported (and growing), enriched with descriptions, and served globally via `/api/skills/search`
 - Index tracked in git (`skillcards/imported/index.json`); individual JSON files gitignored
 - UI at [apeclaw.ai/skills](https://apeclaw.ai/skills) — browse, search, filter, view details, copy CLI commands
 - `/api/skills/get?slug=<slug>` returns full skill metadata + card JSON when available
@@ -417,6 +420,7 @@ ape-claw clawbot list --json
 | `v2 intent create --rpc <url> --privateKey 0x... --intents 0x... --payload '{...}' --json` | Create an intent (v2) |
 | `v2 intent cancel --rpc <url> --privateKey 0x... --intents 0x... --intentId <id> --json` | Cancel an intent (v2) |
 | `v2 receipt record --rpc <url> --privateKey 0x... --receipts 0x... --traceId <trace> [--subject <string>] [--payload '{...}'] [--uri ipfs://...] --json` | Record an onchain receipt by `traceIdHash` (v2) |
+| `v2 vault release --rpc <url> --privateKey 0x... --vault 0x... [--token 0x...] --json` | Claim proportional share from PodVault (native or ERC-20) |
 | `v2 receipt get --rpc <url> --receipts 0x... --traceId <trace> --json` | Read an onchain receipt back (agent “memory reload” primitive) |
 
 ---
@@ -774,7 +778,7 @@ The CLI auto-retries "Order not found" errors up to 3 times by fetching fresh li
 git clone https://github.com/simplefarmer69/ape-claw.git
 cd ape-claw
 npm install
-npm test          # 23 tests
+npm test          # 26 tests
 node ./src/cli.mjs doctor --json
 ```
 

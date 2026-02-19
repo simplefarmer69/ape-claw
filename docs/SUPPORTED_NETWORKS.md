@@ -15,7 +15,7 @@ This doc is the source of truth for:
 Most of ApeClaw is built around ApeChain as the primary chain:
 
 - NFT workflows (buy/autobuy) are designed for ApeChain allowlisted collections.
-- v2 contracts are deployed on ApeChain mainnet (chain ID 33139) with 10 contracts and 1,010+ skill NFTs published.
+- v2 contracts are deployed on ApeChain mainnet (chain ID 33139) with 11 contracts (including ClawllectorPass) and 3,200+ skill NFTs minted onchain (10,000+ total skills in the library and growing).
 
 Chain ID:
 

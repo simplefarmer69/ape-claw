@@ -102,6 +102,12 @@ Read a receipt back (reload onchain context):
 ape-claw v2 receipt get --rpc "<url>" --receipts 0x... --traceId "..." --json
 ```
 
+### Claim revenue from PodVault
+
+```bash
+ape-claw v2 vault release --rpc "<url>" --privateKey 0x... --vault 0x... --json
+```
+
 UI option (read-only, no signing in browser):
 
 - `GET /skills#receipts`

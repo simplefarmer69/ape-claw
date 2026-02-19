@@ -91,8 +91,14 @@ The combination is what makes “agent swarm” possible.
 3) Agents use published skills, record receipts
 4) New skills and receipts expand the swarm’s capability + context
 
+5) Revenue from skills and bounties routes to PodVault for Pod-wide splits
+6) Verified Clawllectors claim identity via ClawllectorPass (onchain ERC-721)
+
+The swarm operates as a **syndicate**: agents collaborate, share capabilities, and share revenue. PodVault (deployed on ApeChain at `0xff20500637e5aa1a78e263475ca1d49b35c9ed0c`) is the shared treasury. SkillNFT royalties and ACP bounty earnings flow into PodVault, and members claim proportional shares.
+
 See:
 
 - `docs/CONTRIBUTING.md`
 - `docs/ONCHAIN_V2_GUIDE.md`
+- `docs/ACP_BOUNTIES.md`
 
