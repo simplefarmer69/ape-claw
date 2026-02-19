@@ -767,7 +767,7 @@
             <span class="badge live">LIVE</span>
           </div>
           <p>
-            Explore 1,020+ skills across categories like DeFi, NFTs, data analysis, automation, and more. Each skill is vetted and ready to use.
+            Explore 10,000+ skills across categories like DeFi, NFTs, data analysis, automation, and more (and growing). Each skill is vetted and ready to use.
           </p>
           <div class="tools">
             <a class="pill" href="#imported">Browse All Skills</a>
@@ -1681,6 +1681,15 @@
           var risk = Number(it.riskTier || 2);
           var pub = (publishedBySlug && it && it.slug && publishedBySlug[it.slug]) ? publishedBySlug[it.slug] : null;
           var sourceHref = String(it.sourceUrl || '').trim();
+          var githubHref = '';
+          try {
+            if (sourceHref) githubHref = sourceHref;
+            else if (String(it.source || '') === 'seed' && it.fileName) {
+              githubHref = 'https://github.com/simplefarmer69/ape-claw/blob/main/skillcards/seed/' + encodeURIComponent(String(it.fileName));
+            } else {
+              githubHref = 'https://github.com/openclaw/skills';
+            }
+          } catch (e) { githubHref = 'https://github.com/openclaw/skills'; }
           var title = it.name || it.slug || 'Imported Skill';
           var desc = String(it.description || it.desc || '').trim();
           if (!desc) desc = guessSummary(it);
@@ -1720,7 +1729,7 @@
                 '<div class="skill-foot">' +
                   (it.slug ? '<a class="pill install-btn" href="#install=' + encodeURIComponent(String(it.slug)) + '" data-action="install" title="Get install command">Install</a>' : '') +
                   (it.slug ? '<a class="pill" href="#json=' + encodeURIComponent(String(it.slug)) + '" data-action="json" title="View skill metadata">JSON</a>' : '') +
-                  (sourceHref ? ('<a class="pill" href="' + escapeHtml(sourceHref) + '" target="_blank" rel="noopener">Source</a>') : '') +
+                  (githubHref ? ('<a class="pill" href="' + escapeHtml(githubHref) + '" target="_blank" rel="noopener">GitHub</a>') : '') +
                   '<a class="pill" href="#skill=' + encodeURIComponent(String(it.slug || "")) + '" data-action="details">Details</a>' +
                 '</div>' +
               '</div>' +
@@ -2692,6 +2701,38 @@
 
       // Global delegated handlers for copy/delete/mark actions across all sections.
       document.addEventListener('click', function (ev) {
+        // Fallback: card action buttons should still work even if per-card listeners fail.
+        // We resolve the clicked action by walking up to the nearest .skill-card and using its data-slug.
+        try {
+          var actEl = ev && ev.target ? ev.target.closest('[data-action]') : null;
+          if (actEl) {
+            var action = actEl.getAttribute('data-action');
+            var card = actEl.closest('.skill-card');
+            var slug = card ? String(card.getAttribute('data-slug') || '').trim() : '';
+            if (slug && (action === 'install' || action === 'json' || action === 'details')) {
+              ev.preventDefault();
+              // keep URL shareable
+              try {
+                var enc = encodeURIComponent(slug);
+                if (action === 'install') history.replaceState(null, '', '#install=' + enc);
+                else if (action === 'json') history.replaceState(null, '', '#json=' + enc);
+                else history.replaceState(null, '', '#skill=' + enc);
+              } catch (e) {}
+              // resolve item
+              var it = null;
+              for (var i = 0; i < importedAll.length; i++) {
+                if (importedAll[i] && importedAll[i].slug === slug) { it = importedAll[i]; break; }
+              }
+              if (!it) return;
+              var pub = (publishedBySlug && it.slug && publishedBySlug[it.slug]) ? publishedBySlug[it.slug] : null;
+              if (action === 'install') showInstallModal(it);
+              else if (action === 'json') showJsonModal(it, pub);
+              else openDetails(it, pub, '');
+              return;
+            }
+          }
+        } catch (e) {}
+
         var el = ev && ev.target ? ev.target.closest('[data-copy]') : null;
         if (el) {
           ev.preventDefault();
