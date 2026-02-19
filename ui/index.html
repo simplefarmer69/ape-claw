@@ -2858,13 +2858,13 @@ async function fetchSkillsStats() {
     console.warn('[skills-stats]', err.message);
     const setIf = (id, val) => { const el = document.getElementById(id); if (el && (el.textContent === '—' || el.textContent === '0')) el.textContent = val; };
     setIf('psSkillsTotal', '10,029');
-    setIf('psSkillsOnchain', '9,914');
+    setIf('psSkillsOnchain', '10,023');
     setIf('psSkillsVetted', '10,015');
     setIf('skillCountBadge', '10,029');
     setIf('ssSeed', '9');
     setIf('ssImported', '10,020');
     setIf('ssUser', '0');
-    setIf('ssOnchain', '9,914');
+    setIf('ssOnchain', '10,023');
     setIf('ssVetted', '10,015');
     const grid = document.getElementById('skillsPanelGrid');
     if (grid && grid.innerHTML.includes('Loading')) {
