@@ -1210,8 +1210,19 @@
     </div>
     </div>
 
+    <div class="toast" id="toast"></div>
 
-    
+    <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
+      <div class="modal">
+        <h3 id="modalTitle">Modal</h3>
+        <div class="body" id="modalBody"></div>
+        <div class="footer">
+          <a class="pill" href="#" id="modalCancelBtn">Close</a>
+          <a class="pill install-btn" href="#" id="modalOkBtn" style="display:none">OK</a>
+        </div>
+      </div>
+    </div>
+
   <script>
     (function () {
       // Lightweight collage background to match the Stonk terminal feel.
@@ -2816,18 +2827,6 @@
     })();
   </script>
 
-  <div class="toast" id="toast"></div>
-
-  <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
-    <div class="modal">
-      <h3 id="modalTitle">Modal</h3>
-      <div class="body" id="modalBody"></div>
-      <div class="footer">
-        <a class="pill" href="#" id="modalCancelBtn">Close</a>
-        <a class="pill install-btn" href="#" id="modalOkBtn" style="display:none">OK</a>
-      </div>
-    </div>
-  </div>
 </body>
 </html>
 
