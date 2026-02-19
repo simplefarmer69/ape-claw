@@ -1,0 +1,15 @@
+[profile.default]
+src = "contracts"
+out = "forge-out"
+libs = ["node_modules"]
+solc = "0.8.24"
+optimizer = true
+optimizer_runs = 200
+via_ir = true
+
+remappings = [
+    "@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/",
+]
+
+[etherscan]
+apechain = { key = "${ETHERSCAN_API_KEY}", chain = 33139, url = "https://api.etherscan.io/v2/api?chainid=33139" }

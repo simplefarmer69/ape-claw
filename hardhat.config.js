@@ -1,6 +1,7 @@
 import { defineConfig, configVariable } from "hardhat/config";
 import hardhatViem from "@nomicfoundation/hardhat-viem";
 import hardhatNodeTestRunner from "@nomicfoundation/hardhat-node-test-runner";
+import hardhatVerify from "@nomicfoundation/hardhat-verify";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -37,7 +38,7 @@ if (process.env.APE_CLAW_V2_RPC_URL === undefined && String(process.env.RPC_URL_
 }
 
 export default defineConfig({
-  plugins: [hardhatViem, hardhatNodeTestRunner],
+  plugins: [hardhatViem, hardhatNodeTestRunner, hardhatVerify],
   networks: {
     // For publish tests via scripts/import-skillcards.mjs (needs an HTTP RPC).
     // This is dev-only: the private key is the well-known default Hardhat node account.
@@ -72,6 +73,21 @@ export default defineConfig({
     tests: "./contracts-test",
     cache: "./contracts-cache",
     artifacts: "./contracts-artifacts",
+  },
+  etherscan: {
+    apiKey: {
+      apechain: configVariable("ETHERSCAN_API_KEY"),
+    },
+    customChains: [
+      {
+        network: "apechain",
+        chainId: 33139,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=33139",
+          browserURL: "https://apescan.io",
+        },
+      },
+    ],
   },
 });
 

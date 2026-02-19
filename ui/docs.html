@@ -401,11 +401,7 @@
           var api = (u.searchParams.get("api") || "").trim();
           if (api) return api.replace(/\/+$/, "");
         } catch (e) {}
-        try {
-          var origin = String(window.location.origin || "");
-          if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) return origin;
-        } catch (e) {}
-        return "https://api.apeclaw.ai";
+        return "";
       }
 
       function escapeHtml(s){

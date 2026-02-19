@@ -1,6 +1,23 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=300, s-maxage=600" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    }
+  ],
   "routes": [
+    { "src": "^/api/health/?$", "dest": "/api/health.json" },
+    { "src": "^/api/skills/stats/?$", "dest": "/api/skills-stats.json" },
+    { "src": "^/api/skills/search/?$", "dest": "/api/skills-search.json" },
+    { "src": "^/api/clawbots/?$", "dest": "/api/clawbots.json" },
+    { "src": "^/api/v2/config/?$", "dest": "/api/v2-config.json" },
+    { "src": "^/api/pod/status/?$", "dest": "/api/pod-status.json" },
+    { "src": "^/api/allowlist/?$", "dest": "/allowlists/recommended.apechain.json" },
     { "src": "^/pod/?$", "dest": "/ui/pod.html" },
     { "src": "^/docs/?$", "dest": "/ui/docs.html" },
     { "src": "^/skills/?$", "dest": "/ui/skills.html" },

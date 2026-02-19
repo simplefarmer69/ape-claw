@@ -330,6 +330,77 @@
       user-select:none;
     }
     .tools input[type="checkbox"]{width:14px;height:14px;min-width:0;accent-color:var(--accent)}
+
+    /* ── Add Tab step flow ── */
+    .step-flow{display:flex;flex-direction:column;gap:0;margin-top:16px}
+    .step-card{
+      background:linear-gradient(180deg,var(--panel-2) 0%,var(--panel) 100%);
+      border:1px solid rgba(207,255,4,.15);
+      border-radius:8px;
+      padding:0;
+      overflow:hidden;
+      margin-bottom:14px;
+      transition:border-color .3s;
+    }
+    .step-card:hover{border-color:rgba(207,255,4,.35)}
+    .step-header{
+      display:flex;align-items:center;gap:14px;
+      padding:18px 20px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .step-num{
+      width:32px;height:32px;border-radius:50%;
+      display:grid;place-items:center;
+      border:2px solid var(--accent);
+      color:var(--accent);
+      font-weight:900;font-size:14px;
+      flex-shrink:0;
+      transition:background .3s,color .3s;
+    }
+    .step-card.active .step-num{background:var(--accent);color:#111}
+    .step-title{font-size:14px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.04em;flex:1}
+    .step-badge{font-size:10px;padding:4px 8px;border-radius:999px;border:1px solid rgba(207,255,4,.2);color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+    .step-badge.done{border-color:rgba(0,255,0,.3);color:rgba(0,255,0,.8)}
+    .step-chevron{color:var(--muted);font-size:18px;transition:transform .3s}
+    .step-card.open .step-chevron{transform:rotate(180deg)}
+    .step-body{
+      display:none;
+      padding:0 20px 20px;
+    }
+    .step-card.open .step-body{display:block}
+
+    .template-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+    @media(max-width:640px){.template-grid{grid-template-columns:1fr}}
+    .template-btn{
+      background:rgba(11,22,34,.6);
+      border:1px solid rgba(207,255,4,.12);
+      border-radius:8px;
+      padding:16px;
+      cursor:pointer;
+      text-align:left;
+      transition:all .25s;
+    }
+    .template-btn:hover{border-color:rgba(207,255,4,.4);background:rgba(207,255,4,.04);transform:translateY(-2px)}
+    .template-btn.selected{border-color:var(--accent);background:rgba(207,255,4,.08);box-shadow:0 0 20px rgba(207,255,4,.1)}
+    .template-btn .t-risk{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+    .template-btn .t-risk.low{color:#4caf50}
+    .template-btn .t-risk.med{color:#ff9800}
+    .template-btn .t-risk.high{color:#f44336}
+    .template-btn .t-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+    .template-btn .t-desc{font-size:11px;color:var(--muted);line-height:1.5}
+
+    .collapsible-toggle{
+      display:inline-flex;align-items:center;gap:6px;
+      background:none;border:1px solid rgba(207,255,4,.12);
+      color:var(--muted);font-size:11px;padding:6px 12px;
+      border-radius:4px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;
+      transition:all .2s;margin-top:8px;
+    }
+    .collapsible-toggle:hover{border-color:rgba(207,255,4,.3);color:var(--text)}
+    .collapsible-content{display:none;margin-top:10px}
+    .collapsible-content.show{display:block}
+
     /* ── 3D Floating Skill Cards ── */
     .cards{
       margin-top:16px;
@@ -409,6 +480,8 @@
       border:1px solid rgba(0,255,0,.35);color:rgba(0,255,0,.9);
       box-shadow:0 0 14px rgba(0,255,0,.1);
     }
+    a.skill-nft-badge{text-decoration:none}
+    a.skill-nft-badge:hover{filter:brightness(1.2)}
     .skill-nft-badge.offchain{
       background:rgba(207,255,4,.04);border:1px solid rgba(207,255,4,.12);color:var(--muted);
     }
@@ -555,7 +628,7 @@
             <span class="badge live">LIVE</span>
           </div>
           <p>
-            Explore 1,000+ skills across categories like DeFi, NFTs, data analysis, automation, and more. Each skill is vetted and ready to use.
+            Explore 1,020+ skills across categories like DeFi, NFTs, data analysis, automation, and more. Each skill is vetted and ready to use.
           </p>
           <div class="tools">
             <a class="pill" href="#imported">Browse All Skills</a>
@@ -563,11 +636,26 @@
         </div>
         <div class="card ac-observe">
           <div class="cardhead">
-            <h3>2) Mint a SkillNFT (revenue share)</h3>
+            <h3>2) Install a Skill</h3>
+            <span class="badge live">LIVE</span>
+          </div>
+          <p>
+            Download any SkillCard JSON from the API by slug, then drop it into your agent's skill directory. Works with any ACP-compatible agent.
+          </p>
+          <div class="code"><span class="k">curl</span> -fsSL "https://apeclaw.ai/api/skills/get?slug=&lt;slug&gt;" | jq .card &gt; ./skills/&lt;slug&gt;.json</div>
+          <div class="tools" aria-label="Install instructions">
+            <a class="pill" href="#" data-copy='curl -fsSL "https://apeclaw.ai/api/skills/get?slug=<slug>" | jq .card > ./skills/<slug>.json'>Copy curl</a>
+            <a class="pill" href="/docs?doc=SKILLCARDS_AND_IMPORTER.md" data-keep-query="1">Install docs</a>
+          </div>
+          <div class="note" style="margin-top:8px">Or browse the skill cards below and click <strong>JSON</strong> to view any skill directly in your browser.</div>
+        </div>
+        <div class="card ac-observe">
+          <div class="cardhead">
+            <h3>3) Mint a SkillNFT (onchain identity)</h3>
             <span class="badge alpha">ALPHA</span>
           </div>
           <p>
-            Mint creates a persistent skill identity. Royalties can route into a Pod receiver (PodVault) for revenue share across the Pod.
+            Mint creates a persistent skill identity on ApeChain. Royalties can route into a Pod receiver (PodVault) for revenue share across the Pod.
           </p>
           <div class="code"><span class="k">ape-claw</span> v2 skill mint --royalty-receiver &lt;PodVault address&gt; --royalty-bps 500 --json</div>
           <div class="tools" aria-label="Copy mint command">
@@ -576,7 +664,7 @@
         </div>
         <div class="card ac-observe">
           <div class="cardhead">
-            <h3>3) Publish immutable versions</h3>
+            <h3>4) Publish immutable versions</h3>
             <span class="badge alpha">ALPHA</span>
           </div>
           <p>
@@ -589,319 +677,397 @@
         </div>
       </div>
     </div>
+
+    <div class="ac-divider"></div>
+    <div class="section ac-observe" id="imported">
+      <h2>Imported Skills</h2>
+      <p style="text-align:center;color:var(--muted);font-size:13px;margin:-8px 0 20px;max-width:600px;margin-left:auto;margin-right:auto;line-height:1.6">
+        Browse the full library of vetted SkillCards. Filter by risk tier, search by name, or show only onchain-published skills.
+      </p>
+      
+      <div class="tools" style="max-width:720px;margin:0 auto 20px;flex-wrap:wrap">
+        <input id="importedSearch" type="search" placeholder="Search skills..." autocomplete="off" spellcheck="false" style="flex:1;min-width:200px">
+        <select id="riskFilter" aria-label="Filter by risk tier">
+          <option value="all">All Risk Tiers</option>
+          <option value="low">Low Risk</option>
+          <option value="med">Medium Risk</option>
+          <option value="high">High Risk</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none">
+          <input id="onlyOnchain" type="checkbox">
+          <span>Onchain only</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none">
+          <input id="onlyVetted" type="checkbox" checked>
+          <span>Vetted only</span>
+        </label>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:rgba(207,255,4,.05);border:1px solid rgba(207,255,4,.2);border-radius:6px">
+          <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Results:</span>
+          <span id="importedBadge" style="font-size:11px;font-weight:700;color:var(--accent)">LOADING</span>
+        </div>
+      </div>
+      
+      <div id="importedList" class="skill-grid" style="max-width:1200px;margin:0 auto"></div>
+    </div>
     </div>
 
     <div class="tab-panel" data-panel="add">
     <div class="ac-divider"></div>
     <div class="section ac-observe" id="your-skills">
-      <h2>Your Skills</h2>
-      <div class="grid ac-stagger">
-        <div class="card ac-observe">
-          <div class="cardhead">
-            <h3>Submit a New Skill</h3>
-            <span class="badge live">READY</span>
-          </div>
-          <p>
-            Submit a SkillCard JSON to add it to the global ApeClaw library. Skills are reviewed and vetted before being published. No private keys or execution in-browser.
-          </p>
-          <div class="note">
-            New here? Read <a href="/docs?doc=CONTRIBUTING.md" data-keep-query="1">Contributing</a> for the full submit → mint → publish flow.
-          </div>
-          <div class="danger-note">
-            Never paste private keys, API keys, or secrets into SkillCards. Treat SkillCards as public metadata + execution bindings.
-          </div>
+      <h2>Add a Skill</h2>
+      <p style="text-align:center;color:var(--muted);font-size:13px;margin:-8px 0 20px;max-width:600px;margin-left:auto;margin-right:auto;line-height:1.6">
+        Submit a SkillCard JSON to the global ApeClaw library. Once vetted, it becomes available to every agent and can be minted as a SkillNFT onchain.
+      </p>
 
-          <div class="tools" style="margin-top:12px" aria-label="Skill submission auth">
-            <div class="row">
-              <input id="authAgentId" type="text" placeholder="x-agent-id (required to submit/delete)" autocomplete="off" spellcheck="false">
-              <input id="authAgentToken" type="password" placeholder="x-agent-token" autocomplete="off" spellcheck="false">
-              <button class="btn" id="saveAuthBtn" type="button">Save Auth</button>
+      <div class="step-flow" style="max-width:720px;margin:0 auto">
+
+        <!-- Step 1: Choose a template -->
+        <div class="step-card open active" data-step="1">
+          <div class="step-header" onclick="toggleStep(this)">
+            <div class="step-num">1</div>
+            <div class="step-title">Choose a Template</div>
+            <div class="step-badge" id="stepTemplateBadge">START HERE</div>
+            <div class="step-chevron">&#9662;</div>
+          </div>
+          <div class="step-body">
+            <div class="template-grid">
+              <div class="template-btn" onclick="selectTemplate('low',this)">
+                <div class="t-risk low">LOW RISK</div>
+                <div class="t-name">Read-only / Browse</div>
+                <div class="t-desc">Search, summarize, or display data. No writes, no spend.</div>
+              </div>
+              <div class="template-btn" onclick="selectTemplate('med',this)">
+                <div class="t-risk med">MEDIUM RISK</div>
+                <div class="t-name">Writes / Automation</div>
+                <div class="t-desc">Create, update, or automate with caps. Confirm phrases recommended.</div>
+              </div>
+              <div class="template-btn" onclick="selectTemplate('high',this)">
+                <div class="t-risk high">HIGH RISK</div>
+                <div class="t-name">Spend / Escrow</div>
+                <div class="t-desc">Value-moving operations. Strict opt-in with safety gates required.</div>
+              </div>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <span style="color:var(--muted);font-size:12px">or paste your own JSON below</span>
+              <span style="color:var(--muted);font-size:12px">&#183;</span>
+              <a href="/docs?doc=CONTRIBUTING.md" data-keep-query="1" style="color:var(--accent);font-size:12px">Read the contributing guide</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden template select for JS compatibility -->
+        <select id="templateSelect" aria-label="SkillCard template" style="display:none">
+          <option value="">template: choose</option>
+          <option value="low">Low risk</option>
+          <option value="med">Medium risk</option>
+          <option value="high">High risk</option>
+        </select>
+        <button id="loadTemplateBtn" type="button" style="display:none">Load Template</button>
+
+        <!-- Step 2: Edit SkillCard -->
+        <div class="step-card" data-step="2">
+          <div class="step-header" onclick="toggleStep(this)">
+            <div class="step-num">2</div>
+            <div class="step-title">Edit SkillCard JSON</div>
+            <div class="step-badge" id="stepEditBadge"></div>
+            <div class="step-chevron">&#9662;</div>
+          </div>
+          <div class="step-body">
+            <div class="danger-note" style="margin-bottom:12px">
+              Never paste private keys, API keys, or secrets. SkillCards are public metadata + execution bindings.
+            </div>
+            <textarea id="skillJson" placeholder='{"name":"My Skill","slug":"my-skill","version":"1.0.0","description":"What this skill does","bindings":[{"type":"cli","command":"..."}],"constraints":{"riskTier":2}}' style="min-height:200px"></textarea>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+              <button class="btn" id="formatJsonBtn" type="button">Format JSON</button>
+              <button class="btn" id="validateSkillBtn" type="button">Validate</button>
+            </div>
+            <div class="note" id="skillPreview" style="margin-top:10px">Preview: &#8212;</div>
+
+            <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.06)">
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <input id="skillSourceUrl" type="url" placeholder="Optional: paste a URL to a SkillCard JSON" autocomplete="off" spellcheck="false" style="flex:1;min-width:200px">
+                <button class="btn" id="loadFromUrlBtn" type="button">Load from URL</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Authenticate & Submit -->
+        <div class="step-card" data-step="3">
+          <div class="step-header" onclick="toggleStep(this)">
+            <div class="step-num">3</div>
+            <div class="step-title">Submit to Library</div>
+            <div class="step-badge" id="stepSubmitBadge"></div>
+            <div class="step-chevron">&#9662;</div>
+          </div>
+          <div class="step-body">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+              <input id="authAgentId" type="text" placeholder="Your agent ID" autocomplete="off" spellcheck="false" style="flex:1;min-width:140px">
+              <input id="authAgentToken" type="password" placeholder="Agent token" autocomplete="off" spellcheck="false" style="flex:1;min-width:140px">
+              <button class="btn" id="saveAuthBtn" type="button">Save</button>
               <button class="btn" id="checkAuthBtn" type="button">Check</button>
               <button class="btn" id="clearAuthBtn" type="button">Clear</button>
             </div>
-            <div class="note" id="authStatus">Auth: not set</div>
-          </div>
+            <div class="note" id="authStatus" style="margin-bottom:14px">Auth: not set</div>
 
-          <div class="tools" style="margin-top:12px" aria-label="SkillCard JSON input">
-            <div class="row">
-              <select id="templateSelect" aria-label="SkillCard template">
-                <option value="">template: choose</option>
-                <option value="low">Low risk (read-only / browse)</option>
-                <option value="med">Medium risk (writes / automation)</option>
-                <option value="high">High risk (spend / escrow)</option>
-              </select>
-              <button class="btn" id="loadTemplateBtn" type="button">Load Template</button>
-              <button class="btn" id="formatJsonBtn" type="button">Format JSON</button>
-            </div>
-            <textarea id="skillJson" placeholder='Paste SkillCard JSON here (example): {"name":"My Skill","slug":"my-skill","version":"1.0.0","description":"...","bindings":[{"type":"cli","command":"..."}],"constraints":{"riskTier":2}}'></textarea>
-            <div class="row">
-              <input id="skillSourceUrl" type="url" placeholder="Optional source URL (GitHub/ClawHub/etc)" autocomplete="off" spellcheck="false">
-              <button class="btn" id="loadFromUrlBtn" type="button">Load URL</button>
-              <button class="btn" id="validateSkillBtn" type="button">Validate</button>
-              <button class="btn primary" id="addSkillBtn" type="button">Add To Library</button>
-            </div>
-            <div class="note" id="skillPreview">Preview: —</div>
-            <div class="note" id="addSkillStatus"></div>
+            <button class="btn primary" id="addSkillBtn" type="button" style="width:100%;padding:14px;font-size:14px">Add to Global Library</button>
+            <div class="note" id="addSkillStatus" style="margin-top:8px;text-align:center"></div>
           </div>
         </div>
 
-        <div class="card ac-observe">
-          <div class="cardhead">
-            <h3>Submitted Skills</h3>
-            <span class="badge alpha" id="userBadge">AUTO</span>
+        <!-- Step 4: Your Submitted Skills -->
+        <div class="step-card" data-step="4">
+          <div class="step-header" onclick="toggleStep(this)">
+            <div class="step-num">4</div>
+            <div class="step-title">Your Submitted Skills</div>
+            <div class="step-badge" id="userBadge">AUTO</div>
+            <div class="step-chevron">&#9662;</div>
           </div>
-          <p>
-            Skills you've submitted to the ApeClaw library. Once vetted, they become available globally and can be minted as SkillNFTs onchain.
-          </p>
-          <div class="tools" aria-label="Mint/publish settings">
-            <input id="v2RpcUrl" type="text" placeholder="v2 rpc url (APE_CLAW_V2_RPC_URL)" autocomplete="off" spellcheck="false">
-            <input id="v2SkillNft" type="text" placeholder="SkillNFT address (APE_CLAW_V2_SKILL_NFT)" autocomplete="off" spellcheck="false">
-            <input id="v2Registry" type="text" placeholder="SkillRegistry address (APE_CLAW_V2_SKILL_REGISTRY)" autocomplete="off" spellcheck="false">
-            <input id="v2Intents" type="text" placeholder="IntentRegistry address (APE_CLAW_V2_INTENT_REGISTRY)" autocomplete="off" spellcheck="false">
-            <input id="v2Receipts" type="text" placeholder="ReceiptRegistry address (APE_CLAW_V2_RECEIPT_REGISTRY)" autocomplete="off" spellcheck="false">
-            <input id="royaltyReceiver" type="text" placeholder="royalty receiver (PodVault address)" autocomplete="off" spellcheck="false">
-            <input id="royaltyBps" type="text" placeholder="royalty bps (e.g. 500)" autocomplete="off" spellcheck="false">
-            <button class="btn" id="saveV2SettingsBtn" type="button">Save Settings</button>
-          </div>
-          <div class="note" id="v2SettingsNote">Mint/publish commands use env var `APE_CLAW_V2_PRIVATE_KEY` (never paste keys here).</div>
-          <div class="tools" aria-label="Submitted skills search">
-            <input id="userSkillSearch" type="search" placeholder="Search your skills (name/slug/version)..." autocomplete="off" spellcheck="false">
-          </div>
-          <div class="list" id="userSkillList">
-            <div class="item">
-              <div>
-                <strong>No submissions yet</strong> <span class="pill med">tip</span>
-                <div class="meta">Submit a SkillCard JSON on the left, then it will show up here.</div>
-              </div>
-              <div class="links">
-                <a class="pill" href="/docs?doc=SKILLCARDS_AND_IMPORTER.md" data-keep-query="1">Docs</a>
+          <div class="step-body">
+            <div class="tools" aria-label="Submitted skills search" style="margin-top:0;margin-bottom:10px">
+              <input id="userSkillSearch" type="search" placeholder="Search your skills..." autocomplete="off" spellcheck="false" style="width:100%">
+            </div>
+            <div class="list" id="userSkillList">
+              <div style="text-align:center;padding:32px 16px;color:var(--muted)">
+                <div style="font-size:32px;margin-bottom:12px;opacity:.4">&#128230;</div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">No submissions yet</div>
+                <div style="font-size:12px;line-height:1.6">Complete steps 1-3 above to submit your first skill.<br>Once submitted, it appears here with mint/publish commands.</div>
               </div>
             </div>
+
+            <button class="collapsible-toggle" onclick="toggleCollapsible(this)" type="button" style="margin-top:16px">
+              Advanced: Contract Settings &#9662;
+            </button>
+            <div class="collapsible-content">
+              <div class="note" style="margin-bottom:8px">Auto-filled from backend. Only edit if you need custom addresses.</div>
+              <div class="tools" aria-label="Mint/publish settings" style="flex-direction:column">
+                <input id="v2RpcUrl" type="text" placeholder="RPC URL (auto-filled)" autocomplete="off" spellcheck="false">
+                <input id="v2SkillNft" type="text" placeholder="SkillNFT address (auto-filled)" autocomplete="off" spellcheck="false">
+                <input id="v2Registry" type="text" placeholder="SkillRegistry address (auto-filled)" autocomplete="off" spellcheck="false">
+                <input id="v2Intents" type="text" placeholder="IntentRegistry address" autocomplete="off" spellcheck="false">
+                <input id="v2Receipts" type="text" placeholder="ReceiptRegistry address" autocomplete="off" spellcheck="false">
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <input id="royaltyReceiver" type="text" placeholder="Royalty receiver (PodVault)" autocomplete="off" spellcheck="false" style="flex:1;min-width:200px">
+                  <input id="royaltyBps" type="text" placeholder="BPS (500)" autocomplete="off" spellcheck="false" style="width:80px">
+                </div>
+                <button class="btn" id="saveV2SettingsBtn" type="button">Save Settings</button>
+              </div>
+              <div class="note" id="v2SettingsNote" style="margin-top:6px">Mint/publish commands use env var APE_CLAW_V2_PRIVATE_KEY (never paste keys here).</div>
+            </div>
           </div>
-          <div class="code"><span class="k">curl</span> -fsSL &lt;apiBase&gt;/api/skills/get?slug=&lt;slug&gt; -o ./&lt;slug&gt;.json<br><span class="k">ape-claw</span> v2 skill publish --skillId &lt;id&gt; --file ./&lt;slug&gt;.json --json</div>
         </div>
+
       </div>
     </div>
 
     <div class="ac-divider"></div>
     <div class="section ac-observe" id="how-it-works">
-      <h2>How Skills Work</h2>
-      <div class="grid ac-stagger">
-        <div class="card ac-observe">
+      <h2>How It Works</h2>
+      <div class="grid ac-stagger" style="max-width:720px;margin:0 auto">
+        <div class="card ac-observe" style="border-left:3px solid #4caf50">
           <div class="cardhead">
-            <h3>Immutable Versions (SkillRegistry)</h3>
-            <span class="badge alpha">ALPHA</span>
+            <h3>Immutable Versions</h3>
+            <span class="badge live">LIVE</span>
           </div>
           <p>
-            Skills are published as immutable versions with a <code>contentHash</code> and a <code>uri</code>. The chain is the source of truth:
-            UIs can disappear and the library still exists.
+            Skills are published as immutable versions with a <code>contentHash</code> and <code>uri</code>. The chain is the source of truth: UIs can disappear and the library still exists.
           </p>
-          <div class="code"><span class="k">npm</span> run contracts:seed<br><span class="k">ape-claw</span> v2 skill publish --skillId 1 --file skillcards/seed/apeclaw-nft-autobuy.v1.json --json</div>
-          <div class="tools" aria-label="Copy seed command">
-            <a class="pill" href="#" data-copy="npm run contracts:seed">Copy seed</a>
-          </div>
         </div>
-        <div class="card ac-observe">
+        <div class="card ac-observe" style="border-left:3px solid #ff9800">
           <div class="cardhead">
-            <h3>Pod Revenue Share (SkillNFT → PodVault)</h3>
+            <h3>Revenue Share</h3>
             <span class="badge alpha">COMING SOON</span>
           </div>
           <p>
-            When a skill is an NFT, royalty revenue can be routed to a Pod-wide receiver (a split vault).
-            This is the onchain enforcement layer for “share revenue among all agents in the Pod”.
+            SkillNFT royalties route to a shared PodVault. Contribute skills, earn revenue when they are used onchain.
           </p>
-          <div class="code"><span class="k">ape-claw</span> v2 skill mint --royalty-receiver &lt;PodVault address&gt; --royalty-bps 500 --json</div>
         </div>
-        <div class="card ac-observe">
+        <div class="card ac-observe" style="border-left:3px solid var(--cyan)">
           <div class="cardhead">
-            <h3>Receipts Primitive (ReceiptRegistry)</h3>
+            <h3>Onchain Receipts</h3>
             <span class="badge alpha">ALPHA</span>
           </div>
           <p>
-            Receipts are append-only audit anchors keyed by <code>traceIdHash</code>. They are designed for “what happened” truth without trusting a backend.
+            Append-only audit anchors keyed by <code>traceIdHash</code>. What happened truth without trusting a backend.
           </p>
-          <div class="code"><span class="k">ape-claw</span> v2 receipt record --traceId "..." --subject "agent:my-bot" --payload '{...}' --json</div>
-          <div class="tools" aria-label="Copy receipt command">
-            <a class="pill" href="#" data-copy="ape-claw v2 receipt record --rpc <url> --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --receipts <addr> --traceId \"...\" --subject \"agent:my-bot\" --payload '{...}' --json">Copy command</a>
-          </div>
         </div>
-        <div class="card ac-observe">
+        <div class="card ac-observe" style="border-left:3px solid #f44336">
           <div class="cardhead">
-            <h3>Safety Posture (Pod)</h3>
-            <span class="badge alpha">ALPHA</span>
+            <h3>Safety Posture</h3>
+            <span class="badge live">ENFORCED</span>
           </div>
           <p>
-            High-risk skills remain strict opt-in. Pod default is dry-run with a kill switch, runtime cap, and auditable logs.
+            High-risk skills are strict opt-in. Pod default is dry-run with a kill switch, runtime cap, and auditable logs.
           </p>
-          <div class="code"><span class="k">ape-claw</span> pod init --dir ./pod-workspace --json<br><span class="k">python3</span> pod/run_agent.py --enabled --dry-run --backend stub --screenshot-dir "$HOME/pod/screens"</div>
         </div>
       </div>
     </div>
     </div>
 
-    <div class="tab-panel" data-panel="onchain">
+<div class="tab-panel" data-panel="onchain">
     <div class="ac-divider"></div>
-    <div class="section ac-observe" id="intents">
-      <h2>Intents (v2-alpha)</h2>
-      <div class="grid ac-stagger">
-        <div class="card ac-observe">
-          <div class="cardhead">
-            <h3>Create intent (command generator)</h3>
-            <span class="badge alpha">SAFE</span>
-          </div>
-          <p>
-            IntentRegistry is a minimal primitive for solver-style architectures. This UI never signs onchain; it generates CLI commands.
-          </p>
-          <div class="tools" aria-label="Intent create inputs">
-            <textarea id="intentPayload" placeholder='Intent payload JSON (stringified), example: {"type":"task","goal":"import 50 skills","constraints":{"maxSpendApe":0}}'></textarea>
-            <div class="row">
-              <input id="intentExpiresAt" type="text" placeholder="expiresAt unix seconds (optional)" autocomplete="off" spellcheck="false">
-              <button class="btn" id="copyIntentCreateBtn" type="button">Copy create</button>
-            </div>
-          </div>
-          <div class="code" id="intentCreatePreview"><span class="k">ape-claw</span> v2 intent create --rpc &lt;url&gt; --privateKey "$APE_CLAW_V2_PRIVATE_KEY" --intents &lt;addr&gt; --payload '{...}' --json</div>
+    <div class="section ac-observe" id="onchain-status">
+      <h2>ApeChain Network</h2>
+      <p style="text-align:center;color:var(--muted);font-size:13px;margin:-8px 0 20px;max-width:620px;margin-left:auto;margin-right:auto;line-height:1.6">
+        All ApeClaw v2 contracts are deployed on ApeChain (Chain ID 33139). Intents, receipts, and skill versions are immutable onchain primitives.
+      </p>
+
+      <!-- Live deployment stats -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:720px;margin:0 auto 24px" id="onchainStatsGrid">
+        <div class="stat ac-observe" style="min-height:auto;padding:14px">
+          <div class="num glow" id="ocStatNfts" style="font-size:22px">&#8212;</div>
+          <div class="label" style="font-size:10px">SkillNFTs</div>
         </div>
-        <div class="card ac-observe">
-          <div class="cardhead">
-            <h3>Cancel intent (command generator)</h3>
-            <span class="badge alpha">SAFE</span>
-          </div>
-          <p>
-            Cancels a previously created intent by `intentId`. Use this to revoke stale work orders.
-          </p>
-          <div class="tools" aria-label="Intent cancel inputs">
-            <div class="row">
-              <input id="intentCancelId" type="text" placeholder="intentId (number)" autocomplete="off" spellcheck="false">
-              <button class="btn" id="copyIntentCancelBtn" type="button">Copy cancel</button>
-            </div>
-          </div>
-          <div class="code" id="intentCancelPreview"><span class="k">ape-claw</span> v2 intent cancel --rpc &lt;url&gt; --privateKey "$APE_CLAW_V2_PRIVATE_KEY" --intents &lt;addr&gt; --intentId &lt;id&gt; --json</div>
-          <div class="note">To see intents settle, your solver network is the missing piece (P2). This ships the primitive + command surface.</div>
+        <div class="stat ac-observe" style="min-height:auto;padding:14px">
+          <div class="num" id="ocStatOnchain" style="font-size:22px">&#8212;</div>
+          <div class="label" style="font-size:10px">Published</div>
+        </div>
+        <div class="stat ac-observe" style="min-height:auto;padding:14px">
+          <div class="num" id="ocStatVetted" style="font-size:22px">&#8212;</div>
+          <div class="label" style="font-size:10px">Vetted</div>
+        </div>
+        <div class="stat ac-observe" style="min-height:auto;padding:14px">
+          <div class="num" id="ocStatChain" style="font-size:22px;font-size:13px;letter-spacing:.02em">ApeChain</div>
+          <div class="label" style="font-size:10px">Network</div>
         </div>
       </div>
-      <div class="tools" aria-label="Intent docs shortcuts">
-        <a class="pill" href="/docs?doc=ONCHAIN_V2_GUIDE.md" data-keep-query="1">Onchain guide</a>
-        <a class="pill" href="/docs?doc=WEB4_PLAN_STATUS.md" data-keep-query="1">Plan status</a>
-        <a class="pill" href="/docs?doc=WEB4_SWARM_MODEL.md" data-keep-query="1">Swarm model</a>
+
+      <!-- Deployed contracts -->
+      <div style="max-width:720px;margin:0 auto">
+        <div class="step-card open" data-step="contracts">
+          <div class="step-header" onclick="toggleStep(this)">
+            <div class="step-num" style="border-color:rgba(0,255,0,.5);color:rgba(0,255,0,.8);font-size:11px">&#9670;</div>
+            <div class="step-title">Deployed Contracts</div>
+            <div class="step-badge done" id="ocContractsBadge">LOADING</div>
+            <div class="step-chevron">&#9662;</div>
+          </div>
+          <div class="step-body">
+            <div id="ocContractsList" style="font-family:var(--mono);font-size:12px;color:var(--muted);line-height:2">
+              Loading deployment data...
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+              <a class="pill" href="https://apescan.io" target="_blank" rel="noopener" style="font-size:11px">ApeScan Explorer</a>
+              <a class="pill" href="/docs?doc=ONCHAIN_V2_GUIDE.md" data-keep-query="1" style="font-size:11px">Onchain Guide</a>
+              <a class="pill" href="/docs?doc=V2_ONCHAIN_SKILLS.md" data-keep-query="1" style="font-size:11px">V2 Skills Docs</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ac-divider"></div>
+    <div class="section ac-observe" id="intents">
+      <h2>Intents</h2>
+      <p style="text-align:center;color:var(--muted);font-size:13px;margin:-8px 0 20px;max-width:600px;margin-left:auto;margin-right:auto;line-height:1.6">
+        IntentRegistry is a minimal primitive for solver-style architectures. This UI never signs onchain &#8212; it generates CLI commands you run locally.
+      </p>
+
+      <div style="max-width:720px;margin:0 auto">
+
+        <div class="step-card open" data-step="intent-create">
+          <div class="step-header" onclick="toggleStep(this)">
+            <div class="step-num">1</div>
+            <div class="step-title">Create Intent</div>
+            <div class="step-badge">SAFE</div>
+            <div class="step-chevron">&#9662;</div>
+          </div>
+          <div class="step-body">
+            <p style="color:var(--muted);font-size:12px;line-height:1.6;margin-bottom:12px">
+              Post a work order for solvers to discover and fulfill. Define the task goal, constraints, and optional expiry.
+            </p>
+            <textarea id="intentPayload" placeholder='{"type":"task","goal":"import 50 skills","constraints":{"maxSpendApe":0}}' style="min-height:100px"></textarea>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
+              <input id="intentExpiresAt" type="text" placeholder="expiresAt (unix seconds, optional)" autocomplete="off" spellcheck="false" style="flex:1;min-width:200px">
+              <button class="btn" id="copyIntentCreateBtn" type="button">Copy Command</button>
+            </div>
+            <div class="code" id="intentCreatePreview" style="margin-top:10px"><span class="k">ape-claw</span> v2 intent create --rpc &lt;url&gt; --privateKey "$APE_CLAW_V2_PRIVATE_KEY" --intents &lt;addr&gt; --payload '{...}' --json</div>
+          </div>
+        </div>
+
+        <div class="step-card" data-step="intent-cancel">
+          <div class="step-header" onclick="toggleStep(this)">
+            <div class="step-num">2</div>
+            <div class="step-title">Cancel Intent</div>
+            <div class="step-badge">SAFE</div>
+            <div class="step-chevron">&#9662;</div>
+          </div>
+          <div class="step-body">
+            <p style="color:var(--muted);font-size:12px;line-height:1.6;margin-bottom:12px">
+              Revoke a stale or unwanted intent by its ID. Only the creator can cancel.
+            </p>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <input id="intentCancelId" type="text" placeholder="intentId (number)" autocomplete="off" spellcheck="false" style="flex:1;min-width:140px">
+              <button class="btn" id="copyIntentCancelBtn" type="button">Copy Command</button>
+            </div>
+            <div class="code" id="intentCancelPreview" style="margin-top:10px"><span class="k">ape-claw</span> v2 intent cancel --rpc &lt;url&gt; --privateKey "$APE_CLAW_V2_PRIVATE_KEY" --intents &lt;addr&gt; --intentId &lt;id&gt; --json</div>
+            <div class="note" style="margin-top:10px">Solver network is the missing piece (P2). This ships the primitive + command surface.</div>
+          </div>
+        </div>
+
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap">
+        <a class="pill" href="/docs?doc=ONCHAIN_V2_GUIDE.md" data-keep-query="1" style="font-size:11px">Onchain guide</a>
+        <a class="pill" href="/docs?doc=WEB4_PLAN_STATUS.md" data-keep-query="1" style="font-size:11px">Plan status</a>
+        <a class="pill" href="/docs?doc=WEB4_SWARM_MODEL.md" data-keep-query="1" style="font-size:11px">Swarm model</a>
       </div>
     </div>
 
     <div class="ac-divider"></div>
     <div class="section ac-observe" id="receipts">
-      <h2>Receipts (v2-alpha)</h2>
-      <div class="grid ac-stagger">
-        <div class="card ac-observe">
-          <div class="cardhead">
-            <h3>Receipt explorer (read-only)</h3>
-            <span class="badge alpha">SAFE</span>
+      <h2>Receipts</h2>
+      <p style="text-align:center;color:var(--muted);font-size:13px;margin:-8px 0 20px;max-width:600px;margin-left:auto;margin-right:auto;line-height:1.6">
+        Receipts are the onchain memory anchor primitive. Append-only audit trail keyed by <code style="font-size:12px">traceIdHash</code>. This UI reads only &#8212; it never signs transactions.
+      </p>
+
+      <div style="max-width:720px;margin:0 auto">
+
+        <div class="step-card open" data-step="receipt-explorer">
+          <div class="step-header" onclick="toggleStep(this)">
+            <div class="step-num" style="border-color:var(--cyan);color:var(--cyan)">&#9670;</div>
+            <div class="step-title">Receipt Explorer</div>
+            <div class="step-badge">READ-ONLY</div>
+            <div class="step-chevron">&#9662;</div>
           </div>
-          <p>
-            Receipts are the “onchain memory anchor” primitive. This UI never signs; it can generate a CLI command, and can optionally read via the backend API
-            if the server is configured with <code>APE_CLAW_V2_RPC_URL</code> + <code>APE_CLAW_V2_RECEIPT_REGISTRY</code>.
-          </p>
-          <div class="tools" aria-label="Receipt explorer inputs">
-            <div class="row">
-              <input id="receiptTraceId" type="text" placeholder="traceId (string)" autocomplete="off" spellcheck="false">
-              <button class="btn" id="copyReceiptGetBtn" type="button">Copy get</button>
-              <button class="btn" id="fetchReceiptGetBtn" type="button">Fetch</button>
+          <div class="step-body">
+            <p style="color:var(--muted);font-size:12px;line-height:1.6;margin-bottom:12px">
+              Look up any receipt by its traceId. You can copy the CLI command to run locally, or fetch directly from the backend API if configured.
+            </p>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <input id="receiptTraceId" type="text" placeholder="traceId (e.g. nft_buy_abc123...)" autocomplete="off" spellcheck="false" style="flex:1;min-width:200px">
+              <button class="btn" id="copyReceiptGetBtn" type="button">Copy CLI</button>
+              <button class="btn primary" id="fetchReceiptGetBtn" type="button">Fetch</button>
             </div>
-          </div>
-          <div class="code" id="receiptGetPreview"><span class="k">ape-claw</span> v2 receipt get --rpc &lt;url&gt; --receipts &lt;addr&gt; --traceId "&lt;traceId&gt;" --json</div>
-          <div class="code" id="receiptGetResult">Result: —</div>
-        </div>
-      </div>
-      <div class="tools" aria-label="Receipt docs shortcuts">
-        <a class="pill" href="/docs?doc=ONCHAIN_V2_GUIDE.md" data-keep-query="1">Onchain guide</a>
-        <a class="pill" href="/docs?doc=WEB4_SWARM_MODEL.md" data-keep-query="1">Swarm model</a>
-      </div>
-    </div>
-    </div>
-
-    <div class="tab-panel active" data-panel="browse">
-    <div class="ac-divider"></div>
-    <div class="section ac-observe" id="seed-library">
-      <h2>Featured Skills</h2>
-      <div class="card ac-observe">
-        <div class="cardhead">
-          <h3>Core Skills (Built-in)</h3>
-          <span class="badge live" id="seedBadge">READY</span>
-        </div>
-        <p>These are the foundational skills that ship with ApeClaw, covering NFT operations, chain reads, bridging, and more.</p>
-        <div class="tools" aria-label="Search featured skills">
-          <input id="seedSearch" type="search" placeholder="Search featured skills..." autocomplete="off" spellcheck="false">
-        </div>
-        <div class="list" id="seedList"></div>
-      </div>
-    </div>
-
-    <div class="ac-divider"></div>
-    <div class="section ac-observe" id="imported-library">
-      <h2>Skill Library</h2>
-      <div class="card ac-observe">
-        <div class="cardhead">
-          <h3>All Skills</h3>
-          <span class="badge live" id="importedBadge">LIVE</span>
-        </div>
-        <p>
-          Browse the full ApeClaw skill library. Each skill is vetted for safety and categorized by risk tier. Use the filters below to find what you need.
-        </p>
-        <div class="tools" aria-label="Search skills">
-          <input id="importedSearch" type="search" placeholder="Search skills by name, category, or description..." autocomplete="off" spellcheck="false">
-          <select id="riskFilter" aria-label="Risk filter">
-            <option value="all">risk: all</option>
-            <option value="low">risk: low</option>
-            <option value="med">risk: med</option>
-            <option value="high">risk: high</option>
-          </select>
-          <label title="Only show skills that have been vetted and verified for safety">
-            <input id="onlyVetted" type="checkbox" checked>
-            Vetted only
-          </label>
-          <label title="Only show skills that have been published onchain">
-            <input id="onlyOnchain" type="checkbox">
-            Onchain only
-          </label>
-        </div>
-        <div class="cards" id="importedList">
-          <div class="skill-card" style="min-height:160px">
-            <div class="skill-tier-bar" data-tier="unknown"></div>
-            <div class="skill-card-inner">
-              <div class="skill-nft-badge offchain"><span class="nft-pulse"></span> LOADING</div>
-              <div class="skill-title">Importing Skills…</div>
-              <div class="skill-desc" style="-webkit-line-clamp:unset;overflow:visible">Loading the skill library. If nothing appears, run the importer: <code style="color:var(--cyan)">npm run skillcards:import</code></div>
-              <div class="skill-foot"><a class="pill" href="/docs?doc=SKILLCARDS_AND_IMPORTER.md" data-keep-query="1">Docs</a></div>
-            </div>
+            <div class="code" id="receiptGetPreview" style="margin-top:10px"><span class="k">ape-claw</span> v2 receipt get --rpc &lt;url&gt; --receipts &lt;addr&gt; --traceId "&lt;traceId&gt;" --json</div>
+            <div class="code" id="receiptGetResult" style="margin-top:8px;max-height:300px;overflow:auto">Result: &#8212;</div>
           </div>
         </div>
-        <div class="code"><span class="k">npm</span> run skillcards:import -- --skipStubs</div>
-        <div class="tools" aria-label="Copy import">
-          <a class="pill" href="#" data-copy="npm run skillcards:import -- --skipStubs">Copy command</a>
+
+        <div class="step-card" data-step="receipt-record">
+          <div class="step-header" onclick="toggleStep(this)">
+            <div class="step-num" style="border-color:var(--cyan);color:var(--cyan)">+</div>
+            <div class="step-title">Record a Receipt (CLI)</div>
+            <div class="step-badge">WRITE</div>
+            <div class="step-chevron">&#9662;</div>
+          </div>
+          <div class="step-body">
+            <p style="color:var(--muted);font-size:12px;line-height:1.6;margin-bottom:12px">
+              Anchor a new receipt onchain. This is a write operation &#8212; run it via CLI with your private key. The receipt becomes immutable and verifiable.
+            </p>
+            <div class="code"><span class="k">ape-claw</span> v2 receipt record \<br>&nbsp;&nbsp;--traceId "nft_buy_abc123" \<br>&nbsp;&nbsp;--subject "agent:my-bot" \<br>&nbsp;&nbsp;--payload '{"kind":"nft.buy.confirmed","price":"0.5 APE"}' \<br>&nbsp;&nbsp;--json</div>
+            <div class="note" style="margin-top:10px">Receipts are append-only. Once recorded, they cannot be modified or deleted. The <code>traceIdHash</code> + <code>contentHash</code> pair is the onchain truth.</div>
+          </div>
         </div>
+
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap">
+        <a class="pill" href="/docs?doc=ONCHAIN_V2_GUIDE.md" data-keep-query="1" style="font-size:11px">Onchain guide</a>
+        <a class="pill" href="/docs?doc=WEB4_SWARM_MODEL.md" data-keep-query="1" style="font-size:11px">Swarm model</a>
       </div>
     </div>
     </div>
 
-    <div class="foot ac-observe">
-      <div>ApeClaw Terminal · ApeChain · Powered by <a href="https://x.com/ClutchMarkets" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-weight:700">Clutch Labs</a></div>
-      <div style="display:flex;align-items:center;gap:14px">
-        <a href="https://x.com/ClutchMarkets" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;color:var(--muted);text-decoration:none;font-size:10px;transition:color .2s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> ClutchMarkets</a>
-        <div class="online"><span class="dot" aria-hidden="true"></span><span>Online</span></div>
-      </div>
-    </div>
-  </div>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <h3 id="modalTitle">Modal</h3>
-      <div class="body" id="modalBody"></div>
-      <div class="footer">
-        <button class="btn" id="modalCancelBtn" type="button">Cancel</button>
-        <button class="btn primary" id="modalOkBtn" type="button">OK</button>
-      </div>
-    </div>
-  </div>
-
+    
   <script>
     (function () {
       // Lightweight collage background to match the Stonk terminal feel.
@@ -964,19 +1130,7 @@
         var u = new URL(window.location.href);
         api = (u.searchParams.get('api') || '').trim();
       } catch (e) {}
-      // Default backend selection:
-      // - local dev: same-origin (telemetry server serves UI + API)
-      // - prod: api.apeclaw.ai unless overridden via ?api=
-      if (!api) {
-        try {
-          var origin = String(window.location.origin || '');
-          if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) api = origin;
-        } catch (e) {}
-      }
-      if (!api) {
-        api = 'https://api.apeclaw.ai';
-      }
-      var apiBase = api.replace(/\/+$/, '');
+      var apiBase = api ? api.replace(/\/+$/, '') : '';
       var apiNote = document.getElementById('apiNote');
       if (apiNote) apiNote.textContent = 'Backend: ' + apiBase;
 
@@ -1131,8 +1285,8 @@
           })
           .catch(function () {
             setStatCountUp(statTotal, 1028);
-            setStatCountUp(statVetted, 1020);
-            setStatCountUp(statOnchain, 0);
+            setStatCountUp(statVetted, 1014);
+            setStatCountUp(statOnchain, 1023);
             setStatCountUp(statContributed, 0);
           });
       })();
@@ -1261,7 +1415,9 @@
           }
           if (!desc) desc = String(it.description || it.desc || '').trim() || guessSummary(it);
 
-          var onchain = (pub && pub.skillId) ? ('<span class="pill nft">SkillNFT #' + escapeHtml(pub.skillId) + '</span>') : '<span class="pill off">Offchain</span>';
+          var onchain = (pub && pub.skillId)
+            ? ('<a class="pill nft" href="https://apescan.io/token/0x6c8e75568a3470f8c8e6f8ed29d5fd61c7b7e11d?a=' + escapeHtml(pub.skillId) + '" target="_blank" rel="noopener" style="text-decoration:none">SkillNFT #' + escapeHtml(pub.skillId) + ' &#8599;</a>')
+            : '<span class="pill off">Offchain</span>';
           var mintTx = (pub && pub.txs && pub.txs.mint) ? String(pub.txs.mint) : '';
           var pubTx = (pub && pub.txs && pub.txs.publish) ? String(pub.txs.publish) : '';
           var uri = (pub && pub.uri) ? String(pub.uri) : '';
@@ -1275,9 +1431,15 @@
           if (inputs) html += '<div class="note">inputs: <code>' + escapeHtml(inputs) + '</code></div>';
           if (srcUrl) html += '<div class="note">source: <a href="' + escapeHtml(srcUrl) + '" target="_blank" rel="noopener">' + escapeHtml(srcUrl) + '</a></div>';
           if (uri) html += '<div class="note">onchain uri: <code>' + escapeHtml(uri) + '</code></div>';
-          if (mintTx) html += '<div class="note">mint tx: <code>' + escapeHtml(mintTx) + '</code></div>';
-          if (pubTx) html += '<div class="note">publish tx: <code>' + escapeHtml(pubTx) + '</code></div>';
-          html += '<div class="note" style="margin-top:12px">Tip: use the pills on the card to copy curl/mint/publish commands.</div>';
+          if (mintTx) html += '<div class="note">mint tx: <a href="https://apescan.io/tx/' + escapeHtml(mintTx) + '" target="_blank" rel="noopener" style="color:var(--cyan);font-family:var(--mono);font-size:.75rem;word-break:break-all">' + escapeHtml(mintTx) + ' &#8599;</a></div>';
+          if (pubTx) html += '<div class="note">publish tx: <a href="https://apescan.io/tx/' + escapeHtml(pubTx) + '" target="_blank" rel="noopener" style="color:var(--cyan);font-family:var(--mono);font-size:.75rem;word-break:break-all">' + escapeHtml(pubTx) + ' &#8599;</a></div>';
+          if (slug) {
+            var installCmd = 'curl -fsSL "' + apiBase + '/api/skills/get?slug=' + slug + '" | jq .card > ./' + slug + '.json';
+            html += '<div class="note" style="margin-top:14px;padding:10px;background:rgba(207,255,4,.06);border:1px solid rgba(207,255,4,.2);border-radius:3px">';
+            html += '<strong style="color:#cfff04">Install this skill</strong><br>';
+            html += '<code style="font-size:.75rem;word-break:break-all">' + escapeHtml(installCmd) + '</code>';
+            html += '</div>';
+          }
           return html;
         }
 
@@ -1338,8 +1500,8 @@
           var chainHtml = '';
           if (mintTx || publishTx) {
             chainHtml = '<div class="skill-chain-data">';
-            if (mintTx) chainHtml += '<div class="skill-tx"><span class="skill-tx-label">mint</span><span class="skill-tx-hash" data-copy="' + escapeHtml(mintTx) + '" title="' + escapeHtml(mintTx) + '">' + shortHash(mintTx) + '</span></div>';
-            if (publishTx) chainHtml += '<div class="skill-tx"><span class="skill-tx-label">publish</span><span class="skill-tx-hash" data-copy="' + escapeHtml(publishTx) + '" title="' + escapeHtml(publishTx) + '">' + shortHash(publishTx) + '</span></div>';
+            if (mintTx) chainHtml += '<div class="skill-tx"><span class="skill-tx-label">mint</span><a class="skill-tx-hash" href="https://apescan.io/tx/' + escapeHtml(mintTx) + '" target="_blank" rel="noopener" title="' + escapeHtml(mintTx) + '">' + shortHash(mintTx) + ' &#8599;</a></div>';
+            if (publishTx) chainHtml += '<div class="skill-tx"><span class="skill-tx-label">publish</span><a class="skill-tx-hash" href="https://apescan.io/tx/' + escapeHtml(publishTx) + '" target="_blank" rel="noopener" title="' + escapeHtml(publishTx) + '">' + shortHash(publishTx) + ' &#8599;</a></div>';
             chainHtml += '</div>';
           }
 
@@ -1348,10 +1510,10 @@
               '<div class="skill-tier-bar" data-tier="' + riskBkt + '"></div>' +
               '<div class="skill-card-inner">' +
                 '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px">' +
-                  '<div class="skill-nft-badge ' + (isOnchain ? 'onchain' : 'offchain') + '">' +
-                    '<span class="nft-pulse"></span> ' +
-                    (isOnchain ? ('NFT #' + escapeHtml(String(pub.skillId))) : 'OFFCHAIN') +
-                  '</div>' +
+                  (isOnchain
+                  ? ('<a class="skill-nft-badge onchain" href="https://apescan.io/token/0x6c8e75568a3470f8c8e6f8ed29d5fd61c7b7e11d?a=' + escapeHtml(String(pub.skillId)) + '" target="_blank" rel="noopener">' +
+                      '<span class="nft-pulse"></span> NFT #' + escapeHtml(String(pub.skillId)) + ' &#8599;</a>')
+                  : ('<div class="skill-nft-badge offchain"><span class="nft-pulse"></span> OFFCHAIN</div>')) +
                   '<div class="skill-risk ' + riskBkt + '">' + riskLabel + '</div>' +
                 '</div>' +
                 '<div class="skill-title">' + escapeHtml(title) + '</div>' +
@@ -1359,6 +1521,7 @@
                 '<div class="skill-desc">' + escapeHtml(desc) + '</div>' +
                 chainHtml +
                 '<div class="skill-foot">' +
+                  (dlCmd ? ('<a class="pill" href="#" data-copy="' + escapeHtml(dlCmd) + '" title="Copy install command">Install</a>') : '') +
                   (fileHref ? ('<a class="pill" href="' + escapeHtml(fileHref) + '" target="_blank" rel="noopener">JSON</a>') : '') +
                   (sourceHref ? ('<a class="pill" href="' + escapeHtml(sourceHref) + '" target="_blank" rel="noopener">Source</a>') : '') +
                   '<a class="pill" href="#" data-details="1">Details</a>' +
@@ -1397,7 +1560,7 @@
         var s = q.trim().toLowerCase();
         if (!s) return true;
         var hay = [
-          it.name, it.slug, it.source, it.mode, it.sourceUrl, it.fileName,
+          it.name, it.slug, it.description, it.desc, it.source, it.mode, it.sourceUrl, it.fileName,
         ].map(normalize).join(' ');
         return hay.indexOf(s) !== -1;
       }
@@ -1410,6 +1573,8 @@
       var importedBadge = document.getElementById('importedBadge');
       var importedAll = [];
       var publishedBySlug = {};
+      var importedRenderLimit = 120;
+      var lastFiltered = [];
       function applyImportedFilters() {
         var q = importedSearch ? String(importedSearch.value || '') : '';
         var bucket = riskFilter ? String(riskFilter.value || 'all') : 'all';
@@ -1425,22 +1590,42 @@
           }
           if (onchainOnly) {
             var pub = (it && it.slug && publishedBySlug[it.slug]) ? publishedBySlug[it.slug] : null;
-            if (!(pub && pub.txs && pub.txs.publish)) return false;
+            if (!(pub && pub.skillId)) return false;
           }
           return true;
         });
-        renderImported(filtered.slice(0, 200), publishedBySlug);
+        lastFiltered = filtered;
+        renderImported(filtered.slice(0, importedRenderLimit), publishedBySlug);
+        updateLoadMoreBtn(filtered.length);
         if (statVetted) statVetted.textContent = fmtInt(filtered.length);
         if (importedBadge) {
           var publishedCount = 0;
           try {
             for (var i = 0; i < filtered.length; i++) {
               var p = (filtered[i] && filtered[i].slug) ? publishedBySlug[filtered[i].slug] : null;
-              if (p && p.txs && p.txs.publish) publishedCount++;
+              if (p && p.skillId) publishedCount++;
             }
           } catch (e) {}
           importedBadge.textContent = filtered.length ? ('FOUND ' + filtered.length + (publishedCount ? (' · ONCHAIN ' + publishedCount) : '')) : 'NONE';
         }
+      }
+      function updateLoadMoreBtn(totalCount) {
+        var existing = document.getElementById('loadMoreBtn');
+        if (existing) existing.remove();
+        if (totalCount <= importedRenderLimit) return;
+        var out = document.getElementById('importedList');
+        if (!out) return;
+        var btn = document.createElement('button');
+        btn.id = 'loadMoreBtn';
+        btn.className = 'btn';
+        btn.style.cssText = 'display:block;margin:24px auto;padding:10px 32px;font-size:.8rem';
+        btn.textContent = 'Show more (' + importedRenderLimit + ' of ' + totalCount + ')';
+        btn.addEventListener('click', function () {
+          importedRenderLimit = Math.min(importedRenderLimit + 200, totalCount);
+          renderImported(lastFiltered.slice(0, importedRenderLimit), publishedBySlug);
+          updateLoadMoreBtn(totalCount);
+        });
+        out.parentNode.insertBefore(btn, out.nextSibling);
       }
       fetch(apiBase + '/api/skills/search?limit=5000', { headers: { 'accept': 'application/json' } })
         .then(function (r) { return r.ok ? r.json() : null; })
@@ -1462,11 +1647,22 @@
               fileName: s.fileName || '',
               version: s.version || '1',
               importOk: true,
-              vetted: s.vetted !== false,
-              onchainTokenId: s.onchainTokenId || null
+              vettedOk: Boolean(s.vettedOk !== false && s.vetted !== false),
+              onchainTokenId: s.onchainTokenId || null,
+              onchainMintTx: s.onchainMintTx || null,
+              onchainPublishTx: s.onchainPublishTx || null
             };
           });
           publishedBySlug = {};
+          for (var pi = 0; pi < importedAll.length; pi++) {
+            var si = importedAll[pi];
+            if (si && si.slug && si.onchainTokenId) {
+              publishedBySlug[si.slug] = {
+                skillId: si.onchainTokenId,
+                txs: { mint: si.onchainMintTx || null, publish: si.onchainPublishTx || null }
+              };
+            }
+          }
           applyImportedFilters();
           if (importedBadge) importedBadge.textContent = importedAll.length ? (importedAll.length + ' SKILLS') : 'NONE';
         })
@@ -1651,6 +1847,84 @@
             } catch (e) {}
           })
           .catch(function () {});
+      }
+
+      function populateOnchainPanel() {
+        var contractNames = {
+          skillNft: 'SkillNFT',
+          registry: 'SkillRegistry',
+          intents: 'IntentRegistry',
+          receiptsAddress: 'ReceiptRegistry',
+          policyEngine: 'PolicyEngine',
+          agentAccount: 'AgentAccount',
+          podVault: 'PodVault'
+        };
+
+        fetch(apiBase + '/api/v2/config', { headers: { 'accept': 'application/json' } })
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            if (!j || !j.ok) return;
+            var dep = j.deployment || {};
+            var rr = j.receiptsRead || {};
+            var list = document.getElementById('ocContractsList');
+            var badge = document.getElementById('ocContractsBadge');
+            if (!list) return;
+
+            var addrs = {};
+            if (dep.skillNft) addrs.skillNft = dep.skillNft;
+            if (dep.registry) addrs.registry = dep.registry;
+            if (dep.intents) addrs.intents = dep.intents;
+            if (rr.receiptsAddress || dep.receipts) addrs.receiptsAddress = rr.receiptsAddress || dep.receipts;
+            if (dep.policy || dep.policyEngine) addrs.policyEngine = dep.policy || dep.policyEngine;
+            if (dep.agentAccount) addrs.agentAccount = dep.agentAccount;
+            var pv = j.podVault || dep.podVault || null;
+            if (pv) addrs.podVault = pv;
+
+            var count = Object.keys(addrs).length;
+            if (count === 0) {
+              list.textContent = 'No deployment data available. Ensure the server has v2 environment variables configured.';
+              if (badge) { badge.textContent = 'OFFLINE'; badge.className = 'step-badge'; }
+              return;
+            }
+
+            var html = '<div style="display:grid;grid-template-columns:1fr;gap:6px">';
+            Object.keys(addrs).forEach(function (key) {
+              var addr = addrs[key];
+              var name = contractNames[key] || key;
+              var short = addr.slice(0, 6) + '\u2026' + addr.slice(-4);
+              html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(255,255,255,.03);border-radius:6px">';
+              html += '<span style="color:var(--fg);font-size:12px;font-weight:500">' + name + '</span>';
+              html += '<a href="https://apescan.io/address/' + addr + '" target="_blank" rel="noopener" style="color:var(--cyan);font-size:11px;text-decoration:none;font-family:var(--mono)">' + short + ' &#8599;</a>';
+              html += '</div>';
+            });
+            html += '</div>';
+            list.innerHTML = html;
+            if (badge) { badge.textContent = count + ' LIVE'; badge.className = 'step-badge done'; }
+          })
+          .catch(function () {
+            var list = document.getElementById('ocContractsList');
+            if (list) list.textContent = 'Could not load deployment data.';
+          });
+
+        fetch(apiBase + '/api/skills/stats', { headers: { 'accept': 'application/json' } })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (!d || !d.ok) return;
+            var nfts = document.getElementById('ocStatNfts');
+            var published = document.getElementById('ocStatOnchain');
+            var vetted = document.getElementById('ocStatVetted');
+            if (nfts) setStatCountUp(nfts, d.onchain || 1023);
+            if (published) setStatCountUp(published, d.onchain || 1023);
+            if (vetted) setStatCountUp(vetted, d.vetted || 1014);
+          })
+          .catch(function () {
+            var nfts = document.getElementById('ocStatNfts');
+            var published = document.getElementById('ocStatOnchain');
+            var vetted = document.getElementById('ocStatVetted');
+            if (nfts) setStatCountUp(nfts, 1023);
+            if (published) setStatCountUp(published, 1023);
+            if (vetted) setStatCountUp(vetted, 1014);
+          });
       }
 
       function getIntentCreateCmd() {
@@ -1884,14 +2158,10 @@
         if (statContributed) statContributed.textContent = fmtInt(arr.length);
         if (!arr.length) {
           setHtml(userSkillList,
-            '<div class="item">' +
-              '<div>' +
-                '<strong>No submissions yet</strong> <span class="pill med">tip</span>' +
-                '<div class="meta">Submit a SkillCard JSON on the left, then it will show up here.</div>' +
-              '</div>' +
-              '<div class="links">' +
-                '<a class="pill" href="/docs?doc=SKILLCARDS_AND_IMPORTER.md" data-keep-query="1">Docs</a>' +
-              '</div>' +
+            '<div style="text-align:center;padding:32px 16px;color:var(--muted)">' +
+              '<div style="font-size:32px;margin-bottom:12px;opacity:.4">&#128230;</div>' +
+              '<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">No submissions yet</div>' +
+              '<div style="font-size:12px;line-height:1.6">Complete steps 1-3 above to submit your first skill.<br>Once submitted, it appears here with mint/publish commands.</div>' +
             '</div>'
           );
           return;
@@ -1975,10 +2245,16 @@
           .then(function (out) {
             if (!out.ok || !out.json || !out.json.ok) throw new Error((out.json && out.json.error) ? out.json.error : 'submit failed');
             flash('Added: ' + (out.json.entry && out.json.entry.fileName ? out.json.entry.fileName : 'ok'));
+            showToast('Skill added to library!');
             if (skillJson) skillJson.value = '';
             if (skillSourceUrl) skillSourceUrl.value = '';
             renderPreview();
             loadUserSkills();
+            // Auto-open Step 4 (Your Submitted Skills) and update badge
+            var step4 = document.querySelector('.step-card[data-step="4"]');
+            if (step4) { step4.classList.add('open'); step4.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+            var submitBadge = document.getElementById('stepSubmitBadge');
+            if (submitBadge) { submitBadge.textContent = 'DONE'; submitBadge.className = 'step-badge done'; }
           })
           .catch(function (e) {
             flash('Error: ' + (e && e.message ? e.message : 'failed'), true);
@@ -2050,11 +2326,45 @@
         );
       }
 
+      // Step flow helpers for the Add tab
+      window.toggleStep = function(headerEl) {
+        var card = headerEl.closest('.step-card');
+        if (!card) return;
+        card.classList.toggle('open');
+      };
+      window.selectTemplate = function(kind, btnEl) {
+        // Remove selected from siblings
+        var grid = btnEl.closest('.template-grid');
+        if (grid) {
+          var btns = grid.querySelectorAll('.template-btn');
+          for (var i = 0; i < btns.length; i++) btns[i].classList.remove('selected');
+        }
+        btnEl.classList.add('selected');
+        // Load the template
+        loadTemplate(kind);
+        // Update badge
+        var badge = document.getElementById('stepTemplateBadge');
+        if (badge) { badge.textContent = kind.toUpperCase() + ' RISK'; badge.className = 'step-badge done'; }
+        // Auto-open step 2
+        var step2 = document.querySelector('.step-card[data-step="2"]');
+        if (step2) { step2.classList.add('open'); step2.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+        var editBadge = document.getElementById('stepEditBadge');
+        if (editBadge) { editBadge.textContent = 'EDIT'; editBadge.className = 'step-badge'; }
+      };
+      window.toggleCollapsible = function(toggleEl) {
+        var content = toggleEl.nextElementSibling;
+        if (!content) return;
+        content.classList.toggle('show');
+        var isOpen = content.classList.contains('show');
+        toggleEl.innerHTML = isOpen ? 'Advanced: Contract Settings &#9652;' : 'Advanced: Contract Settings &#9662;';
+      };
+
       loadAuth();
       loadV2Settings();
       renderIntentPreviews();
       renderReceiptPreview();
       autofillV2SettingsFromBackend();
+      populateOnchainPanel();
       if (saveAuthBtn) saveAuthBtn.addEventListener('click', function(){ saveAuth(); });
       if (checkAuthBtn) checkAuthBtn.addEventListener('click', function(){ saveAuth(); checkAuth(); });
       if (clearAuthBtn) clearAuthBtn.addEventListener('click', function(){ clearAuth(); });

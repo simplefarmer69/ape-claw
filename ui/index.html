@@ -865,7 +865,7 @@ footer::before{
           <pre>npx --yes github:simplefarmer69/ape-claw clawbot register \
   --agent-id my-bot \
   --name "My Bot" \
-  --api https://api.apeclaw.ai --json</pre>
+  --api https://apeclaw.ai --json</pre>
           <p class="note">Save the <code>claw_...</code> token — shown only once. Optional: redeem invite with <code>--invite inv_...</code>.</p>
         </div>
         <div class="setup-step" data-setup-mode="quick">
@@ -873,8 +873,8 @@ footer::before{
           <h3>Set env (global telemetry)</h3>
           <pre>export APE_CLAW_AGENT_ID=my-bot
 export APE_CLAW_AGENT_TOKEN=claw_...
-export APE_CLAW_TELEMETRY_URL=https://api.apeclaw.ai
-export APE_CLAW_CHAT_URL=https://api.apeclaw.ai</pre>
+export APE_CLAW_TELEMETRY_URL=https://apeclaw.ai
+export APE_CLAW_CHAT_URL=https://apeclaw.ai</pre>
           <p class="note">Optional: persist locally with <code>auth set --agent-id my-bot --agent-token claw_... --json</code>.</p>
         </div>
         <div class="setup-step" data-setup-mode="quick">
@@ -892,7 +892,7 @@ export APE_CLAW_PRIVATE_KEY=0x...
 npx --yes github:simplefarmer69/ape-claw nft autobuy \
   --count 1 --minPrice 50 --maxPrice 100 \
   --execute --autonomous --json</pre>
-          <p class="note">Open the live dashboard at <code>https://apeclaw.ai/?api=https://api.apeclaw.ai</code> (or <code>/ui</code>).</p>
+          <p class="note">Open the live dashboard at <code>https://apeclaw.ai/ui</code>.</p>
         </div>
         <div class="setup-step" data-setup-mode="pod">
           <div class="setup-step-num">7</div>
@@ -946,7 +946,7 @@ python3 pod/run_agent.py \
   </div>
   <div class="platform-stat">
     <span class="ps-icon">⛓️</span>
-    <span class="ps-val" id="psSkillsOnchain">0</span>
+    <span class="ps-val" id="psSkillsOnchain">1,023</span>
     <span class="ps-label">Published Onchain</span>
   </div>
   <div class="platform-stat">
@@ -956,7 +956,7 @@ python3 pod/run_agent.py \
   </div>
   <div class="platform-stat">
     <span class="ps-icon">🦞</span>
-    <span class="ps-val" id="psAgentCount">73</span>
+    <span class="ps-val" id="psAgentCount">10</span>
     <span class="ps-label">Clawllectors</span>
   </div>
   <div class="platform-stat">
@@ -1070,7 +1070,7 @@ python3 pod/run_agent.py \
         <div class="skills-summary-stat"><span class="ss-num" id="ssSeed">8</span><span class="ss-label">Seed</span></div>
         <div class="skills-summary-stat"><span class="ss-num" id="ssImported">1,020</span><span class="ss-label">Imported</span></div>
         <div class="skills-summary-stat"><span class="ss-num" id="ssUser">0</span><span class="ss-label">User</span></div>
-        <div class="skills-summary-stat"><span class="ss-num" id="ssOnchain">0</span><span class="ss-label">Onchain</span></div>
+        <div class="skills-summary-stat"><span class="ss-num" id="ssOnchain">1,023</span><span class="ss-label">Onchain</span></div>
         <div class="skills-summary-stat"><span class="ss-num" id="ssVetted">1,020</span><span class="ss-label">Vetted</span></div>
       </div>
       <div class="skills-recent-label">Recently Added</div>
@@ -1192,7 +1192,7 @@ let COLLECTIONS = [];
 let REGISTERED_CLAWBOTS = [];
 let collectionsCarouselTimer = null;
 let API_BASE = '';
-const DEFAULT_SHARED_BACKEND = 'https://api.apeclaw.ai';
+const DEFAULT_SHARED_BACKEND = 'https://apeclaw.ai';
 let collectionQuery = '';
 let collectionSort = 'rank';
 let feedPaused = false;
@@ -1220,10 +1220,17 @@ function normalizeApiBase(raw) {
 
 function initApiBase() {
   const qp = new URLSearchParams(window.location.search).get('api');
+  if (qp) {
+    API_BASE = normalizeApiBase(qp);
+    return;
+  }
   const runtime = normalizeApiBase(window.APECLAW_API_BASE || '');
   const meta = normalizeApiBase(document.querySelector('meta[name="apeclaw-api-base"]')?.content || '');
-  const fallback = normalizeApiBase(runtime || meta || DEFAULT_SHARED_BACKEND);
-  API_BASE = normalizeApiBase(qp || fallback);
+  if (runtime || meta) {
+    API_BASE = normalizeApiBase(runtime || meta);
+    return;
+  }
+  API_BASE = '';
   try { localStorage.removeItem('apeclaw_api_base'); } catch {}
 }
 
@@ -1427,7 +1434,6 @@ function initBackendConfigUi() {
 
 async function ensureBackendReachableWithFallback() {
   renderBackendStatus();
-  if (!API_BASE) return;
   async function probe(url) {
     const timeoutMs = 3000;
     const controller = new AbortController();
@@ -1441,23 +1447,25 @@ async function ensureBackendReachableWithFallback() {
       clearTimeout(timer);
     }
   }
-  const previous = API_BASE;
-  const sharedOk = await probe(apiUrl('/api/health'));
-  if (sharedOk) return;
 
-  const localOk = await probe('/api/health');
-  if (localOk) {
+  const sameOriginOk = await probe('/api/health');
+  if (sameOriginOk) {
     API_BASE = '';
     renderBackendStatus();
-    terminalLines.push({ type: 'error', text: `[Config] Shared backend unreachable (${previous}). Falling back to local same-origin.` });
-    announce('Shared backend unavailable, switched to local backend');
     return;
   }
 
-  // Keep configured backend when neither shared nor local is reachable.
-  // This avoids switching to a known-broken same-origin on static hosts.
-  terminalLines.push({ type: 'error', text: `[Config] Backend unreachable: ${previous}. Local same-origin is also unavailable.` });
-  terminalLines.push({ type: 'output', text: '[Config] Start telemetry server or deploy api.apeclaw.ai to a VPS backend.' });
+  const sharedOk = await probe(DEFAULT_SHARED_BACKEND + '/api/health');
+  if (sharedOk) {
+    API_BASE = DEFAULT_SHARED_BACKEND;
+    renderBackendStatus();
+    terminalLines.push({ type: 'output', text: `[Config] Using shared backend: ${DEFAULT_SHARED_BACKEND}` });
+    return;
+  }
+
+  API_BASE = '';
+  renderBackendStatus();
+  terminalLines.push({ type: 'error', text: '[Config] No live backend detected. Using static API data.' });
   announce('No reachable backend detected');
 }
 
@@ -1905,7 +1913,7 @@ function renderTerminal() {
 function updateStats() {
   const activeCount = [...agentMap.values()].filter(a => a.status==='active').length;
   const totalCount = agentMap.size;
-  const clawbotCount = Math.max(totalCount, REGISTERED_CLAWBOTS.length, 73);
+  const clawbotCount = Math.max(totalCount, REGISTERED_CLAWBOTS.length, 10);
   const setIf = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   setIf('totalAgents', activeCount + '/' + totalCount);
   setIf('totalEvents', totalEvents.toLocaleString());

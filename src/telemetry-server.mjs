@@ -101,9 +101,10 @@ function buildMergedSkillIndex() {
   const merged = [];
 
   // 1. Read seed skills from skillcards/seed/*.json
+  let seedTokenId = 1;
   try {
     if (fs.existsSync(SKILLCARDS_SEED_DIR)) {
-      const seedFiles = fs.readdirSync(SKILLCARDS_SEED_DIR).filter((f) => f.endsWith(".json"));
+      const seedFiles = fs.readdirSync(SKILLCARDS_SEED_DIR).filter((f) => f.endsWith(".json")).sort();
       for (const fileName of seedFiles) {
         try {
           const filePath = path.join(SKILLCARDS_SEED_DIR, fileName);
@@ -115,12 +116,14 @@ function buildMergedSkillIndex() {
               slug: String(skill.slug || "").trim(),
               description: String(skill.description || "").trim(),
               source: "seed",
-              vettedOk: true, // Seed skills are trusted
+              vettedOk: true,
               importOk: true,
               riskTier: Number(skill?.constraints?.riskTier ?? skill?.riskTier ?? 2),
               sourceUrl: String(skill?.provenance?.sourceUrl || "").trim() || null,
               provenance: skill.provenance || { publisher: "apeclaw", signed: false },
+              onchainTokenId: String(seedTokenId),
             });
+            seedTokenId++;
           }
         } catch {
           // Skip malformed seed files
@@ -150,6 +153,9 @@ function buildMergedSkillIndex() {
             riskTier: Number(item.riskTier ?? 2),
             sourceUrl: String(item.sourceUrl || "").trim() || null,
             provenance: item.provenance || { publisher: "imported", signed: false },
+            onchainTokenId: item.onchainTokenId || null,
+            onchainMintTx: item.onchainMintTx || null,
+            onchainPublishTx: item.onchainPublishTx || null,
           });
         }
       }
