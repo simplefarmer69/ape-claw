@@ -1,91 +1,71 @@
 {
-    "ok": true,
-    "total": 1028,
-    "seed": 8,
-    "imported": 1020,
-    "user": 0,
-    "vetted": 1014,
-    "onchain": 1023,
-    "recent": [
-        {
-            "name": "ApeClaw NFT Autobuy",
-            "slug": "apeclaw-nft-autobuy",
-            "source": "imported",
-            "riskTier": 1,
-            "description": "Plan and (optionally) execute multi-collection NFT buys on ApeChain within strict policy gates. Designed for agents that collect NFTs while you sleep.",
-            "onchainTokenId": "1010"
-        },
-        {
-            "name": "CodeBuddy CLI for OpenClaw",
-            "slug": "clawhub-codebuddy-cli",
-            "source": "imported",
-            "riskTier": 1,
-            "description": "Imported reference from clawhub: https://clawhub.ai/skills/codebuddy-cli",
-            "onchainTokenId": null
-        },
-        {
-            "name": "Skill Reviewer",
-            "slug": "clawhub-skill-reviewer",
-            "source": "imported",
-            "riskTier": 1,
-            "description": "Imported reference from clawhub: https://clawhub.ai/skills/skill-reviewer",
-            "onchainTokenId": null
-        },
-        {
-            "name": "Stagehand Browser CLI",
-            "slug": "clawhub-stagehand-browser-cli",
-            "source": "imported",
-            "riskTier": 3,
-            "description": "Imported reference from clawhub: https://clawhub.ai/skills/stagehand-browser-cli",
-            "onchainTokenId": null
-        },
-        {
-            "name": "Super Skills",
-            "slug": "clawhub-super-skills",
-            "source": "imported",
-            "riskTier": 2,
-            "description": "Imported reference from clawhub: https://clawhub.ai/10e9928a/super-skills",
-            "onchainTokenId": null
-        },
-        {
-            "name": "Wechat Publisher",
-            "slug": "openclaw-wechat-publisher",
-            "source": "imported",
-            "riskTier": 2,
-            "description": "\u4e00\u952e\u53d1\u5e03 Markdown \u5230\u5fae\u4fe1\u516c\u4f17\u53f7\u8349\u7a3f\u7bb1\u3002\u57fa\u4e8e wenyan-cli\uff0c\u652f\u6301\u591a\u4e3b\u9898\u3001\u4ee3\u7801\u9ad8\u4eae\u3001\u56fe\u7247\u81ea\u52a8\u4e0a\u4f20\u3002",
-            "onchainTokenId": "1009"
-        },
-        {
-            "name": "ACP (Agent Commerce Protocol)",
-            "slug": "acp-skill-md",
-            "source": "imported",
-            "riskTier": 3,
-            "description": "--- name: virtuals-protocol-acp description: Hire specialised agents to handle any task \u2014 data analysis, trading, content generation, research, on-cha",
-            "onchainTokenId": "1008"
-        },
-        {
-            "name": "Token Optimizer",
-            "slug": "clawhub-openclaw-token-optimizer",
-            "source": "imported",
-            "riskTier": 2,
-            "description": "--- name: token-optimizer description: Reduce OpenClaw token usage and API costs through smart model routing, heartbeat optimization, budget tracking,",
-            "onchainTokenId": "1007"
-        },
-        {
-            "name": "Firecrawl",
-            "slug": "clawhub-firecrawl-search",
-            "source": "imported",
-            "riskTier": 2,
-            "description": "--- name: firecrawl description: Web search and scraping via Firecrawl API. Use when you need to search the web, scrape websites (including JS-heavy p",
-            "onchainTokenId": "1006"
-        },
-        {
-            "name": "MoodCast",
-            "slug": "clawhub-moodcast",
-            "source": "imported",
-            "riskTier": 2,
-            "description": "--- name: moodcast description: Transform any text into emotionally expressive audio with ambient soundscapes using ElevenLabs v3 audio tags and Sound",
-            "onchainTokenId": "1005"
-        }
-    ]
+  "ok": true,
+  "total": 10028,
+  "seed": 8,
+  "imported": 10020,
+  "user": 0,
+  "vetted": 10014,
+  "onchain": 3249,
+  "recent": [
+    {
+      "name": "Notify Forta 134",
+      "slug": "ac-notify-forta-134",
+      "source": "community_generated",
+      "importedAt": "2026-02-19T09:09:34.338Z"
+    },
+    {
+      "name": "Watch Chainjet 135",
+      "slug": "ac-watch-chainjet-135",
+      "source": "community_generated",
+      "importedAt": "2026-02-19T09:09:34.340Z"
+    },
+    {
+      "name": "Pager Tenderly Alerts Bsc 136",
+      "slug": "ac-pager-tenderly-alerts-bsc-136",
+      "source": "community_generated",
+      "importedAt": "2026-02-19T09:09:34.340Z"
+    },
+    {
+      "name": "Webhook Push Protocol 137",
+      "slug": "ac-webhook-push-protocol-137",
+      "source": "community_generated",
+      "importedAt": "2026-02-19T09:09:34.340Z"
+    },
+    {
+      "name": "Notify Hal.xyz 138",
+      "slug": "ac-notify-hal-xyz-138",
+      "source": "community_generated",
+      "importedAt": "2026-02-19T09:09:34.340Z"
+    },
+    {
+      "name": "Monitor Phalcon Ethereum 139",
+      "slug": "ac-monitor-phalcon-ethereum-139",
+      "source": "community_generated",
+      "importedAt": "2026-02-19T09:09:34.340Z"
+    },
+    {
+      "name": "Push Hal.xyz Base 140",
+      "slug": "ac-push-hal-xyz-base-140",
+      "source": "community_generated",
+      "importedAt": "2026-02-19T09:09:34.340Z"
+    },
+    {
+      "name": "Monitor Forta Optimism 141",
+      "slug": "ac-monitor-forta-optimism-141",
+      "source": "community_generated",
+      "importedAt": "2026-02-19T09:09:34.340Z"
+    },
+    {
+      "name": "Monitor Openzeppelin Sentinel Arbitrum 142",
+      "slug": "ac-monitor-openzeppelin-sentinel-arbitrum-142",
+      "source": "community_generated",
+      "importedAt": "2026-02-19T09:09:34.340Z"
+    },
+    {
+      "name": "Monitor Tenderly Alerts Solana 143",
+      "slug": "ac-monitor-tenderly-alerts-solana-143",
+      "source": "community_generated",
+      "importedAt": "2026-02-19T09:09:34.341Z"
+    }
+  ]
 }
