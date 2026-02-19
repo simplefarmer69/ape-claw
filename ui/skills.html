@@ -532,6 +532,8 @@
       border:1px solid rgba(99,215,255,.15);color:var(--cyan);background:rgba(99,215,255,.04);
     }
     .skill-foot .pill:hover{border-color:var(--accent);background:rgba(207,255,4,.08);color:#fff;text-decoration:none}
+    .skill-foot .pill.install-btn{border-color:rgba(207,255,4,.35);color:var(--accent);background:rgba(207,255,4,.08);font-weight:800}
+    .skill-foot .pill.install-btn:hover{border-color:var(--accent);background:rgba(207,255,4,.18);color:#fff;box-shadow:0 0 12px rgba(207,255,4,.12)}
     .skill-foot .pill.nft{border-color:rgba(0,255,0,.25);color:rgba(0,255,0,.85);background:rgba(0,255,0,.05)}
     .skill-foot .pill.nft:hover{border-color:rgba(0,255,0,.5);background:rgba(0,255,0,.12);color:#fff}
 
@@ -554,6 +556,15 @@
       font-size:12px;color:var(--muted);font-weight:600;
       letter-spacing:.04em;min-width:120px;text-align:center;
     }
+
+    #importedList{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:20px;
+      perspective:1400px;
+    }
+    @media(min-width:580px){#importedList{grid-template-columns:repeat(2,1fr)}}
+    @media(min-width:960px){#importedList{grid-template-columns:repeat(3,1fr)}}
 
     .skill-source-tag{
       font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
@@ -1493,25 +1504,53 @@
             });
         }
 
+        function showInstallModal(it) {
+          var slug = escapeHtml(it.slug || '');
+          var fileName = it.fileName || it.slug + '.json';
+          var html = '';
+          html += '<div style="margin-bottom:16px"><strong style="color:#cfff04;font-size:14px">' + escapeHtml(it.name || it.slug) + '</strong></div>';
+          html += '<div class="note" style="margin-bottom:12px;color:var(--muted);font-size:12px">Copy the command below and run it in your terminal to install this skill.</div>';
+          html += '<div style="position:relative;background:rgba(0,0,0,.5);border:1px solid rgba(207,255,4,.15);border-radius:6px;padding:14px 16px;margin-bottom:12px">';
+          html += '<code style="font-size:11px;color:var(--cyan);word-break:break-all;line-height:1.6;display:block" id="installCmd">';
+          html += 'curl -fsSL &quot;https://apeclaw.ai/api/skills/search&quot; | \\\n  jq \'[.results[] | select(.slug==&quot;' + slug + '&quot;)][0]\' \\\n  &gt; ./' + escapeHtml(fileName) + '</code>';
+          html += '<a href="#" data-copy="curl -fsSL &quot;https://apeclaw.ai/api/skills/search&quot; | jq \'[.results[] | select(.slug==&quot;' + slug + '&quot;)][0]\' > ./' + escapeHtml(fileName) + '" style="position:absolute;top:8px;right:8px;font-size:9px;color:var(--accent);border:1px solid rgba(207,255,4,.2);padding:3px 8px;border-radius:3px;text-decoration:none;background:rgba(207,255,4,.06)">COPY</a>';
+          html += '</div>';
+          if (it.sourceUrl) {
+            html += '<div class="note" style="font-size:11px">Source: <a href="' + escapeHtml(it.sourceUrl) + '" target="_blank" rel="noopener" style="color:var(--cyan)">' + escapeHtml(it.sourceUrl) + '</a></div>';
+          }
+          openModal('Install Skill', html, function () { closeModal(); }, function () {});
+        }
+
+        function showJsonModal(it, pub) {
+          var obj = {
+            name: it.name || '',
+            slug: it.slug || '',
+            description: it.description || it.desc || '',
+            version: it.version || '1',
+            riskTier: it.riskTier || 2,
+            source: it.source || '',
+          };
+          if (it.sourceUrl) obj.sourceUrl = it.sourceUrl;
+          if (pub && pub.skillId) {
+            obj.onchain = { skillId: pub.skillId, network: 'apechain', chainId: 33139 };
+            if (pub.txs && pub.txs.mint) obj.onchain.mintTx = pub.txs.mint;
+            if (pub.txs && pub.txs.publish) obj.onchain.publishTx = pub.txs.publish;
+          }
+          var json = JSON.stringify(obj, null, 2);
+          var html = '';
+          html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
+          html += '<strong style="color:#cfff04;font-size:14px">' + escapeHtml(it.name || it.slug) + '</strong>';
+          html += '<a href="#" data-copy="' + escapeHtml(json) + '" style="font-size:9px;color:var(--accent);border:1px solid rgba(207,255,4,.2);padding:3px 8px;border-radius:3px;text-decoration:none;background:rgba(207,255,4,.06)">COPY JSON</a>';
+          html += '</div>';
+          html += '<pre style="background:rgba(0,0,0,.5);border:1px solid rgba(207,255,4,.12);border-radius:6px;padding:14px 16px;font-size:11px;color:var(--cyan);overflow-x:auto;max-height:400px;overflow-y:auto;line-height:1.6;margin:0">' + escapeHtml(json) + '</pre>';
+          openModal('Skill JSON', html, function () { closeModal(); }, function () {});
+        }
+
         out.innerHTML = items.map(function (it) {
           var risk = Number(it.riskTier || 2);
           var pub = (publishedBySlug && it && it.slug && publishedBySlug[it.slug]) ? publishedBySlug[it.slug] : null;
-          var fileHref = it.slug ? ('/api/skills/get?slug=' + encodeURIComponent(it.slug)) : '';
           var sourceHref = String(it.sourceUrl || '').trim();
-          var rpc = localStorage.getItem('apeclaw_v2_rpc') || '';
-          var reg = localStorage.getItem('apeclaw_v2_registry') || '';
-          var dlCmd = it.slug ? ('curl -fsSL \"' + apiBase + '/api/skills/get?slug=' + encodeURIComponent(it.slug) + '\" -o \"./' + (it.fileName || it.slug + '.json') + '\"') : '';
-          var pubCmd = it.slug
-            ? ((rpc && reg)
-              ? ('ape-claw v2 skill publish --rpc \"' + String(rpc).trim() + '\" --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --registry \"' + String(reg).trim() + '\" --skillId <id> --file \"./' + (it.fileName || it.slug + '.json') + '\" --riskTier ' + String(Number(it.riskTier || 1)) + ' --json')
-              : ('ape-claw v2 skill publish --rpc <url> --privateKey \"$APE_CLAW_V2_PRIVATE_KEY\" --registry <addr> --skillId <id> --file \"./' + (it.fileName || it.slug + '.json') + '\" --riskTier ' + String(Number(it.riskTier || 1)) + ' --json'))
-            : '';
           var title = it.name || it.slug || 'Imported Skill';
-          var metaBits = [];
-          if (it.slug) metaBits.push('slug: ' + it.slug);
-          if (it.version) metaBits.push('v' + it.version);
-          if (it.source) metaBits.push(String(it.source));
-          if (it.mode && it.mode !== it.source) metaBits.push(String(it.mode));
           var desc = String(it.description || it.desc || '').trim();
           if (!desc) desc = guessSummary(it);
 
@@ -1524,15 +1563,14 @@
           var cardIdx = items.indexOf(it);
 
           var chainHtml = '';
-          if (mintTx || publishTx) {
+          if (isOnchain) {
             chainHtml = '<div class="skill-chain-data">';
-            if (mintTx) chainHtml += '<div class="skill-tx"><span class="skill-tx-label">mint</span><a class="skill-tx-hash" href="https://apescan.io/tx/' + escapeHtml(mintTx) + '" target="_blank" rel="noopener" title="' + escapeHtml(mintTx) + '">' + shortHash(mintTx) + ' &#8599;</a></div>';
-            if (publishTx) chainHtml += '<div class="skill-tx"><span class="skill-tx-label">publish</span><a class="skill-tx-hash" href="https://apescan.io/tx/' + escapeHtml(publishTx) + '" target="_blank" rel="noopener" title="' + escapeHtml(publishTx) + '">' + shortHash(publishTx) + ' &#8599;</a></div>';
+            chainHtml += '<div class="skill-tx"><span class="skill-tx-label">onchain</span><a class="skill-tx-hash" href="https://apescan.io/token/0x6c8e75568a3470f8c8e6f8ed29d5fd61c7b7e11d?a=' + escapeHtml(String(pub.skillId)) + '" target="_blank" rel="noopener" title="View on ApeScan">NFT #' + escapeHtml(String(pub.skillId)) + ' &#8599;</a></div>';
             chainHtml += '</div>';
           }
 
           return (
-            '<div class="skill-card" data-imported-file="' + escapeHtml(String(fileHref || '')) + '" style="--i:' + (cardIdx % 12) + '">' +
+            '<div class="skill-card" data-slug="' + escapeHtml(it.slug || '') + '" style="--i:' + (cardIdx % 12) + '">' +
               '<div class="skill-tier-bar" data-tier="' + riskBkt + '"></div>' +
               '<div class="skill-card-inner">' +
                 '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px">' +
@@ -1547,36 +1585,34 @@
                 '<div class="skill-desc">' + escapeHtml(desc) + '</div>' +
                 chainHtml +
                 '<div class="skill-foot">' +
-                  (dlCmd ? ('<a class="pill" href="#" data-copy="' + escapeHtml(dlCmd) + '" title="Copy install command">Install</a>') : '') +
-                  (fileHref ? ('<a class="pill" href="' + escapeHtml(fileHref) + '" target="_blank" rel="noopener">JSON</a>') : '') +
+                  (it.slug ? '<a class="pill install-btn" href="#" data-action="install" title="Get install command">Install</a>' : '') +
+                  (it.slug ? '<a class="pill" href="#" data-action="json" title="View skill metadata">JSON</a>' : '') +
                   (sourceHref ? ('<a class="pill" href="' + escapeHtml(sourceHref) + '" target="_blank" rel="noopener">Source</a>') : '') +
-                  '<a class="pill" href="#" data-details="1">Details</a>' +
+                  '<a class="pill" href="#" data-action="details">Details</a>' +
                 '</div>' +
               '</div>' +
             '</div>'
           );
         }).join('');
 
-        // Details handler (local to imported grid; copy/delete handled globally).
         try {
           var cards = out.querySelectorAll('.skill-card');
           for (var i = 0; i < cards.length; i++) {
-            (function () {
-              var idx = i;
+            (function (idx) {
               var card = cards[idx];
-              var btn = card.querySelector('a[data-details]');
-              if (!btn) return;
-              btn.addEventListener('click', function (ev) {
+              card.addEventListener('click', function (ev) {
+                var target = ev.target.closest('[data-action]');
+                if (!target) return;
                 ev.preventDefault();
-                var fileHref = card.getAttribute('data-imported-file') || '';
+                var action = target.getAttribute('data-action');
                 var it = items[idx];
                 var pub = (publishedBySlug && it && it.slug && publishedBySlug[it.slug]) ? publishedBySlug[it.slug] : null;
-                openDetails(it, pub, fileHref);
+                if (action === 'install') showInstallModal(it);
+                else if (action === 'json') showJsonModal(it, pub);
+                else if (action === 'details') openDetails(it, pub, '');
               });
-            })();
+            })(i);
           }
-
-          // Descriptions are now served inline from the API index — no individual file fetches needed.
         } catch (e) {}
       }
 
@@ -2185,11 +2221,23 @@
       }
 
       function copyText(txt) {
-        try {
-          return Promise.resolve(navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(String(txt || '')) : null);
-        } catch (e) {
-          return Promise.resolve(null);
+        var s = String(txt || '');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          return navigator.clipboard.writeText(s).catch(function () { fallbackCopy(s); });
         }
+        fallbackCopy(s);
+        return Promise.resolve();
+      }
+      function fallbackCopy(s) {
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = s;
+          ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        } catch (e) {}
       }
 
       function renderUserSkills(items) {
