@@ -3,7 +3,7 @@
 """
 THE POD — Otherside Navigator (v2-alpha scaffold)
 
-This is a minimal, safe-by-default implementation of the loop described in IMG_9254.JPG:
+This is a minimal, safe-by-default implementation of the loop described in assets/otherside-navigator-reference.jpg:
 
 1) Grab latest screenshot from rolling buffer on disk
 2) If screen hasn't changed for N seconds -> stuck recovery event

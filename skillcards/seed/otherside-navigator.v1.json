@@ -94,11 +94,11 @@
   ],
   "examples": [
     {
-      "title": "FAST_PROMPT (exact structure from IMG_9254.JPG)",
+      "title": "FAST_PROMPT (exact structure from otherside-navigator-reference.jpg)",
       "value": "What gets sent to Claude (the FAST_PROMPT):\n\nAnalyze this game screenshot briefly.\n\n1) PLAYERS: List any player names visible (floating text above characters)\n2) DIRECTION: which way is the waypoint/objective marker? (left/right/forward/none)\n3) STATE: gameplay / settings_menu / loading / launcher_window\n4) CHAT: Any new chat messages? (just quote who said what)\n\nKeep it SHORT. Only report what you actually see.\n\n(Plus the actual screenshot image attached.)"
     },
     {
-      "title": "DEEP_PROMPT (exact structure from IMG_9254.JPG)",
+      "title": "DEEP_PROMPT (exact structure from otherside-navigator-reference.jpg)",
       "value": "Or on a deeper analysis pass (DEEP_PROMPT), something like:\n\n1) ENVIRONMENT: Open grassy terrain, purple-tinted sky, distant crystalline structures, warm ambient lighting, atmospheric haze on horizon\n2) HUD/UI: Waypoint marker bottom-left \"247m\", compass visible top-center showing heading NNE, no health bar visible, minimap not present\n3) PLAYERS: JayVega (red avatar, close, ~10m), Aurelius_X(blue cape, mid-distance ~25m), moonwalker99 (far, ~40m)\n4) CHAT LOG: moonwalker99: \"anyone know where the portal is\"\n5) GAME STATE: gameplay\n6) NOTABLE: Unusual light flickering near the rock formation at center-right - possible rendering artifact\n7) NAVIGATION: Waypoint marker is to the left\n8) SUGGESTED ACTIONS:\n- Move toward waypoint (left)\n- Approach JayVega (nearest player)\n- Investigate flickering near rock formation"
     },
     {

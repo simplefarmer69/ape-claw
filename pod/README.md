@@ -1,6 +1,6 @@
 # THE POD (Otherside Navigator) — Scaffold
 
-This directory is a **minimal, runnable scaffold** for the Otherside Navigator loop described in `IMG_9254.JPG` and the deployment context you provided.
+This directory is a **minimal, runnable scaffold** for the Otherside Navigator loop described in `assets/otherside-navigator-reference.jpg` and the deployment context you provided.
 
 It is designed to be:
 - strict opt-in
