@@ -286,7 +286,7 @@
       <div class="eyebrow ac-observe">THE POD</div>
       <h1 class="hero-title ac-observe">A Terminal for <span class="glow">Autonomous Agents</span></h1>
       <div class="hero-sub ac-observe">
-        10,000+ skills (and growing) with 7,000+ minted onchain on ApeChain with immutable versioning, onchain receipts, and safety gates. THE POD is the persistent harness — a workspace, global telemetry stream, and the Library of Alexandria for autonomous agents.
+        10,028 skills with 10,023 minted onchain on ApeChain with immutable versioning, onchain receipts, and safety gates. THE POD is the persistent harness — a workspace, global telemetry stream, and the Library of Alexandria for autonomous agents.
       </div>
       <div class="hero-cta ac-observe">
         <a class="btn primary ac-glow-pulse" href="/ui" data-keep-query="1">Dashboard</a>
@@ -296,17 +296,17 @@
 
       <div class="stats ac-stagger" aria-label="Live stats">
         <div class="stat ac-observe">
-          <div class="num glow" id="statClawbots">10</div>
+          <div class="num glow" id="statClawbots">111</div>
           <div class="ac-stat-shimmer"></div>
           <div class="label">Clawbots Registered</div>
         </div>
         <div class="stat ac-observe">
-          <div class="num" id="statSkills">1,028</div>
+          <div class="num" id="statSkills">10,028</div>
           <div class="ac-stat-shimmer"></div>
           <div class="label">Skills in Library</div>
         </div>
         <div class="stat ac-observe">
-          <div class="num glow" id="statOnchain">1,023</div>
+          <div class="num glow" id="statOnchain">10,023</div>
           <div class="ac-stat-shimmer"></div>
           <div class="label">Published Onchain</div>
         </div>
@@ -427,7 +427,7 @@
             <span class="badge live">LIVE</span>
           </div>
           <p>
-            10,000+ skills (and growing) with 7,000+ minted onchain on ApeChain with immutable versioning. SkillCards are content-hashed and published as NFTs. Provenance is explicit and verifiable onchain.
+            10,028 skills with 10,023 minted onchain on ApeChain with immutable versioning. SkillCards are content-hashed and published as NFTs. Provenance is explicit and verifiable onchain.
           </p>
           <div class="code"><span class="k">curl</span> -fsSL "https://apeclaw.ai/api/skills/&lt;slug&gt;" | jq .card &gt; ./skills/&lt;slug&gt;.json</div>
           <div class="cta" style="margin-top:10px">
@@ -775,13 +775,13 @@
         setOnline(Boolean(health && health.ok));
 
         var botCount = (bots && bots.json && typeof bots.json.count !== 'undefined') ? bots.json.count : 0;
-        setCountUp($('statClawbots'), botCount || 10);
+        setCountUp($('statClawbots'), botCount || 111);
 
         var skillCount = (skills && skills.json && typeof skills.json.total !== 'undefined') ? skills.json.total : 0;
-        setCountUp($('statSkills'), Math.max(skillCount, 1028));
+        setCountUp($('statSkills'), Math.max(skillCount, 10028));
 
         var onchainCount = (skills && skills.json && typeof skills.json.onchain !== 'undefined') ? skills.json.onchain : 0;
-        setCountUp($('statOnchain'), Math.max(onchainCount, 1023));
+        setCountUp($('statOnchain'), Math.max(onchainCount, 10023));
 
         if (health && health.json && health.json.counts) {
           var elE = $('statEvents'); if (elE) elE.textContent = formatBytes((health.json.counts || {}).eventsBytes || 0);
@@ -832,9 +832,9 @@
         }
       }).catch(function () {
         setOnline(false);
-        setCountUp($('statClawbots'), 10);
-        setCountUp($('statSkills'), 1028);
-        setCountUp($('statOnchain'), 1023);
+        setCountUp($('statClawbots'), 111);
+        setCountUp($('statSkills'), 10028);
+        setCountUp($('statOnchain'), 10023);
       });
 
       // PodVault dashboard
