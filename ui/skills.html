@@ -1718,10 +1718,10 @@
                 '<div class="skill-desc">' + escapeHtml(desc) + '</div>' +
                 chainHtml +
                 '<div class="skill-foot">' +
-                  (it.slug ? '<a class="pill install-btn" href="#" data-action="install" title="Get install command">Install</a>' : '') +
-                  (it.slug ? '<a class="pill" href="#" data-action="json" title="View skill metadata">JSON</a>' : '') +
+                  (it.slug ? '<a class="pill install-btn" href="#install=' + encodeURIComponent(String(it.slug)) + '" data-action="install" title="Get install command">Install</a>' : '') +
+                  (it.slug ? '<a class="pill" href="#json=' + encodeURIComponent(String(it.slug)) + '" data-action="json" title="View skill metadata">JSON</a>' : '') +
                   (sourceHref ? ('<a class="pill" href="' + escapeHtml(sourceHref) + '" target="_blank" rel="noopener">Source</a>') : '') +
-                  '<a class="pill" href="#" data-action="details">Details</a>' +
+                  '<a class="pill" href="#skill=' + encodeURIComponent(String(it.slug || "")) + '" data-action="details">Details</a>' +
                 '</div>' +
               '</div>' +
             '</div>'
@@ -1734,12 +1734,21 @@
             (function (idx) {
               var card = cards[idx];
               card.addEventListener('click', function (ev) {
-                var target = ev.target.closest('[data-action]');
+                var t = (ev && ev.target && ev.target.closest) ? ev.target : null;
+                var target = t ? t.closest('[data-action]') : null;
                 if (!target) return;
                 ev.preventDefault();
                 var action = target.getAttribute('data-action');
                 var it = items[idx];
                 var pub = (publishedBySlug && it && it.slug && publishedBySlug[it.slug]) ? publishedBySlug[it.slug] : null;
+                try {
+                  if (it && it.slug) {
+                    var slug = encodeURIComponent(String(it.slug));
+                    if (action === 'install') history.replaceState(null, '', '#install=' + slug);
+                    else if (action === 'json') history.replaceState(null, '', '#json=' + slug);
+                    else if (action === 'details') history.replaceState(null, '', '#skill=' + slug);
+                  }
+                } catch (e) {}
                 if (action === 'install') showInstallModal(it);
                 else if (action === 'json') showJsonModal(it, pub);
                 else if (action === 'details') openDetails(it, pub, '');
@@ -1860,6 +1869,40 @@
           importedBadge.textContent = filtered.length ? ('FOUND ' + filtered.length + (publishedCount ? (' · ONCHAIN ' + publishedCount) : '')) : 'NONE';
         }
       }
+
+      // Hash-based fallback: if JS handlers fail, card links still carry intent.
+      // Supports deep links like:
+      // - #install=<slug>
+      // - #json=<slug>
+      // - #skill=<slug>
+      function parseSkillHash() {
+        try {
+          var h = String(location.hash || '').replace(/^#/, '').trim();
+          if (!h) return null;
+          var m = h.match(/^(install|json|skill)=(.+)$/);
+          if (!m) return null;
+          return { action: m[1], slug: decodeURIComponent(m[2] || '') };
+        } catch (e) { return null; }
+      }
+      function openFromHash() {
+        var parsed = parseSkillHash();
+        if (!parsed || !parsed.slug) return;
+        if (!importedAll || !importedAll.length) return; // wait until data is loaded
+        var slug = String(parsed.slug || '').trim();
+        if (!slug) return;
+        var it = null;
+        for (var i = 0; i < importedAll.length; i++) {
+          if (importedAll[i] && importedAll[i].slug === slug) { it = importedAll[i]; break; }
+        }
+        if (!it) return;
+        var pub = (publishedBySlug && it.slug && publishedBySlug[it.slug]) ? publishedBySlug[it.slug] : null;
+        if (parsed.action === 'install') showInstallModal(it);
+        else if (parsed.action === 'json') showJsonModal(it, pub);
+        else openDetails(it, pub, '');
+      }
+      window.addEventListener('hashchange', function () {
+        try { openFromHash(); } catch (e) {}
+      });
       fetch(apiBase + '/api/skills/search?limit=5000', { headers: { 'accept': 'application/json' } })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) {
@@ -1898,6 +1941,7 @@
           }
           applyImportedFilters();
           if (importedBadge) importedBadge.textContent = importedAll.length ? (importedAll.length + ' SKILLS') : 'NONE';
+          try { openFromHash(); } catch (e) {}
         })
         .catch(function () {
           if (importedBadge) importedBadge.textContent = 'UNAVAILABLE';
