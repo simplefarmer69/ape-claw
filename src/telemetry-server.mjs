@@ -7,6 +7,9 @@ import { ROOT as PROJECT_ROOT, STATE_DIR, EVENTS_PATH, ALLOWLIST_PATH, POLICY_PA
 import { ensureDir } from "./lib/io.mjs";
 import { verifyClawbot, registerClawbot } from "./lib/clawbots.mjs";
 import { ReceiptRegistry_ABI } from "./lib/v2-onchain-abi.mjs";
+import { handleCorsPreflightOrSetHeaders } from "./server/middleware/cors.mjs";
+import { checkRateLimit } from "./server/middleware/rate-limit.mjs";
+import { collectBody as collectBodyLimited } from "./server/middleware/body-limit.mjs";
 
 const PORT = Number(process.env.APE_CLAW_UI_PORT || 8787);
 const BIND_HOST = String(process.env.APE_CLAW_BIND_HOST || "").trim();
@@ -231,8 +234,8 @@ function requireSkillWriteAuth(req) {
   const agentToken = String(req.headers["x-agent-token"] || "").trim();
   if (agentId && agentToken) {
     try {
-      const v = verifyClawbot(agentId, agentToken);
-      if (v?.ok) return { ok: true, mode: "agent", agentId };
+      const v = verifyClawbot({ agentId, agentToken });
+      if (v?.verified) return { ok: true, mode: "agent", agentId };
     } catch {}
   }
   return { ok: false, mode: "none", agentId: null };
@@ -245,17 +248,14 @@ function sendSse(res, evt) {
 function sendBacklog(res) {
   const raw = fs.readFileSync(EVENTS_PATH, "utf8");
   const lines = raw.trim() ? raw.trim().split("\n") : [];
-  const events = lines.slice(-300).map((l) => {
+  const events = lines.slice(-1000).map((l) => {
     try {
       return JSON.parse(l);
     } catch {
       return null;
     }
   }).filter(Boolean);
-  res.writeHead(200, {
-    "content-type": "application/json; charset=utf-8",
-    "access-control-allow-origin": "*",
-  });
+  res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
   res.end(JSON.stringify({ events }));
 }
 
@@ -265,10 +265,7 @@ function serveJson(res, filePath) {
     return res.end(JSON.stringify({ error: "not found" }));
   }
   const raw = fs.readFileSync(filePath, "utf8");
-  res.writeHead(200, {
-    "content-type": "application/json; charset=utf-8",
-    "access-control-allow-origin": "*",
-  });
+  res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
   return res.end(raw);
 }
 
@@ -641,16 +638,10 @@ async function resolveChatAuth(req, body) {
   };
 }
 
-function readRequestBody(req) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    req.on("data", (c) => chunks.push(c));
-    req.on("end", () => {
-      try { resolve(JSON.parse(Buffer.concat(chunks).toString("utf8"))); }
-      catch (e) { reject(e); }
-    });
-    req.on("error", reject);
-  });
+async function readRequestBody(req, res) {
+  const raw = await collectBodyLimited(req, res);
+  if (raw === null) return null;
+  return JSON.parse(raw);
 }
 
 async function verifyMoltbookIdentity(identityToken) {
@@ -675,11 +666,10 @@ async function verifyMoltbookIdentity(identityToken) {
   }
 }
 
-const CORS_HEADERS = {
-  "access-control-allow-origin": "*",
-  "access-control-allow-methods": "GET, POST, OPTIONS",
-  "access-control-allow-headers": "content-type, x-agent-id, x-agent-token, x-moltbook-identity, x-registration-key",
-};
+// Rate limit tiers
+const RL_READ = { limit: 60, windowMs: 60_000, keyPrefix: "read" };
+const RL_WRITE = { limit: 10, windowMs: 60_000, keyPrefix: "write" };
+const RL_AUTH = { limit: 5, windowMs: 60_000, keyPrefix: "auth" };
 
 // ── Pod workspace helpers ────────────────────────────────────────
 
@@ -748,10 +738,15 @@ const server = http.createServer((req, res) => {
   const reqUrl = new URL(req.url, `http://localhost:${PORT}`);
   const pathname = reqUrl.pathname;
 
-  // ── CORS preflight
-  if (req.method === "OPTIONS") {
-    res.writeHead(204, CORS_HEADERS);
-    return res.end();
+  // ── CORS (handles OPTIONS preflight automatically)
+  if (handleCorsPreflightOrSetHeaders(req, res)) return;
+
+  // ── Rate limiting for API routes
+  if (pathname.startsWith("/api/")) {
+    const isAuth = pathname.startsWith("/api/clawbots/register") || pathname.startsWith("/api/clawbots/verify");
+    const isWrite = req.method === "POST" || req.method === "PATCH";
+    const rl = isAuth ? RL_AUTH : isWrite ? RL_WRITE : RL_READ;
+    if (checkRateLimit(req, res, rl)) return;
   }
 
   if (pathname === "/events") {
@@ -759,7 +754,6 @@ const server = http.createServer((req, res) => {
       "content-type": "text/event-stream",
       "cache-control": "no-cache",
       connection: "keep-alive",
-      "access-control-allow-origin": "*",
     });
     res.write("\n");
     clients.add(res);
@@ -770,10 +764,7 @@ const server = http.createServer((req, res) => {
   if (pathname === "/api/allowlist") {
     getAllowlistWithIcons()
       .then((data) => {
-        res.writeHead(200, {
-          "content-type": "application/json; charset=utf-8",
-          "access-control-allow-origin": "*",
-        });
+        res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
         res.end(JSON.stringify(data));
       })
       .catch((err) => {
@@ -789,10 +780,10 @@ const server = http.createServer((req, res) => {
     try {
       const raw = JSON.parse(fs.readFileSync(SKILLCARDS_USER_INDEX_PATH, "utf8"));
       const skills = Array.isArray(raw?.skills) ? raw.skills : [];
-      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: true, skills }));
     } catch (err) {
-      res.writeHead(500, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: err.message || "failed to load index" }));
     }
   }
@@ -833,7 +824,7 @@ const server = http.createServer((req, res) => {
       const end = start + limit;
       const paginatedResults = results.slice(start, end);
 
-      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
       return res.end(
         JSON.stringify({
           ok: true,
@@ -845,7 +836,7 @@ const server = http.createServer((req, res) => {
         }),
       );
     } catch (err) {
-      res.writeHead(500, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: err.message || "search failed" }));
     }
   }
@@ -853,13 +844,13 @@ const server = http.createServer((req, res) => {
     try {
       const slug = String(reqUrl.searchParams.get("slug") || "").trim();
       if (!slug) {
-        res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
         return res.end(JSON.stringify({ ok: false, error: "missing slug" }));
       }
       const all = getMergedSkillIndex();
       const match = all.find((s) => s.slug === slug);
       if (!match) {
-        res.writeHead(404, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        res.writeHead(404, { "content-type": "application/json; charset=utf-8" });
         return res.end(JSON.stringify({ ok: false, error: "skill not found" }));
       }
       let fullCard = null;
@@ -875,10 +866,10 @@ const server = http.createServer((req, res) => {
           if (fs.existsSync(fp)) fullCard = JSON.parse(fs.readFileSync(fp, "utf8"));
         } catch { /* index metadata is still returned below */ }
       }
-      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: true, skill: match, card: fullCard }));
     } catch (err) {
-      res.writeHead(500, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: err.message || "get failed" }));
     }
   }
@@ -897,16 +888,16 @@ const server = http.createServer((req, res) => {
         riskTier: s.riskTier, description: String(s.description || "").slice(0, 150),
         onchainTokenId: s.onchainTokenId ?? null,
       }));
-      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: true, total: all.length, seed, imported, user, vetted, onchain, recent }));
     } catch (err) {
-      res.writeHead(500, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: err.message || "stats failed" }));
     }
   }
   if (pathname === "/api/skillcards/user/auth-check" && req.method === "GET") {
     const auth = requireSkillWriteAuth(req);
-    res.writeHead(auth.ok ? 200 : 401, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+    res.writeHead(auth.ok ? 200 : 401, { "content-type": "application/json; charset=utf-8" });
     return res.end(JSON.stringify({
       ok: auth.ok,
       mode: auth.mode,
@@ -916,10 +907,11 @@ const server = http.createServer((req, res) => {
   if (pathname === "/api/skillcards/user/add" && req.method === "POST") {
     const auth = requireSkillWriteAuth(req);
     if (!auth.ok) {
-      res.writeHead(401, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(401, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: "unauthorized (set x-agent-id/x-agent-token or x-registration-key)" }));
     }
-    readRequestBody(req).then((body) => {
+    readRequestBody(req, res).then((body) => {
+      if (body === null) return;
       const skillcard = body?.skillcard || body?.card || body;
       if (!skillcard || typeof skillcard !== "object") throw new Error("missing skillcard object");
 
@@ -962,10 +954,10 @@ const server = http.createServer((req, res) => {
       next.unshift(entry);
       atomicWriteJson(SKILLCARDS_USER_INDEX_PATH, { skills: next });
 
-      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: true, entry, fileHref: `/skillcards/user/${encodeURIComponent(fileName)}` }));
     }).catch((err) => {
-      res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: err.message || "invalid request" }));
     });
     return;
@@ -973,10 +965,11 @@ const server = http.createServer((req, res) => {
   if (pathname === "/api/skillcards/user/delete" && req.method === "POST") {
     const auth = requireSkillWriteAuth(req);
     if (!auth.ok) {
-      res.writeHead(401, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(401, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: "unauthorized" }));
     }
-    readRequestBody(req).then((body) => {
+    readRequestBody(req, res).then((body) => {
+      if (body === null) return;
       const fileName = String(body?.fileName || "").trim();
       if (!fileName || fileName.includes("..") || fileName.includes("/") || fileName.includes("\\")) {
         throw new Error("invalid fileName");
@@ -989,10 +982,10 @@ const server = http.createServer((req, res) => {
       const skills = Array.isArray(idx?.skills) ? idx.skills : [];
       const next = skills.filter((s) => String(s?.fileName || "") !== fileName);
       atomicWriteJson(SKILLCARDS_USER_INDEX_PATH, { skills: next });
-      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: true }));
     }).catch((err) => {
-      res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: err.message || "invalid request" }));
     });
     return;
@@ -1000,10 +993,11 @@ const server = http.createServer((req, res) => {
   if (pathname === "/api/skillcards/user/mark-onchain" && req.method === "POST") {
     const auth = requireSkillWriteAuth(req);
     if (!auth.ok) {
-      res.writeHead(401, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(401, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: "unauthorized" }));
     }
-    readRequestBody(req).then((body) => {
+    readRequestBody(req, res).then((body) => {
+      if (body === null) return;
       const fileName = String(body?.fileName || "").trim();
       if (!fileName || fileName.includes("..") || fileName.includes("/") || fileName.includes("\\")) {
         throw new Error("invalid fileName");
@@ -1028,10 +1022,10 @@ const server = http.createServer((req, res) => {
       });
       if (!found) throw new Error("skill not found");
       atomicWriteJson(SKILLCARDS_USER_INDEX_PATH, { skills: next });
-      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: true }));
     }).catch((err) => {
-      res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: err.message || "invalid request" }));
     });
     return;
@@ -1041,12 +1035,12 @@ const server = http.createServer((req, res) => {
   if (pathname === "/api/v2/receipt/get" && req.method === "GET") {
     const traceId = String(reqUrl.searchParams.get("traceId") || reqUrl.searchParams.get("trace") || "").trim();
     if (!traceId) {
-      res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: "missing traceId" }));
     }
     const cfg = resolveV2ReceiptReadConfig();
     if (!cfg.ok) {
-      res.writeHead(501, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(501, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: cfg.reason, inferredRpc: cfg.inferredRpc || false }));
     }
     (async () => {
@@ -1066,13 +1060,13 @@ const server = http.createServer((req, res) => {
         isRecorded: Boolean(isRecorded),
         receipt,
       };
-      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
       // viem returns bigint for uints; JSON.stringify would throw.
       res.end(JSON.stringify(result, (_k, v) => (typeof v === "bigint" ? v.toString() : v)));
     })().catch((err) => {
       // Avoid crashing the whole server if the client disconnected or we already replied.
       if (res.headersSent || res.writableEnded) return;
-      res.writeHead(502, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(502, { "content-type": "application/json; charset=utf-8" });
       res.end(JSON.stringify({ ok: false, error: err?.message || "receipt read failed" }));
     });
     return;
@@ -1083,7 +1077,7 @@ const server = http.createServer((req, res) => {
   if (pathname === "/api/v2/config" && req.method === "GET") {
     const rec = resolveV2DeploymentRecord();
     const v2Cfg = resolveV2ReceiptReadConfig();
-    res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
     return res.end(JSON.stringify({
       ok: true,
       deployment: rec,
@@ -1100,7 +1094,7 @@ const server = http.createServer((req, res) => {
   // ── Pod status endpoint ────────────────────────────────────────
   if (pathname === "/api/pod/status" && req.method === "GET") {
     const status = getPodStatus();
-    res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
     return res.end(JSON.stringify(status));
   }
 
@@ -1108,22 +1102,22 @@ const server = http.createServer((req, res) => {
   if (pathname === "/api/pod/stop" && req.method === "POST") {
     const auth = requireSkillWriteAuth(req);
     if (!auth.ok) {
-      res.writeHead(401, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(401, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: "unauthorized (set x-registration-key or x-agent-id/x-agent-token)" }));
     }
     const workspacePath = findPodWorkspaceDir();
     if (!workspacePath) {
-      res.writeHead(404, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(404, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: "pod workspace not found" }));
     }
     const stopFlagPath = path.join(workspacePath, "stop.flag");
     try {
       ensureDir(workspacePath);
       fs.writeFileSync(stopFlagPath, new Date().toISOString() + "\n");
-      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: true, action: "stop", flagPath: stopFlagPath }));
     } catch (err) {
-      res.writeHead(500, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: err.message || "failed to create stop flag" }));
     }
   }
@@ -1165,12 +1159,12 @@ const server = http.createServer((req, res) => {
       },
       ts: new Date().toISOString(),
     };
-    res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
     return res.end(JSON.stringify(payload));
   }
   if (pathname === "/api/clawbots") {
     if (!fs.existsSync(CLAWBOTS_PATH)) {
-      res.writeHead(200, { "content-type": "application/json; charset=utf-8", "access-control-allow-origin": "*" });
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ count: 0, clawbots: [], sharedKeyConfigured: false }));
     }
     try {
@@ -1182,8 +1176,9 @@ const server = http.createServer((req, res) => {
         enabled: a.enabled !== false,
         createdAt: a.createdAt || null,
       }));
-      res.writeHead(200, { "content-type": "application/json; charset=utf-8", "access-control-allow-origin": "*" });
-      return res.end(JSON.stringify({ count: clawbots.length, clawbots, sharedKeyConfigured: Boolean(raw.sharedOpenseaApiKey) }));
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+      const sharedKeyConfigured = Boolean(raw.sharedOpenseaApiKey || process.env.APE_CLAW_SHARED_OPENSEA_KEY);
+      return res.end(JSON.stringify({ count: clawbots.length, clawbots, sharedKeyConfigured }));
     } catch (err) {
       res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ error: err.message }));
@@ -1203,15 +1198,15 @@ const server = http.createServer((req, res) => {
     };
     const baseDir = ALLOWED_BUCKETS[bucket];
     if (!baseDir || !fileName || fileName.includes("..") || fileName.includes("\\")) {
-      res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ error: "invalid file" }));
     }
     const filePath = path.join(baseDir, fileName);
     if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
-      res.writeHead(404, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(404, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ error: "not found" }));
     }
-    res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
     return fs.createReadStream(filePath).pipe(res);
   }
   if (pathname === "/api/clawbots/verify" && req.method === "POST") {
@@ -1220,15 +1215,15 @@ const server = http.createServer((req, res) => {
     const headerAgentId = String(req.headers["x-agent-id"] || "").trim();
     const headerAgentToken = String(req.headers["x-agent-token"] || "").trim();
     if (!headerAgentId || !headerAgentToken) {
-      res.writeHead(401, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(401, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: "missing credentials: x-agent-id + x-agent-token are required" }));
     }
     const verification = verifyClawbot({ agentId: headerAgentId, agentToken: headerAgentToken });
     if (!verification.verified) {
-      res.writeHead(403, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(403, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: "not verified", reason: verification.reason }));
     }
-    res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
     return res.end(JSON.stringify({
       ok: true,
       verified: true,
@@ -1237,20 +1232,21 @@ const server = http.createServer((req, res) => {
     }));
   }
   if (pathname === "/api/invites/create" && req.method === "POST") {
-    readRequestBody(req).then((body) => {
+    readRequestBody(req, res).then((body) => {
+      if (body === null) return;
       if (!REGISTRATION_KEY) {
-        res.writeHead(503, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        res.writeHead(503, { "content-type": "application/json; charset=utf-8" });
         return res.end(JSON.stringify({ error: "invite creation disabled: backend missing APE_CLAW_REGISTRATION_KEY" }));
       }
       const providedKey = String(req.headers["x-registration-key"] || "").trim();
       if (!providedKey || providedKey !== REGISTRATION_KEY) {
-        res.writeHead(403, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        res.writeHead(403, { "content-type": "application/json; charset=utf-8" });
         return res.end(JSON.stringify({ error: "invalid registration key" }));
       }
       const ttlMs = body?.ttlMs;
       const uses = body?.uses;
       const invite = mintInvite({ ttlMs, uses });
-      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({
         ok: true,
         invite: invite.token,
@@ -1259,18 +1255,19 @@ const server = http.createServer((req, res) => {
         note: "Share this invite privately. It can be redeemed via clawbot register --invite <token>.",
       }));
     }).catch(() => {
-      res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ error: "invalid JSON body" }));
     });
     return;
   }
   if (pathname === "/api/clawbots/register" && req.method === "POST") {
-    readRequestBody(req).then((body) => {
+    readRequestBody(req, res).then((body) => {
+      if (body === null) return;
       const inviteToken = String(body?.invite || "").trim();
       const inviteOk = inviteToken ? consumeInvite(inviteToken) : { ok: false, reason: "missing invite" };
 
       if (!REGISTRATION_KEY && !OPEN_REGISTRATION && !inviteOk.ok) {
-        res.writeHead(503, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        res.writeHead(503, { "content-type": "application/json; charset=utf-8" });
         return res.end(JSON.stringify({
           error: "registration is disabled: use an invite, set APE_CLAW_REGISTRATION_KEY, or enable APE_CLAW_OPEN_REGISTRATION",
         }));
@@ -1281,7 +1278,7 @@ const server = http.createServer((req, res) => {
         return Boolean(providedKey) && providedKey === REGISTRATION_KEY;
       })();
       if (!OPEN_REGISTRATION && !hasValidKey && !inviteOk.ok) {
-        res.writeHead(403, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        res.writeHead(403, { "content-type": "application/json; charset=utf-8" });
         return res.end(JSON.stringify({ error: "registration not allowed (missing invite or invalid registration key)" }));
       }
       if (OPEN_REGISTRATION && !hasValidKey && REGISTRATION_COOLDOWN_MS > 0) {
@@ -1290,7 +1287,7 @@ const server = http.createServer((req, res) => {
         const last = Number(registrationByIp.get(ip) || 0);
         if (last && now - last < REGISTRATION_COOLDOWN_MS) {
           const waitMs = REGISTRATION_COOLDOWN_MS - (now - last);
-          res.writeHead(429, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+          res.writeHead(429, { "content-type": "application/json; charset=utf-8" });
           return res.end(JSON.stringify({
             error: "registration rate limited",
             retryAfterMs: waitMs,
@@ -1302,7 +1299,7 @@ const server = http.createServer((req, res) => {
       const agentId = String(body?.agentId || "").trim();
       const displayName = String(body?.name || agentId || "").trim();
       if (!agentId) {
-        res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
         return res.end(JSON.stringify({ error: "agentId is required" }));
       }
       try {
@@ -1314,35 +1311,36 @@ const server = http.createServer((req, res) => {
           token: reg.token,
           note: "Save this token — it is shown only once. Use as APE_CLAW_AGENT_TOKEN or --agent-token.",
         };
-        res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
         return res.end(JSON.stringify(result));
       } catch (err) {
-        res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
         return res.end(JSON.stringify({ error: err.message || "registration failed" }));
       }
     }).catch(() => {
-      res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ error: "invalid JSON body" }));
     });
     return;
   }
   if (pathname === "/api/events" && req.method === "POST") {
-    readRequestBody(req).then((body) => {
+    readRequestBody(req, res).then((body) => {
+      if (body === null) return;
       const eventType = String(body?.eventType || "").trim();
       if (!eventType) {
-        res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
         return res.end(JSON.stringify({ error: "eventType is required" }));
       }
 
       const headerAgentId = String(req.headers["x-agent-id"] || "").trim();
       const headerAgentToken = String(req.headers["x-agent-token"] || "").trim();
       if (!headerAgentId || !headerAgentToken) {
-        res.writeHead(401, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        res.writeHead(401, { "content-type": "application/json; charset=utf-8" });
         return res.end(JSON.stringify({ error: "missing credentials: x-agent-id + x-agent-token are required" }));
       }
       const verification = verifyClawbot({ agentId: headerAgentId, agentToken: headerAgentToken });
       if (!verification.verified) {
-        res.writeHead(403, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+        res.writeHead(403, { "content-type": "application/json; charset=utf-8" });
         return res.end(JSON.stringify({ error: "not verified", reason: verification.reason }));
       }
 
@@ -1370,10 +1368,10 @@ const server = http.createServer((req, res) => {
       appendTelemetryEvent(evt);
       for (const c of clients) sendSse(c, evt);
 
-      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: true, event: evt }));
     }).catch(() => {
-      res.writeHead(400, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ error: "invalid JSON body" }));
     });
     return;
@@ -1385,7 +1383,6 @@ const server = http.createServer((req, res) => {
       "content-type": "text/event-stream",
       "cache-control": "no-cache",
       connection: "keep-alive",
-      ...CORS_HEADERS,
     });
     res.write("\n");
     const client = { res, room };
@@ -1399,7 +1396,7 @@ const server = http.createServer((req, res) => {
     const room = normalizeRoomName(reqUrl.searchParams.get("room") || "all");
     const limit = Math.max(1, Math.min(500, Number(reqUrl.searchParams.get("limit") || 100)));
     const messages = readChatMessages(limit, room);
-    res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
     return res.end(JSON.stringify({ room, limit, messages }));
   }
 
@@ -1407,24 +1404,25 @@ const server = http.createServer((req, res) => {
   if (pathname === "/api/chat/rooms" && req.method === "GET") {
     const limit = Math.max(1, Math.min(200, Number(reqUrl.searchParams.get("limit") || 50)));
     const rooms = readChatRooms(limit);
-    res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
     return res.end(JSON.stringify({ count: rooms.length, rooms }));
   }
 
   // ── Chat: POST new message ────────────────────────
   if (pathname === "/api/chat" && req.method === "POST") {
-    readRequestBody(req).then(async (body) => {
+    readRequestBody(req, res).then(async (body) => {
+      if (body === null) return;
       const room = normalizeRoomName(body.room || reqUrl.searchParams.get("room") || "general");
       const text = String(body.text || "").trim();
       const replyTo = String(body.replyTo || "").trim();
 
       if (!text || text.length > 500) {
-        res.writeHead(400, { "content-type": "application/json", ...CORS_HEADERS });
+        res.writeHead(400, { "content-type": "application/json" });
         return res.end(JSON.stringify({ error: "message must be 1-500 characters" }));
       }
       const authRes = await resolveChatAuth(req, body);
       if (!authRes.ok) {
-        res.writeHead(authRes.status || 403, { "content-type": "application/json", ...CORS_HEADERS });
+        res.writeHead(authRes.status || 403, { "content-type": "application/json" });
         return res.end(JSON.stringify({ error: authRes.error, reason: authRes.reason }));
       }
       const auth = authRes.auth;
@@ -1433,7 +1431,7 @@ const server = http.createServer((req, res) => {
         const existing = materializeChatMessages(readChatEntries(), room);
         const parent = existing.find((m) => m.id === replyTo);
         if (!parent) {
-          res.writeHead(400, { "content-type": "application/json", ...CORS_HEADERS });
+          res.writeHead(400, { "content-type": "application/json" });
           return res.end(JSON.stringify({ error: "reply target not found in this room" }));
         }
       }
@@ -1456,10 +1454,10 @@ const server = http.createServer((req, res) => {
       appendChatMessage(msg);
       broadcastChat(msg);
 
-      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: true, message: msg }));
     }).catch((err) => {
-      res.writeHead(400, { "content-type": "application/json", ...CORS_HEADERS });
+      res.writeHead(400, { "content-type": "application/json" });
       return res.end(JSON.stringify({ error: "invalid JSON body" }));
     });
     return;
@@ -1467,18 +1465,19 @@ const server = http.createServer((req, res) => {
 
   // ── Chat: POST reaction toggle ─────────────────────
   if (pathname === "/api/chat/react" && req.method === "POST") {
-    readRequestBody(req).then(async (body) => {
+    readRequestBody(req, res).then(async (body) => {
+      if (body === null) return;
       const room = normalizeRoomName(body.room || reqUrl.searchParams.get("room") || "general");
       const messageId = String(body.messageId || "").trim();
       const emoji = String(body.emoji || "").trim().slice(0, 8);
       if (!messageId || !emoji) {
-        res.writeHead(400, { "content-type": "application/json", ...CORS_HEADERS });
+        res.writeHead(400, { "content-type": "application/json" });
         return res.end(JSON.stringify({ error: "messageId and emoji are required" }));
       }
 
       const authRes = await resolveChatAuth(req, body);
       if (!authRes.ok) {
-        res.writeHead(authRes.status || 403, { "content-type": "application/json", ...CORS_HEADERS });
+        res.writeHead(authRes.status || 403, { "content-type": "application/json" });
         return res.end(JSON.stringify({ error: authRes.error, reason: authRes.reason }));
       }
       const auth = authRes.auth;
@@ -1486,7 +1485,7 @@ const server = http.createServer((req, res) => {
       const existing = materializeChatMessages(readChatEntries(), room);
       const parent = existing.find((m) => m.id === messageId);
       if (!parent) {
-        res.writeHead(404, { "content-type": "application/json", ...CORS_HEADERS });
+        res.writeHead(404, { "content-type": "application/json" });
         return res.end(JSON.stringify({ error: "message not found in this room" }));
       }
 
@@ -1502,10 +1501,10 @@ const server = http.createServer((req, res) => {
       };
       appendChatMessage(evt);
       broadcastChat(evt);
-      res.writeHead(200, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: true, reaction: evt }));
     }).catch(() => {
-      res.writeHead(400, { "content-type": "application/json", ...CORS_HEADERS });
+      res.writeHead(400, { "content-type": "application/json" });
       return res.end(JSON.stringify({ error: "invalid JSON body" }));
     });
     return;

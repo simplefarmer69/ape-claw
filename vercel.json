@@ -11,6 +11,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/events/backlog", "destination": "/data/events-backlog.json" },
     { "source": "/api/health", "destination": "/data/health.json" },
     { "source": "/api/skills/stats", "destination": "/data/skills-stats.json" },
     { "source": "/api/skills/search", "destination": "/data/skills-search.json" },
