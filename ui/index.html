@@ -1377,8 +1377,8 @@ function pushFeedEvent(evt, { trim = true } = {}) {
   if (k) seenFeedKeys.add(k);
 
   if (trim) {
-    while (feedItems.length > 100) feedItems.shift();
-    while (feedRawEvents.length > 1000) {
+    while (feedItems.length > 500) feedItems.shift();
+    while (feedRawEvents.length > 2000) {
       feedRawEvents.shift();
       const oldKey = feedKeys.shift();
       if (oldKey) seenFeedKeys.delete(oldKey);
@@ -1880,7 +1880,7 @@ function renderFeed() {
   const note = (filter !== 'all')
     ? `<div style="font-size:.66rem;color:var(--dim);margin-bottom:8px">Filter: <code>${escapeHtml(filter)}</code> • showing ${visible.length}/${feedItems.length}</div>`
     : '';
-  el.innerHTML = pausedBanner + note + visible.slice(-50).reverse().map(f => f.html).join('');
+  el.innerHTML = pausedBanner + note + visible.slice(-100).reverse().map(f => f.html).join('');
 }
 
 function renderTerminal() {
@@ -2117,8 +2117,8 @@ async function connectLiveTelemetry() {
         pushFeedEvent(evt, { trim: false });
       });
       // Trim once after bulk push.
-      while (feedItems.length > 100) feedItems.shift();
-      while (feedRawEvents.length > 1000) {
+      while (feedItems.length > 500) feedItems.shift();
+      while (feedRawEvents.length > 2000) {
         feedRawEvents.shift();
         const oldKey = feedKeys.shift();
         if (oldKey) seenFeedKeys.delete(oldKey);
