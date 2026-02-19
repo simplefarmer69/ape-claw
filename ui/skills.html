@@ -2721,6 +2721,22 @@
             var card = actEl.closest('.skill-card');
             var slug = card ? String(card.getAttribute('data-slug') || '').trim() : '';
             if (slug && (action === 'install' || action === 'json' || action === 'details')) {
+              // If the skills list is still loading, don't intercept.
+              // Let the browser follow the link (progressive enhancement).
+              if (!importedAll || !importedAll.length) return;
+
+              // resolve item
+              var it = null;
+              for (var i = 0; i < importedAll.length; i++) {
+                if (importedAll[i] && importedAll[i].slug === slug) { it = importedAll[i]; break; }
+              }
+              if (!it) return;
+
+              // Only prevent default if we can actually open the modal.
+              var modalReady = false;
+              try { modalReady = !!(modalBackdrop && modalTitle && modalBody); } catch (e) {}
+              if (!modalReady) return;
+
               ev.preventDefault();
               // keep URL shareable
               try {
@@ -2729,18 +2745,7 @@
                 else if (action === 'json') history.replaceState(null, '', '#json=' + enc);
                 else history.replaceState(null, '', '#skill=' + enc);
               } catch (e) {}
-              // If the skills list is still loading, don't "dead click".
-              // We'll open once importedAll finishes populating.
-              if (!importedAll || !importedAll.length) {
-                try { showToast('Loading skills...'); } catch (e) {}
-                return;
-              }
-              // resolve item
-              var it = null;
-              for (var i = 0; i < importedAll.length; i++) {
-                if (importedAll[i] && importedAll[i].slug === slug) { it = importedAll[i]; break; }
-              }
-              if (!it) return;
+
               var pub = (publishedBySlug && it.slug && publishedBySlug[it.slug]) ? publishedBySlug[it.slug] : null;
               if (action === 'install') showInstallModal(it);
               else if (action === 'json') showJsonModal(it, pub);

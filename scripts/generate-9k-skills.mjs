@@ -505,7 +505,9 @@ async function main() {
 
   const total = mergedImported.length + 8;
   const vettedCount = mergedImported.filter(it => it.vettedOk).length + 8;
-  const onchainCount = mergedImported.filter(it => it.onchainTokenId).length + 8;
+  // Do not assume seed skills are onchain.
+  // Onchain count should reflect actual minted/published skills (onchainTokenId present).
+  const onchainCount = mergedImported.filter(it => it.onchainTokenId).length;
 
   const statsObj = {
     ok: true,

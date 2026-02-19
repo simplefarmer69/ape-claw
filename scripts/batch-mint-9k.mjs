@@ -222,7 +222,8 @@ async function updateIndex(progress) {
   const mergedImported = indexRaw.imported || [];
   const total = mergedImported.length + 8;
   const vettedCount = mergedImported.filter(it => it.vettedOk).length + 8;
-  const onchainCount = mergedImported.filter(it => it.onchainTokenId).length + 8;
+  // Do not assume seed skills are onchain. Count only entries that actually have onchainTokenId.
+  const onchainCount = mergedImported.filter(it => it.onchainTokenId).length;
 
   const statsObj = {
     ok: true, total, seed: 8, imported: mergedImported.length, user: 0,
