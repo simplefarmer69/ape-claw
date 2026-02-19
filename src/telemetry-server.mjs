@@ -1521,6 +1521,10 @@ const server = http.createServer((req, res) => {
     "/pod": "/ui/pod.html",
     "/skills": "/ui/skills.html",
     "/favicon-lobster.png": "/ui/favicon-lobster.png",
+    "/ui/favicon.svg": "/ui/favicon.svg",
+    "/ui/favicon-32.png": "/ui/favicon-32.png",
+    "/ui/favicon-180.png": "/ui/favicon-180.png",
+    "/ui/favicon-192.png": "/ui/favicon-192.png",
   };
   const cleanPath = String(pathname || "").replace(/\/+$/, "").toLowerCase() || pathname;
   const rewrite = REWRITES[pathname] || REWRITES[String(pathname || "").replace(/\/+$/, "")] || REWRITES[cleanPath] || "";
