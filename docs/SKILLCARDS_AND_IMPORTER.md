@@ -125,7 +125,7 @@ This is devnet-first. For ApeChain deployment, you will typically want:
 Skills are served globally via the backend API at `https://apeclaw.ai`. The UI at [apeclaw.ai/skills](https://apeclaw.ai/skills) consumes these endpoints:
 
 - `GET /api/skills/search` — search and browse all skills (seed + imported + user)
-- `GET /api/skills/get?slug=<slug>` — fetch full skill details and SkillCard JSON by slug
+- `GET /api/skills/<slug>` — fetch full skill details and SkillCard JSON by slug
 - `GET /api/skills/stats` — aggregate counts (total, seed, imported, vetted, onchain)
 
 The `index.json` is tracked in git and deployed to the backend. Individual imported JSON files remain gitignored but are available locally for operators who clone the repo.

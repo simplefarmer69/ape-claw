@@ -136,7 +136,7 @@ Skills Library (global, API-first):
 - 10,000+ skills imported (and growing), enriched with descriptions, and served globally via `/api/skills/search`
 - Index tracked in git (`skillcards/imported/index.json`); individual JSON files gitignored
 - UI at [apeclaw.ai/skills](https://apeclaw.ai/skills) — browse, search, filter, view details, copy CLI commands
-- `/api/skills/get?slug=<slug>` returns full skill metadata + card JSON when available
+- `/api/skills/<slug>` returns full skill metadata + card JSON when available
 
 PodVault (deployed on ApeChain at `0xff20500637e5aa1a78e263475ca1d49b35c9ed0c`):
 

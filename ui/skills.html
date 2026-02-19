@@ -781,9 +781,9 @@
           <p>
             Download any SkillCard JSON from the API by slug, then drop it into your agent's skill directory. Works with any ACP-compatible agent.
           </p>
-          <div class="code"><span class="k">curl</span> -fsSL "https://apeclaw.ai/api/skills/get?slug=&lt;slug&gt;" | jq .card &gt; ./skills/&lt;slug&gt;.json</div>
+          <div class="code"><span class="k">curl</span> -fsSL "https://apeclaw.ai/api/skills/&lt;slug&gt;" | jq .card &gt; ./skills/&lt;slug&gt;.json</div>
           <div class="tools" aria-label="Install instructions">
-            <a class="pill" href="#" data-copy='curl -fsSL "https://apeclaw.ai/api/skills/get?slug=<slug>" | jq .card > ./skills/<slug>.json'>Copy curl</a>
+            <a class="pill" href="#" data-copy='curl -fsSL "https://apeclaw.ai/api/skills/<slug>" | jq .card > ./skills/<slug>.json'>Copy curl</a>
             <a class="pill" href="/docs?doc=SKILLCARDS_AND_IMPORTER.md" data-keep-query="1">Install docs</a>
           </div>
           <div class="note" style="margin-top:8px">Or browse the skill cards below and click <strong>JSON</strong> to view any skill directly in your browser.</div>
@@ -1353,56 +1353,56 @@
         {
           name: 'ApeClaw NFT Autobuy',
           slug: 'apeclaw-nft-autobuy',
-          file: '/api/skills/get?slug=apeclaw-nft-autobuy',
+          file: '/api/skills/apeclaw-nft-autobuy',
           riskTier: 1,
           desc: 'Collect NFTs while you sleep (policy gated).'
         },
         {
           name: 'ACP Browse (Discover Providers)',
           slug: 'acp-browse',
-          file: '/api/skills/get?slug=acp-browse',
+          file: '/api/skills/acp-browse',
           riskTier: 1,
           desc: 'Find specialist agents before posting bounties.'
         },
         {
           name: 'ACP Bounty (Post Work Request)',
           slug: 'acp-bounty-post',
-          file: '/api/skills/get?slug=acp-bounty-post',
+          file: '/api/skills/acp-bounty-post',
           riskTier: 3,
           desc: 'Post a bounty with explicit USDC budget (strict opt-in).'
         },
         {
           name: 'ACP Bounty (Poll + Match Lifecycle)',
           slug: 'acp-bounty-poll',
-          file: '/api/skills/get?slug=acp-bounty-poll',
+          file: '/api/skills/acp-bounty-poll',
           riskTier: 2,
           desc: 'Poll candidates/jobs and surface deliverables.'
         },
         {
           name: 'ACP Fulfillment (Earn USDC → PodVault)',
           slug: 'acp-fulfill-and-route',
-          file: '/api/skills/get?slug=acp-fulfill-and-route',
+          file: '/api/skills/acp-fulfill-and-route',
           riskTier: 3,
           desc: 'Fulfill jobs and route earnings into PodVault (strict opt-in).'
         },
         {
           name: 'ApeClaw Receipt Recorder',
           slug: 'apeclaw-receipt-recorder',
-          file: '/api/skills/get?slug=apeclaw-receipt-recorder',
+          file: '/api/skills/apeclaw-receipt-recorder',
           riskTier: 2,
           desc: 'Anchor audit receipts onchain (ReceiptRegistry).'
         },
         {
           name: 'ApeClaw Bridge Relay',
           slug: 'apeclaw-bridge-relay',
-          file: '/api/skills/get?slug=apeclaw-bridge-relay',
+          file: '/api/skills/apeclaw-bridge-relay',
           riskTier: 2,
           desc: 'Bridge execution wrapper with confirm phrases and caps.'
         },
         {
           name: 'Otherside Navigator',
           slug: 'otherside-navigator',
-          file: '/api/skills/get?slug=otherside-navigator',
+          file: '/api/skills/otherside-navigator',
           riskTier: 3,
           desc: 'Mac mini Pod loop (dry-run scaffold; strict opt-in).'
         }
@@ -1590,7 +1590,7 @@
           if (mintTx) html += '<div class="note">mint tx: <a href="https://apescan.io/tx/' + escapeHtml(mintTx) + '" target="_blank" rel="noopener" style="color:var(--cyan);font-family:var(--mono);font-size:.75rem;word-break:break-all">' + escapeHtml(mintTx) + ' &#8599;</a></div>';
           if (pubTx) html += '<div class="note">publish tx: <a href="https://apescan.io/tx/' + escapeHtml(pubTx) + '" target="_blank" rel="noopener" style="color:var(--cyan);font-family:var(--mono);font-size:.75rem;word-break:break-all">' + escapeHtml(pubTx) + ' &#8599;</a></div>';
           if (slug) {
-            var installCmd = 'curl -fsSL "' + apiBase + '/api/skills/get?slug=' + slug + '" | jq .card > ./' + slug + '.json';
+            var installCmd = 'curl -fsSL "' + apiBase + '/api/skills/' + slug + '" | jq .card > ./' + slug + '.json';
             html += '<div class="note" style="margin-top:14px;padding:10px;background:rgba(207,255,4,.06);border:1px solid rgba(207,255,4,.2);border-radius:3px">';
             html += '<strong style="color:#cfff04">Install this skill</strong><br>';
             html += '<code style="font-size:.75rem;word-break:break-all">' + escapeHtml(installCmd) + '</code>';
@@ -1611,7 +1611,7 @@
             openModal('Skill details', detailsHtml(it, pub, null), function () { closeModal(); }, function () {});
             return;
           }
-          fetch(apiBase + '/api/skills/get?slug=' + encodeURIComponent(slug), { headers: { 'accept': 'application/json' } })
+          fetch(apiBase + '/api/skills/' + encodeURIComponent(slug), { headers: { 'accept': 'application/json' } })
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (j) {
               var card = (j && j.card) ? j.card : (j && j.skill) ? j.skill : null;
@@ -1627,7 +1627,7 @@
           var rawSlug = String(it.slug || '');
           var slug = escapeHtml(rawSlug);
           var fileName = it.fileName || rawSlug + '.json';
-          var installCmd = 'curl -fsSL "' + (apiBase || 'https://apeclaw.ai') + '/api/skills/get?slug=' + rawSlug + '" | jq .card > ./' + fileName;
+          var installCmd = 'curl -fsSL "' + (apiBase || 'https://apeclaw.ai') + '/api/skills/' + rawSlug + '" | jq .card > ./' + fileName;
           var html = '';
           html += '<div style="margin-bottom:16px"><strong style="color:#cfff04;font-size:14px">' + escapeHtml(it.name || it.slug) + '</strong></div>';
           html += '<div class="note" style="margin-bottom:12px;color:var(--muted);font-size:12px">Copy the command below and run it in your terminal to install this skill.</div>';
@@ -1695,9 +1695,9 @@
           var slugRaw = String(it.slug || '').trim();
           var skillGetUrl = '';
           try {
-            skillGetUrl = (apiBase || 'https://apeclaw.ai') + '/api/skills/get?slug=' + encodeURIComponent(slugRaw);
+            skillGetUrl = (apiBase || 'https://apeclaw.ai') + '/api/skills/' + encodeURIComponent(slugRaw);
           } catch (e) {
-            skillGetUrl = 'https://apeclaw.ai/api/skills/get?slug=' + encodeURIComponent(slugRaw);
+            skillGetUrl = 'https://apeclaw.ai/api/skills/' + encodeURIComponent(slugRaw);
           }
           var githubHref = '';
           try {
@@ -2488,11 +2488,11 @@
         }
         setHtml(userSkillList, arr.map(function (it) {
           var risk = Number(it.riskTier || 2);
-          var fileHref = it.slug ? ('/api/skills/get?slug=' + encodeURIComponent(it.slug)) : '';
+          var fileHref = it.slug ? ('/api/skills/' + encodeURIComponent(it.slug)) : '';
           var created = it.createdAt ? (' · ' + String(it.createdAt)) : '';
           var onchainMeta = (it.onchain && it.onchain.skillId) ? (' · onchain: skillId=' + String(it.onchain.skillId)) : '';
           var meta = ['slug: ' + (it.slug || '?'), 'v' + (it.version || '?')].join(' · ') + onchainMeta + created;
-          var dlCmd = it.slug ? ('curl -fsSL \"' + apiBase + '/api/skills/get?slug=' + encodeURIComponent(it.slug) + '\" -o \"./' + (it.fileName || it.slug + '.json') + '\"') : '';
+          var dlCmd = it.slug ? ('curl -fsSL \"' + apiBase + '/api/skills/' + encodeURIComponent(it.slug) + '\" -o \"./' + (it.fileName || it.slug + '.json') + '\"') : '';
           var rpc = v2RpcUrl ? String(v2RpcUrl.value || '').trim() : '';
           var nft = v2SkillNft ? String(v2SkillNft.value || '').trim() : '';
           var reg = v2Registry ? String(v2Registry.value || '').trim() : '';
