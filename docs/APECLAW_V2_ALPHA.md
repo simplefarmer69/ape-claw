@@ -15,6 +15,11 @@ This document describes the v2 build: onchain skill primitives + a seed library,
   - `apeclaw-nft-autobuy`
   - `apeclaw-bridge-relay`
   - `otherside-navigator`
+  - `apeclaw-receipt-recorder`
+  - `acp-fulfill-and-route`
+  - `acp-browse`
+  - `acp-bounty-poll`
+  - `acp-bounty-post`
 - Additive CLI commands (v1 remains unchanged):
   - `ape-claw v2 skill mint|publish`
   - `ape-claw v2 intent create|cancel`
@@ -51,7 +56,7 @@ Deploy and seed the initial library (local devnet):
 npm run contracts:seed
 ```
 
-The seed script prints contract addresses for `SkillNFT`, `SkillRegistry`, `IntentRegistry`, and `ReceiptRegistry`.
+The seed script prints all 10 contract addresses: `SkillNFT`, `SkillRegistry`, `IntentRegistry`, `ReceiptRegistry`, `PolicyEngine`, `AgentAccount`, `PodVault`, `SwapModule`, `BridgeModule`, and `NftBuyModule`.
 
 ## Deploy to ApeChain (mainnet)
 

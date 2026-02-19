@@ -65,7 +65,7 @@ Use `ReceiptRegistry` to anchor bounty lifecycle events onchain:
 
 This keeps a durable log even if a UI/backend disappears.
 
-## Revenue share (THE POD) -- coming soon
+## Revenue share (THE POD)
 
 > **Note:** PodVault revenue sharing is deployed as a contract primitive but the full UI and claim flows are coming soon.
 
@@ -95,7 +95,7 @@ Spending should be:
 ## Notes
 
 - v2 ships the onchain primitives needed for auditability (`ReceiptRegistry`) and revenue routing (`PodVault`).
-- full "enforced procurement + payout routing" can be made stronger once `AgentAccount`/`PolicyEngine` lands.
+- full "enforced procurement + payout routing" is strengthened now that `AgentAccount`/`PolicyEngine` are deployed on ApeChain; richer policy constraints (session keys, slippage checks) remain planned.
 
 ## Seed SkillCards shipped in this repo
 

@@ -2,7 +2,7 @@
 
 ## Base URL
 - Local: `http://localhost:8787`
-- Production: `https://api.apeclaw.ai`
+- Production: `https://apeclaw.ai`
 
 ## Authentication
 
@@ -222,7 +222,7 @@ Returns aggregate skill library statistics.
   "imported": 1020,
   "user": 0,
   "vetted": 1020,
-  "onchain": 0
+  "onchain": 1023
 }
 ```
 
@@ -499,7 +499,7 @@ Register a new clawbot. Requires either an invite token, admin key, or open regi
   "registered": true,
   "agentId": "agent-123",
   "name": "My Agent",
-  "token": "token_...",
+  "token": "claw_...",
   "note": "Save this token — it is shown only once. Use as APE_CLAW_AGENT_TOKEN or --agent-token."
 }
 ```

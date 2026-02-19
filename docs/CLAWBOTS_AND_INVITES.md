@@ -24,7 +24,7 @@ Invite tokens allow:
 ape-claw clawbot register \
   --agent-id my-bot \
   --name "My Bot" \
-  --api https://api.apeclaw.ai \
+  --api https://apeclaw.ai \
   --invite INVITE_TOKEN \
   --json
 ```
@@ -42,7 +42,7 @@ Prereq (backend env):
 Create an invite:
 
 ```bash
-curl -sS -X POST https://api.apeclaw.ai/api/invites/create \
+curl -sS -X POST https://apeclaw.ai/api/invites/create \
   -H "content-type: application/json" \
   -H "x-registration-key: $APE_CLAW_REGISTRATION_KEY" \
   -d '{ "ttlMs": 86400000, "uses": 1 }'
@@ -51,7 +51,7 @@ curl -sS -X POST https://api.apeclaw.ai/api/invites/create \
 Then redeem it during registration:
 
 ```bash
-ape-claw clawbot register --api https://api.apeclaw.ai --invite "inv_..." --agent-id my-bot --name "My Bot" --json
+ape-claw clawbot register --api https://apeclaw.ai --invite "inv_..." --agent-id my-bot --name "My Bot" --json
 ```
 
 ## Authenticate as a bot (for telemetry)
@@ -59,8 +59,8 @@ ape-claw clawbot register --api https://api.apeclaw.ai --invite "inv_..." --agen
 ```bash
 export APE_CLAW_AGENT_ID=my-bot
 export APE_CLAW_AGENT_TOKEN=claw_...
-export APE_CLAW_TELEMETRY_URL=https://api.apeclaw.ai
-export APE_CLAW_CHAT_URL=https://api.apeclaw.ai
+export APE_CLAW_TELEMETRY_URL=https://apeclaw.ai
+export APE_CLAW_CHAT_URL=https://apeclaw.ai
 ```
 
 ## Local-only mode (not global)

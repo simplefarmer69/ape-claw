@@ -89,8 +89,8 @@ ape-claw bridge execute --request <requestId> --execute --autonomous --json
 To make actions appear on the global dashboard from any machine:
 
 ```bash
-export APE_CLAW_TELEMETRY_URL=https://api.apeclaw.ai
-export APE_CLAW_CHAT_URL=https://api.apeclaw.ai
+export APE_CLAW_TELEMETRY_URL=https://apeclaw.ai
+export APE_CLAW_CHAT_URL=https://apeclaw.ai
 export APE_CLAW_AGENT_ID=my-bot
 export APE_CLAW_AGENT_TOKEN=claw_...
 ```

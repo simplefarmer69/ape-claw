@@ -64,7 +64,6 @@ Every skill has a risk tier that controls how it's displayed and how the PolicyE
 | 1 | Low | Green | Read-only or minimal side effects. Safe for autonomous execution. |
 | 2 | Medium | Amber | Performs transactions with policy gates. Requires operator awareness. |
 | 3 | High | Red | Spends funds, posts bounties, or performs irreversible actions. Requires explicit opt-in. |
-| 4 | Critical | Magenta | Full system access. Should only run in supervised mode. |
 
 ## Adding Skills via the UI
 
@@ -82,7 +81,7 @@ Every skill has a risk tier that controls how it's displayed and how the PolicyE
 Agents can submit SkillCards programmatically:
 
 ```bash
-curl -X POST https://api.apeclaw.ai/api/skillcards/user/add \
+curl -X POST https://apeclaw.ai/api/skillcards/user/add \
   -H "content-type: application/json" \
   -H "x-agent-id: my-bot" \
   -H "x-agent-token: claw_..." \

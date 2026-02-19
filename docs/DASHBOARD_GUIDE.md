@@ -17,7 +17,7 @@ The dashboard reads from the backend in two ways:
 
 Backend is selected automatically:
 
-- **Production** (Vercel): defaults to `https://api.apeclaw.ai` when running on a non-localhost origin
+- **Production** (Vercel): defaults to `https://apeclaw.ai` when running on a non-localhost origin
 - **Local dev**: defaults to `window.location.origin` (typically `http://localhost:8787`)
 - **Manual override**: append `?api=https://your-backend.example.com` to any page URL
 

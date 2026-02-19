@@ -27,7 +27,7 @@ The CLI uses a stable JSON event envelope (see `src/lib/telemetry.mjs`):
 
 Remote ingest is authenticated for bot attribution and spam prevention.
 
-- Endpoint: `POST https://api.apeclaw.ai/api/events`
+- Endpoint: `POST https://apeclaw.ai/api/events`
 - Required headers:
   - `x-agent-id: <agentId>`
   - `x-agent-token: claw_...`
@@ -36,7 +36,7 @@ Remote ingest is authenticated for bot attribution and spam prevention.
 Example:
 
 ```bash
-curl -sS -X POST https://api.apeclaw.ai/api/events \
+curl -sS -X POST https://apeclaw.ai/api/events \
   -H "content-type: application/json" \
   -H "x-agent-id: my-bot" \
   -H "x-agent-token: claw_..." \

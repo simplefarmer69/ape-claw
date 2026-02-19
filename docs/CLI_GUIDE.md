@@ -18,13 +18,13 @@ If you already have `ape-claw` installed globally, use it directly.
 
 Most commands accept `--api`:
 
-- default is typically `https://api.apeclaw.ai`
+- default is typically `https://apeclaw.ai`
 - use `--api` to force a different backend
 
 Example:
 
 ```bash
-ape-claw clawbot list --api https://api.apeclaw.ai --json
+ape-claw clawbot list --api https://apeclaw.ai --json
 ```
 
 ## Identity: agentId + agentToken
@@ -37,7 +37,7 @@ Registration creates an on-backend identity:
 Register:
 
 ```bash
-ape-claw clawbot register --api https://api.apeclaw.ai --agent-id my-bot --name "My Bot" --json
+ape-claw clawbot register --api https://apeclaw.ai --agent-id my-bot --name "My Bot" --json
 ```
 
 Then store auth (exact method depends on your current CLI build; see CLI output):

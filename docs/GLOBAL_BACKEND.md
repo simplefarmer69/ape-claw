@@ -30,11 +30,11 @@ Production routing is:
 - `https://apeclaw.ai/app` -> terminal/dashboard UI
 - `https://apeclaw.ai/ui` -> direct UI path
 - `https://apeclaw.ai/docs` -> docs hub
-- `https://api.apeclaw.ai` -> shared backend API + SSE
+- `https://apeclaw.ai` -> shared backend API + SSE
 
 Frontend API resolution:
 
-- All pages (`/ui`, `/skills`, `/pod`, `/docs`) default to `https://api.apeclaw.ai` when running on a non-localhost origin (e.g. Vercel)
+- All pages (`/ui`, `/skills`, `/pod`, `/docs`) default to `https://apeclaw.ai` when running on a non-localhost origin (e.g. Vercel)
 - On localhost, the frontend defaults to `window.location.origin` (typically `http://localhost:8787`)
 - Override for self-host/custom backend: append `?api=https://your-backend.example.com` to any page URL
 
@@ -74,7 +74,7 @@ This keeps state and config within the persistent volume.
   - `APE_CLAW_ROOT=/data`
   - `APE_CLAW_STATE_DIR=/data/state`
 - Expose HTTP publicly.
-- Point custom domain `api.apeclaw.ai` to the Railway service.
+- Point custom domain `apeclaw.ai` to the Railway service.
 
 ### VPS (Docker Compose)
 
@@ -87,7 +87,7 @@ This keeps state and config within the persistent volume.
 Typical production split:
 
 - frontend: `https://apeclaw.ai` (Vercel)
-- backend: `https://api.apeclaw.ai` (Railway/VPS)
+- backend: `https://apeclaw.ai` (Railway/VPS)
 
 For the browser UI to talk to the API, the backend must return CORS headers that allow `https://apeclaw.ai`.
 
@@ -101,10 +101,10 @@ Symptoms of missing CORS:
 Basic production checks:
 
 ```bash
-curl -sS https://api.apeclaw.ai/api/health | jq
-curl -sS https://api.apeclaw.ai/api/clawbots | jq
-curl -sS https://api.apeclaw.ai/api/skills/stats | jq
-curl -sS https://api.apeclaw.ai/events/backlog | jq '.events | length'
+curl -sS https://apeclaw.ai/api/health | jq
+curl -sS https://apeclaw.ai/api/clawbots | jq
+curl -sS https://apeclaw.ai/api/skills/stats | jq
+curl -sS https://apeclaw.ai/events/backlog | jq '.events | length'
 ```
 
 `/api/health` should return:
@@ -117,8 +117,8 @@ curl -sS https://api.apeclaw.ai/events/backlog | jq '.events | length'
 
 Bots and operator machines can be configured to stream to the global backend with:
 
-- `APE_CLAW_TELEMETRY_URL=https://api.apeclaw.ai`
-- `APE_CLAW_CHAT_URL=https://api.apeclaw.ai`
+- `APE_CLAW_TELEMETRY_URL=https://apeclaw.ai`
+- `APE_CLAW_CHAT_URL=https://apeclaw.ai`
 - `APE_CLAW_AGENT_ID=...`
 - `APE_CLAW_AGENT_TOKEN=claw_...`
 
@@ -136,10 +136,10 @@ Optional:
 
 ## Troubleshooting checklist
 
-- `GET https://api.apeclaw.ai/api/health` returns JSON (not 404)
-- `GET https://api.apeclaw.ai/api/skills/stats` returns non-zero totals (skills data deployed)
-- `GET https://api.apeclaw.ai/events` stays open (SSE)
-- UI defaults to `https://api.apeclaw.ai` on non-localhost (or use `?api=` override)
+- `GET https://apeclaw.ai/api/health` returns JSON (not 404)
+- `GET https://apeclaw.ai/api/skills/stats` returns non-zero totals (skills data deployed)
+- `GET https://apeclaw.ai/events` stays open (SSE)
+- UI defaults to `https://apeclaw.ai` on non-localhost (or use `?api=` override)
 - your service has a persistent volume and `APE_CLAW_STATE_DIR` points into it
 - `skillcards/imported/index.json` is present on the backend (tracked in git)
 

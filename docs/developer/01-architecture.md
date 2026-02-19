@@ -223,16 +223,16 @@ await policy.write.setSelectorAllowed([targetAddress, selector, true]);
 
 The backend (`src/telemetry-server.mjs`) provides:
 
-- **SSE Stream** (`/api/events/stream`): Real-time event feed
+- **SSE Stream** (`/events`): Real-time event feed
 - **REST API** (`/api/*`): Skills, pods, clawbots
 - **Static Files**: Serves `ui/` directory
 
 Key endpoints:
 
-- `GET /api/skills`: Merged skill index (seed + imported + user)
-- `POST /api/skills`: Submit new SkillCard (requires auth)
-- `GET /api/events/backlog`: Last 300 events
-- `GET /api/events/stream`: SSE stream of new events
+- `GET /api/skills/search`: Merged skill index (seed + imported + user)
+- `POST /api/skillcards/user/add`: Submit new SkillCard (requires auth)
+- `GET /events/backlog`: Last 300 events
+- `GET /events`: SSE stream of new events
 - `POST /api/clawbots/register`: Register clawbot
 
 ### Event System

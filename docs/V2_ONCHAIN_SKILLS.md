@@ -19,9 +19,19 @@ v2 introduces onchain primitives so skills can be versioned immutably and refere
 - `ReceiptRegistry` (`contracts/ReceiptRegistry.sol`)
   - append-only receipts keyed by `traceIdHash`
   - stores `contentHash` + `uri` + `subject` for discoverability filters
+- `PolicyEngine` (`contracts/PolicyEngine.sol`)
+  - minimal onchain pre-check hook (allowlists + value cap)
+- `AgentAccount` (`contracts/AgentAccount.sol`)
+  - minimal execution shell that enforces PolicyEngine and records receipts
 - `PodVault` (`contracts/PodVault.sol`)
   - revenue split vault for THE POD (native + ERC20)
   - can be used as the royalty receiver for SkillNFTs (EIP-2981)
+- `SwapModule` (`contracts/SwapModule.sol`)
+  - policy-gated swap call wrapper
+- `BridgeModule` (`contracts/BridgeModule.sol`)
+  - policy-gated bridge call wrapper
+- `NftBuyModule` (`contracts/NftBuyModule.sol`)
+  - policy-gated NFT buy call wrapper
 
 ## Hashing model
 
@@ -94,14 +104,14 @@ npm run skillcards:import:publish -- \
 
 The chain always stores hashes; the URI is an *access path*, not the source of truth.
 
-## Revenue share (THE POD) -- coming soon
+## Revenue share (THE POD)
 
-> **Note:** PodVault revenue sharing is deployed as a contract primitive but the full UI and claim flows are coming soon.
+> **Note:** PodVault revenue sharing is deployed as a contract primitive on ApeChain. The full UI and claim flows are coming soon.
 
 In v2, the "download/install agreement" is enforced in two layers:
 
-- Onchain where possible: SkillNFT supports EIP-2981 royalties, so a SkillNFT can route marketplace royalty revenue to a shared `PodVault`.
-- Offchain for now: the Pod workspace includes `REVENUE_SHARING.md` as an explicit runner contract note until `AgentAccount` + `PolicyEngine` enforcement ships.
+- Onchain: SkillNFT supports EIP-2981 royalties, so a SkillNFT can route marketplace royalty revenue to a shared `PodVault`. `AgentAccount` + `PolicyEngine` are deployed on ApeChain and enforce policy hooks onchain.
+- Offchain complement: the Pod workspace includes `REVENUE_SHARING.md` as an explicit runner contract note for additional guidance beyond the onchain enforcement.
 
 ### Mint a SkillNFT with a PodVault royalty receiver
 

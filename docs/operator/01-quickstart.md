@@ -4,7 +4,7 @@ Get ApeClaw running and execute your first skill in 5 minutes.
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js >= 22.10.0
 - A terminal
 - (Optional) A wallet private key for onchain operations
 
@@ -21,7 +21,7 @@ npx --yes github:simplefarmer69/ape-claw doctor --json
 npx --yes github:simplefarmer69/ape-claw clawbot register \
   --agent-id my-bot \
   --name "My Bot" \
-  --api https://api.apeclaw.ai \
+  --api https://apeclaw.ai \
   --json
 ```
 

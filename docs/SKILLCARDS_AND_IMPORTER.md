@@ -122,7 +122,7 @@ This is devnet-first. For ApeChain deployment, you will typically want:
 
 ## Global API Access
 
-Skills are served globally via the backend API at `https://api.apeclaw.ai`. The UI at [apeclaw.ai/skills](https://apeclaw.ai/skills) consumes these endpoints:
+Skills are served globally via the backend API at `https://apeclaw.ai`. The UI at [apeclaw.ai/skills](https://apeclaw.ai/skills) consumes these endpoints:
 
 - `GET /api/skills/search` — search and browse all skills (seed + imported + user)
 - `GET /api/skills/get?slug=<slug>` — fetch full skill details and SkillCard JSON by slug

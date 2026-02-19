@@ -68,7 +68,7 @@ The current posture is deliberately "v2":
 ## Phase mapping (rough)
 
 - P0 (contracts + basic UI): partially shipped
-  - contracts shipped: yes (SkillNFT, Registry, IntentRegistry, ReceiptRegistry)
+  - contracts shipped: yes (SkillNFT, SkillRegistry, IntentRegistry, ReceiptRegistry, PolicyEngine, AgentAccount, PodVault, SwapModule, BridgeModule, NftBuyModule)
   - basic UI for discovery/install/intents: partially shipped
     - discovery: `/skills` (seed + imported + submitted SkillCards, onchain status visualization)
     - intents: `/skills#intents` ships a safe command-generator surface for `v2 intent create|cancel`

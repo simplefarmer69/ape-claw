@@ -73,7 +73,7 @@ This document lists all environment variables used by ApeClaw, organized by comp
 ```bash
 export APE_CLAW_AGENT_ID=my-bot
 export APE_CLAW_AGENT_TOKEN=claw_...
-export APE_CLAW_TELEMETRY_URL=https://api.apeclaw.ai
+export APE_CLAW_TELEMETRY_URL=https://apeclaw.ai
 ```
 
 ### Execute Flows (NFT Buy, Bridge)
@@ -194,7 +194,7 @@ export APE_CLAW_PRIVATE_KEY=0x...
 ```bash
 export APE_CLAW_AGENT_ID=my-bot
 export APE_CLAW_AGENT_TOKEN=claw_...
-export APE_CLAW_TELEMETRY_URL=https://api.apeclaw.ai
+export APE_CLAW_TELEMETRY_URL=https://apeclaw.ai
 # Shared OpenSea key injected automatically
 ```
 

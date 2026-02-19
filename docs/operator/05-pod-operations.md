@@ -253,7 +253,7 @@ Enable telemetry:
 python3 pod/run_agent.py \
   --enabled \
   --telemetry-enabled \
-  --telemetry-url "https://api.apeclaw.ai" \
+  --telemetry-url "https://apeclaw.ai" \
   --telemetry-agent-id "your-agent-id" \
   --telemetry-agent-token "claw_..."
 ```

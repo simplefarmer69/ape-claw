@@ -316,10 +316,10 @@ The telemetry server (`src/telemetry-server.mjs`) exposes several endpoints:
 
 - `GET /`: Dashboard UI
 - `GET /events`: Server-Sent Events stream
-- `GET /api/backlog`: Historical events (JSONL)
-- `GET /api/collections`: Collection metadata
-- `POST /api/clawbot/register`: Register a clawbot
-- `GET /api/clawbot/verify`: Verify clawbot token
+- `GET /events/backlog`: Historical events (JSONL)
+- `GET /api/allowlist`: Collection metadata
+- `POST /api/clawbots/register`: Register a clawbot
+- `POST /api/clawbots/verify`: Verify clawbot token
 
 ### Testing with curl
 
@@ -332,25 +332,25 @@ curl http://localhost:8787/
 #### Get Event Backlog
 
 ```bash
-curl http://localhost:8787/api/backlog | head -20
+curl http://localhost:8787/events/backlog | head -20
 ```
 
 #### Register Clawbot
 
 ```bash
-curl -X POST http://localhost:8787/api/clawbot/register \
+curl -X POST http://localhost:8787/api/clawbots/register \
   -H "Content-Type: application/json" \
   -d '{
     "agentId": "test-bot",
     "name": "Test Bot",
-    "api": "https://api.apeclaw.ai"
+    "api": "https://apeclaw.ai"
   }'
 ```
 
 #### Verify Clawbot Token
 
 ```bash
-curl "http://localhost:8787/api/clawbot/verify?agentId=test-bot&token=claw_..."
+curl "http://localhost:8787/api/clawbots/verify?agentId=test-bot&token=claw_..."
 ```
 
 #### Stream Live Events (SSE)
@@ -375,7 +375,7 @@ curl -N http://localhost:8787/events
 
 3. Check events in backlog:
    ```bash
-   curl http://localhost:8787/api/backlog | jq '.[-1]'
+   curl http://localhost:8787/events/backlog | jq '.[-1]'
    ```
 
 #### Test SSE Stream
@@ -456,7 +456,7 @@ node ./src/cli.mjs chain info --json
 
 4. **Verify telemetry events**:
    ```bash
-   curl http://localhost:8787/api/backlog | jq '.[] | select(.eventType == "nft.buy.executed")'
+   curl http://localhost:8787/events/backlog | jq '.[] | select(.eventType == "nft.buy.confirmed")'
    ```
 
 ### Negative Test Cases

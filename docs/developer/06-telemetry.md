@@ -692,7 +692,7 @@ eventSource.onerror = (error) => {
 If `APE_CLAW_TELEMETRY_URL` is set, events are automatically sent to the remote server:
 
 ```bash
-export APE_CLAW_TELEMETRY_URL="https://api.apeclaw.ai"
+export APE_CLAW_TELEMETRY_URL="https://apeclaw.ai"
 export APE_CLAW_AGENT_ID="agent-123"
 export APE_CLAW_AGENT_TOKEN="token_..."
 ```
