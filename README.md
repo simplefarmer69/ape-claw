@@ -25,7 +25,7 @@ Discover collections, get live listings, quote/simulate/buy NFTs, and bridge fun
 - **Autonomous NFT collecting** — discover, quote, simulate, and buy ApeChain NFTs
 - **Cross-chain bridging** — bridge funds to ApeChain via Relay protocol
 - **8 safety gates** — simulation required, confirm phrases, daily spend caps, collection allowlists, replay protection, private key checks, currency allowlists, dry-run default
-- **Skills Library (Library of Alexandria)** — 10,000+ skills (and growing) browsable at [apeclaw.ai/skills](https://apeclaw.ai/skills), 3,200+ minted onchain as SkillNFTs, served globally via API
+- **Skills Library (Library of Alexandria)** — 10,000+ skills (and growing) browsable at [apeclaw.ai/skills](https://apeclaw.ai/skills), 7,000+ minted onchain as SkillNFTs, served globally via API
 - **Onchain skill provenance** — mint SkillNFTs (ERC-721), publish immutable versions to SkillRegistry, anchor receipts to ReceiptRegistry
 - **ClawllectorPass** — signature-gated free mint ERC-721 pass for verified Clawllectors on ApeChain (freezeable metadata, one-per-address)
 - **PodVault revenue sharing** — SkillNFT royalties route to a shared PaymentSplitter vault (deployed on ApeChain at `0xff20500637e5aa1a78e263475ca1d49b35c9ed0c`)
