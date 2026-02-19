@@ -943,7 +943,7 @@ python3 pod/run_agent.py \
 <div class="platform-stats-bar reveal reveal-2 ac-observe" id="platformStatsBar">
   <div class="platform-stat highlight">
     <span class="ps-icon">📚</span>
-    <span class="ps-val" id="psSkillsTotal">10,028</span>
+    <span class="ps-val" id="psSkillsTotal">10,029</span>
     <span class="ps-label">Skills in Library</span>
   </div>
   <div class="platform-stat">
@@ -1055,7 +1055,7 @@ python3 pod/run_agent.py \
   <!-- ── Skills Library ── -->
   <div class="panel reveal reveal-4 ac-observe" style="grid-column:1/-1">
     <div class="panel-header">
-      <span class="icon">📚</span> Skills Library <span class="badge" id="skillCountBadge">10,028</span>
+      <span class="icon">📚</span> Skills Library <span class="badge" id="skillCountBadge">10,029</span>
       <span class="panel-actions">
         <input class="mini-input" id="skillSearchInput" type="search" placeholder="Search skills…" aria-label="Search skills">
         <select class="mini-select" id="skillSourceFilter" aria-label="Filter by source">
@@ -2857,15 +2857,15 @@ async function fetchSkillsStats() {
   } catch (err) {
     console.warn('[skills-stats]', err.message);
     const setIf = (id, val) => { const el = document.getElementById(id); if (el && (el.textContent === '—' || el.textContent === '0')) el.textContent = val; };
-    setIf('psSkillsTotal', '10,028');
-    setIf('psSkillsOnchain', '10,023');
-    setIf('psSkillsVetted', '10,014');
-    setIf('skillCountBadge', '10,028');
-    setIf('ssSeed', '8');
+    setIf('psSkillsTotal', '10,029');
+    setIf('psSkillsOnchain', '9,914');
+    setIf('psSkillsVetted', '10,015');
+    setIf('skillCountBadge', '10,029');
+    setIf('ssSeed', '9');
     setIf('ssImported', '10,020');
     setIf('ssUser', '0');
-    setIf('ssOnchain', '10,023');
-    setIf('ssVetted', '10,014');
+    setIf('ssOnchain', '9,914');
+    setIf('ssVetted', '10,015');
     const grid = document.getElementById('skillsPanelGrid');
     if (grid && grid.innerHTML.includes('Loading')) {
       grid.innerHTML = '<div style="color:var(--dim);font-size:.7rem;padding:20px;text-align:center;grid-column:1/-1">Could not load skills. <button onclick="fetchSkillsStats()" style="background:none;border:1px solid var(--border);color:var(--accent);padding:3px 8px;border-radius:4px;cursor:pointer;font-size:.65rem">Retry</button></div>';
