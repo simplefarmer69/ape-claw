@@ -10,20 +10,18 @@
       ]
     }
   ],
-  "routes": [
-    { "src": "^/api/health/?$", "dest": "/api/health.json" },
-    { "src": "^/api/skills/stats/?$", "dest": "/api/skills-stats.json" },
-    { "src": "^/api/skills/search/?$", "dest": "/api/skills-search.json" },
-    { "src": "^/api/clawbots/?$", "dest": "/api/clawbots.json" },
-    { "src": "^/api/v2/config/?$", "dest": "/api/v2-config.json" },
-    { "src": "^/api/pod/status/?$", "dest": "/api/pod-status.json" },
-    { "src": "^/api/allowlist/?$", "dest": "/allowlists/recommended.apechain.json" },
-    { "src": "^/pod/?$", "dest": "/ui/pod.html" },
-    { "src": "^/docs/?$", "dest": "/ui/docs.html" },
-    { "src": "^/skills/?$", "dest": "/ui/skills.html" },
-    { "src": "^/ui/?$", "dest": "/ui/index.html" },
-    { "src": "^/app/?$", "dest": "/ui/index.html" },
-    { "src": "^/favicon-lobster\\.png$", "dest": "/ui/favicon-lobster.png" },
-    { "handle": "filesystem" }
+  "rewrites": [
+    { "source": "/api/health", "destination": "/data/health.json" },
+    { "source": "/api/skills/stats", "destination": "/data/skills-stats.json" },
+    { "source": "/api/skills/search", "destination": "/data/skills-search.json" },
+    { "source": "/api/clawbots", "destination": "/data/clawbots.json" },
+    { "source": "/api/v2/config", "destination": "/data/v2-config.json" },
+    { "source": "/api/pod/status", "destination": "/data/pod-status.json" },
+    { "source": "/api/allowlist", "destination": "/allowlists/recommended.apechain.json" },
+    { "source": "/pod", "destination": "/ui/pod.html" },
+    { "source": "/docs", "destination": "/ui/docs.html" },
+    { "source": "/skills", "destination": "/ui/skills.html" },
+    { "source": "/ui", "destination": "/ui/index.html" },
+    { "source": "/app", "destination": "/ui/index.html" }
   ]
 }
