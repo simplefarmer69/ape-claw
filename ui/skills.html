@@ -1681,11 +1681,21 @@
           var risk = Number(it.riskTier || 2);
           var pub = (publishedBySlug && it && it.slug && publishedBySlug[it.slug]) ? publishedBySlug[it.slug] : null;
           var sourceHref = String(it.sourceUrl || '').trim();
+          var slugRaw = String(it.slug || '').trim();
+          var skillGetUrl = '';
+          try {
+            skillGetUrl = (apiBase || 'https://apeclaw.ai') + '/api/skills/get?slug=' + encodeURIComponent(slugRaw);
+          } catch (e) {
+            skillGetUrl = 'https://apeclaw.ai/api/skills/get?slug=' + encodeURIComponent(slugRaw);
+          }
           var githubHref = '';
           try {
-            if (sourceHref) githubHref = sourceHref;
-            else if (String(it.source || '') === 'seed' && it.fileName) {
+            if (String(it.source || '') === 'seed' && it.fileName) {
               githubHref = 'https://github.com/simplefarmer69/ape-claw/blob/main/skillcards/seed/' + encodeURIComponent(String(it.fileName));
+            } else if (sourceHref && sourceHref.indexOf('https://github.com/') === 0) {
+              // If we have a direct GitHub file URL, also provide the repo root.
+              var m = sourceHref.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\//);
+              githubHref = m ? ('https://github.com/' + m[1] + '/' + m[2]) : 'https://github.com/openclaw/skills';
             } else {
               githubHref = 'https://github.com/openclaw/skills';
             }
@@ -1727,10 +1737,11 @@
                 '<div class="skill-desc">' + escapeHtml(desc) + '</div>' +
                 chainHtml +
                 '<div class="skill-foot">' +
-                  (it.slug ? '<a class="pill install-btn" href="#install=' + encodeURIComponent(String(it.slug)) + '" data-action="install" title="Get install command">Install</a>' : '') +
-                  (it.slug ? '<a class="pill" href="#json=' + encodeURIComponent(String(it.slug)) + '" data-action="json" title="View skill metadata">JSON</a>' : '') +
+                  (slugRaw ? '<a class="pill install-btn" href="' + escapeHtml(skillGetUrl) + '" data-action="install" title="Get install command">Install</a>' : '') +
+                  (slugRaw ? '<a class="pill" href="' + escapeHtml(skillGetUrl) + '" data-action="json" title="View skill metadata">JSON</a>' : '') +
                   (githubHref ? ('<a class="pill" href="' + escapeHtml(githubHref) + '" target="_blank" rel="noopener">GitHub</a>') : '') +
-                  '<a class="pill" href="#skill=' + encodeURIComponent(String(it.slug || "")) + '" data-action="details">Details</a>' +
+                  (sourceHref ? ('<a class="pill" href="' + escapeHtml(sourceHref) + '" target="_blank" rel="noopener">Source</a>') : '') +
+                  (slugRaw ? '<a class="pill" href="' + escapeHtml(skillGetUrl) + '" data-action="details">Details</a>' : '') +
                 '</div>' +
               '</div>' +
             '</div>'
@@ -2718,6 +2729,12 @@
                 else if (action === 'json') history.replaceState(null, '', '#json=' + enc);
                 else history.replaceState(null, '', '#skill=' + enc);
               } catch (e) {}
+              // If the skills list is still loading, don't "dead click".
+              // We'll open once importedAll finishes populating.
+              if (!importedAll || !importedAll.length) {
+                try { showToast('Loading skills...'); } catch (e) {}
+                return;
+              }
               // resolve item
               var it = null;
               for (var i = 0; i < importedAll.length; i++) {
