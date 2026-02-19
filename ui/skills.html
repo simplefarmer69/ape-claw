@@ -402,138 +402,239 @@
     .collapsible-content{display:none;margin-top:10px}
     .collapsible-content.show{display:block}
 
-    /* ── 3D Floating Skill Cards ── */
+    /* ── 3D Holographic Skill Cards ── */
     .cards{
       margin-top:16px;
       display:grid;
       grid-template-columns:1fr;
       gap:20px;
-      perspective:1400px;
+      perspective:1200px;
     }
     @media(min-width:640px){.cards{grid-template-columns:repeat(2,1fr)}}
     @media(min-width:1000px){.cards{grid-template-columns:repeat(3,1fr)}}
 
     .skill-card{
+      --glow-color:207,255,4;
+      --glow-a:.12;
       position:relative;
-      background:linear-gradient(145deg,rgba(28,28,28,.9) 0%,rgba(14,14,14,.97) 100%);
-      border:1px solid rgba(207,255,4,.12);
-      border-radius:8px;
+      background:
+        linear-gradient(168deg,rgba(22,26,30,.96) 0%,rgba(12,12,14,.98) 55%,rgba(16,20,24,.97) 100%);
+      border:1px solid rgba(var(--glow-color),.10);
+      border-radius:14px;
       padding:0;
       overflow:hidden;
       display:flex;
       flex-direction:column;
-      min-height:280px;
-      transition:transform .45s cubic-bezier(.25,.46,.45,.94),box-shadow .45s ease,border-color .35s;
+      min-height:290px;
+      transition:
+        transform .5s cubic-bezier(.22,.68,0,1.2),
+        box-shadow .5s cubic-bezier(.22,.68,0,1),
+        border-color .4s ease;
       transform-style:preserve-3d;
-      will-change:transform;
-      animation:cardFloat 7s ease-in-out infinite;
-      animation-delay:calc(var(--i,0) * .2s);
+      will-change:transform,box-shadow;
+      box-shadow:
+        0 2px 8px rgba(0,0,0,.4),
+        0 0 1px rgba(var(--glow-color),.15),
+        inset 0 1px 0 rgba(255,255,255,.03);
     }
-    .skill-card:nth-child(odd){animation-delay:.2s}
-    .skill-card:nth-child(3n){animation-delay:.5s}
-    .skill-card:nth-child(5n){animation-delay:.8s}
 
     .skill-card::before{
-      content:'';position:absolute;inset:0;
-      background:linear-gradient(135deg,rgba(207,255,4,.05) 0%,transparent 40%,rgba(99,215,255,.03) 100%);
-      opacity:0;transition:opacity .4s;pointer-events:none;z-index:1;border-radius:8px;
-    }
-    .skill-card::after{
-      content:'';position:absolute;
-      top:-60%;left:-60%;width:220%;height:220%;
-      background:conic-gradient(from 180deg,transparent 0%,rgba(207,255,4,.05) 8%,transparent 16%,rgba(99,215,255,.04) 24%,transparent 32%);
-      opacity:0;transition:opacity .6s;pointer-events:none;z-index:0;
-      animation:holoSpin 10s linear infinite;
-    }
-    .skill-card:hover{
-      transform:translateY(-10px) scale(1.03) rotateX(2deg);
-      border-color:rgba(207,255,4,.45);
-      box-shadow:
-        0 25px 70px rgba(0,0,0,.5),
-        0 0 50px rgba(207,255,4,.07),
-        0 0 100px rgba(207,255,4,.03),
-        inset 0 1px 0 rgba(255,255,255,.06);
+      content:'';position:absolute;inset:-1px;border-radius:15px;
+      background:conic-gradient(
+        from var(--border-angle,0deg),
+        transparent 0%,
+        rgba(var(--glow-color),.4) 8%,
+        transparent 16%,
+        rgba(99,215,255,.3) 25%,
+        transparent 33%,
+        rgba(var(--glow-color),.2) 50%,
+        transparent 58%,
+        rgba(99,215,255,.15) 66%,
+        transparent 75%,
+        rgba(var(--glow-color),.3) 90%,
+        transparent 100%
+      );
+      opacity:0;
+      transition:opacity .5s ease;
+      pointer-events:none;
+      z-index:-1;
+      animation:borderSpin 6s linear infinite;
     }
     .skill-card:hover::before{opacity:1}
-    .skill-card:hover::after{opacity:.7}
+    @property --border-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
+    @keyframes borderSpin{to{--border-angle:360deg}}
 
-    @keyframes cardFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-    @keyframes holoSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+    .skill-card::after{
+      content:'';position:absolute;inset:0;border-radius:14px;
+      background:linear-gradient(
+        135deg,
+        rgba(var(--glow-color),.06) 0%,
+        transparent 35%,
+        transparent 65%,
+        rgba(99,215,255,.04) 100%
+      );
+      opacity:0;
+      transition:opacity .4s ease;
+      pointer-events:none;z-index:1;
+    }
+    .skill-card:hover::after{opacity:1}
+
+    .skill-card:hover{
+      transform:translateY(-12px) scale(1.02);
+      border-color:rgba(var(--glow-color),.35);
+      box-shadow:
+        0 30px 60px -10px rgba(0,0,0,.6),
+        0 0 40px -5px rgba(var(--glow-color),.12),
+        0 0 80px -10px rgba(var(--glow-color),.06),
+        0 0 0 1px rgba(var(--glow-color),.08),
+        inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    .skill-card.onchain-card{--glow-color:0,255,100;--glow-a:.15}
+    .skill-card.risk-high{--glow-color:255,60,60;--glow-a:.12}
+
+    .skill-card .card-shine{
+      position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:14px;
+      background:radial-gradient(
+        600px circle at var(--mx,50%) var(--my,50%),
+        rgba(255,255,255,.045) 0%,
+        transparent 50%
+      );
+      opacity:0;transition:opacity .35s;
+    }
+    .skill-card:hover .card-shine{opacity:1}
+
+    .skill-card .card-scanline{
+      position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:14px;overflow:hidden;
+      opacity:0;transition:opacity .5s;
+    }
+    .skill-card:hover .card-scanline{opacity:1}
+    .skill-card .card-scanline::after{
+      content:'';position:absolute;left:0;right:0;height:1px;top:-10%;
+      background:linear-gradient(90deg,transparent 5%,rgba(var(--glow-color),.2) 30%,rgba(var(--glow-color),.35) 50%,rgba(var(--glow-color),.2) 70%,transparent 95%);
+      animation:scanDrop 3.5s ease-in-out infinite;
+      box-shadow:0 0 12px 2px rgba(var(--glow-color),.08);
+    }
+    @keyframes scanDrop{0%{top:-10%}100%{top:110%}}
+
+    .skill-card{
+      animation:cardEnter .6s cubic-bezier(.22,.68,0,1.1) both;
+      animation-delay:calc(var(--i,0) * 60ms);
+    }
+    @keyframes cardEnter{
+      from{opacity:0;transform:translateY(30px) scale(.95) rotateX(4deg)}
+      to{opacity:1;transform:translateY(0) scale(1) rotateX(0)}
+    }
 
     .skill-tier-bar{
-      height:3px;width:100%;
-      background:linear-gradient(90deg,var(--tier-color,#444) 0%,transparent 80%);
-      flex-shrink:0;
+      height:3px;width:100%;flex-shrink:0;
+      background:linear-gradient(90deg,var(--tier-color,#333) 0%,rgba(var(--glow-color),.15) 60%,transparent 100%);
+      box-shadow:0 0 8px var(--tier-color,transparent);
+      transition:box-shadow .4s;
     }
+    .skill-card:hover .skill-tier-bar{box-shadow:0 0 16px var(--tier-color,transparent)}
     .skill-tier-bar[data-tier="low"]{--tier-color:#4caf50}
-    .skill-tier-bar[data-tier="medium"]{--tier-color:#ff9800}
+    .skill-tier-bar[data-tier="med"]{--tier-color:#ff9800}
     .skill-tier-bar[data-tier="high"]{--tier-color:#f44336}
 
-    .skill-card-inner{position:relative;z-index:2;padding:18px 20px 16px;display:flex;flex-direction:column;flex:1}
+    .skill-card-inner{
+      position:relative;z-index:4;
+      padding:20px 22px 18px;
+      display:flex;flex-direction:column;flex:1;
+    }
 
     .skill-nft-badge{
       display:inline-flex;align-items:center;gap:5px;
-      padding:3px 9px;border-radius:4px;
+      padding:4px 10px;border-radius:6px;
       font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+      backdrop-filter:blur(4px);
     }
     .skill-nft-badge.onchain{
-      background:linear-gradient(135deg,rgba(0,255,0,.14),rgba(0,255,0,.04));
-      border:1px solid rgba(0,255,0,.35);color:rgba(0,255,0,.9);
-      box-shadow:0 0 14px rgba(0,255,0,.1);
+      background:linear-gradient(135deg,rgba(0,255,100,.16),rgba(0,255,100,.04));
+      border:1px solid rgba(0,255,100,.4);color:rgba(0,255,100,.95);
+      box-shadow:0 0 18px rgba(0,255,100,.12),inset 0 0 8px rgba(0,255,100,.04);
     }
     a.skill-nft-badge{text-decoration:none}
-    a.skill-nft-badge:hover{filter:brightness(1.2)}
+    a.skill-nft-badge:hover{filter:brightness(1.3);box-shadow:0 0 24px rgba(0,255,100,.2)}
     .skill-nft-badge.offchain{
-      background:rgba(207,255,4,.04);border:1px solid rgba(207,255,4,.12);color:var(--muted);
+      background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.35);
     }
-    .nft-pulse{width:5px;height:5px;border-radius:50%;background:currentColor;box-shadow:0 0 6px currentColor;animation:nftPulse 2s ease-in-out infinite}
-    @keyframes nftPulse{0%,100%{opacity:1}50%{opacity:.35}}
+    .nft-pulse{
+      width:6px;height:6px;border-radius:50%;background:currentColor;
+      box-shadow:0 0 8px currentColor,0 0 16px currentColor;
+      animation:nftPulse 2s ease-in-out infinite;
+    }
+    @keyframes nftPulse{0%,100%{opacity:1;box-shadow:0 0 8px currentColor,0 0 16px currentColor}50%{opacity:.3;box-shadow:0 0 4px currentColor}}
 
     .skill-risk{
-      display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;
-      letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:3px;border:1px solid;
+      display:inline-flex;align-items:center;gap:3px;font-size:8px;font-weight:800;
+      letter-spacing:.1em;text-transform:uppercase;padding:4px 8px;border-radius:5px;
+      border:1px solid;backdrop-filter:blur(4px);
     }
-    .skill-risk.low{border-color:rgba(76,175,80,.3);color:#4caf50;background:rgba(76,175,80,.06)}
-    .skill-risk.med{border-color:rgba(255,152,0,.3);color:#ff9800;background:rgba(255,152,0,.06)}
-    .skill-risk.high{border-color:rgba(244,67,54,.3);color:#f44336;background:rgba(244,67,54,.06)}
+    .skill-risk.low{border-color:rgba(76,175,80,.35);color:#4caf50;background:rgba(76,175,80,.08)}
+    .skill-risk.med{border-color:rgba(255,152,0,.35);color:#ff9800;background:rgba(255,152,0,.08)}
+    .skill-risk.high{border-color:rgba(244,67,54,.35);color:#f44336;background:rgba(244,67,54,.08)}
     .skill-risk.unknown{border-color:rgba(102,102,102,.3);color:#888;background:rgba(102,102,102,.06)}
 
     .skill-title{
       margin:0;font-size:15px;font-weight:900;letter-spacing:.02em;
-      text-transform:uppercase;color:#fff;line-height:1.3;transition:color .3s;
+      text-transform:uppercase;color:#fff;line-height:1.35;
+      transition:color .3s,text-shadow .3s;
     }
-    .skill-card:hover .skill-title{color:var(--accent)}
-    .skill-slug{margin-top:3px;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.01em;opacity:.7}
+    .skill-card:hover .skill-title{
+      color:rgba(var(--glow-color),1);
+      text-shadow:0 0 20px rgba(var(--glow-color),.2);
+    }
+    .skill-slug{
+      margin-top:4px;font-family:var(--mono);font-size:10px;
+      color:rgba(255,255,255,.3);letter-spacing:.02em;
+    }
 
     .skill-desc{
-      margin-top:10px;color:var(--lightgray);font-size:12px;line-height:1.65;flex:1;
+      margin-top:12px;color:rgba(255,255,255,.5);font-size:12px;line-height:1.7;flex:1;
       display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
     }
 
     .skill-chain-data{
       margin-top:auto;padding-top:12px;
-      border-top:1px solid rgba(207,255,4,.06);
+      border-top:1px solid rgba(var(--glow-color),.06);
       display:flex;flex-direction:column;gap:4px;
     }
     .skill-tx{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;color:var(--muted)}
-    .skill-tx-label{font-weight:700;color:var(--accent-soft);text-transform:uppercase;letter-spacing:.06em;min-width:48px;font-size:8px}
+    .skill-tx-label{font-weight:700;color:rgba(var(--glow-color),.7);text-transform:uppercase;letter-spacing:.06em;min-width:52px;font-size:8px}
     .skill-tx-hash{
       color:var(--cyan);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-      cursor:pointer;transition:color .2s;max-width:160px;display:inline-block;
+      cursor:pointer;transition:color .2s,text-shadow .2s;max-width:160px;display:inline-block;text-decoration:none;
     }
-    .skill-tx-hash:hover{color:#fff;text-decoration:underline}
+    .skill-tx-hash:hover{color:#fff;text-shadow:0 0 8px rgba(99,215,255,.4)}
 
     .skill-foot{
-      margin-top:12px;padding-top:10px;border-top:1px solid rgba(207,255,4,.06);
+      margin-top:14px;padding-top:12px;
+      border-top:1px solid rgba(var(--glow-color),.06);
       display:flex;gap:6px;flex-wrap:wrap;align-items:center;
     }
     .skill-foot .pill{
-      font-size:9px;padding:4px 8px;border-radius:3px;transition:all .25s;
-      border:1px solid rgba(99,215,255,.15);color:var(--cyan);background:rgba(99,215,255,.04);
+      font-size:9px;padding:5px 10px;border-radius:5px;
+      transition:all .25s cubic-bezier(.22,.68,0,1);
+      border:1px solid rgba(99,215,255,.12);color:rgba(99,215,255,.8);
+      background:rgba(99,215,255,.03);text-decoration:none;
     }
-    .skill-foot .pill:hover{border-color:var(--accent);background:rgba(207,255,4,.08);color:#fff;text-decoration:none}
-    .skill-foot .pill.install-btn{border-color:rgba(207,255,4,.35);color:var(--accent);background:rgba(207,255,4,.08);font-weight:800}
-    .skill-foot .pill.install-btn:hover{border-color:var(--accent);background:rgba(207,255,4,.18);color:#fff;box-shadow:0 0 12px rgba(207,255,4,.12)}
+    .skill-foot .pill:hover{
+      border-color:rgba(var(--glow-color),.5);
+      background:rgba(var(--glow-color),.1);
+      color:#fff;text-decoration:none;
+      box-shadow:0 0 16px rgba(var(--glow-color),.08);
+      transform:translateY(-1px);
+    }
+    .skill-foot .pill.install-btn{
+      border-color:rgba(var(--glow-color),.4);color:rgba(var(--glow-color),.95);
+      background:rgba(var(--glow-color),.08);font-weight:800;
+      box-shadow:0 0 8px rgba(var(--glow-color),.06);
+    }
+    .skill-foot .pill.install-btn:hover{
+      border-color:rgba(var(--glow-color),.7);
+      background:rgba(var(--glow-color),.18);color:#fff;
+      box-shadow:0 0 20px rgba(var(--glow-color),.15),0 0 40px rgba(var(--glow-color),.06);
+    }
     .skill-foot .pill.nft{border-color:rgba(0,255,0,.25);color:rgba(0,255,0,.85);background:rgba(0,255,0,.05)}
     .skill-foot .pill.nft:hover{border-color:rgba(0,255,0,.5);background:rgba(0,255,0,.12);color:#fff}
 
@@ -560,11 +661,11 @@
     #importedList{
       display:grid;
       grid-template-columns:1fr;
-      gap:20px;
-      perspective:1400px;
+      gap:24px;
+      perspective:1000px;
     }
-    @media(min-width:580px){#importedList{grid-template-columns:repeat(2,1fr)}}
-    @media(min-width:960px){#importedList{grid-template-columns:repeat(3,1fr)}}
+    @media(min-width:580px){#importedList{grid-template-columns:repeat(2,1fr);gap:26px}}
+    @media(min-width:960px){#importedList{grid-template-columns:repeat(3,1fr);gap:28px}}
 
     .skill-source-tag{
       font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
@@ -1396,7 +1497,8 @@
         if (!out) return;
         if (!items || !items.length) {
           out.innerHTML = (
-            '<div class="skill-card" style="min-height:180px">' +
+            '<div class="skill-card" style="min-height:180px;--i:0">' +
+              '<div class="card-shine"></div>' +
               '<div class="skill-tier-bar" data-tier="unknown"></div>' +
               '<div class="skill-card-inner">' +
                 '<div class="skill-nft-badge offchain"><span class="nft-pulse"></span> NO RESULTS</div>' +
@@ -1570,7 +1672,9 @@
           }
 
           return (
-            '<div class="skill-card" data-slug="' + escapeHtml(it.slug || '') + '" style="--i:' + (cardIdx % 12) + '">' +
+            '<div class="skill-card' + (isOnchain ? ' onchain-card' : '') + (riskBkt === 'high' ? ' risk-high' : '') + '" data-slug="' + escapeHtml(it.slug || '') + '" style="--i:' + (cardIdx % 12) + '">' +
+              '<div class="card-shine"></div>' +
+              '<div class="card-scanline"></div>' +
               '<div class="skill-tier-bar" data-tier="' + riskBkt + '"></div>' +
               '<div class="skill-card-inner">' +
                 '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px">' +
@@ -1612,6 +1716,29 @@
                 else if (action === 'details') openDetails(it, pub, '');
               });
             })(i);
+          }
+        } catch (e) {}
+
+        try {
+          var allCards = out.querySelectorAll('.skill-card');
+          for (var ci = 0; ci < allCards.length; ci++) {
+            (function (card) {
+              var shine = card.querySelector('.card-shine');
+              card.addEventListener('mousemove', function (e) {
+                var rect = card.getBoundingClientRect();
+                var x = e.clientX - rect.left;
+                var y = e.clientY - rect.top;
+                var px = (x / rect.width) * 100;
+                var py = (y / rect.height) * 100;
+                var rotY = ((px - 50) / 50) * 8;
+                var rotX = ((py - 50) / 50) * -6;
+                card.style.transform = 'perspective(800px) rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg) translateY(-8px) scale(1.02)';
+                if (shine) { shine.style.setProperty('--mx', px + '%'); shine.style.setProperty('--my', py + '%'); }
+              });
+              card.addEventListener('mouseleave', function () {
+                card.style.transform = '';
+              });
+            })(allCards[ci]);
           }
         } catch (e) {}
       }
