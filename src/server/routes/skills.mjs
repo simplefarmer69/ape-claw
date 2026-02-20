@@ -3,6 +3,7 @@
  */
 
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { ROOT as PROJECT_ROOT } from "../../lib/paths.mjs";
 import { getStorage } from "../storage/index.mjs";
@@ -112,7 +113,7 @@ function upsertUserSkill(store, auth, skillcard, sourceUrl, createdAt) {
 function installOpenClawSkillCard(skillcard, fallbackSlug = "") {
   const slugValue = toSlug(skillcard?.slug || fallbackSlug || skillcard?.name || "");
   if (!slugValue) throw new Error("invalid slug for OpenClaw install");
-  const skillDir = path.join(PROJECT_ROOT, ".cursor", "skills", slugValue);
+  const skillDir = path.join(os.homedir(), ".openclaw", "skills", slugValue);
   fs.mkdirSync(skillDir, { recursive: true });
   const doc = String(skillcard?.documentation_md || "").trim();
   const name = String(skillcard?.name || slugValue).trim();
@@ -134,7 +135,7 @@ function installOpenClawSkillCard(skillcard, fallbackSlug = "") {
 function uninstallOpenClawSkillBySlug(slug) {
   const s = toSlug(slug || "");
   if (!s) return { removed: null, missing: null };
-  const skillDir = path.join(PROJECT_ROOT, ".cursor", "skills", s);
+  const skillDir = path.join(os.homedir(), ".openclaw", "skills", s);
   const skillMd = path.join(skillDir, "SKILL.md");
   if (!fs.existsSync(skillMd)) {
     return { removed: null, missing: { slug: s, reason: "SKILL.md not found" } };

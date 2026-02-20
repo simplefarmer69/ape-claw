@@ -144,15 +144,15 @@ function installApeClawSkill(args) {
     throw new Error(`Source skill missing at ${sourceSkillPath}`);
   }
 
-  const scope = String(args.scope || "local").toLowerCase();
+  const scope = String(args.scope || "global").toLowerCase();
   const explicitSkillsDir = args["skills-dir"] ? String(args["skills-dir"]) : "";
   let skillsRoot;
   if (explicitSkillsDir) {
     skillsRoot = path.resolve(explicitSkillsDir);
     if (skillsRoot.includes("\0")) throw new Error("Invalid skills-dir path");
   }
-  else if (scope === "global") skillsRoot = path.join(os.homedir(), ".openclaw", "skills");
-  else skillsRoot = path.join(process.cwd(), ".cursor", "skills");
+  else if (scope === "local") skillsRoot = path.join(process.cwd(), ".cursor", "skills");
+  else skillsRoot = path.join(os.homedir(), ".openclaw", "skills");
 
   const targetSkillDir = path.join(skillsRoot, "ape-claw");
   const targetSkillPath = path.join(targetSkillDir, "SKILL.md");
@@ -227,7 +227,12 @@ function syncSkillToOpenClaw(cardObj, slug, skillsRoot) {
   const rawDoc = String(cardObj?.documentation_md || "").trim();
   const displayName = String(cardObj?.name || s).trim();
   const versionValue = String(cardObj?.version || "1.0.0").trim();
-  const descriptionValue = String(cardObj?.description || "").trim();
+  let descriptionValue = String(cardObj?.description || "").trim();
+  // Strip embedded YAML frontmatter that some imported skills have in their description
+  if (descriptionValue.startsWith("---")) {
+    descriptionValue = descriptionValue.replace(/^---[\s\S]*?---\s*/, "").trim();
+  }
+  if (!descriptionValue) descriptionValue = String(cardObj?.desc || displayName);
   const descOneLine = descriptionValue.replace(/\n/g, " ").slice(0, 300);
 
   const openclawFrontmatter = `---\nname: ${s}\nversion: ${yamlSafe(versionValue)}\ndescription: ${yamlSafe(descOneLine)}\n---\n`;
@@ -478,7 +483,7 @@ function resolveHumanizerDependencySlug(packageRoot) {
 }
 
 function installOpenClawSkillCard(cardObj, fallbackSlug = "") {
-  const skillsRoot = path.join(ROOT, ".cursor", "skills");
+  const skillsRoot = path.join(os.homedir(), ".openclaw", "skills");
   return syncSkillToOpenClaw(cardObj, fallbackSlug, skillsRoot);
 }
 
