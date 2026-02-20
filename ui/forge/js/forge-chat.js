@@ -139,7 +139,8 @@ async function sendToForgeAgent(text) {
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      if (bodyEl) bodyEl.textContent = `Error: ${errData.error || res.statusText}`;
+      const errMsg = errData.error || errData.message || res.statusText || `HTTP ${res.status}`;
+      if (bodyEl) bodyEl.textContent = `Error: ${errMsg}`;
       finishStreaming();
       return;
     }
