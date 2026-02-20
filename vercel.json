@@ -1,29 +1,21 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/ui", "destination": "/ui/index.html" },
+    { "source": "/app", "destination": "/ui/index.html" },
+    { "source": "/skills", "destination": "/ui/skills.html" },
+    { "source": "/docs", "destination": "/ui/docs.html" },
+    { "source": "/pod", "destination": "/ui/pod.html" },
+    { "source": "/forge", "destination": "/ui/forge/index.html" },
+    { "source": "/dashboard", "destination": "/ui/index.html" }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",
       "headers": [
-        { "key": "Content-Type", "value": "application/json; charset=utf-8" },
-        { "key": "Cache-Control", "value": "public, max-age=300, s-maxage=600" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" }
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, x-agent-id, x-agent-token" }
       ]
     }
-  ],
-  "rewrites": [
-    { "source": "/events/backlog", "destination": "/data/events-backlog.json" },
-    { "source": "/api/health", "destination": "/data/health.json" },
-    { "source": "/api/skills/stats", "destination": "/data/skills-stats.json" },
-    { "source": "/api/skills/search", "destination": "/data/skills-search.json" },
-    { "source": "/api/skills/:slug", "destination": "/data/skills/:slug.json" },
-    { "source": "/api/clawbots", "destination": "/data/clawbots.json" },
-    { "source": "/api/v2/config", "destination": "/data/v2-config.json" },
-    { "source": "/api/pod/status", "destination": "/data/pod-status.json" },
-    { "source": "/api/allowlist", "destination": "/allowlists/recommended.apechain.json" },
-    { "source": "/pod", "destination": "/ui/pod.html" },
-    { "source": "/docs", "destination": "/ui/docs.html" },
-    { "source": "/skills", "destination": "/ui/skills.html" },
-    { "source": "/ui", "destination": "/ui/index.html" },
-    { "source": "/app", "destination": "/ui/index.html" }
   ]
 }
