@@ -53,7 +53,7 @@
     var active = !l.external && isActive(l.href, cur);
     var attrs = active ? ' aria-current="page"' : "";
     if (l.external) attrs += ' target="_blank" rel="noopener"';
-    var badge = l.external ? "EXT" : (l.icon === "forge" ? "LOCAL" : "");
+    var badge = l.external ? "EXT" : "";
     navHtml +=
       '<a class="sb-link" href="' + String(l.href) + '" data-tip="' + String(l.label) + '"' + attrs + ">" +
       iconSvg(l.icon) +
