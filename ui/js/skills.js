@@ -1334,7 +1334,7 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
               '<div class="links">' +
                 (fileHref ? ('<a class="pill" href="' + escapeHtml(fileHref) + '" target="_blank" rel="noopener">JSON</a>') : '') +
                 (fileHref ? ('<a class="pill" href="' + escapeHtml(fileHref) + '" download>Download</a>') : '') +
-                (dlCmd ? ('<a class="pill" href="#" data-copy="' + escapeHtml(dlCmd) + '">Copy curl</a>') : '') +
+                (dlCmd ? ('<a class="pill" href="#" data-copy="' + escapeHtml(dlCmd) + '">Copy install</a>') : '') +
                 ('<a class="pill" href="#" data-copy="' + escapeHtml(mintCmd) + '">Copy mint</a>') +
                 (pubCmd ? ('<a class="pill" href="#" data-copy="' + escapeHtml(pubCmd) + '">Copy publish</a>') : '') +
                 (it.fileName ? ('<a class="pill" href="#" data-mark="' + escapeHtml(String(it.fileName)) + '">Set onchain</a>') : '') +

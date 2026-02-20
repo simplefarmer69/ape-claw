@@ -356,7 +356,38 @@ function safeSkillVersion(v) {
 function resolveBundledSkillFile(packageRoot, slug) {
   const skillsDataDir = path.join(packageRoot, "data", "skills");
   const target = path.join(skillsDataDir, `${slug}.json`);
-  return fs.existsSync(target) ? target : "";
+  if (fs.existsSync(target)) return target;
+
+  // Check starter-pack-bundle.json for the skill
+  for (const bp of ["data/starter-pack-bundle.json", "data/starter-pack.json"]) {
+    const bundlePath = path.join(packageRoot, bp);
+    if (!fs.existsSync(bundlePath)) continue;
+    try {
+      const bundle = JSON.parse(fs.readFileSync(bundlePath, "utf8"));
+      const skills = Array.isArray(bundle.skills) ? bundle.skills : Array.isArray(bundle) ? bundle : [];
+      const match = skills.find((s) => toSlug(s?.slug || s?.name || "") === slug);
+      if (match) {
+        const tmpPath = path.join(skillsDataDir, `_resolved_${slug}.json`);
+        fs.mkdirSync(skillsDataDir, { recursive: true });
+        fs.writeFileSync(tmpPath, JSON.stringify(match, null, 2), "utf8");
+        return tmpPath;
+      }
+    } catch {}
+  }
+  return "";
+}
+
+async function fetchSkillFromApi(slug) {
+  const apiBase = process.env.APE_CLAW_API_URL || "https://apeclaw.ai";
+  const url = `${apiBase}/api/skills/${encodeURIComponent(slug)}`;
+  try {
+    const res = await fetch(url, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(15000) });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.card || json?.skill || json || null;
+  } catch {
+    return null;
+  }
 }
 
 function resolveHumanizerDependencySlug(packageRoot) {
@@ -553,12 +584,38 @@ async function main() {
     if (requestedSkillSlug) {
       const here = path.dirname(fileURLToPath(import.meta.url));
       const packageRoot = path.resolve(here, "..");
-      const result = installBundledSkillBySlug({
-        packageRoot,
-        slug: requestedSkillSlug,
-        authMode: "cli",
-        authAgentId: _agentId,
-      });
+      let result;
+      try {
+        result = installBundledSkillBySlug({
+          packageRoot,
+          slug: requestedSkillSlug,
+          authMode: "cli",
+          authAgentId: _agentId,
+        });
+      } catch (bundledErr) {
+        // Not in bundled data — fetch from API
+        if (!asJson) console.log(`\x1b[2m  Skill not bundled locally, fetching from API…\x1b[0m`);
+        const card = await fetchSkillFromApi(requestedSkillSlug);
+        if (!card || typeof card !== "object" || (!card.name && !card.slug)) {
+          if (asJson) return print({ ok: false, error: `Skill "${requestedSkillSlug}" not found (bundled: ${bundledErr.message}, API: not found)` }, true);
+          console.error(`\x1b[31m  ✗ Skill "${requestedSkillSlug}" not found in bundled library or API.\x1b[0m`);
+          console.error(`\x1b[2m    Browse available skills at https://apeclaw.ai/skills\x1b[0m`);
+          process.exitCode = 1;
+          return;
+        }
+        // Write fetched card to a temp file and install it
+        const tmpDir = path.join(packageRoot, "data", "skills");
+        fs.mkdirSync(tmpDir, { recursive: true });
+        const resolvedSlug = toSlug(requestedSkillSlug);
+        const tmpFile = path.join(tmpDir, `${resolvedSlug}.json`);
+        fs.writeFileSync(tmpFile, JSON.stringify(card, null, 2), "utf8");
+        result = installBundledSkillBySlug({
+          packageRoot,
+          slug: requestedSkillSlug,
+          authMode: "cli",
+          authAgentId: _agentId,
+        });
+      }
       emitEvent({ eventType: "skill.install.slug.ran", command, dryRun: true, result });
       if (asJson) return print(result, true);
 
