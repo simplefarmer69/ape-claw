@@ -248,6 +248,12 @@ let hoverHudEl = null;
 let headPivotRef = null, leftArmPivotRef = null, rightArmPivotRef = null;
 let agentSpeaking = false;
 let heatShimmerMeshes = [];
+let robotPowered = false;
+let powerLevel = 0;
+let powerDownTimer = null;
+const POWER_UP_SPEED = 2.5;
+const POWER_DOWN_SPEED = 1.2;
+const POWER_DOWN_DELAY = 4000;
 
 const viewportEl = () => document.getElementById("forgeViewport");
 const canvasEl = () => document.getElementById("forgeCanvas");
@@ -2147,7 +2153,23 @@ function findNearestAttachment(ndc) {
 function onCanvasClick(e) {
   const ndc = screenToNDC(e);
   const target = findNearestAttachment(ndc);
-  selectAttachment(target);
+  if (target) {
+    selectAttachment(target);
+    return;
+  }
+  // Check if click hit the robot body
+  if (robotGroup) {
+    mouse.copy(ndc);
+    raycaster.setFromCamera(mouse, camera);
+    const bodyMeshes = [];
+    robotGroup.traverse(c => { if (c.isMesh) bodyMeshes.push(c); });
+    const hits = raycaster.intersectObjects(bodyMeshes, false);
+    if (hits.length > 0) {
+      toggleRobotPower();
+      return;
+    }
+  }
+  selectAttachment(null);
 }
 
 function onCanvasHover(e) {
@@ -2286,71 +2308,107 @@ export function captureScreenshot(agentName, skillCount, onchainCount, categoryC
    ══════════════════════════════════════════════════════════ */
 let idleAnimatorFn = null;
 export function setIdleAnimator(fn) { idleAnimatorFn = fn; }
-export function setAgentSpeaking(v) { agentSpeaking = !!v; }
+export function setAgentSpeaking(v) {
+  agentSpeaking = !!v;
+  if (agentSpeaking) {
+    powerOn();
+  } else {
+    schedulePowerDown();
+  }
+}
+
+function powerOn() {
+  if (powerDownTimer) { clearTimeout(powerDownTimer); powerDownTimer = null; }
+  robotPowered = true;
+}
+
+function schedulePowerDown() {
+  if (powerDownTimer) clearTimeout(powerDownTimer);
+  powerDownTimer = setTimeout(() => {
+    robotPowered = false;
+    powerDownTimer = null;
+  }, POWER_DOWN_DELAY);
+}
+
+export function toggleRobotPower() {
+  if (robotPowered) {
+    robotPowered = false;
+    if (powerDownTimer) { clearTimeout(powerDownTimer); powerDownTimer = null; }
+  } else {
+    powerOn();
+    schedulePowerDown();
+  }
+}
 
 function animate() {
   requestAnimationFrame(animate);
   if (renderPaused) return;
   const time = performance.now() * 0.001;
+  const dt = 1 / 60;
 
   controls.update();
 
+  // ── Power level ramp (smooth on/off transition) ──
+  const targetPower = robotPowered ? 1.0 : 0.0;
+  if (powerLevel < targetPower) {
+    powerLevel = Math.min(powerLevel + dt * POWER_UP_SPEED, 1.0);
+  } else if (powerLevel > targetPower) {
+    powerLevel = Math.max(powerLevel - dt * POWER_DOWN_SPEED, 0.0);
+  }
+  const pw = powerLevel;
+
   // Core reactor pulse
   if (coreMesh) {
-    coreMesh.material.emissiveIntensity = 1.55 + 0.45 * Math.sin(time * 2.5);
-    coreMesh.rotation.y += 0.02;
-    coreMesh.rotation.x = Math.sin(time * 1.5) * 0.2;
+    coreMesh.material.emissiveIntensity = (1.55 + 0.45 * Math.sin(time * 2.5)) * pw;
+    coreMesh.rotation.y += 0.02 * pw;
+    coreMesh.rotation.x = Math.sin(time * 1.5) * 0.2 * pw;
   }
 
   // Spine glow cascade
   spineSegments.forEach((seg, i) => {
-    seg.material.emissiveIntensity = 1.0 + 1.5 * Math.max(0, Math.sin(time * 3.5 - i * 0.5));
+    seg.material.emissiveIntensity = (1.0 + 1.5 * Math.max(0, Math.sin(time * 3.5 - i * 0.5))) * pw;
   });
 
-  // Visor flicker — layered optical system effect
+  // Visor — off when powered down, full optical system when powered up
   if (visorMesh) {
     const sp = agentSpeaking ? 1.6 : 1.0;
-    // Base transmission oscillation (breathing)
     const vBreath = Math.sin(time * 1.8) * 0.02;
-    // Micro-flicker (digital noise)
     const vNoise = (Math.random() - 0.5) * 0.015;
-    // Scanning pulse (periodic bright sweep)
     const scanPhase = (time * 0.7) % 1.0;
     const scanPulse = Math.exp(-30 * (scanPhase - 0.5) * (scanPhase - 0.5)) * 0.12;
-    // Speaking boost
     const speakBurst = agentSpeaking ? Math.sin(time * 8) * 0.04 + Math.random() * 0.03 : 0;
 
-    visorMesh.material.transmission = 0.82 + vBreath + vNoise + scanPulse * 0.3;
-    visorMesh.material.emissiveIntensity = (2.0 + 0.4 * Math.sin(time * 2.5) + scanPulse * 2.0 + speakBurst) * sp;
-    visorMesh.material.opacity = 0.84 + vBreath * 0.5 + scanPulse * 0.1;
-    visorMesh.material.iridescence = 0.5 + 0.15 * Math.sin(time * 1.2);
+    visorMesh.material.transmission = 0.4 + 0.42 * pw + (vBreath + vNoise + scanPulse * 0.3) * pw;
+    visorMesh.material.emissiveIntensity = ((2.0 + 0.4 * Math.sin(time * 2.5) + scanPulse * 2.0 + speakBurst) * sp) * pw;
+    visorMesh.material.opacity = 0.5 + 0.34 * pw + (vBreath * 0.5 + scanPulse * 0.1) * pw;
+    visorMesh.material.iridescence = (0.5 + 0.15 * Math.sin(time * 1.2)) * pw;
   }
 
   // Joint glow rings pulse
   glowRings.forEach((ring, i) => {
     if (ring.material) {
-      ring.material.opacity = 0.3 + 0.2 * Math.sin(time * 2 + i * 0.7);
-      ring.material.emissiveIntensity = 1.1 + 0.6 * Math.sin(time * 2.5 + i * 0.5);
+      ring.material.opacity = (0.3 + 0.2 * Math.sin(time * 2 + i * 0.7)) * pw;
+      ring.material.emissiveIntensity = (1.1 + 0.6 * Math.sin(time * 2.5 + i * 0.5)) * pw;
     }
   });
 
   // Exhaust flames flicker
   exhaustFlames.forEach((flame, i) => {
     if (flame.material) {
-      flame.material.emissiveIntensity = 1.4 + 0.8 * Math.random();
-      flame.material.opacity = 0.32 + 0.2 * Math.random();
+      flame.material.emissiveIntensity = (1.4 + 0.8 * Math.random()) * pw;
+      flame.material.opacity = (0.32 + 0.2 * Math.random()) * pw;
     }
-    flame.scale.y = 0.8 + 0.4 * Math.random();
+    flame.scale.y = 0.8 + 0.4 * Math.random() * pw;
   });
 
   // Heat shimmer above exhausts
   heatShimmerMeshes.forEach((shim, i) => {
     const phase = time * 3 + i * 1.5;
-    shim.material.opacity = 0.025 + 0.02 * Math.sin(phase);
-    shim.scale.x = 1.0 + 0.15 * Math.sin(phase * 1.3);
-    shim.scale.z = 1.0 + 0.15 * Math.sin(phase * 1.3 + 0.5);
-    shim.scale.y = 0.9 + 0.2 * Math.sin(phase * 0.7);
-    shim.rotation.y += 0.02;
+    shim.material.opacity = (0.025 + 0.02 * Math.sin(phase)) * pw;
+    shim.scale.x = 1.0 + 0.15 * Math.sin(phase * 1.3) * pw;
+    shim.scale.z = 1.0 + 0.15 * Math.sin(phase * 1.3 + 0.5) * pw;
+    shim.scale.y = 0.9 + 0.2 * Math.sin(phase * 0.7) * pw;
+    shim.rotation.y += 0.02 * pw;
   });
 
   // Energy streams rotation
