@@ -1,5 +1,8 @@
 {
   "rewrites": [
+    { "source": "/api/:path*", "destination": "https://api.apeclaw.ai/api/:path*" },
+    { "source": "/events/:path*", "destination": "https://api.apeclaw.ai/events/:path*" },
+    { "source": "/skillcards/:path*", "destination": "https://api.apeclaw.ai/skillcards/:path*" },
     { "source": "/ui", "destination": "/ui/index.html" },
     { "source": "/app", "destination": "/ui/index.html" },
     { "source": "/skills", "destination": "/ui/skills.html" },
