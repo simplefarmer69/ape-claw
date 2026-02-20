@@ -747,52 +747,67 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
       window.addEventListener('hashchange', function () {
         try { openFromHash(); } catch (e) {}
       });
+      function hydrateImportedFromResults(results) {
+        importedAll = (Array.isArray(results) ? results : []).map(function (s, idx) {
+          return {
+            name: s.name || s.slug || 'Skill',
+            slug: s.slug || '',
+            description: s.description || s.desc || '',
+            desc: s.description || s.desc || '',
+            riskTier: s.riskTier || 2,
+            source: s.source || 'imported',
+            sourceUrl: s.sourceUrl || '',
+            fileName: s.fileName || '',
+            version: s.version || '1',
+            importOk: true,
+            vettedOk: Boolean(s.vettedOk !== false && s.vetted !== false),
+            addedAt: s.addedAt || s.importedAt || s.createdAt || '',
+            importedAt: s.importedAt || s.addedAt || '',
+            createdAt: s.createdAt || '',
+            _indexOrder: idx,
+            onchainTokenId: s.onchainTokenId || null,
+            onchainMintTx: s.onchainMintTx || null,
+            onchainPublishTx: s.onchainPublishTx || null
+          };
+        });
+        publishedBySlug = {};
+        for (var pi = 0; pi < importedAll.length; pi++) {
+          var si = importedAll[pi];
+          if (si && si.slug && si.onchainTokenId) {
+            publishedBySlug[si.slug] = {
+              skillId: si.onchainTokenId,
+              txs: { mint: si.onchainMintTx || null, publish: si.onchainPublishTx || null }
+            };
+          }
+        }
+        applyImportedFilters();
+        if (importedBadge) importedBadge.textContent = importedAll.length ? (importedAll.length + ' SKILLS') : 'NONE';
+        try { openFromHash(); } catch (e) {}
+      }
+
+      function loadImportedFromStaticFallback() {
+        return fetch('/data/skills-search.json', { headers: { 'accept': 'application/json' } })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (j) {
+            var results = (j && Array.isArray(j.results)) ? j.results : [];
+            hydrateImportedFromResults(results);
+            if (importedBadge && results.length) importedBadge.textContent = results.length + ' SKILLS (FALLBACK)';
+          })
+          .catch(function () {
+            if (importedBadge) importedBadge.textContent = 'UNAVAILABLE';
+          });
+      }
+
       fetch(apiBase + '/api/skills/search?limit=5000', { headers: { 'accept': 'application/json' } })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) {
-          if (!j || !j.ok) {
-            if (importedBadge) importedBadge.textContent = 'UNAVAILABLE';
-            return;
-          }
-          var results = j.results || [];
-          importedAll = results.map(function (s, idx) {
-            return {
-              name: s.name || s.slug || 'Skill',
-              slug: s.slug || '',
-              description: s.description || s.desc || '',
-              desc: s.description || s.desc || '',
-              riskTier: s.riskTier || 2,
-              source: s.source || 'imported',
-              sourceUrl: s.sourceUrl || '',
-              fileName: s.fileName || '',
-              version: s.version || '1',
-              importOk: true,
-              vettedOk: Boolean(s.vettedOk !== false && s.vetted !== false),
-              addedAt: s.addedAt || s.importedAt || s.createdAt || '',
-              importedAt: s.importedAt || s.addedAt || '',
-              createdAt: s.createdAt || '',
-              _indexOrder: idx,
-              onchainTokenId: s.onchainTokenId || null,
-              onchainMintTx: s.onchainMintTx || null,
-              onchainPublishTx: s.onchainPublishTx || null
-            };
-          });
-          publishedBySlug = {};
-          for (var pi = 0; pi < importedAll.length; pi++) {
-            var si = importedAll[pi];
-            if (si && si.slug && si.onchainTokenId) {
-              publishedBySlug[si.slug] = {
-                skillId: si.onchainTokenId,
-                txs: { mint: si.onchainMintTx || null, publish: si.onchainPublishTx || null }
-              };
-            }
-          }
-          applyImportedFilters();
-          if (importedBadge) importedBadge.textContent = importedAll.length ? (importedAll.length + ' SKILLS') : 'NONE';
-          try { openFromHash(); } catch (e) {}
+          var results = (j && j.ok && Array.isArray(j.results)) ? j.results : [];
+          // If API is unavailable or temporarily empty, use static snapshot so the page is never blank.
+          if (!results.length) return loadImportedFromStaticFallback();
+          hydrateImportedFromResults(results);
         })
         .catch(function () {
-          if (importedBadge) importedBadge.textContent = 'UNAVAILABLE';
+          return loadImportedFromStaticFallback();
         });
 
       if (importedSearch) {
