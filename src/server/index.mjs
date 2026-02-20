@@ -42,7 +42,7 @@ import {
   handleIndex, handleStaticFile,
 } from "./routes/static.mjs";
 
-const PORT = Number(process.env.APE_CLAW_UI_PORT || 8787);
+const PORT = Number(process.env.PORT || process.env.APE_CLAW_UI_PORT || 8787);
 const BIND_HOST = String(process.env.APE_CLAW_BIND_HOST || "").trim();
 
 const RL_READ = { limit: 60, windowMs: 60_000, keyPrefix: "read" };
