@@ -763,7 +763,10 @@ async function init() {
   document.getElementById("forgeAuthAgentId")?.addEventListener("change", saveAuth);
   document.getElementById("forgeAuthAgentToken")?.addEventListener("change", saveAuth);
 
-  window.addEventListener("forge:ready", async () => {
+  let started = false;
+  async function startForgeAssembly() {
+    if (started) return;
+    started = true;
     const loaded = await loadAllData();
     updateHeader();
     initShareToX();
@@ -802,7 +805,18 @@ async function init() {
 
     window.addEventListener("forge:select", (e) => showInspector(e.detail));
     window.addEventListener("forge:deselect", () => hideInspector());
-  });
+  }
+
+  window.addEventListener("forge:ready", startForgeAssembly, { once: true });
+
+  // Fallback for race conditions where forge:ready fired before listener attach.
+  if (window.__forgeSceneReady === true) {
+    startForgeAssembly();
+  } else {
+    setTimeout(() => {
+      if (!started) startForgeAssembly();
+    }, 2500);
+  }
 }
 
 function groupByCategory(arr) {

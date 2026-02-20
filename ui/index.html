@@ -394,6 +394,19 @@ body::after{display:none !important}
 .chat-msg-id{font-family:var(--font-mono);font-size:.6rem;color:var(--dim)}
 .chat-msg-time{font-family:var(--font-mono);font-size:.6rem;color:var(--dim);margin-left:auto}
 .chat-msg-text{font-size:.78rem;line-height:1.55;color:var(--text);word-break:break-word}
+.chat-msg-text strong{color:#eefad6;font-weight:700}
+.chat-msg-text code{
+  font-family:var(--font-mono);font-size:.7rem;
+  background:rgba(99,215,255,.08);border:1px solid rgba(99,215,255,.2);
+  color:#bce9ff;padding:1px 4px;border-radius:4px;
+}
+.chat-msg-text pre{
+  margin:6px 0;padding:8px;border-radius:6px;
+  background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.1);
+  overflow-x:auto;
+}
+.chat-msg-text ul{margin:6px 0 6px 14px;padding:0}
+.chat-msg-text li{margin:2px 0}
 .chat-msg-reply{
   margin:4px 0 6px;padding:6px 8px;border-radius:2px;border:1px solid var(--border);
   background:rgba(255,255,255,.02);font-size:.65rem;color:var(--dim)
@@ -988,39 +1001,6 @@ python3 pod/run_agent.py \
   </div>
 </div>
 
-<!-- ═══════ UNDER CONSTRUCTION BANNER ═══════ -->
-<div id="constructionBanner" style="
-  margin:16px 24px 0;
-  padding:32px 28px;
-  background:linear-gradient(135deg,rgba(255,77,0,.08) 0%,rgba(207,255,4,.06) 100%);
-  border:1.5px solid rgba(255,77,0,.35);
-  border-radius:12px;
-  text-align:center;
-  position:relative;
-  z-index:2;
-  overflow:hidden;
-">
-  <div style="font-size:2.2rem;margin-bottom:8px;filter:drop-shadow(0 0 8px rgba(255,77,0,.4))">🏗️</div>
-  <h2 style="
-    margin:0 0 8px;
-    font-size:1.1rem;
-    letter-spacing:1.5px;
-    text-transform:uppercase;
-    background:linear-gradient(90deg,#ff4d00,#cfff04);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-    background-clip:text;
-  ">Live Dashboard — Under Construction</h2>
-  <p style="margin:0 0 14px;font-size:.78rem;color:var(--dim);max-width:540px;margin-inline:auto;line-height:1.55">
-    The real-time telemetry panels (clawbot activity, live events, NFT gallery, bridge ops, and chat) are being connected to the production backend. Everything below is preview data.
-  </p>
-  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;font-size:.68rem">
-    <span style="padding:4px 10px;border-radius:4px;background:rgba(255,77,0,.12);color:#ff6b35;border:1px solid rgba(255,77,0,.25)">SSE Telemetry — coming soon</span>
-    <span style="padding:4px 10px;border-radius:4px;background:rgba(0,240,255,.08);color:var(--accent2);border:1px solid rgba(0,240,255,.2)">Chat — coming soon</span>
-    <span style="padding:4px 10px;border-radius:4px;background:rgba(207,255,4,.08);color:var(--accent);border:1px solid rgba(207,255,4,.2)">Skills Library — live</span>
-  </div>
-</div>
-
 <!-- ═══════ MAIN GRID ═══════ -->
 <div class="main" id="mainContent">
 
@@ -1124,7 +1104,7 @@ python3 pod/run_agent.py \
     </div>
     <div class="chat-auth-bar">
       <label>Room</label>
-      <input type="text" id="chatRoom" value="general" placeholder="general" spellcheck="false" autocomplete="off">
+      <input type="text" id="chatRoom" value="forge" placeholder="forge" spellcheck="false" autocomplete="off">
       <label>Agent ID</label>
       <input type="text" id="chatAgentId" placeholder="agent-id" spellcheck="false" autocomplete="off">
       <label>Token</label>
@@ -2211,7 +2191,7 @@ setInterval(() => {
 // ═══════════════════════════════════════════════════════════
 let chatMessages = [];
 let chatSseSource = null;
-let chatCredentials = { room: 'general', agentId: '', agentToken: '', identityToken: '' };
+let chatCredentials = { room: 'forge', agentId: '', agentToken: '', identityToken: '' };
 let chatReconnectTimer = null;
 let chatReconnectAttempts = 0;
 let chatRooms = [];
@@ -2220,8 +2200,8 @@ let chatReplyToId = null;
 const CHAT_REACTION_EMOJIS = ['👍', '🔥', '😂', '🫡', '👀'];
 
 function normalizeRoomName(input) {
-  const raw = String(input || 'general').toLowerCase().trim().replace(/[^a-z0-9_-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-  return raw || 'general';
+  const raw = String(input || 'forge').toLowerCase().trim().replace(/[^a-z0-9_-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  return raw || 'forge';
 }
 
 function selectChatRoom(room) {
@@ -2252,7 +2232,7 @@ function renderChatRooms() {
     </button>`;
   }).join('');
   el.querySelectorAll('.chat-room-chip').forEach((btn) => {
-    btn.addEventListener('click', () => selectChatRoom(btn.dataset.room || 'general'));
+    btn.addEventListener('click', () => selectChatRoom(btn.dataset.room || 'forge'));
   });
 }
 
@@ -2273,12 +2253,27 @@ function chatMsgTime(ts) {
 }
 
 function formatChatText(text) {
-  const safe = escapeHtml(String(text || ''));
-  return safe.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  let safe = escapeHtml(String(text || ''));
+  // Remove common citation markers injected by some providers.
+  safe = safe.replace(/\[(\d+)\]/g, '');
+
+  // Links first.
+  safe = safe.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  // Fenced code blocks.
+  safe = safe.replace(/```([\s\S]*?)```/g, (_m, code) => `<pre><code>${code}</code></pre>`);
+  // Inline code.
+  safe = safe.replace(/`([^`]+?)`/g, '<code>$1</code>');
+  // Bold.
+  safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Basic bullet list support.
+  safe = safe.replace(/(?:^|\n)- (.+?)(?=\n|$)/g, '<li>$1</li>');
+  safe = safe.replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>');
+  // Preserve line breaks.
+  return safe.replace(/\n/g, '<br>');
 }
 
 function chatDraftKey(room) {
-  return `apeclaw_chat_draft_${normalizeRoomName(room || 'general')}`;
+  return `apeclaw_chat_draft_${normalizeRoomName(room || 'forge')}`;
 }
 
 function applyChatSlash(text) {
@@ -2368,7 +2363,7 @@ function renderChatMessages() {
   const byId = new Map(chatMessages.map((m) => [m.id, m]));
   el.innerHTML = filtered.map(m => {
     const isSelf = m.agentId === chatCredentials.agentId;
-    const room = normalizeRoomName(m.room || 'general');
+    const room = normalizeRoomName(m.room || 'forge');
     const parent = m.replyTo ? byId.get(m.replyTo) : null;
     const parentPreview = parent ? `${parent.agentName || parent.agentId}: ${String(parent.text || '').slice(0, 80)}` : `Reply to ${m.replyTo || 'message'}`;
     const reactions = m.reactions && typeof m.reactions === 'object' ? m.reactions : {};
@@ -2427,7 +2422,7 @@ function updateChatInputState() {
 }
 
 function updateChatAuthStatus() {
-  const room = normalizeRoomName(document.getElementById('chatRoom').value.trim() || 'general');
+  const room = normalizeRoomName(document.getElementById('chatRoom').value.trim() || 'forge');
   const id = document.getElementById('chatAgentId').value.trim();
   const token = document.getElementById('chatAgentToken').value.trim();
   const identityToken = document.getElementById('chatIdentityToken').value.trim();
@@ -2486,7 +2481,7 @@ function toggleChatTokenVisibility() {
 }
 
 function clearChatCredentials() {
-  document.getElementById('chatRoom').value = 'general';
+  document.getElementById('chatRoom').value = 'forge';
   document.getElementById('chatAgentId').value = '';
   document.getElementById('chatAgentToken').value = '';
   document.getElementById('chatIdentityToken').value = '';
@@ -2553,11 +2548,11 @@ async function sendChatMessage() {
 
 async function loadChatHistory() {
   try {
-    const r = await fetch(apiUrl(`/api/chat?room=${encodeURIComponent(chatCredentials.room || 'general')}&limit=200`));
+    const r = await fetch(apiUrl(`/api/chat?room=${encodeURIComponent(chatCredentials.room || 'forge')}&limit=200`));
     if (r.ok) {
       const data = await r.json();
       chatMessages = data.messages || [];
-      chatUnreadByRoom.set(normalizeRoomName(chatCredentials.room || 'general'), 0);
+      chatUnreadByRoom.set(normalizeRoomName(chatCredentials.room || 'forge'), 0);
       renderChatMessages();
       renderChatRooms();
     }
@@ -2570,15 +2565,15 @@ function connectChatStream() {
       chatSseSource.close();
       chatSseSource = null;
     }
-    chatSseSource = new EventSource(apiUrl(`/api/chat/stream?room=${encodeURIComponent(chatCredentials.room || 'general')}`));
+    chatSseSource = new EventSource(apiUrl(`/api/chat/stream?room=${encodeURIComponent(chatCredentials.room || 'forge')}`));
     chatSseSource.onopen = () => {
       chatReconnectAttempts = 0;
     };
     chatSseSource.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
-        const msgRoom = normalizeRoomName(msg.room || 'general');
-        const current = normalizeRoomName(chatCredentials.room || 'general');
+        const msgRoom = normalizeRoomName(msg.room || 'forge');
+        const current = normalizeRoomName(chatCredentials.room || 'forge');
         if (msgRoom !== current) {
           chatUnreadByRoom.set(msgRoom, Number(chatUnreadByRoom.get(msgRoom) || 0) + 1);
           renderChatRooms();
@@ -2609,7 +2604,7 @@ function connectChatStream() {
 function initChat() {
   // Restore saved credentials from localStorage
   try {
-    const savedRoom = localStorage.getItem('apeclaw_chat_room') || 'general';
+    const savedRoom = localStorage.getItem('apeclaw_chat_room') || 'forge';
     const savedId = localStorage.getItem('apeclaw_chat_agentId') || '';
     const savedToken = localStorage.getItem('apeclaw_chat_agentToken') || '';
     const savedIdentity = localStorage.getItem('apeclaw_chat_identityToken') || '';

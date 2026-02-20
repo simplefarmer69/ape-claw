@@ -1206,6 +1206,7 @@ export function initForgeScene() {
   animate();
 
   playCinematicIntro(() => {
+    window.__forgeSceneReady = true;
     window.dispatchEvent(new CustomEvent("forge:ready"));
   });
 

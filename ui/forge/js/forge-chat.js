@@ -24,6 +24,39 @@ let localProvider = "";
 
 const conversationHistory = [];
 
+function escapeHtml(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function renderChatText(raw) {
+  let text = String(raw || "");
+  // Strip common citation markers from provider answers (e.g. [1], [2]).
+  text = text.replace(/\[(\d+)\]/g, "");
+
+  // Escape first for safety, then apply a tiny markdown subset.
+  let html = escapeHtml(text);
+
+  // Fenced code blocks.
+  html = html.replace(/```([\s\S]*?)```/g, (_m, code) => `<pre><code>${code}</code></pre>`);
+  // Inline code.
+  html = html.replace(/`([^`]+?)`/g, "<code>$1</code>");
+  // Bold.
+  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+
+  // Basic bullet list support.
+  html = html.replace(/(?:^|\n)- (.+?)(?=\n|$)/g, "<li>$1</li>");
+  html = html.replace(/(<li>[\s\S]*?<\/li>)/g, "<ul>$1</ul>");
+
+  // Preserve line breaks.
+  html = html.replace(/\n/g, "<br>");
+  return html;
+}
+
 /* ══════════════════════════════════════════════════════════
    Environment detection
    ══════════════════════════════════════════════════════════ */
@@ -81,7 +114,8 @@ function appendMsg(role, text) {
 
   const body = document.createElement("div");
   body.className = "chat-msg-text";
-  body.textContent = text;
+  if (role === "agent") body.innerHTML = renderChatText(text);
+  else body.textContent = text;
 
   el.appendChild(header);
   el.appendChild(body);
@@ -165,7 +199,7 @@ async function sendToForgeAgent(text) {
     const contentType = res.headers.get("content-type") || "";
     if (!contentType.includes("text/event-stream")) {
       const data = await res.json().catch(() => ({}));
-      if (bodyEl) bodyEl.textContent = data.reply || data.message || "No response";
+      if (bodyEl) bodyEl.innerHTML = renderChatText(data.reply || data.message || "No response");
       if (data.reply || data.message) {
         conversationHistory.push({ role: "assistant", content: data.reply || data.message });
       }
@@ -194,7 +228,7 @@ async function sendToForgeAgent(text) {
           const t = chunk.text || chunk.content || "";
           if (t) {
             buffer += t;
-            if (bodyEl) bodyEl.textContent = buffer;
+            if (bodyEl) bodyEl.innerHTML = renderChatText(buffer);
             const box = msgBox();
             if (box) box.scrollTop = box.scrollHeight;
           }
@@ -208,7 +242,10 @@ async function sendToForgeAgent(text) {
       bodyEl.textContent = "No response received";
     }
   } catch (err) {
-    if (bodyEl) bodyEl.textContent = buffer || `Connection error: ${err.message}`;
+    if (bodyEl) {
+      const msg = buffer || `Connection error: ${err.message}`;
+      bodyEl.innerHTML = renderChatText(msg);
+    }
   }
 
   finishStreaming();
@@ -273,7 +310,7 @@ function streamResponse(streamId) {
     try {
       const chunk = JSON.parse(e.data);
       buffer += chunk.text || chunk.content || "";
-      if (bodyEl) bodyEl.textContent = buffer;
+      if (bodyEl) bodyEl.innerHTML = renderChatText(buffer);
       const box = msgBox();
       if (box) box.scrollTop = box.scrollHeight;
     } catch { /* ignore parse errors */ }

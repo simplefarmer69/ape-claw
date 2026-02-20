@@ -424,6 +424,8 @@ function buildSystemPrompt(snapshot) {
   parts.push("- When asked about skills, reference the real library stats and help users find what they need.");
   parts.push("- Do NOT hallucinate capabilities — stick to what ApeClaw actually ships.");
   parts.push("- Keep responses focused and practical. Use short paragraphs.");
+  parts.push("- Prefer plain conversational output with light formatting only (bold, short bullets).");
+  parts.push("- Do NOT include citation markers like [1], [2], or footnote-style references unless the user explicitly asks for sources.");
 
   return parts.join("\n");
 }
