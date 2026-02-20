@@ -34,7 +34,7 @@
     "ape-claw": "src/cli/index.mjs"
   },
   "scripts": {
-    "test": "hardhat compile && node --test",
+    "test": "hardhat compile && node --test 'test/*.test.mjs' 'contracts-test/*.test.js' test-browser-console.mjs",
     "test:install": "bash ./scripts/test-install.sh",
     "telemetry": "node ./src/server/index.mjs",
     "start:ui": "node ./src/server/index.mjs",
