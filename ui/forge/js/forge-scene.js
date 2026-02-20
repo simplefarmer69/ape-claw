@@ -66,6 +66,14 @@ export const MAT = {
   rivetMat:   new P({ color: 0xe0e8f0, roughness: 0.04, metalness: 0.98, emissive: 0x607088, emissiveIntensity: 0.3, clearcoat: 1.0, clearcoatRoughness: 0.0 }),
   frameMat:   new P({ color: 0x1a2030, roughness: 0.35, metalness: 0.6, emissive: 0x050810, emissiveIntensity: 0.1, clearcoat: 0.4, clearcoatRoughness: 0.2 }),
   darkChrome: new P({ color: 0x2a3040, roughness: 0.08, metalness: 0.92, emissive: 0x101520, emissiveIntensity: 0.25, clearcoat: 1.0, clearcoatRoughness: 0.04 }),
+  // Mechanical internals
+  servo:     new P({ color: 0x2a2a32, roughness: 0.35, metalness: 0.7, emissive: 0x080810, emissiveIntensity: 0.1, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
+  hydraulic: new P({ color: 0x886622, roughness: 0.2, metalness: 0.85, emissive: 0x221100, emissiveIntensity: 0.15, clearcoat: 0.7, clearcoatRoughness: 0.1 }),
+  rubber:    new P({ color: 0x0c0c10, roughness: 0.9, metalness: 0.05, emissive: 0x000000, emissiveIntensity: 0.0 }),
+  coolingFin:new P({ color: 0x1e2838, roughness: 0.25, metalness: 0.75, emissive: 0x040810, emissiveIntensity: 0.08, clearcoat: 0.5, clearcoatRoughness: 0.15 }),
+  weldSeam:  new P({ color: 0x505868, roughness: 0.5, metalness: 0.6, emissive: 0x101418, emissiveIntensity: 0.05, clearcoat: 0.2 }),
+  oilStain:  new P({ color: 0x181410, roughness: 0.7, metalness: 0.2, emissive: 0x000000, emissiveIntensity: 0.0, clearcoat: 0.6, clearcoatRoughness: 0.4 }),
+  lens:      new P({ color: 0x112244, emissive: CYAN, emissiveIntensity: 1.5, roughness: 0.02, metalness: 0.0, transmission: 0.6, thickness: 0.2, clearcoat: 1.0, clearcoatRoughness: 0.0, transparent: true, opacity: 0.9 }),
 };
 
 /* ══════════════════════════════════════════════════════════
@@ -184,9 +192,16 @@ for (const k of ["chrome", "darkChrome"]) {
 MAT.hardpoint.bumpMap = _armorBump; MAT.hardpoint.bumpScale = 0.012;
 MAT.hardpoint.normalMap = _armorNormal; MAT.hardpoint.normalScale = new THREE.Vector2(0.1, 0.1);
 MAT.pistonMat.bumpMap = _chromeBump; MAT.pistonMat.bumpScale = 0.008;
+MAT.pistonMat.normalMap = _chromeAniso; MAT.pistonMat.normalScale = new THREE.Vector2(0.1, 0.1);
 MAT.joint.bumpMap = _chromeBump; MAT.joint.bumpScale = 0.006;
 MAT.undersuit.bumpMap = _armorBump; MAT.undersuit.bumpScale = 0.005;
 MAT.frameMat.bumpMap = _armorBump; MAT.frameMat.bumpScale = 0.008;
+MAT.servo.bumpMap = _armorBump; MAT.servo.bumpScale = 0.01;
+MAT.servo.roughnessMap = _roughVar;
+MAT.hydraulic.bumpMap = _chromeBump; MAT.hydraulic.bumpScale = 0.006;
+MAT.hydraulic.normalMap = _chromeAniso; MAT.hydraulic.normalScale = new THREE.Vector2(0.08, 0.08);
+MAT.coolingFin.bumpMap = _armorBump; MAT.coolingFin.bumpScale = 0.008;
+MAT.weldSeam.bumpMap = _roughVar; MAT.weldSeam.bumpScale = 0.02;
 
 /* ══════════════════════════════════════════════════════════
    Film grain + vignette shader
@@ -324,6 +339,51 @@ function cableRun(g, r, len, x, y, z, rx, ry, rz) {
   if (rx) m.rotation.x = rx; if (ry) m.rotation.y = ry; if (rz) m.rotation.z = rz;
   return m;
 }
+function servoDrum(g, r, w, x, y, z, rz) {
+  const drum = cyl(g, r, r, w, MAT.servo, x, y, z, 16);
+  if (rz) drum.rotation.z = rz; else drum.rotation.z = Math.PI / 2;
+  const cap1 = cyl(g, r * 0.5, r * 0.5, w * 0.15, MAT.chrome, x, y, z, 8);
+  cap1.rotation.z = drum.rotation.z;
+  torus(g, r * 0.85, r * 0.08, MAT.darkChrome, x, y, z);
+  return drum;
+}
+function hydraulicRam(g, r, len, x, y, z, rx, ry, rz) {
+  const outer = cyl(g, r, r, len * 0.55, MAT.hydraulic, x, y, z, 10);
+  if (rx) outer.rotation.x = rx; if (ry) outer.rotation.y = ry; if (rz) outer.rotation.z = rz;
+  const inner = cyl(g, r * 0.6, r * 0.6, len * 0.65, MAT.pistonMat, x, y, z, 8);
+  inner.rotation.x = outer.rotation.x; inner.rotation.y = outer.rotation.y; inner.rotation.z = outer.rotation.z;
+  const seal = cyl(g, r * 1.2, r * 1.2, len * 0.06, MAT.rubber, x, y, z, 12);
+  seal.rotation.x = outer.rotation.x; seal.rotation.y = outer.rotation.y; seal.rotation.z = outer.rotation.z;
+  return outer;
+}
+function coolingFins(g, count, w, h, spacing, x, y, z, vertical) {
+  for (let i = 0; i < count; i++) {
+    const offset = (i - (count - 1) / 2) * spacing;
+    if (vertical) {
+      box(g, 0.015, h, w, MAT.coolingFin, x + offset, y, z);
+    } else {
+      box(g, w, 0.015, h, MAT.coolingFin, x, y + offset, z);
+    }
+  }
+}
+function boltCluster(g, count, radius, x, y, z) {
+  for (let i = 0; i < count; i++) {
+    const a = (i / count) * Math.PI * 2;
+    rivet(g, x + Math.cos(a) * radius, y, z + Math.sin(a) * radius);
+  }
+}
+function rubberSeal(g, r, tube, x, y, z) {
+  const m = new THREE.Mesh(new THREE.TorusGeometry(r, tube, 12, 32), MAT.rubber);
+  m.position.set(x, y, z); m.rotation.x = Math.PI / 2; g.add(m); return m;
+}
+function cableBundle(g, count, r, len, x, y, z, rx, ry, rz) {
+  for (let i = 0; i < count; i++) {
+    const a = (i / count) * Math.PI * 2;
+    const ox = Math.cos(a) * r * 2.5;
+    const oz = Math.sin(a) * r * 2.5;
+    cableRun(g, r, len, x + ox, y, z + oz, rx, ry, rz);
+  }
+}
 
 /* ══════════════════════════════════════════════════════════
    Build chassis — HV-MTL Activated inspired mecha
@@ -343,101 +403,179 @@ function buildChassis() {
   const _rp = new THREE.Group(); _rp.position.set(1.75, 5.25, 0);
   const ra = new THREE.Group(); ra.position.set(-1.75, -5.25, 0); _rp.add(ra);
 
-  // ── HEAD (Optimus-style helmet with tall crest and faceplate) ──
-  box(hd, 0.9, 0.78, 0.78, MAT.undersuit, 0, 6.4, 0);
-  // Helmet halves — deep blue
+  // ── HEAD (layered helmet, camera lenses, cooling fins, exposed internals) ──
+  // Inner cranium structure
+  box(hd, 0.85, 0.74, 0.74, MAT.servo, 0, 6.4, 0);
+  box(hd, 0.78, 0.68, 0.68, MAT.frameMat, 0, 6.4, 0);
+  // Outer helmet halves — blue armor with visible sub-panels
   box(hd, 0.56, 0.95, 0.96, MAT.armor, -0.3, 6.44, 0);
   box(hd, 0.56, 0.95, 0.96, MAT.armor, 0.3, 6.44, 0);
+  // Panel seam lines on helmet
   box(hd, 0.03, 0.95, 0.06, MAT.panelLine, 0, 6.44, 0.46);
-  // Tall central crest (Prime signature)
-  box(hd, 0.18, 0.45, 0.7, MAT.chrome, 0, 7.12, -0.04);
-  box(hd, 0.1, 0.25, 0.5, MAT.armorRed, 0, 7.28, -0.04);
-  box(hd, 0.06, 0.12, 0.35, MAT.chrome, 0, 7.38, -0.04);
-  // Brow plate — heavy chrome
-  box(hd, 1.2, 0.22, 0.38, MAT.chrome, 0, 6.76, 0.28, -0.12, 0, 0);
-  box(hd, 0.9, 0.08, 0.28, MAT.darkChrome, 0, 6.68, 0.32, -0.1, 0, 0);
-  // Faceplate / chin guard — chrome like Prime's mouth guard
-  box(hd, 0.75, 0.3, 0.5, MAT.chrome, 0, 5.98, 0.15);
-  box(hd, 0.55, 0.12, 0.4, MAT.darkChrome, 0, 5.88, 0.2);
-  ventSlits(hd, 0.4, 4, 0.045, MAT.vent, 0, 5.86, 0.4);
-  // Cheek guards — angular Prime-style
+  box(hd, 0.03, 0.7, 0.04, MAT.weldSeam, -0.15, 6.5, 0.46);
+  box(hd, 0.03, 0.7, 0.04, MAT.weldSeam, 0.15, 6.5, 0.46);
+  // Sub-panel detail layers on each side
   for (let side = -1; side <= 1; side += 2) {
-    box(hd, 0.2, 0.5, 0.75, MAT.armor, side * 0.56, 6.32, 0.05, 0, 0, side * 0.08);
-    box(hd, 0.08, 0.3, 0.6, MAT.darkChrome, side * 0.6, 6.24, 0.02, 0, 0, side * 0.08);
+    box(hd, 0.04, 0.5, 0.45, MAT.darkChrome, side * 0.3, 6.62, 0.22);
+    box(hd, 0.02, 0.3, 0.25, MAT.servo, side * 0.28, 6.72, 0.3);
+  }
+  // Tall central crest with internal ribbing
+  box(hd, 0.18, 0.5, 0.72, MAT.chrome, 0, 7.14, -0.04);
+  box(hd, 0.1, 0.28, 0.52, MAT.armorRed, 0, 7.3, -0.04);
+  box(hd, 0.06, 0.14, 0.38, MAT.chrome, 0, 7.4, -0.04);
+  // Internal crest ribbing
+  for (let i = 0; i < 4; i++) box(hd, 0.12, 0.03, 0.5, MAT.frameMat, 0, 7.0 + i * 0.12, -0.04);
+  // Brow plate — heavy chrome, bolted
+  box(hd, 1.22, 0.24, 0.4, MAT.chrome, 0, 6.76, 0.28, -0.12, 0, 0);
+  box(hd, 0.92, 0.1, 0.3, MAT.darkChrome, 0, 6.68, 0.32, -0.1, 0, 0);
+  boltCluster(hd, 4, 0.08, -0.4, 6.76, 0.44);
+  boltCluster(hd, 4, 0.08, 0.4, 6.76, 0.44);
+  // Faceplate / chin guard with vent grille
+  box(hd, 0.78, 0.32, 0.52, MAT.chrome, 0, 5.98, 0.15);
+  box(hd, 0.58, 0.14, 0.42, MAT.darkChrome, 0, 5.88, 0.2);
+  box(hd, 0.5, 0.06, 0.35, MAT.servo, 0, 5.82, 0.22);
+  ventSlits(hd, 0.42, 5, 0.038, MAT.vent, 0, 5.82, 0.42);
+  // Cheek guards with exposed mechanical layers
+  for (let side = -1; side <= 1; side += 2) {
+    box(hd, 0.22, 0.52, 0.78, MAT.armor, side * 0.56, 6.32, 0.05, 0, 0, side * 0.08);
+    box(hd, 0.1, 0.34, 0.62, MAT.darkChrome, side * 0.6, 6.24, 0.02, 0, 0, side * 0.08);
+    // Exposed mechanical inset on cheek
+    box(hd, 0.04, 0.2, 0.35, MAT.servo, side * 0.58, 6.15, -0.08, 0, 0, side * 0.08);
+    cyl(hd, 0.04, 0.04, 0.05, MAT.hydraulic, side * 0.58, 6.08, 0.02, 6);
     rivet(hd, side * 0.48, 6.72, 0.38); rivet(hd, side * 0.48, 6.16, 0.38);
+    rivet(hd, side * 0.5, 6.44, 0.42); rivet(hd, side * 0.52, 6.0, 0.34);
   }
-  // Ear vents
+  // Ear modules — sensor arrays with cooling fins
   for (let side = -1; side <= 1; side += 2) {
-    box(hd, 0.1, 0.4, 0.2, MAT.frameMat, side * 0.66, 6.38, -0.12);
-    for (let i = 0; i < 3; i++)
-      box(hd, 0.05, 0.06, 0.16, MAT.vent, side * 0.68, 6.34 + i * 0.1, -0.12);
+    box(hd, 0.12, 0.42, 0.22, MAT.frameMat, side * 0.68, 6.38, -0.12);
+    box(hd, 0.06, 0.3, 0.18, MAT.servo, side * 0.7, 6.38, -0.14);
+    for (let i = 0; i < 4; i++)
+      box(hd, 0.06, 0.055, 0.18, MAT.vent, side * 0.7, 6.3 + i * 0.08, -0.12);
+    coolingFins(hd, 5, 0.16, 0.1, 0.035, side * 0.72, 6.38, -0.22, true);
+    sphere(hd, 0.02, MAT.lens, side * 0.68, 6.52, -0.04);
   }
-  // Visor — wide single band
-  visorMesh = box(hd, 1.1, 0.2, 0.06, MAT.visor, 0, 6.44, 0.49);
-  box(hd, 0.03, 0.26, 0.08, MAT.chrome, -0.38, 6.44, 0.47);
-  box(hd, 0.03, 0.26, 0.08, MAT.chrome, 0.38, 6.44, 0.47);
-  box(hd, 1.14, 0.14, 0.02, MAT.coreInner, 0, 6.44, 0.44);
-  box(hd, 0.7, 0.04, 0.05, MAT.panelLine, 0, 6.78, 0.4);
-  // Antenna fins — taller, more heroic
+  // Visor — wide band with camera lens clusters behind
+  visorMesh = box(hd, 1.12, 0.22, 0.06, MAT.visor, 0, 6.44, 0.49);
+  box(hd, 0.04, 0.28, 0.09, MAT.chrome, -0.4, 6.44, 0.47);
+  box(hd, 0.04, 0.28, 0.09, MAT.chrome, 0.4, 6.44, 0.47);
+  box(hd, 1.16, 0.16, 0.02, MAT.coreInner, 0, 6.44, 0.44);
+  // Camera lenses behind visor (3 per side)
   for (let side = -1; side <= 1; side += 2) {
-    box(hd, 0.07, 0.1, 0.16, MAT.frameMat, side * 0.52, 6.82, -0.1);
-    box(hd, 0.06, 0.7, 0.22, MAT.chrome, side * 0.58, 7.0, -0.1, 0, 0, side * 0.18);
-    box(hd, 0.03, 0.5, 0.05, MAT.panelLine, side * 0.59, 7.08, -0.05, 0, 0, side * 0.18);
-    rivet(hd, side * 0.53, 6.82, -0.02);
+    for (let i = 0; i < 3; i++) {
+      const lx = side * (0.12 + i * 0.12);
+      cyl(hd, 0.035, 0.03, 0.04, MAT.lens, lx, 6.44, 0.42, 12);
+      sphere(hd, 0.018, MAT.coreInner, lx, 6.44, 0.44);
+      cyl(hd, 0.045, 0.045, 0.015, MAT.darkChrome, lx, 6.44, 0.41, 12);
+    }
   }
-  // Back data ports
-  box(hd, 0.85, 0.55, 0.12, MAT.darkChrome, 0, 6.42, -0.44);
-  for (let i = 0; i < 4; i++) {
-    cyl(hd, 0.06, 0.06, 0.09, MAT.frameMat, -0.22 + i * 0.15, 6.42, -0.48, 8);
-    sphere(hd, 0.025, MAT.vent, -0.22 + i * 0.15, 6.42, -0.52);
+  box(hd, 0.72, 0.04, 0.05, MAT.panelLine, 0, 6.78, 0.4);
+  // Antenna fins — structural with visible wiring
+  for (let side = -1; side <= 1; side += 2) {
+    box(hd, 0.08, 0.12, 0.18, MAT.frameMat, side * 0.54, 6.82, -0.1);
+    box(hd, 0.07, 0.75, 0.24, MAT.chrome, side * 0.58, 7.02, -0.1, 0, 0, side * 0.18);
+    box(hd, 0.03, 0.55, 0.06, MAT.panelLine, side * 0.59, 7.1, -0.05, 0, 0, side * 0.18);
+    cableRun(hd, 0.01, 0.45, side * 0.55, 6.95, -0.18, 0, 0, side * 0.18);
+    rivet(hd, side * 0.54, 6.82, -0.02);
+    sphere(hd, 0.025, MAT.vent, side * 0.58, 7.35, -0.1);
   }
+  // Back of head — data ports + cooling radiator
+  box(hd, 0.88, 0.58, 0.14, MAT.darkChrome, 0, 6.42, -0.44);
+  for (let i = 0; i < 5; i++) {
+    cyl(hd, 0.055, 0.055, 0.1, MAT.frameMat, -0.26 + i * 0.13, 6.42, -0.48, 8);
+    sphere(hd, 0.022, MAT.vent, -0.26 + i * 0.13, 6.42, -0.52);
+  }
+  coolingFins(hd, 8, 0.55, 0.06, 0.05, 0, 6.2, -0.5, false);
+  // Exposed cabling from back of skull
+  cableBundle(hd, 3, 0.012, 0.35, 0, 6.1, -0.48);
 
-  // ── NECK (chrome collar) ──
-  cyl(g, 0.24, 0.35, 0.5, MAT.joint, 0, 5.85, 0);
+  // ── NECK (exposed servos, hydraulic actuators, cable harness) ──
+  // Central neck column
+  cyl(g, 0.2, 0.32, 0.55, MAT.servo, 0, 5.85, 0);
+  // Rubber gaskets top and bottom
+  rubberSeal(g, 0.25, 0.02, 0, 6.08, 0);
+  rubberSeal(g, 0.34, 0.025, 0, 5.62, 0);
+  // Two neck servos (yaw + pitch)
+  servoDrum(g, 0.12, 0.18, 0.22, 5.95, 0);
+  servoDrum(g, 0.1, 0.14, -0.2, 5.78, 0);
+  // Hydraulic actuators (4 around neck for head tilt)
   for (let i = 0; i < 4; i++) {
     const a = (i / 4) * Math.PI * 2 + 0.4;
-    cableRun(g, 0.028, 0.5, Math.cos(a) * 0.3, 5.85, Math.sin(a) * 0.3);
+    const cx = Math.cos(a) * 0.26, cz = Math.sin(a) * 0.26;
+    hydraulicRam(g, 0.022, 0.45, cx, 5.85, cz);
   }
+  // Cable harness running through neck
+  cableBundle(g, 5, 0.014, 0.5, 0, 5.85, 0.22);
+  cableBundle(g, 3, 0.012, 0.5, 0, 5.85, -0.22);
   const neckRing = torus(g, 0.35, 0.05, MAT.vent, 0, 5.85, 0);
   glowRings.push(neckRing);
   const neckRing2 = torus(g, 0.3, 0.03, MAT.panelLine, 0, 5.72, 0);
   glowRings.push(neckRing2);
-  box(g, 1.7, 0.18, 0.85, MAT.darkChrome, 0, 5.6, 0);
+  const neckRing3 = torus(g, 0.28, 0.02, MAT.darkChrome, 0, 5.98, 0);
+  // Collar plate
+  box(g, 1.75, 0.2, 0.88, MAT.darkChrome, 0, 5.6, 0);
+  boltCluster(g, 6, 0.12, 0, 5.6, 0.42);
 
-  // ── TORSO (Optimus Prime inspired — broad chest, truck-windshield plates) ──
+  // ── TORSO (visible internal frame, hydraulic rams, servo mounts, radiator) ──
+  // Central spine column (visible endoskeleton)
   box(g, 0.4, 5.0, 0.4, MAT.frameMat, 0, 3.6, -0.15);
-  for (let i = 0; i < 5; i++)
-    box(g, 1.6, 0.06, 0.24, MAT.frameMat, 0, 3.0 + i * 0.5, 0);
-  // Main chest plates — RED (Optimus signature) L/R split
+  // Internal cross-ribs (exposed structural skeleton)
+  for (let i = 0; i < 6; i++) {
+    box(g, 1.6, 0.05, 0.22, MAT.frameMat, 0, 2.85 + i * 0.45, 0);
+    // Weld seam on each rib
+    box(g, 1.2, 0.02, 0.02, MAT.weldSeam, 0, 2.87 + i * 0.45, 0.11);
+  }
+  // Internal servo mounts (visible in torso gap)
+  for (let side = -1; side <= 1; side += 2) {
+    servoDrum(g, 0.08, 0.12, side * 0.4, 4.6, -0.1);
+    servoDrum(g, 0.07, 0.1, side * 0.35, 3.4, -0.08);
+  }
+  // Hydraulic rams connecting chest to waist (visible in side gaps)
+  for (let side = -1; side <= 1; side += 2) {
+    hydraulicRam(g, 0.035, 1.4, side * 0.95, 3.5, -0.35);
+    hydraulicRam(g, 0.028, 1.0, side * 0.85, 3.8, 0.35);
+  }
+  // Main chest plates — RED L/R split
   box(g, 1.15, 2.8, 1.35, MAT.armorRed, -0.58, 4.0, 0);
   box(g, 1.15, 2.8, 1.35, MAT.armorRed, 0.58, 4.0, 0);
+  // Central seam with weld detail
   box(g, 0.04, 2.6, 0.06, MAT.panelLine, 0, 4.0, 0.68);
-  // Windshield-style chest windows (translucent blue panels)
+  box(g, 0.02, 2.4, 0.03, MAT.weldSeam, 0, 4.0, 0.71);
+  // Windshield-style chest windows
   for (let side = -1; side <= 1; side += 2) {
     box(g, 0.55, 0.7, 0.06, MAT.visor, side * 0.42, 4.6, 0.7);
     box(g, 0.04, 0.76, 0.08, MAT.chrome, side * 0.14, 4.6, 0.7);
+    // Window frame bolts
+    rivet(g, side * 0.62, 4.88, 0.72); rivet(g, side * 0.62, 4.32, 0.72);
+    rivet(g, side * 0.22, 4.88, 0.72); rivet(g, side * 0.22, 4.32, 0.72);
   }
-  // Collar / gorget — heavy chrome
-  box(g, 1.85, 0.25, 1.0, MAT.chrome, 0, 5.38, 0);
-  box(g, 1.5, 0.08, 0.55, MAT.panelLine, 0, 5.48, 0.38);
+  // Collar / gorget — heavy chrome, bolted
+  box(g, 1.88, 0.26, 1.02, MAT.chrome, 0, 5.38, 0);
+  box(g, 1.52, 0.08, 0.56, MAT.panelLine, 0, 5.48, 0.38);
+  boltCluster(g, 6, 0.16, 0, 5.38, 0.5);
   // Upper chest chevron — chrome accent
-  box(g, 2.2, 0.65, 0.14, MAT.chrome, 0, 5.02, 0.68);
-  box(g, 1.7, 0.38, 0.07, MAT.darkChrome, 0, 5.18, 0.72);
+  box(g, 2.22, 0.66, 0.14, MAT.chrome, 0, 5.02, 0.68);
+  box(g, 1.72, 0.4, 0.07, MAT.darkChrome, 0, 5.18, 0.72);
   // Lower chest
-  box(g, 1.9, 0.42, 0.14, MAT.armor, 0, 4.4, 0.72);
-  // Side flanks — blue armor
+  box(g, 1.92, 0.44, 0.14, MAT.armor, 0, 4.4, 0.72);
+  // Side flanks — blue armor with exposed mechanical sub-layer
   for (let side = -1; side <= 1; side += 2) {
-    box(g, 0.32, 2.2, 1.15, MAT.armor, side * 1.2, 4.1, 0, 0, 0, side * -0.08);
-    box(g, 0.1, 1.8, 0.9, MAT.darkChrome, side * 1.28, 4.1, 0, 0, 0, side * -0.08);
-    rivet(g, side * 1.1, 5.0, 0.58); rivet(g, side * 1.1, 3.2, 0.58);
+    box(g, 0.34, 2.2, 1.18, MAT.armor, side * 1.22, 4.1, 0, 0, 0, side * -0.08);
+    box(g, 0.12, 1.8, 0.92, MAT.darkChrome, side * 1.3, 4.1, 0, 0, 0, side * -0.08);
+    // Visible servo + cable through flank gap
+    box(g, 0.06, 0.8, 0.3, MAT.servo, side * 1.08, 4.5, -0.2, 0, 0, side * -0.08);
+    cableBundle(g, 2, 0.01, 1.4, side * 1.05, 4.1, 0.3);
+    rivet(g, side * 1.12, 5.0, 0.58); rivet(g, side * 1.12, 3.2, 0.58);
+    rivet(g, side * 1.12, 4.3, 0.58); rivet(g, side * 1.12, 3.8, 0.58);
   }
-  // Back plate
-  box(g, 1.9, 2.4, 0.2, MAT.chrome, 0, 4.1, -0.72);
-  box(g, 1.4, 1.8, 0.1, MAT.darkChrome, 0, 4.2, -0.78);
-  // Ab plates — chrome segments
+  // Back plate with radiator cooling fins
+  box(g, 1.92, 2.4, 0.22, MAT.chrome, 0, 4.1, -0.72);
+  box(g, 1.42, 1.8, 0.1, MAT.darkChrome, 0, 4.2, -0.78);
+  coolingFins(g, 12, 1.2, 0.08, 0.06, 0, 4.2, -0.84, false);
+  // Ab plates — chrome segments with bolts
   for (let side = -1; side <= 1; side += 2) {
     for (let i = 0; i < 3; i++) {
       box(g, 0.44, 0.3, 0.13, MAT.chrome, side * 0.36, 3.0 + i * 0.35, 0.7);
+      rivet(g, side * 0.36, 3.1 + i * 0.35, 0.78);
     }
   }
   // Panel line accents
@@ -513,145 +651,231 @@ function buildChassis() {
   coreGlow.layers.enable(1);
   sphere(g, 0.08, MAT.coreInner, 0, 4.5, 0.7);
 
-  // ── WAIST / PELVIS (chrome belt, wider stance) ──
-  box(g, 1.7, 0.75, 1.05, MAT.armor, 0, 2.35, 0);
-  box(g, 1.3, 0.55, 0.85, MAT.undersuit, 0, 2.35, 0);
+  // ── WAIST / PELVIS (servo mounts, hydraulic cross-links, bolted hip skirts) ──
+  box(g, 1.72, 0.76, 1.06, MAT.armor, 0, 2.35, 0);
+  box(g, 1.32, 0.56, 0.86, MAT.undersuit, 0, 2.35, 0);
+  // Internal waist servos (visible in gaps)
+  servoDrum(g, 0.1, 0.16, 0, 2.35, 0);
+  for (let side = -1; side <= 1; side += 2)
+    hydraulicRam(g, 0.025, 0.5, side * 0.55, 2.35, -0.3, 0, 0, side * 0.3);
   // Chrome belt buckle
-  box(g, 1.9, 0.22, 0.16, MAT.chrome, 0, 2.72, 0.54);
-  box(g, 0.6, 0.16, 0.1, MAT.armorRed, 0, 2.72, 0.58);
-  // Hip guard skirts — blue
+  box(g, 1.92, 0.23, 0.17, MAT.chrome, 0, 2.72, 0.54);
+  box(g, 0.62, 0.17, 0.11, MAT.armorRed, 0, 2.72, 0.58);
+  boltCluster(g, 6, 0.14, 0, 2.72, 0.62);
+  // Hip guard skirts with bolt detail
   for (let side = -1; side <= 1; side += 2) {
-    box(g, 0.5, 0.55, 0.75, MAT.armor, side * 0.72, 2.15, 0, 0, 0, side * -0.12);
-    box(g, 0.38, 0.14, 0.6, MAT.darkChrome, side * 0.74, 2.32, 0, 0, 0, side * -0.12);
-    rivet(g, side * 0.62, 2.52, 0.4);
+    box(g, 0.52, 0.56, 0.76, MAT.armor, side * 0.73, 2.15, 0, 0, 0, side * -0.12);
+    box(g, 0.4, 0.15, 0.62, MAT.darkChrome, side * 0.75, 2.32, 0, 0, 0, side * -0.12);
+    rivet(g, side * 0.63, 2.52, 0.42); rivet(g, side * 0.63, 2.12, 0.42);
+    // Visible mechanical substructure in hip gap
+    box(g, 0.08, 0.3, 0.2, MAT.servo, side * 0.55, 2.1, -0.15, 0, 0, side * -0.12);
   }
-  const waistRing = torus(g, 0.95, 0.05, MAT.vent, 0, 2.72, 0);
+  const waistRing = torus(g, 0.96, 0.055, MAT.vent, 0, 2.72, 0);
   glowRings.push(waistRing);
-  box(g, 0.85, 0.05, 0.07, MAT.panelLine, 0, 2.0, 0.54);
-  cableRun(g, 0.022, 1.3, 0, 2.58, -0.5, 0, 0, Math.PI / 2);
+  box(g, 0.86, 0.05, 0.07, MAT.panelLine, 0, 2.0, 0.55);
+  cableBundle(g, 4, 0.012, 1.3, 0, 2.58, -0.5);
 
-  // ── SHOULDERS (massive Optimus-style pauldrons) ──
+  // ── SHOULDERS (massive pauldrons, exposed servo + actuators) ──
   function buildShoulder(tgt, side) {
     const sx = side * 1.75;
+    // Ball joint with rubber gasket
     sphere(tgt, 0.45, MAT.joint, sx, 5.25, 0);
+    rubberSeal(tgt, 0.42, 0.025, sx, 5.25, 0);
     const shoulderRing = torus(tgt, 0.5, 0.05, MAT.vent, sx, 5.25, 0);
     glowRings.push(shoulderRing);
-    // Inner mount
-    box(tgt, 0.7, 0.4, 0.7, MAT.frameMat, sx + side * 0.2, 5.38, 0, 0, 0, side * -0.1);
-    // Massive pauldron — red accent
-    box(tgt, 1.15, 0.6, 1.0, MAT.armorRed, sx + side * 0.35, 5.45, 0, 0, 0, side * -0.12);
-    // Chrome trim on pauldron
-    box(tgt, 1.0, 0.18, 0.85, MAT.chrome, sx + side * 0.4, 5.72, 0, 0, 0, side * -0.12);
-    box(tgt, 0.7, 0.06, 0.7, MAT.darkChrome, sx + side * 0.35, 5.62, 0, 0, 0, side * -0.12);
-    // Top cap
-    box(tgt, 0.85, 0.1, 0.75, MAT.chrome, sx + side * 0.38, 5.78, 0, 0, 0, side * -0.12);
-    ventSlits(tgt, 0.45, 2, 0.09, MAT.vent, sx + side * 0.4, 5.28, 0);
-    pistonGeo(tgt, 0.045, 0.6, MAT.pistonMat, sx * 0.65, 5.32, -0.38, 0, 0, side * 0.55);
-    rivet(tgt, sx + side * 0.15, 5.65, 0.42); rivet(tgt, sx + side * 0.6, 5.65, -0.35);
+    // Rotational servo drum (visible)
+    servoDrum(tgt, 0.15, 0.2, sx + side * 0.08, 5.25, -0.15);
+    // Inner structural mount
+    box(tgt, 0.72, 0.42, 0.72, MAT.frameMat, sx + side * 0.2, 5.38, 0, 0, 0, side * -0.1);
+    box(tgt, 0.5, 0.3, 0.5, MAT.servo, sx + side * 0.2, 5.38, 0, 0, 0, side * -0.1);
+    // Pauldron — red with chrome layers
+    box(tgt, 1.18, 0.62, 1.02, MAT.armorRed, sx + side * 0.35, 5.46, 0, 0, 0, side * -0.12);
+    box(tgt, 1.02, 0.2, 0.88, MAT.chrome, sx + side * 0.4, 5.74, 0, 0, 0, side * -0.12);
+    box(tgt, 0.72, 0.07, 0.72, MAT.darkChrome, sx + side * 0.35, 5.63, 0, 0, 0, side * -0.12);
+    // Top cap with bolts
+    box(tgt, 0.88, 0.12, 0.78, MAT.chrome, sx + side * 0.38, 5.8, 0, 0, 0, side * -0.12);
+    boltCluster(tgt, 4, 0.18, sx + side * 0.38, 5.82, 0);
+    // Hydraulic actuator under pauldron
+    hydraulicRam(tgt, 0.03, 0.5, sx * 0.65, 5.32, -0.35, 0, 0, side * 0.55);
+    // Vent grilles
+    ventSlits(tgt, 0.48, 3, 0.07, MAT.vent, sx + side * 0.42, 5.26, 0);
+    // Cable harness from shoulder to arm
+    cableBundle(tgt, 3, 0.012, 0.5, sx + side * 0.1, 5.0, 0.25);
+    rivet(tgt, sx + side * 0.15, 5.67, 0.44); rivet(tgt, sx + side * 0.62, 5.67, -0.38);
+    rivet(tgt, sx + side * 0.35, 5.44, 0.5); rivet(tgt, sx + side * 0.35, 5.44, -0.5);
   }
   buildShoulder(la, -1);
   buildShoulder(ra, 1);
 
-  // ── ARMS (heavier forearms, chrome gauntlets) ──
+  // ── ARMS (actuators, cable bundles, articulated fingers, servo drums) ──
   function buildArm(tgt, side) {
     const sx = side * 2.2;
-    // Upper arm
-    box(tgt, 0.4, 1.35, 0.4, MAT.undersuit, sx, 4.2, 0);
-    box(tgt, 0.6, 1.45, 0.55, MAT.armor, sx, 4.2, 0);
-    box(tgt, 0.48, 0.5, 0.4, MAT.darkChrome, sx, 4.68, 0.2);
-    box(tgt, 0.44, 0.07, 0.38, MAT.panelLine, sx, 4.52, 0.28);
-    pistonGeo(tgt, 0.035, 0.65, MAT.pistonMat, sx + side * 0.24, 4.2, -0.22);
-    cableRun(tgt, 0.02, 1.1, sx - side * 0.22, 4.2, 0.2);
-    // Elbow
-    sphere(tgt, 0.32, MAT.joint, sx, 3.4, 0);
-    const elbowRing = torus(tgt, 0.36, 0.04, MAT.vent, sx, 3.4, 0);
+    // Upper arm — undersuit + blue armor shell
+    box(tgt, 0.38, 1.35, 0.38, MAT.undersuit, sx, 4.2, 0);
+    box(tgt, 0.62, 1.46, 0.56, MAT.armor, sx, 4.2, 0);
+    box(tgt, 0.5, 0.52, 0.42, MAT.darkChrome, sx, 4.7, 0.2);
+    box(tgt, 0.46, 0.08, 0.4, MAT.panelLine, sx, 4.54, 0.28);
+    // Bicep piston + hydraulic ram
+    pistonGeo(tgt, 0.035, 0.68, MAT.pistonMat, sx + side * 0.24, 4.2, -0.22);
+    hydraulicRam(tgt, 0.028, 0.6, sx - side * 0.2, 4.3, -0.18);
+    // Cable harness down arm
+    cableBundle(tgt, 4, 0.01, 1.2, sx - side * 0.2, 4.2, 0.22);
+    // Bicep servo mount
+    servoDrum(tgt, 0.06, 0.1, sx + side * 0.18, 4.6, -0.06);
+    // Elbow — ball joint + servo + rubber seal
+    sphere(tgt, 0.34, MAT.joint, sx, 3.4, 0);
+    rubberSeal(tgt, 0.32, 0.02, sx, 3.4, 0);
+    servoDrum(tgt, 0.1, 0.14, sx, 3.4, 0.18);
+    const elbowRing = torus(tgt, 0.38, 0.04, MAT.vent, sx, 3.4, 0);
     glowRings.push(elbowRing);
-    pistonGeo(tgt, 0.03, 0.45, MAT.pistonMat, sx + side * 0.2, 3.4, -0.2, 0.3, 0, 0);
+    // Elbow actuators (dual pistons)
+    pistonGeo(tgt, 0.028, 0.42, MAT.pistonMat, sx + side * 0.22, 3.4, -0.2, 0.3, 0, 0);
+    pistonGeo(tgt, 0.025, 0.35, MAT.pistonMat, sx - side * 0.18, 3.4, -0.18, -0.25, 0, 0);
     // Forearm — MASSIVE chrome gauntlet
-    box(tgt, 0.38, 1.3, 0.38, MAT.undersuit, sx, 2.4, 0);
-    box(tgt, 0.65, 1.4, 0.6, MAT.chrome, sx, 2.4, 0);
-    box(tgt, 0.7, 0.35, 0.65, MAT.armorRed, sx, 2.85, 0);
-    box(tgt, 0.15, 1.0, 0.15, MAT.darkChrome, sx + side * 0.32, 2.4, 0);
-    box(tgt, 0.08, 0.9, 0.08, MAT.panelLine, sx + side * 0.3, 2.4, 0.28);
-    // Wrist band
-    torus(tgt, 0.28, 0.04, MAT.vent, sx, 1.8, 0);
-    box(tgt, 0.42, 0.1, 0.42, MAT.darkChrome, sx, 1.78, 0);
-    // Hand — bigger fist
-    box(tgt, 0.35, 0.4, 0.35, MAT.joint, sx, 1.5, 0);
-    for (let f = -1; f <= 1; f++) {
-      box(tgt, 0.08, 0.26, 0.1, MAT.frameMat, sx + f * 0.12, 1.26, 0.1);
+    box(tgt, 0.36, 1.32, 0.36, MAT.undersuit, sx, 2.4, 0);
+    box(tgt, 0.66, 1.42, 0.62, MAT.chrome, sx, 2.4, 0);
+    box(tgt, 0.72, 0.36, 0.66, MAT.armorRed, sx, 2.86, 0);
+    box(tgt, 0.16, 1.02, 0.16, MAT.darkChrome, sx + side * 0.33, 2.4, 0);
+    box(tgt, 0.08, 0.92, 0.08, MAT.panelLine, sx + side * 0.31, 2.4, 0.3);
+    // Forearm internal: cable conduit visible
+    cableBundle(tgt, 3, 0.008, 0.9, sx - side * 0.25, 2.4, -0.22);
+    // Forearm cooling vents
+    ventSlits(tgt, 0.25, 3, 0.08, MAT.vent, sx + side * 0.34, 2.2, 0.2);
+    rivet(tgt, sx - side * 0.24, 2.86, 0.32); rivet(tgt, sx + side * 0.24, 2.04, 0.3);
+    rivet(tgt, sx, 2.65, 0.33); rivet(tgt, sx, 2.15, 0.33);
+    // Wrist — rotational servo + rubber seal
+    torus(tgt, 0.3, 0.045, MAT.vent, sx, 1.8, 0);
+    rubberSeal(tgt, 0.28, 0.018, sx, 1.76, 0);
+    servoDrum(tgt, 0.08, 0.12, sx, 1.8, 0.12);
+    box(tgt, 0.44, 0.12, 0.44, MAT.darkChrome, sx, 1.78, 0);
+    // Hand — articulated fingers with individual joints
+    box(tgt, 0.36, 0.3, 0.36, MAT.joint, sx, 1.55, 0);
+    box(tgt, 0.3, 0.06, 0.3, MAT.servo, sx, 1.62, 0);
+    // 4 fingers (knuckle + 2 segments each)
+    for (let f = 0; f < 4; f++) {
+      const fz = -0.1 + f * 0.07;
+      // Knuckle ball
+      sphere(tgt, 0.025, MAT.joint, sx + 0.0, 1.38, fz);
+      // Proximal segment
+      box(tgt, 0.045, 0.14, 0.05, MAT.frameMat, sx + 0.0, 1.28, fz);
+      // Distal segment
+      box(tgt, 0.04, 0.1, 0.045, MAT.chrome, sx + 0.0, 1.18, fz);
     }
-    box(tgt, 0.08, 0.2, 0.1, MAT.frameMat, sx + side * 0.18, 1.36, -0.1);
-    rivet(tgt, sx - side * 0.22, 2.85, 0.3); rivet(tgt, sx + side * 0.22, 2.0, 0.28);
+    // Thumb (opposite side)
+    sphere(tgt, 0.028, MAT.joint, sx + side * 0.18, 1.45, -0.15);
+    box(tgt, 0.05, 0.12, 0.06, MAT.frameMat, sx + side * 0.2, 1.36, -0.15);
+    box(tgt, 0.045, 0.09, 0.05, MAT.chrome, sx + side * 0.22, 1.28, -0.15);
   }
   buildArm(la, -1);
   buildArm(ra, 1);
 
-  // ── LEGS (heroic proportions, massive knee guards) ──
+  // ── LEGS (hydraulic thigh rams, shock absorber knee, articulated feet) ──
   function buildLeg(side) {
     const sx = side * 0.6;
-    // Hip joint
-    sphere(g, 0.35, MAT.joint, sx, 1.95, 0);
-    const hipRing = torus(g, 0.4, 0.04, MAT.vent, sx, 1.95, 0);
+    // Hip joint — ball + rubber seal + servo
+    sphere(g, 0.36, MAT.joint, sx, 1.95, 0);
+    rubberSeal(g, 0.34, 0.02, sx, 1.95, 0);
+    servoDrum(g, 0.1, 0.14, sx + side * 0.08, 1.95, -0.12);
+    const hipRing = torus(g, 0.42, 0.045, MAT.vent, sx, 1.95, 0);
     glowRings.push(hipRing);
-    // Hip skirt — blue armor
-    box(g, 0.6, 0.4, 0.6, MAT.armor, sx + side * 0.12, 1.82, 0.12, 0, 0, side * -0.1);
-    box(g, 0.45, 0.12, 0.45, MAT.darkChrome, sx + side * 0.12, 1.92, 0.15, 0, 0, side * -0.1);
-    // Thigh — blue plates
-    box(g, 0.45, 1.55, 0.45, MAT.undersuit, sx, 0.8, 0);
-    box(g, 0.7, 1.65, 0.7, MAT.armor, sx, 0.8, 0);
-    box(g, 0.55, 0.14, 0.5, MAT.chrome, sx, 1.35, 0.35);
-    box(g, 0.5, 0.14, 0.45, MAT.darkChrome, sx, 0.5, 0.35);
-    box(g, 0.07, 1.1, 0.07, MAT.panelLine, sx + side * 0.33, 0.8, 0.35);
-    cableRun(g, 0.02, 1.3, sx - side * 0.3, 0.8, -0.22);
-    rivet(g, sx + side * 0.28, 1.5, 0.33); rivet(g, sx + side * 0.28, 0.1, 0.33);
-    // Knee joint
-    sphere(g, 0.3, MAT.joint, sx, -0.1, 0.1);
-    const kneeRing = torus(g, 0.34, 0.04, MAT.vent, sx, -0.1, 0.1);
+    // Hip skirt armor
+    box(g, 0.62, 0.42, 0.62, MAT.armor, sx + side * 0.12, 1.82, 0.12, 0, 0, side * -0.1);
+    box(g, 0.47, 0.13, 0.47, MAT.darkChrome, sx + side * 0.12, 1.92, 0.15, 0, 0, side * -0.1);
+    boltCluster(g, 4, 0.14, sx + side * 0.12, 1.82, 0.38);
+    // Thigh — blue plates with hydraulic ram running down front
+    box(g, 0.44, 1.55, 0.44, MAT.undersuit, sx, 0.8, 0);
+    box(g, 0.72, 1.66, 0.72, MAT.armor, sx, 0.8, 0);
+    box(g, 0.56, 0.15, 0.52, MAT.chrome, sx, 1.36, 0.36);
+    box(g, 0.52, 0.15, 0.47, MAT.darkChrome, sx, 0.5, 0.36);
+    box(g, 0.07, 1.12, 0.07, MAT.panelLine, sx + side * 0.34, 0.8, 0.36);
+    // Thigh hydraulic ram (front, visible through panel gap)
+    hydraulicRam(g, 0.03, 1.2, sx, 0.8, 0.38);
+    // Cable conduit (rear)
+    cableBundle(g, 3, 0.01, 1.3, sx - side * 0.28, 0.8, -0.25);
+    rivet(g, sx + side * 0.3, 1.52, 0.35); rivet(g, sx + side * 0.3, 0.08, 0.35);
+    rivet(g, sx - side * 0.3, 1.2, 0.35); rivet(g, sx - side * 0.3, 0.4, 0.35);
+    // Knee joint — shock absorber assembly
+    sphere(g, 0.32, MAT.joint, sx, -0.1, 0.1);
+    rubberSeal(g, 0.3, 0.02, sx, -0.1, 0.1);
+    const kneeRing = torus(g, 0.36, 0.045, MAT.vent, sx, -0.1, 0.1);
     glowRings.push(kneeRing);
-    pistonGeo(g, 0.03, 0.38, MAT.pistonMat, sx + side * 0.24, -0.1, -0.18, 0.25, 0, 0);
-    pistonGeo(g, 0.03, 0.32, MAT.pistonMat, sx - side * 0.24, -0.1, 0.22, -0.2, 0, 0);
-    // MASSIVE knee guard — chrome + red accent
-    box(g, 0.72, 0.55, 0.22, MAT.chrome, sx, -0.1, 0.38);
-    box(g, 0.58, 0.35, 0.1, MAT.armorRed, sx, -0.08, 0.48);
-    box(g, 0.48, 0.08, 0.06, MAT.darkChrome, sx, -0.28, 0.44);
-    // Shin — blue armor
-    box(g, 0.4, 1.45, 0.4, MAT.undersuit, sx, -1.2, 0.08);
-    box(g, 0.6, 1.55, 0.6, MAT.armor, sx, -1.2, 0.08);
-    box(g, 0.65, 0.65, 0.16, MAT.chrome, sx, -0.6, 0.38);
-    box(g, 0.55, 0.38, 0.1, MAT.darkChrome, sx, -0.85, 0.4);
-    box(g, 0.07, 1.0, 0.07, MAT.panelLine, sx, -1.2, 0.4);
-    ventSlits(g, 0.22, 3, 0.09, MAT.vent, sx - side * 0.3, -1.4, 0);
-    cableRun(g, 0.018, 1.2, sx + side * 0.24, -1.2, -0.2);
-    // Ankle
-    cyl(g, 0.18, 0.22, 0.32, MAT.joint, sx, -2.1, 0.08);
-    pistonGeo(g, 0.025, 0.28, MAT.pistonMat, sx + side * 0.14, -2.0, 0.24);
-    pistonGeo(g, 0.025, 0.28, MAT.pistonMat, sx - side * 0.14, -2.0, -0.1);
-    // Foot — chrome plated
-    box(g, 0.7, 0.24, 0.65, MAT.chrome, sx, -2.35, 0.4);
-    box(g, 0.6, 0.2, 0.38, MAT.armor, sx, -2.35, -0.05);
-    box(g, 0.65, 0.1, 0.6, MAT.darkChrome, sx, -2.22, 0.42);
-    box(g, 0.5, 0.05, 0.4, MAT.chrome, sx, -2.18, 0.42);
-    box(g, 0.32, 0.1, 0.32, MAT.ventHot, sx, -2.48, 0.15);
-    rivet(g, sx + side * 0.28, -2.2, 0.62); rivet(g, sx - side * 0.28, -2.2, 0.62);
+    // Dual knee actuators
+    pistonGeo(g, 0.032, 0.4, MAT.pistonMat, sx + side * 0.26, -0.1, -0.2, 0.25, 0, 0);
+    pistonGeo(g, 0.032, 0.34, MAT.pistonMat, sx - side * 0.26, -0.1, 0.24, -0.2, 0, 0);
+    // Shock absorber (chrome cylinder behind knee)
+    cyl(g, 0.05, 0.05, 0.5, MAT.pistonMat, sx, -0.1, -0.25, 10);
+    cyl(g, 0.065, 0.065, 0.2, MAT.hydraulic, sx, -0.2, -0.25, 10);
+    rubberSeal(g, 0.06, 0.012, sx, 0.05, -0.25);
+    // Knee guard — chrome + red accent, bolted
+    box(g, 0.74, 0.56, 0.24, MAT.chrome, sx, -0.1, 0.4);
+    box(g, 0.6, 0.38, 0.12, MAT.armorRed, sx, -0.08, 0.5);
+    box(g, 0.5, 0.09, 0.07, MAT.darkChrome, sx, -0.28, 0.46);
+    boltCluster(g, 4, 0.1, sx, -0.1, 0.52);
+    // Shin — blue armor with visible cable run
+    box(g, 0.42, 1.46, 0.42, MAT.undersuit, sx, -1.2, 0.08);
+    box(g, 0.62, 1.56, 0.62, MAT.armor, sx, -1.2, 0.08);
+    box(g, 0.67, 0.66, 0.18, MAT.chrome, sx, -0.6, 0.4);
+    box(g, 0.57, 0.4, 0.12, MAT.darkChrome, sx, -0.85, 0.42);
+    box(g, 0.07, 1.02, 0.07, MAT.panelLine, sx, -1.2, 0.42);
+    // Shin coolant lines
+    cableBundle(g, 2, 0.008, 1.0, sx + side * 0.26, -1.2, -0.22);
+    ventSlits(g, 0.24, 4, 0.075, MAT.vent, sx - side * 0.32, -1.4, 0);
+    // Ankle — servo + rubber seal
+    cyl(g, 0.2, 0.24, 0.34, MAT.joint, sx, -2.1, 0.08);
+    rubberSeal(g, 0.22, 0.015, sx, -2.0, 0.08);
+    servoDrum(g, 0.065, 0.1, sx + side * 0.1, -2.1, 0.2);
+    pistonGeo(g, 0.025, 0.3, MAT.pistonMat, sx + side * 0.15, -2.0, 0.26);
+    pistonGeo(g, 0.025, 0.3, MAT.pistonMat, sx - side * 0.15, -2.0, -0.12);
+    // Foot — 2-part articulated (toe plate + heel plate)
+    // Toe plate
+    box(g, 0.72, 0.22, 0.5, MAT.chrome, sx, -2.36, 0.5);
+    box(g, 0.58, 0.08, 0.4, MAT.darkChrome, sx, -2.24, 0.52);
+    // Midfoot joint (visible hinge)
+    cyl(g, 0.04, 0.04, 0.55, MAT.joint, sx, -2.36, 0.22, 8);
+    // Heel plate
+    box(g, 0.62, 0.2, 0.4, MAT.armor, sx, -2.36, -0.05);
+    box(g, 0.52, 0.06, 0.3, MAT.chrome, sx, -2.24, -0.05);
+    // Sole thruster
+    box(g, 0.34, 0.1, 0.34, MAT.ventHot, sx, -2.48, 0.15);
+    // Toe tip sensor
+    sphere(g, 0.03, MAT.lens, sx, -2.4, 0.72);
+    // Rivets
+    rivet(g, sx + side * 0.3, -2.22, 0.64); rivet(g, sx - side * 0.3, -2.22, 0.64);
+    rivet(g, sx + side * 0.25, -2.22, -0.18); rivet(g, sx - side * 0.25, -2.22, -0.18);
   }
   buildLeg(-1);
   buildLeg(1);
 
-  // ── SPINE (vertebrae with cross-struts) ──
+  // ── SPINE (vertebrae, coolant lines, structural cross-bracing) ──
   spineSegments = [];
   for (let i = 0; i < 8; i++) {
+    const yOff = 2.7 + i * 0.4;
     const mat = MAT.spineGlow.clone();
-    const seg = box(g, 0.12, 0.2, 0.12, mat, 0, 2.7 + i * 0.4, -0.72);
+    // Vertebra body
+    const seg = box(g, 0.14, 0.22, 0.14, mat, 0, yOff, -0.72);
     spineSegments.push(seg);
+    // Inter-vertebral disc (rubber gasket)
     if (i > 0) {
-      box(g, 0.22, 0.04, 0.06, MAT.frameMat, 0, 2.7 + i * 0.4 - 0.2, -0.72);
+      box(g, 0.1, 0.04, 0.1, MAT.rubber, 0, yOff - 0.2, -0.72);
+      box(g, 0.24, 0.04, 0.07, MAT.frameMat, 0, yOff - 0.2, -0.72);
+    }
+    // Lateral transverse process (structural wing)
+    for (let side = -1; side <= 1; side += 2) {
+      box(g, 0.12, 0.05, 0.04, MAT.frameMat, side * 0.12, yOff, -0.72);
     }
     // Cross-struts to torso
     if (i >= 2 && i <= 6) {
-      box(g, 0.04, 0.04, 0.2, MAT.frameMat, 0, 2.7 + i * 0.4, -0.6);
+      box(g, 0.04, 0.04, 0.22, MAT.frameMat, 0, yOff, -0.6);
+      // Diagonal braces
+      for (let side = -1; side <= 1; side += 2)
+        box(g, 0.02, 0.04, 0.18, MAT.frameMat, side * 0.06, yOff, -0.58, 0, side * 0.15, 0);
     }
   }
+  // Coolant lines running along spine
+  for (let side = -1; side <= 1; side += 2)
+    cableRun(g, 0.015, 3.0, side * 0.12, 4.0, -0.78);
+  // Central data conduit
+  cableRun(g, 0.02, 3.2, 0, 4.0, -0.82);
 
   // ── BACK THRUSTERS / EXHAUST (detailed nozzles) ──
   for (let side = -1; side <= 1; side += 2) {
