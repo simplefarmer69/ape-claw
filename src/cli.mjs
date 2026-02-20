@@ -176,39 +176,64 @@ function installApeClawSkill(args) {
 
   // ── Starter Pack: install top 100 curated skills ──
   const starterPackInstalled = [];
-  const starterPackPath = path.join(packageRoot, "data", "starter-pack.json");
-  if (!skipStarterPack && fs.existsSync(starterPackPath)) {
+  const bundlePath = path.join(packageRoot, "data", "starter-pack-bundle.json");
+  const legacyPackPath = path.join(packageRoot, "data", "starter-pack.json");
+  const starterPackAvailable = fs.existsSync(bundlePath) || fs.existsSync(legacyPackPath);
+  if (!skipStarterPack && starterPackAvailable) {
     try {
-      const pack = JSON.parse(fs.readFileSync(starterPackPath, "utf8"));
-      const skillsDataDir = path.join(packageRoot, "data", "skills");
       const starterDir = path.join(skillsRoot, "starter-pack");
       fs.mkdirSync(starterDir, { recursive: true });
-
       const manifestEntries = [];
-      for (const entry of (pack.skills || [])) {
-        const slug = String(entry.slug || "").trim();
-        if (!slug) continue;
 
-        const sourceJson = path.join(skillsDataDir, `${slug}.json`);
-        if (!fs.existsSync(sourceJson)) continue;
-
-        const targetJson = path.join(starterDir, `${slug}.json`);
-        fs.copyFileSync(sourceJson, targetJson);
-        manifestEntries.push({
-          slug,
-          name: entry.name,
-          category: entry.category,
-          description: entry.description,
-          vettedOk: entry.vettedOk,
-          onchain: entry.onchain,
-          installedAt: new Date().toISOString(),
-        });
-        starterPackInstalled.push({
-          slug,
-          name: entry.name,
-          category: entry.category,
-          description: entry.description,
-        });
+      if (fs.existsSync(bundlePath)) {
+        const bundle = JSON.parse(fs.readFileSync(bundlePath, "utf8"));
+        for (const entry of (bundle.skills || [])) {
+          const slug = String(entry.slug || "").trim();
+          if (!slug || !entry.fullJson) continue;
+          const targetJson = path.join(starterDir, `${slug}.json`);
+          fs.writeFileSync(targetJson, JSON.stringify(entry.fullJson));
+          manifestEntries.push({
+            slug,
+            name: entry.name,
+            category: entry.category,
+            description: entry.description,
+            vettedOk: entry.vettedOk,
+            onchain: entry.onchain,
+            installedAt: new Date().toISOString(),
+          });
+          starterPackInstalled.push({
+            slug,
+            name: entry.name,
+            category: entry.category,
+            description: entry.description,
+          });
+        }
+      } else {
+        const pack = JSON.parse(fs.readFileSync(legacyPackPath, "utf8"));
+        const skillsDataDir = path.join(packageRoot, "data", "skills");
+        for (const entry of (pack.skills || [])) {
+          const slug = String(entry.slug || "").trim();
+          if (!slug) continue;
+          const sourceJson = path.join(skillsDataDir, `${slug}.json`);
+          if (!fs.existsSync(sourceJson)) continue;
+          const targetJson = path.join(starterDir, `${slug}.json`);
+          fs.copyFileSync(sourceJson, targetJson);
+          manifestEntries.push({
+            slug,
+            name: entry.name,
+            category: entry.category,
+            description: entry.description,
+            vettedOk: entry.vettedOk,
+            onchain: entry.onchain,
+            installedAt: new Date().toISOString(),
+          });
+          starterPackInstalled.push({
+            slug,
+            name: entry.name,
+            category: entry.category,
+            description: entry.description,
+          });
+        }
       }
 
       if (manifestEntries.length > 0) {
