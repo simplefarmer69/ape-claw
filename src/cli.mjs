@@ -215,14 +215,22 @@ function syncSkillToOpenClaw(cardObj, slug, skillsRoot) {
   const s = String(slug || cardObj?.slug || cardObj?.name || "").toLowerCase().trim()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   if (!s) return null;
-  const skillDir = path.join(skillsRoot, s);
-  fs.mkdirSync(skillDir, { recursive: true });
   const doc = String(cardObj?.documentation_md || "").trim();
   const nameValue = String(cardObj?.name || s).trim();
   const versionValue = String(cardObj?.version || "1.0.0").trim();
   const descriptionValue = String(cardObj?.description || "").trim();
   const content = doc || `---\nname: ${nameValue}\nversion: ${versionValue}\ndescription: ${descriptionValue}\n---\n\n# ${nameValue}\n\n${descriptionValue}\n`;
+
+  const skillDir = path.join(skillsRoot, s);
+  fs.mkdirSync(skillDir, { recursive: true });
   fs.writeFileSync(path.join(skillDir, "SKILL.md"), content, "utf8");
+
+  const openclawWorkspaceSkills = path.join(os.homedir(), ".openclaw", "workspace", "skills", s);
+  try {
+    fs.mkdirSync(openclawWorkspaceSkills, { recursive: true });
+    fs.writeFileSync(path.join(openclawWorkspaceSkills, "SKILL.md"), content, "utf8");
+  } catch {}
+
   return { slug: s, skillDir };
 }
 
