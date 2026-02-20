@@ -403,90 +403,210 @@ function buildChassis() {
   const _rp = new THREE.Group(); _rp.position.set(1.75, 5.25, 0);
   const ra = new THREE.Group(); ra.position.set(-1.75, -5.25, 0); _rp.add(ra);
 
-  // ── HEAD (layered helmet, camera lenses, cooling fins, exposed internals) ──
-  // Inner cranium structure
-  box(hd, 0.85, 0.74, 0.74, MAT.servo, 0, 6.4, 0);
-  box(hd, 0.78, 0.68, 0.68, MAT.frameMat, 0, 6.4, 0);
-  // Outer helmet halves — blue armor with visible sub-panels
-  box(hd, 0.56, 0.95, 0.96, MAT.armor, -0.3, 6.44, 0);
-  box(hd, 0.56, 0.95, 0.96, MAT.armor, 0.3, 6.44, 0);
-  // Panel seam lines on helmet
-  box(hd, 0.03, 0.95, 0.06, MAT.panelLine, 0, 6.44, 0.46);
-  box(hd, 0.03, 0.7, 0.04, MAT.weldSeam, -0.15, 6.5, 0.46);
-  box(hd, 0.03, 0.7, 0.04, MAT.weldSeam, 0.15, 6.5, 0.46);
-  // Sub-panel detail layers on each side
+  // ══════════════════════════════════════════════════════════
+  // HEAD — Refined helmet with advanced multi-element optical array
+  // ══════════════════════════════════════════════════════════
+
+  // ── Inner cranium (processor housing visible through panel gaps) ──
+  box(hd, 0.82, 0.72, 0.72, MAT.servo, 0, 6.4, 0);
+  box(hd, 0.74, 0.66, 0.66, MAT.frameMat, 0, 6.4, 0);
+  // Processor board detail (visible through top gap)
+  box(hd, 0.4, 0.02, 0.35, MAT.vent, 0, 6.72, 0);
+  for (let i = 0; i < 3; i++)
+    box(hd, 0.06, 0.04, 0.06, MAT.coreInner, -0.12 + i * 0.12, 6.73, 0.08);
+
+  // ── Outer helmet (split halves with layered sub-panels) ──
+  box(hd, 0.58, 0.98, 0.98, MAT.armor, -0.3, 6.44, 0);
+  box(hd, 0.58, 0.98, 0.98, MAT.armor, 0.3, 6.44, 0);
+  // Central seam
+  box(hd, 0.03, 0.98, 0.06, MAT.panelLine, 0, 6.44, 0.47);
+  box(hd, 0.02, 0.75, 0.04, MAT.weldSeam, -0.16, 6.52, 0.47);
+  box(hd, 0.02, 0.75, 0.04, MAT.weldSeam, 0.16, 6.52, 0.47);
+  // Sub-panel chrome inlays
   for (let side = -1; side <= 1; side += 2) {
-    box(hd, 0.04, 0.5, 0.45, MAT.darkChrome, side * 0.3, 6.62, 0.22);
-    box(hd, 0.02, 0.3, 0.25, MAT.servo, side * 0.28, 6.72, 0.3);
+    box(hd, 0.05, 0.55, 0.48, MAT.darkChrome, side * 0.32, 6.64, 0.22);
+    box(hd, 0.03, 0.35, 0.28, MAT.servo, side * 0.3, 6.74, 0.32);
+    // Temple status indicator lights (3 per side)
+    for (let i = 0; i < 3; i++)
+      sphere(hd, 0.015, MAT.vent, side * 0.58, 6.62 + i * 0.1, 0.3);
   }
-  // Tall central crest with internal ribbing
-  box(hd, 0.18, 0.5, 0.72, MAT.chrome, 0, 7.14, -0.04);
-  box(hd, 0.1, 0.28, 0.52, MAT.armorRed, 0, 7.3, -0.04);
-  box(hd, 0.06, 0.14, 0.38, MAT.chrome, 0, 7.4, -0.04);
-  // Internal crest ribbing
-  for (let i = 0; i < 4; i++) box(hd, 0.12, 0.03, 0.5, MAT.frameMat, 0, 7.0 + i * 0.12, -0.04);
-  // Brow plate — heavy chrome, bolted
-  box(hd, 1.22, 0.24, 0.4, MAT.chrome, 0, 6.76, 0.28, -0.12, 0, 0);
-  box(hd, 0.92, 0.1, 0.3, MAT.darkChrome, 0, 6.68, 0.32, -0.1, 0, 0);
-  boltCluster(hd, 4, 0.08, -0.4, 6.76, 0.44);
-  boltCluster(hd, 4, 0.08, 0.4, 6.76, 0.44);
-  // Faceplate / chin guard with vent grille
-  box(hd, 0.78, 0.32, 0.52, MAT.chrome, 0, 5.98, 0.15);
-  box(hd, 0.58, 0.14, 0.42, MAT.darkChrome, 0, 5.88, 0.2);
-  box(hd, 0.5, 0.06, 0.35, MAT.servo, 0, 5.82, 0.22);
-  ventSlits(hd, 0.42, 5, 0.038, MAT.vent, 0, 5.82, 0.42);
-  // Cheek guards with exposed mechanical layers
+
+  // ── Crest (taller, multi-layered Prime fin) ──
+  box(hd, 0.2, 0.55, 0.75, MAT.chrome, 0, 7.16, -0.04);
+  box(hd, 0.12, 0.32, 0.55, MAT.armorRed, 0, 7.34, -0.04);
+  box(hd, 0.07, 0.18, 0.4, MAT.chrome, 0, 7.44, -0.04);
+  box(hd, 0.04, 0.1, 0.25, MAT.coreInner, 0, 7.5, -0.04);
+  for (let i = 0; i < 5; i++)
+    box(hd, 0.14, 0.025, 0.52, MAT.frameMat, 0, 6.98 + i * 0.11, -0.04);
+
+  // ── Brow plate (heavy chrome visor shield, bolted) ──
+  box(hd, 1.28, 0.18, 0.42, MAT.chrome, 0, 6.72, 0.3, -0.1, 0, 0);
+  box(hd, 1.0, 0.08, 0.32, MAT.darkChrome, 0, 6.66, 0.34, -0.08, 0, 0);
+  // Underside of brow (recessed shadow area above visor)
+  box(hd, 1.2, 0.06, 0.12, MAT.servo, 0, 6.62, 0.42);
+  boltCluster(hd, 5, 0.1, -0.42, 6.72, 0.46);
+  boltCluster(hd, 5, 0.1, 0.42, 6.72, 0.46);
+
+  // ══════════════════════════════════════════════════════════
+  // VISION SYSTEM — Recessed optical housing with multi-element array
+  // ══════════════════════════════════════════════════════════
+
+  // Visor housing recess (dark channel cut into helmet face)
+  box(hd, 1.24, 0.3, 0.12, MAT.servo, 0, 6.44, 0.44);
+  box(hd, 1.18, 0.26, 0.06, MAT.frameMat, 0, 6.44, 0.46);
+
+  // Main visor glass (curved band sitting in the recess)
+  visorMesh = box(hd, 1.2, 0.24, 0.05, MAT.visor, 0, 6.44, 0.5);
+
+  // Chrome visor frame (top rail, bottom rail, side brackets)
+  box(hd, 1.26, 0.03, 0.1, MAT.chrome, 0, 6.57, 0.48);
+  box(hd, 1.26, 0.03, 0.1, MAT.chrome, 0, 6.31, 0.48);
+  box(hd, 0.05, 0.3, 0.1, MAT.chrome, -0.62, 6.44, 0.48);
+  box(hd, 0.05, 0.3, 0.1, MAT.chrome, 0.62, 6.44, 0.48);
+  // Corner brackets
+  for (let sx = -1; sx <= 1; sx += 2)
+    for (let sy = -1; sy <= 1; sy += 2)
+      rivet(hd, sx * 0.58, 6.44 + sy * 0.12, 0.52);
+
+  // Inner visor glow plate (HUD backlight)
+  box(hd, 1.14, 0.2, 0.015, MAT.coreInner, 0, 6.44, 0.43);
+
+  // ── Primary optics (2 main camera barrels — left and right of center) ──
   for (let side = -1; side <= 1; side += 2) {
-    box(hd, 0.22, 0.52, 0.78, MAT.armor, side * 0.56, 6.32, 0.05, 0, 0, side * 0.08);
-    box(hd, 0.1, 0.34, 0.62, MAT.darkChrome, side * 0.6, 6.24, 0.02, 0, 0, side * 0.08);
-    // Exposed mechanical inset on cheek
-    box(hd, 0.04, 0.2, 0.35, MAT.servo, side * 0.58, 6.15, -0.08, 0, 0, side * 0.08);
-    cyl(hd, 0.04, 0.04, 0.05, MAT.hydraulic, side * 0.58, 6.08, 0.02, 6);
-    rivet(hd, side * 0.48, 6.72, 0.38); rivet(hd, side * 0.48, 6.16, 0.38);
-    rivet(hd, side * 0.5, 6.44, 0.42); rivet(hd, side * 0.52, 6.0, 0.34);
+    const ox = side * 0.22;
+    // Outer barrel housing (chrome)
+    cyl(hd, 0.075, 0.075, 0.1, MAT.darkChrome, ox, 6.44, 0.42, 16);
+    // Lens element 1 (outer glass)
+    cyl(hd, 0.06, 0.055, 0.03, MAT.lens, ox, 6.44, 0.46, 16);
+    // Lens element 2 (inner, brighter)
+    cyl(hd, 0.04, 0.035, 0.02, MAT.core, ox, 6.44, 0.47, 16);
+    // Pupil (bright emissive center)
+    sphere(hd, 0.022, MAT.coreInner, ox, 6.44, 0.48);
+    // Iris ring
+    torus(hd, 0.05, 0.008, MAT.vent, ox, 6.44, 0.46);
+    // Focus ring (chrome)
+    torus(hd, 0.065, 0.006, MAT.chrome, ox, 6.44, 0.44);
+    // Barrel mount bolts
+    boltCluster(hd, 6, 0.07, ox, 6.44, 0.42);
   }
-  // Ear modules — sensor arrays with cooling fins
+
+  // ── Central targeting sensor (between main optics) ──
+  cyl(hd, 0.03, 0.03, 0.08, MAT.darkChrome, 0, 6.44, 0.44, 12);
+  sphere(hd, 0.018, MAT.ventHot, 0, 6.44, 0.48);
+  torus(hd, 0.025, 0.004, MAT.chrome, 0, 6.44, 0.46);
+
+  // ── Peripheral sensors (small wide-angle lenses at visor edges) ──
   for (let side = -1; side <= 1; side += 2) {
-    box(hd, 0.12, 0.42, 0.22, MAT.frameMat, side * 0.68, 6.38, -0.12);
-    box(hd, 0.06, 0.3, 0.18, MAT.servo, side * 0.7, 6.38, -0.14);
-    for (let i = 0; i < 4; i++)
-      box(hd, 0.06, 0.055, 0.18, MAT.vent, side * 0.7, 6.3 + i * 0.08, -0.12);
-    coolingFins(hd, 5, 0.16, 0.1, 0.035, side * 0.72, 6.38, -0.22, true);
-    sphere(hd, 0.02, MAT.lens, side * 0.68, 6.52, -0.04);
+    const px = side * 0.48;
+    cyl(hd, 0.025, 0.025, 0.05, MAT.frameMat, px, 6.44, 0.44, 10);
+    cyl(hd, 0.018, 0.015, 0.02, MAT.lens, px, 6.44, 0.47, 10);
+    sphere(hd, 0.01, MAT.coreInner, px, 6.44, 0.48);
   }
-  // Visor — wide band with camera lens clusters behind
-  visorMesh = box(hd, 1.12, 0.22, 0.06, MAT.visor, 0, 6.44, 0.49);
-  box(hd, 0.04, 0.28, 0.09, MAT.chrome, -0.4, 6.44, 0.47);
-  box(hd, 0.04, 0.28, 0.09, MAT.chrome, 0.4, 6.44, 0.47);
-  box(hd, 1.16, 0.16, 0.02, MAT.coreInner, 0, 6.44, 0.44);
-  // Camera lenses behind visor (3 per side)
+
+  // ── Scanning emitter bar (thin line below visor that sweeps) ──
+  box(hd, 1.1, 0.02, 0.04, MAT.vent, 0, 6.3, 0.49);
+  box(hd, 0.8, 0.012, 0.02, MAT.coreInner, 0, 6.3, 0.5);
+
+  // ── Infrared/thermal sensors (above visor, recessed) ──
   for (let side = -1; side <= 1; side += 2) {
-    for (let i = 0; i < 3; i++) {
-      const lx = side * (0.12 + i * 0.12);
-      cyl(hd, 0.035, 0.03, 0.04, MAT.lens, lx, 6.44, 0.42, 12);
-      sphere(hd, 0.018, MAT.coreInner, lx, 6.44, 0.44);
-      cyl(hd, 0.045, 0.045, 0.015, MAT.darkChrome, lx, 6.44, 0.41, 12);
-    }
+    cyl(hd, 0.02, 0.02, 0.04, MAT.darkChrome, side * 0.35, 6.6, 0.44, 8);
+    sphere(hd, 0.012, MAT.ventHot, side * 0.35, 6.6, 0.46);
   }
-  box(hd, 0.72, 0.04, 0.05, MAT.panelLine, 0, 6.78, 0.4);
-  // Antenna fins — structural with visible wiring
+
+  // ── Under-visor data strip (status readout line) ──
+  box(hd, 0.9, 0.025, 0.03, MAT.panelLine, 0, 6.28, 0.48);
+
+  // ══════════════════════════════════════════════════════════
+  // FACEPLATE / JAW (segmented with jaw actuators)
+  // ══════════════════════════════════════════════════════════
+
+  // Upper faceplate
+  box(hd, 0.82, 0.2, 0.54, MAT.chrome, 0, 6.12, 0.15);
+  box(hd, 0.64, 0.08, 0.44, MAT.darkChrome, 0, 6.04, 0.2);
+  // Faceplate vent grille (articulated slats)
+  for (let i = 0; i < 6; i++) {
+    box(hd, 0.5, 0.015, 0.06, MAT.vent, 0, 6.16 - i * 0.032, 0.42);
+    box(hd, 0.48, 0.008, 0.04, MAT.frameMat, 0, 6.16 - i * 0.032, 0.44);
+  }
+  // Lower jaw / chin guard
+  box(hd, 0.72, 0.18, 0.48, MAT.chrome, 0, 5.88, 0.16);
+  box(hd, 0.52, 0.06, 0.36, MAT.servo, 0, 5.82, 0.2);
+  // Jaw actuator pistons (visible, one per side)
   for (let side = -1; side <= 1; side += 2) {
-    box(hd, 0.08, 0.12, 0.18, MAT.frameMat, side * 0.54, 6.82, -0.1);
-    box(hd, 0.07, 0.75, 0.24, MAT.chrome, side * 0.58, 7.02, -0.1, 0, 0, side * 0.18);
-    box(hd, 0.03, 0.55, 0.06, MAT.panelLine, side * 0.59, 7.1, -0.05, 0, 0, side * 0.18);
-    cableRun(hd, 0.01, 0.45, side * 0.55, 6.95, -0.18, 0, 0, side * 0.18);
-    rivet(hd, side * 0.54, 6.82, -0.02);
-    sphere(hd, 0.025, MAT.vent, side * 0.58, 7.35, -0.1);
+    hydraulicRam(hd, 0.015, 0.2, side * 0.32, 5.95, 0.08);
+    rivet(hd, side * 0.34, 6.04, 0.38);
+    rivet(hd, side * 0.3, 5.86, 0.38);
   }
-  // Back of head — data ports + cooling radiator
-  box(hd, 0.88, 0.58, 0.14, MAT.darkChrome, 0, 6.42, -0.44);
-  for (let i = 0; i < 5; i++) {
-    cyl(hd, 0.055, 0.055, 0.1, MAT.frameMat, -0.26 + i * 0.13, 6.42, -0.48, 8);
-    sphere(hd, 0.022, MAT.vent, -0.26 + i * 0.13, 6.42, -0.52);
+
+  // ══════════════════════════════════════════════════════════
+  // CHEEK GUARDS (angular, with exposed internals)
+  // ══════════════════════════════════════════════════════════
+  for (let side = -1; side <= 1; side += 2) {
+    box(hd, 0.24, 0.56, 0.82, MAT.armor, side * 0.58, 6.34, 0.04, 0, 0, side * 0.08);
+    box(hd, 0.12, 0.38, 0.66, MAT.darkChrome, side * 0.62, 6.26, 0.01, 0, 0, side * 0.08);
+    // Cheek inset panel (servo exposed)
+    box(hd, 0.06, 0.24, 0.38, MAT.servo, side * 0.6, 6.18, -0.08, 0, 0, side * 0.08);
+    cyl(hd, 0.04, 0.04, 0.06, MAT.hydraulic, side * 0.6, 6.08, 0.02, 8);
+    // Cheek surface detail
+    box(hd, 0.02, 0.35, 0.04, MAT.panelLine, side * 0.52, 6.32, 0.38);
+    rivet(hd, side * 0.5, 6.72, 0.4); rivet(hd, side * 0.5, 6.18, 0.4);
+    rivet(hd, side * 0.52, 6.46, 0.44); rivet(hd, side * 0.54, 6.02, 0.36);
   }
-  coolingFins(hd, 8, 0.55, 0.06, 0.05, 0, 6.2, -0.5, false);
-  // Exposed cabling from back of skull
-  cableBundle(hd, 3, 0.012, 0.35, 0, 6.1, -0.48);
+
+  // ══════════════════════════════════════════════════════════
+  // EAR MODULES (sensor arrays + cooling + comms antenna)
+  // ══════════════════════════════════════════════════════════
+  for (let side = -1; side <= 1; side += 2) {
+    // Main housing
+    box(hd, 0.14, 0.46, 0.24, MAT.frameMat, side * 0.7, 6.38, -0.12);
+    box(hd, 0.08, 0.34, 0.2, MAT.servo, side * 0.72, 6.38, -0.14);
+    // Vent grille (5 slats)
+    for (let i = 0; i < 5; i++)
+      box(hd, 0.07, 0.05, 0.2, MAT.vent, side * 0.72, 6.26 + i * 0.065, -0.12);
+    // Cooling radiator
+    coolingFins(hd, 6, 0.18, 0.12, 0.032, side * 0.74, 6.38, -0.24, true);
+    // Side-mounted sensor lens
+    sphere(hd, 0.025, MAT.lens, side * 0.7, 6.54, -0.02);
+    // Comms antenna nub
+    cyl(hd, 0.012, 0.008, 0.12, MAT.chrome, side * 0.72, 6.64, -0.14, 6);
+    sphere(hd, 0.015, MAT.vent, side * 0.72, 6.7, -0.14);
+  }
+
+  box(hd, 0.74, 0.04, 0.05, MAT.panelLine, 0, 6.8, 0.42);
+
+  // ══════════════════════════════════════════════════════════
+  // ANTENNA FINS (taller, with wiring and tip lights)
+  // ══════════════════════════════════════════════════════════
+  for (let side = -1; side <= 1; side += 2) {
+    box(hd, 0.09, 0.14, 0.2, MAT.frameMat, side * 0.55, 6.84, -0.1);
+    box(hd, 0.08, 0.8, 0.26, MAT.chrome, side * 0.6, 7.06, -0.1, 0, 0, side * 0.16);
+    box(hd, 0.04, 0.6, 0.07, MAT.panelLine, side * 0.61, 7.12, -0.04, 0, 0, side * 0.16);
+    cableRun(hd, 0.01, 0.5, side * 0.57, 6.98, -0.2, 0, 0, side * 0.16);
+    rivet(hd, side * 0.56, 6.84, -0.02);
+    // Tip light
+    sphere(hd, 0.022, MAT.coreInner, side * 0.62, 7.42, -0.1);
+    // Secondary micro-antenna
+    cyl(hd, 0.006, 0.006, 0.15, MAT.chrome, side * 0.56, 7.4, -0.18, 6);
+    sphere(hd, 0.01, MAT.ventHot, side * 0.56, 7.48, -0.18);
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // BACK OF HEAD (data ports, cooling radiator, cable harness)
+  // ══════════════════════════════════════════════════════════
+  box(hd, 0.92, 0.62, 0.16, MAT.darkChrome, 0, 6.42, -0.44);
+  // Data port connectors (6 total)
+  for (let i = 0; i < 6; i++) {
+    const px = -0.3 + i * 0.12;
+    cyl(hd, 0.05, 0.05, 0.1, MAT.frameMat, px, 6.42, -0.5, 8);
+    sphere(hd, 0.02, MAT.vent, px, 6.42, -0.54);
+    cyl(hd, 0.06, 0.06, 0.02, MAT.darkChrome, px, 6.42, -0.48, 8);
+  }
+  // Cooling radiator array
+  coolingFins(hd, 10, 0.6, 0.07, 0.042, 0, 6.18, -0.52, false);
+  // Cable harness exiting skull
+  cableBundle(hd, 4, 0.014, 0.4, 0, 6.08, -0.5);
+  cableBundle(hd, 2, 0.01, 0.3, 0.2, 6.08, -0.48);
+  cableBundle(hd, 2, 0.01, 0.3, -0.2, 6.08, -0.48);
 
   // ── NECK (exposed servos, hydraulic actuators, cable harness) ──
   // Central neck column
@@ -1453,12 +1573,23 @@ function animate() {
     seg.material.emissiveIntensity = 1.0 + 1.5 * Math.max(0, Math.sin(time * 3.5 - i * 0.5));
   });
 
-  // Visor flicker (transmission glass + emissive pulse)
+  // Visor flicker — layered optical system effect
   if (visorMesh) {
-    const vFlicker = Math.sin(time * 4) * 0.04 + Math.random() * 0.015;
-    visorMesh.material.transmission = 0.82 + vFlicker;
-    visorMesh.material.emissiveIntensity = 2.0 + 0.6 * Math.sin(time * 3) + Math.random() * 0.1;
-    visorMesh.material.opacity = 0.82 + vFlicker * 0.5;
+    const sp = agentSpeaking ? 1.6 : 1.0;
+    // Base transmission oscillation (breathing)
+    const vBreath = Math.sin(time * 1.8) * 0.02;
+    // Micro-flicker (digital noise)
+    const vNoise = (Math.random() - 0.5) * 0.015;
+    // Scanning pulse (periodic bright sweep)
+    const scanPhase = (time * 0.7) % 1.0;
+    const scanPulse = Math.exp(-30 * (scanPhase - 0.5) * (scanPhase - 0.5)) * 0.12;
+    // Speaking boost
+    const speakBurst = agentSpeaking ? Math.sin(time * 8) * 0.04 + Math.random() * 0.03 : 0;
+
+    visorMesh.material.transmission = 0.82 + vBreath + vNoise + scanPulse * 0.3;
+    visorMesh.material.emissiveIntensity = (2.0 + 0.4 * Math.sin(time * 2.5) + scanPulse * 2.0 + speakBurst) * sp;
+    visorMesh.material.opacity = 0.84 + vBreath * 0.5 + scanPulse * 0.1;
+    visorMesh.material.iridescence = 0.5 + 0.15 * Math.sin(time * 1.2);
   }
 
   // Joint glow rings pulse
