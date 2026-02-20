@@ -15,9 +15,6 @@ COPY skillcards ./skillcards
 COPY data ./data
 COPY scripts ./scripts
 
-# Preinstall OpenClaw in the image (more stable than runtime global install).
-RUN npm i -g openclaw
-
 COPY <<'ENTRYPOINT' /app/entrypoint.sh
 #!/bin/sh
 set -e
