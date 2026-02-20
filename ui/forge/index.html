@@ -173,7 +173,6 @@
   <!-- Forge requires a local server to discover installed skills -->
   <div class="forge-offline-gate" id="forgeOfflineGate" style="display:none">
     <div class="forge-offline-card">
-      <button class="forge-offline-close" id="forgeOfflineClose" type="button" aria-label="Close">&times;</button>
       <div class="forge-offline-icon">&#x1F916;</div>
       <h2 class="forge-offline-title">ClawBot Forge</h2>
       <p class="forge-offline-sub">Your 3D agent — shaped by the skills you install</p>
@@ -213,6 +212,7 @@
         Skills are installed to <code>~/.openclaw/skills/</code> and synced to <code>~/.openclaw/workspace/skills/</code> automatically. <strong>Requires <a href="https://openclaw.ai" style="color:var(--accent)">OpenClaw</a>.</strong>
       </p>
       <div class="forge-offline-links">
+        <button class="forge-offline-btn forge-offline-btn-agent" id="forgeTryAgent" type="button">&#x1F99E; Try Our Agent</button>
         <a class="forge-offline-btn" href="/skills">Browse Skills</a>
         <a class="forge-offline-btn forge-offline-btn-secondary" href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
       </div>
@@ -229,9 +229,16 @@
     const app = document.querySelector(".forge-app");
     if (app) app.style.display = "none";
 
-    document.getElementById("forgeOfflineClose").addEventListener("click", function() {
+    document.getElementById("forgeTryAgent").addEventListener("click", function() {
       document.getElementById("forgeOfflineGate").style.display = "none";
       if (app) app.style.display = "";
+      const chatInput = document.getElementById("forgeChatInput");
+      if (chatInput) {
+        chatInput.disabled = false;
+        chatInput.focus();
+      }
+      const chatBtn = document.getElementById("forgeChatSendBtn");
+      if (chatBtn) chatBtn.disabled = false;
     });
   })();
   </script>
