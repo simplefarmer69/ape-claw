@@ -3,8 +3,6 @@ set -eu
 
 echo "[forge] bootstrap starting"
 
-# Railway should mount a persistent volume (recommended /data).
-# Keep OpenClaw state under HOME so skills persist across deploys.
 if [ -d "/data" ]; then
   export HOME="/data"
 fi
@@ -13,14 +11,11 @@ if ! command -v openclaw >/dev/null 2>&1; then
   echo "[forge] installing openclaw globally"
   npm i -g openclaw
 else
-  echo "[forge] openclaw already installed"
+  echo "[forge] openclaw already installed ($(openclaw --version 2>/dev/null || echo '?'))"
 fi
 
-if [ ! -f "$HOME/.openclaw/skills/ape-claw/SKILL.md" ]; then
-  echo "[forge] installing ape-claw skill set"
-  npx ape-claw skill install --starter-pack
-else
-  echo "[forge] ape-claw skill already present"
-fi
+# Ape-claw managed skills are bundled in data/forge-skills/ at build time.
+# OpenClaw bundled skills ship with the npm package.
+# The forge-agent scans both locations automatically — no runtime install needed.
 
 echo "[forge] bootstrap complete"

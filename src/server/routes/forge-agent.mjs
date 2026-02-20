@@ -12,6 +12,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { execSync } from "node:child_process";
 import { getStorage } from "../storage/index.mjs";
 import { collectBody } from "../middleware/body-limit.mjs";
 import { CLAWBOTS_PATH } from "../../lib/paths.mjs";
@@ -82,17 +83,59 @@ function loadSkillsFromDir(dir) {
   return skills;
 }
 
+function findOpenClawBundledSkillsDir() {
+  try {
+    const bin = execSync("which openclaw", { encoding: "utf8" }).trim();
+    if (bin) {
+      const resolved = fs.realpathSync(bin);
+      const pkgDir = path.resolve(path.dirname(resolved), "..", "lib", "node_modules", "openclaw", "skills");
+      if (fs.existsSync(pkgDir)) return pkgDir;
+      const altDir = path.resolve(path.dirname(resolved), "..", "node_modules", "openclaw", "skills");
+      if (fs.existsSync(altDir)) return altDir;
+    }
+  } catch {}
+  const globalPaths = [
+    "/usr/local/lib/node_modules/openclaw/skills",
+    "/usr/lib/node_modules/openclaw/skills",
+    path.join(os.homedir(), ".npm-global", "lib", "node_modules", "openclaw", "skills"),
+  ];
+  for (const p of globalPaths) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
+}
+
+let _openclawBundledDir = undefined;
+
 function refreshSkillCache() {
   const now = Date.now();
   if (now - cachedSkills.loadedAt < SKILL_RESCAN_INTERVAL_MS) return;
 
-  const openclawDir = path.join(os.homedir(), ".openclaw", "skills");
-  const cursorDir = path.join(process.cwd(), ".cursor", "skills");
+  const seen = new Set();
+  const allSkills = [];
 
-  let skills = loadSkillsFromDir(openclawDir);
-  if (skills.length === 0) {
-    skills = loadSkillsFromDir(cursorDir);
+  function addSkillsFrom(dir) {
+    for (const s of loadSkillsFromDir(dir)) {
+      if (!seen.has(s.slug)) {
+        seen.add(s.slug);
+        allSkills.push(s);
+      }
+    }
   }
+
+  addSkillsFrom(path.join(os.homedir(), ".openclaw", "skills"));
+
+  if (_openclawBundledDir === undefined) {
+    _openclawBundledDir = findOpenClawBundledSkillsDir();
+    if (_openclawBundledDir) logger.info({ dir: _openclawBundledDir }, "Found OpenClaw bundled skills");
+  }
+  if (_openclawBundledDir) addSkillsFrom(_openclawBundledDir);
+
+  addSkillsFrom(path.join(process.cwd(), "data", "forge-skills"));
+
+  addSkillsFrom(path.join(process.cwd(), ".cursor", "skills"));
+
+  const skills = allSkills;
 
   const apeClaw = skills.find((s) => s.slug === "ape-claw");
   const summaries = skills
