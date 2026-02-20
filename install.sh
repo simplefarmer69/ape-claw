@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_REF="${APE_CLAW_REPO_REF:-github:simplefarmer69/ape-claw}"
-GLOBAL_SPEC="${APE_CLAW_GLOBAL_SPEC:-github:simplefarmer69/ape-claw}"
+REPO_REF="${APE_CLAW_REPO_REF:-ape-claw}"
+GLOBAL_SPEC="${APE_CLAW_GLOBAL_SPEC:-ape-claw}"
 SKIP_GLOBAL_INSTALL="${APE_CLAW_SKIP_GLOBAL_INSTALL:-0}"
-CLI_CMD="npx --yes ${REPO_REF}"
+CLI_CMD="npx ${REPO_REF}"
 
 echo
 echo "🦞 ApeClaw Installer"
@@ -43,10 +43,10 @@ if [ "${OPENCLAW_SUPPORTED}" = true ] && ! command -v openclaw >/dev/null 2>&1; 
   fi
 fi
 
-if ! npx --yes "${REPO_REF}" skill install --scope local --json; then
+if ! npx "${REPO_REF}" skill install --scope local --json; then
   echo "❌ Skill installation failed."
   echo "Try running manually:"
-  echo "  npx --yes ${REPO_REF} skill install --scope local --json"
+  echo "  npx ${REPO_REF} skill install --scope local --json"
   exit 1
 fi
 

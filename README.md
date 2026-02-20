@@ -253,13 +253,6 @@ npx ape-claw skill install --scope local --starter-pack --json
 ### 3. Global CLI install (optional)
 
 ```bash
-# Works today from GitHub (no npm publish required)
-npm i -g github:simplefarmer69/ape-claw
-```
-
-If this package is later published to npm, you can also use:
-
-```bash
 npm i -g ape-claw
 ```
 
@@ -296,11 +289,7 @@ ape-claw auth set --private-key 0x... --json
 
 If your OpenClaw bot already has a wallet secret, map/export that secret as `APE_CLAW_PRIVATE_KEY` before running execute commands.
 
-If `npm i -g ape-claw` returns `404 Not Found`, use GitHub install instead:
-
-```bash
-npm i -g github:simplefarmer69/ape-claw
-```
+The package is published on npm as `ape-claw`. If you prefer not to install globally, use `npx ape-claw` to run any command on demand.
 
 ---
 
