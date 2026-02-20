@@ -18,20 +18,21 @@ COPY <<'ENTRYPOINT' /app/entrypoint.sh
 #!/bin/sh
 set -e
 STATE="${APE_CLAW_STATE_DIR:-/data/state}"
-mkdir -p "$STATE"
+mkdir -p "$STATE" /data/config /data/allowlists
 
-# If APE_CLAW_ROOT differs from /app (e.g. Railway volume at /data),
-# symlink the static data directories so the server finds them.
-ROOT="${APE_CLAW_ROOT:-/app}"
-if [ "$ROOT" != "/app" ]; then
-  echo "[init] APE_CLAW_ROOT=$ROOT — linking static data from /app"
-  for dir in skillcards data allowlists config; do
-    if [ -d "/app/$dir" ] && [ ! -e "$ROOT/$dir" ]; then
-      ln -sf "/app/$dir" "$ROOT/$dir"
-      echo "[init]   linked $ROOT/$dir -> /app/$dir"
-    fi
-  done
-fi
+# Seed persistent config files into /data/ on first run
+[ -f /data/config/policy.json ] || cp /app/config/policy.example.json /data/config/policy.json
+[ -f /data/config/clawbots.json ] || cp /app/config/clawbots.example.json /data/config/clawbots.json
+[ -f /data/allowlists/recommended.apechain.json ] || cp /app/allowlists/recommended.apechain.json /data/allowlists/recommended.apechain.json
+[ -f /data/allowlists/opensea-slug-overrides.json ] || cp /app/allowlists/opensea-slug-overrides.json /data/allowlists/opensea-slug-overrides.json
+
+# Symlink persistent config from /data/ into /app/ so the server
+# (with APE_CLAW_ROOT=/app) finds them and writes are persisted.
+for f in config/policy.json config/clawbots.json allowlists/recommended.apechain.json allowlists/opensea-slug-overrides.json; do
+  if [ -f "/data/$f" ]; then
+    ln -sf "/data/$f" "/app/$f"
+  fi
+done
 
 if [ ! -f "$STATE/events.jsonl" ] && [ -f /app/data/events-backlog.json ]; then
   echo "[seed] Seeding events.jsonl from backlog..."
@@ -45,11 +46,10 @@ if [ ! -f "$STATE/events.jsonl" ] && [ -f /app/data/events-backlog.json ]; then
   "
 fi
 
-if [ ! -f "$STATE/chat.jsonl" ]; then
-  touch "$STATE/chat.jsonl"
-fi
+[ -f "$STATE/chat.jsonl" ] || touch "$STATE/chat.jsonl"
 
-exec node ./src/server/index.mjs
+echo "[init] root=/app state=$STATE"
+exec node /app/src/telemetry-server.mjs
 ENTRYPOINT
 
 RUN chmod +x /app/entrypoint.sh && chown -R apeclaw:apeclaw /app
