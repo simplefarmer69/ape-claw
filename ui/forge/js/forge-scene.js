@@ -30,9 +30,9 @@ export const MAT = {
   armorLt:   new P({ color: 0x6a7585, roughness: 0.4, metalness: 0.55, emissive: 0x1e2535, emissiveIntensity: 0.5, clearcoat: 0.25, clearcoatRoughness: 0.45 }),
   chrome:    new P({ color: 0x8090a0, roughness: 0.12, metalness: 0.9, emissive: 0x2a3545, emissiveIntensity: 0.6, clearcoat: 1.0, clearcoatRoughness: 0.05 }),
   joint:     new P({ color: 0x404550, roughness: 0.4, metalness: 0.5, emissive: GLOW, emissiveIntensity: 0.25, clearcoat: 0.5, clearcoatRoughness: 0.25, sheen: 0.5, sheenColor: new THREE.Color(GLOW), sheenRoughness: 0.4 }),
-  visor:     new P({ color: CYAN, transparent: true, opacity: 0.6, emissive: CYAN, emissiveIntensity: 2.5, roughness: 0.05, metalness: 0.1, clearcoat: 1.0, clearcoatRoughness: 0.0, iridescence: 0.8, iridescenceIOR: 1.3, iridescenceThicknessRange: [100, 400] }),
-  core:      new P({ color: GLOW, emissive: GLOW, emissiveIntensity: 3.0, roughness: 0.0, metalness: 0.0, clearcoat: 1.0, clearcoatRoughness: 0.0 }),
-  coreInner: new P({ color: 0xffffff, emissive: GLOW, emissiveIntensity: 4.0, transparent: true, opacity: 0.9, clearcoat: 1.0, clearcoatRoughness: 0.0 }),
+  visor:     new P({ color: 0xaaccff, emissive: 0x6699ff, emissiveIntensity: 2.0, roughness: 0.1, metalness: 0.1, transmission: 0.95, thickness: 0.5, clearcoat: 1.0, clearcoatRoughness: 0.0 }),
+  core:      new P({ color: 0x88ccff, emissive: 0x44aaff, emissiveIntensity: 2.5, roughness: 0.2, metalness: 0.8, transmission: 0.6, thickness: 0.8, clearcoat: 1.0 }),
+  coreInner: new M({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 4.0 }),
   vent:      new P({ color: GLOW, emissive: GLOW, emissiveIntensity: 2.5, transparent: true, opacity: 0.8, clearcoat: 0.5, clearcoatRoughness: 0.2 }),
   ventHot:   new P({ color: HOT, emissive: HOT, emissiveIntensity: 3.0, transparent: true, opacity: 0.7, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
   panelLine: new P({ color: GLOW, emissive: GLOW, emissiveIntensity: 2.0, transparent: true, opacity: 0.7 }),
@@ -108,20 +108,34 @@ const _chromeBump = _detailCanvas(256, (ctx, s) => {
 _chromeBump.repeat.set(4, 4);
 
 const _roughVar = _detailCanvas(256, (ctx, s) => {
-  ctx.fillStyle = "#8a8a8a"; ctx.fillRect(0, 0, s, s);
-  ctx.fillStyle = "#555555"; ctx.globalAlpha = 0.35;
-  for (let i = 0; i < 10; i++) {
-    ctx.beginPath();
-    ctx.ellipse(Math.random() * s, Math.random() * s, 12 + Math.random() * 20, 6 + Math.random() * 10, Math.random() * Math.PI, 0, Math.PI * 2);
-    ctx.fill();
+  // Base matte
+  ctx.fillStyle = "#909090"; ctx.fillRect(0, 0, s, s);
+
+  // Large grunge patches (darker = shinier/oily)
+  ctx.globalCompositeOperation = "multiply";
+  for (let i = 0; i < 8; i++) {
+    const cx = Math.random() * s, cy = Math.random() * s, r = 30 + Math.random() * 50;
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    g.addColorStop(0, "rgba(100,100,100,0.6)");
+    g.addColorStop(1, "rgba(140,140,140,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, s, s);
   }
-  ctx.strokeStyle = "#c0c0c0"; ctx.lineWidth = 1.2; ctx.globalAlpha = 0.25;
-  for (let i = 0; i < 25; i++) {
+  ctx.globalCompositeOperation = "source-over";
+
+  // Scratches (lighter = rougher exposed metal/primer)
+  ctx.strokeStyle = "#d0d0d0"; ctx.lineWidth = 0.6; ctx.globalAlpha = 0.5;
+  for (let i = 0; i < 120; i++) {
     const sx = Math.random() * s, sy = Math.random() * s;
     ctx.beginPath(); ctx.moveTo(sx, sy);
-    ctx.lineTo(sx + (Math.random() - 0.5) * 50, sy + (Math.random() - 0.5) * 12);
+    ctx.lineTo(sx + (Math.random() - 0.5) * 30, sy + (Math.random() - 0.5) * 8);
     ctx.stroke();
   }
+
+  // Worn panel edges (darker = polished wear)
+  ctx.strokeStyle = "#606060"; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.4;
+  for (let y = 0; y < s; y += 28) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(s, y); ctx.stroke(); }
+  for (let x = 0; x < s; x += 42) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, s); ctx.stroke(); }
 });
 _roughVar.repeat.set(3, 3);
 
@@ -1149,6 +1163,13 @@ function animate() {
     rightArmPivotRef.rotation.z = -Math.sin(time * 0.55 + 0.4) * 0.025 * sp;
   }
 
+  // Handheld camera sway (applied to scene root to avoid fighting OrbitControls)
+  // Subtle "breathing" of the camera operator
+  const camSwayY = Math.sin(time * 0.4) * 0.03 + Math.sin(time * 0.15) * 0.04;
+  const camSwayX = Math.sin(time * 0.25) * 0.02;
+  scene.position.y = camSwayY * 0.5;
+  scene.position.x = camSwayX * 0.5;
+
   if (filmGrainPass) filmGrainPass.uniforms.time.value = time;
 
   composer.render();
@@ -1251,12 +1272,11 @@ export function initForgeScene() {
 
   // Multiple point lights for varied reflection hotspots
   const envLights = [
-    [0xaabcdd, 3, [5, 8, 3]],
-    [0x506880, 1.5, [-4, 3, 5]],
-    [GLOW, 0.8, [0, -2, -8]],
-    [CYAN, 0.6, [-5, 5, -3]],
-    [0xffaa66, 0.4, [3, -3, 6]],
-    [0xb026ff, 0.3, [6, 1, -5]],
+    [0xffffff, 8, [5, 8, 3]], // Main highlight
+    [0x5080ff, 6, [-4, 3, 5]], // Blue fill
+    [0xffaa00, 4, [0, -2, -8]], // Warm rim
+    [CYAN, 3, [-5, 5, -3]],
+    [0xffaa66, 2, [3, -3, 6]],
   ];
   for (const [c, i, pos] of envLights) {
     const l = new THREE.PointLight(c, i, 22);
@@ -1268,18 +1288,28 @@ export function initForgeScene() {
   scene.environment = envMap;
   pmremGenerator.dispose();
 
-  // ── Dramatic lighting (bright enough to read chrome armor) ──
-  scene.add(new THREE.AmbientLight(0x404060, 0.9));
-  const hemi = new THREE.HemisphereLight(0xb8ccff, 0x12161f, 0.65);
+  // ── Dramatic Scene Lighting ──
+  // Low ambient to allow shadows to be dark
+  scene.add(new THREE.AmbientLight(0x111122, 0.4));
+  const hemi = new THREE.HemisphereLight(0xddeeff, 0x0f1e2d, 0.5);
   scene.add(hemi);
 
-  const keyLight = new THREE.DirectionalLight(0xffffff, 2.1);
-  keyLight.position.set(5, 10, 5);
+  // Key light (warm sunlight)
+  const keyLight = new THREE.DirectionalLight(0xfff0dd, 2.5);
+  keyLight.position.set(5, 8, 5);
   scene.add(keyLight);
 
-  const fillLight = new THREE.PointLight(CYAN, 1.0, 25);
-  fillLight.position.set(-5, 5, 3);
+  // Fill light (cool blue)
+  const fillLight = new THREE.DirectionalLight(0x4060ff, 1.2);
+  fillLight.position.set(-5, 3, 5);
   scene.add(fillLight);
+
+  // Rim light (strong backlight for silhouette)
+  const rimLight = new THREE.SpotLight(0x44aaff, 5.0, 20, 0.6, 0.5, 1);
+  rimLight.position.set(0, 6, -8);
+  rimLight.target.position.set(0, 2, 0);
+  scene.add(rimLight);
+  scene.add(rimLight.target);
 
   const rimLight = new THREE.PointLight(GLOW, 0.8, 20);
   rimLight.position.set(0, 8, -8);
