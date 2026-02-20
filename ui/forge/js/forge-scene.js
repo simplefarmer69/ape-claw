@@ -904,42 +904,104 @@ function buildChassis() {
     box(tgt, 0.46, 0.14, 0.46, MAT.darkChrome, sx, 1.78, 0);
     boltCluster(tgt, 6, 0.18, sx, 1.78, 0);
 
-    // ── HAND (articulated mechanical fingers) ──
-    // Palm structure
-    box(tgt, 0.38, 0.22, 0.38, MAT.joint, sx, 1.58, 0);
-    box(tgt, 0.32, 0.04, 0.32, MAT.servo, sx, 1.66, 0);
-    box(tgt, 0.28, 0.04, 0.28, MAT.frameMat, sx, 1.5, 0);
-    // Finger tendon servo (top of palm)
-    servoDrum(tgt, 0.04, 0.22, sx, 1.64, 0.06);
-
-    // 4 fingers: each has knuckle ball + 3 phalanx segments + tip cap
-    for (let f = 0; f < 4; f++) {
-      const fz = -0.12 + f * 0.08;
-      const fCurl = 0.08 + f * 0.02;
-      // Knuckle (ball joint)
-      sphere(tgt, 0.028, MAT.joint, sx, 1.44, fz);
-      // Proximal phalanx (longest)
-      box(tgt, 0.048, 0.13, 0.05, MAT.chrome, sx, 1.34, fz);
-      // Mid joint
-      sphere(tgt, 0.018, MAT.joint, sx, 1.275, fz);
-      // Middle phalanx
-      box(tgt, 0.042, 0.1, 0.046, MAT.frameMat, sx, 1.22, fz);
-      // Distal joint
-      sphere(tgt, 0.015, MAT.joint, sx, 1.168, fz);
-      // Distal phalanx (fingertip)
-      box(tgt, 0.038, 0.07, 0.042, MAT.chrome, sx, 1.13, fz);
-      // Fingertip pad
-      sphere(tgt, 0.016, MAT.rubber, sx, 1.1, fz);
-      // Tendon cable
-      cableRun(tgt, 0.004, 0.32, sx - side * 0.02, 1.3, fz);
+    // ══════════════════════════════════════════════════════════
+    // HAND — full mechanical assembly with armored fingers
+    // ══════════════════════════════════════════════════════════
+    // Palm chassis (layered)
+    box(tgt, 0.42, 0.18, 0.42, MAT.chrome, sx, 1.6, 0);
+    box(tgt, 0.36, 0.14, 0.36, MAT.joint, sx, 1.58, 0);
+    box(tgt, 0.3, 0.04, 0.3, MAT.servo, sx, 1.67, 0);
+    box(tgt, 0.3, 0.04, 0.3, MAT.frameMat, sx, 1.49, 0);
+    // Palm armor plate (top)
+    box(tgt, 0.38, 0.03, 0.34, MAT.darkChrome, sx, 1.685, 0);
+    // Grip pads on underside (3 rubber strips)
+    for (let p = -1; p <= 1; p++) {
+      box(tgt, 0.08, 0.02, 0.28, MAT.rubber, sx + p * 0.11, 1.49, 0);
     }
-    // Thumb — 2-segment, offset outward
-    sphere(tgt, 0.03, MAT.joint, sx + side * 0.19, 1.48, -0.16);
-    box(tgt, 0.055, 0.11, 0.06, MAT.chrome, sx + side * 0.21, 1.4, -0.16);
-    sphere(tgt, 0.02, MAT.joint, sx + side * 0.22, 1.34, -0.16);
-    box(tgt, 0.05, 0.09, 0.055, MAT.frameMat, sx + side * 0.23, 1.28, -0.16);
-    sphere(tgt, 0.018, MAT.rubber, sx + side * 0.24, 1.24, -0.16);
-    cableRun(tgt, 0.004, 0.2, sx + side * 0.18, 1.38, -0.16);
+    // Tendon servo bank (5 micro servos across knuckle line)
+    for (let f = 0; f < 5; f++) {
+      const fz = -0.14 + f * 0.07;
+      servoDrum(tgt, 0.018, 0.05, sx, 1.66, fz);
+    }
+    // Hydraulic manifold (distributes pressure to fingers)
+    box(tgt, 0.06, 0.08, 0.3, MAT.hydraulic, sx - side * 0.14, 1.58, 0);
+    cableBundle(tgt, 3, 0.005, 0.2, sx - side * 0.12, 1.58, 0.14);
+    // Knuckle guard plate (chrome bar across all 4 fingers)
+    box(tgt, 0.06, 0.08, 0.32, MAT.chrome, sx, 1.46, 0.02);
+    boltCluster(tgt, 4, 0.12, sx, 1.46, 0.04);
+
+    // 4 fingers: knuckle + 3 armored phalanges + sensor tip
+    const fingerSpread = [-0.13, -0.05, 0.03, 0.11];
+    const fingerLen = [1.0, 1.1, 1.05, 0.9];
+    for (let f = 0; f < 4; f++) {
+      const fz = fingerSpread[f];
+      const scale = fingerLen[f];
+      const fy = 1.44;
+
+      // Knuckle ball joint + rubber gasket
+      sphere(tgt, 0.032, MAT.joint, sx, fy, fz);
+      torus(tgt, 0.028, 0.006, MAT.rubber, sx, fy, fz);
+
+      // Proximal phalanx (armored)
+      const p1y = fy - 0.08 * scale;
+      box(tgt, 0.052, 0.14 * scale, 0.055, MAT.chrome, sx, p1y, fz);
+      box(tgt, 0.04, 0.12 * scale, 0.042, MAT.servo, sx, p1y, fz);
+      // Piston actuator along proximal
+      pistonGeo(tgt, 0.006, 0.1 * scale, MAT.pistonMat, sx - side * 0.022, p1y, fz);
+
+      // PIP joint (mid knuckle)
+      const pipy = fy - 0.17 * scale;
+      sphere(tgt, 0.022, MAT.joint, sx, pipy, fz);
+
+      // Middle phalanx (armored)
+      const p2y = pipy - 0.06 * scale;
+      box(tgt, 0.046, 0.1 * scale, 0.05, MAT.frameMat, sx, p2y, fz);
+      box(tgt, 0.038, 0.08 * scale, 0.04, MAT.darkChrome, sx, p2y, fz);
+
+      // DIP joint
+      const dipy = pipy - 0.12 * scale;
+      sphere(tgt, 0.018, MAT.joint, sx, dipy, fz);
+
+      // Distal phalanx (fingertip armor)
+      const p3y = dipy - 0.045 * scale;
+      box(tgt, 0.042, 0.075 * scale, 0.046, MAT.chrome, sx, p3y, fz);
+
+      // Fingertip: rubber grip pad + pressure sensor
+      const tipy = dipy - 0.08 * scale;
+      sphere(tgt, 0.02, MAT.rubber, sx, tipy, fz);
+      sphere(tgt, 0.008, MAT.lens, sx, tipy - 0.01, fz);
+
+      // Tendon cable (runs full finger length)
+      cableRun(tgt, 0.004, 0.35 * scale, sx - side * 0.018, p1y, fz);
+    }
+
+    // Thumb — 3-segment, opposable (angled outward and rotated)
+    const tx = sx + side * 0.2, tz = -0.18;
+    // Carpometacarpal joint (base — swivel)
+    sphere(tgt, 0.035, MAT.joint, tx, 1.5, tz);
+    torus(tgt, 0.03, 0.007, MAT.rubber, tx, 1.5, tz);
+    servoDrum(tgt, 0.015, 0.04, tx, 1.5, tz - 0.03);
+    // Metacarpal (thick base segment)
+    box(tgt, 0.058, 0.1, 0.062, MAT.chrome, tx + side * 0.02, 1.42, tz);
+    box(tgt, 0.046, 0.08, 0.05, MAT.servo, tx + side * 0.02, 1.42, tz);
+    pistonGeo(tgt, 0.006, 0.08, MAT.pistonMat, tx + side * 0.03, 1.42, tz + 0.025);
+    // MCP joint
+    sphere(tgt, 0.025, MAT.joint, tx + side * 0.03, 1.36, tz);
+    // Proximal phalanx
+    box(tgt, 0.052, 0.09, 0.056, MAT.frameMat, tx + side * 0.04, 1.3, tz);
+    box(tgt, 0.042, 0.07, 0.044, MAT.darkChrome, tx + side * 0.04, 1.3, tz);
+    // IP joint
+    sphere(tgt, 0.02, MAT.joint, tx + side * 0.04, 1.25, tz);
+    // Distal phalanx
+    box(tgt, 0.048, 0.07, 0.052, MAT.chrome, tx + side * 0.05, 1.2, tz);
+    // Thumb tip
+    sphere(tgt, 0.022, MAT.rubber, tx + side * 0.05, 1.165, tz);
+    sphere(tgt, 0.009, MAT.lens, tx + side * 0.05, 1.155, tz);
+    cableRun(tgt, 0.005, 0.28, tx, 1.38, tz);
+
+    // Wrist-to-palm data connector
+    cyl(tgt, 0.03, 0.03, 0.04, MAT.frameMat, sx - side * 0.16, 1.7, -0.12, 8);
+    sphere(tgt, 0.012, MAT.vent, sx - side * 0.16, 1.72, -0.12);
   }
   buildArm(la, -1);
   buildArm(ra, 1);
@@ -1058,38 +1120,115 @@ function buildChassis() {
     // Ankle guard
     box(g, 0.35, 0.18, 0.3, MAT.darkChrome, sx, -2.02, 0.26);
 
-    // ── FOOT (3-part articulated: toes + midfoot + heel) ──
-    // Toe section (armored)
-    box(g, 0.74, 0.2, 0.32, MAT.chrome, sx, -2.38, 0.58);
-    box(g, 0.6, 0.06, 0.24, MAT.darkChrome, sx, -2.28, 0.6);
-    // Individual toe segments (3)
-    for (let t = -1; t <= 1; t++) {
-      box(g, 0.18, 0.12, 0.14, MAT.chrome, sx + t * 0.2, -2.42, 0.72);
-      sphere(g, 0.025, MAT.joint, sx + t * 0.2, -2.38, 0.64);
-      sphere(g, 0.015, MAT.rubber, sx + t * 0.2, -2.46, 0.76);
+    // ══════════════════════════════════════════════════════════
+    // FOOT — armored multi-segment with arch, tread, and sensors
+    // ══════════════════════════════════════════════════════════
+
+    // ── TOE SECTION (4 armored toe segments) ──
+    // Toe plate (main armored shell)
+    box(g, 0.76, 0.18, 0.28, MAT.chrome, sx, -2.38, 0.62);
+    box(g, 0.62, 0.05, 0.22, MAT.darkChrome, sx, -2.3, 0.64);
+    // Individual toe caps (4 articulated digits)
+    for (let t = 0; t < 4; t++) {
+      const tz = 0.66 + (t === 0 || t === 3 ? 0 : 0.04);
+      const tx = sx + (-0.24 + t * 0.16);
+      // MTP joint
+      sphere(g, 0.024, MAT.joint, tx, -2.38, tz - 0.04);
+      // Proximal toe segment (armored)
+      box(g, 0.1, 0.1, 0.1, MAT.chrome, tx, -2.42, tz);
+      box(g, 0.07, 0.06, 0.07, MAT.servo, tx, -2.42, tz);
+      // IP joint
+      sphere(g, 0.016, MAT.joint, tx, -2.42, tz + 0.06);
+      // Distal toe (claw-like tip)
+      box(g, 0.08, 0.08, 0.08, MAT.darkChrome, tx, -2.44, tz + 0.1);
+      // Toe grip pad (rubber)
+      box(g, 0.06, 0.02, 0.06, MAT.rubber, tx, -2.48, tz + 0.1);
+      // Toe pressure sensor
+      sphere(g, 0.008, MAT.lens, tx, -2.48, tz + 0.12);
     }
-    // Midfoot joint (visible hinge axle)
-    cyl(g, 0.045, 0.045, 0.6, MAT.joint, sx, -2.38, 0.36, 10);
-    rubberSeal(g, 0.04, 0.01, sx, -2.38, 0.36);
-    // Midfoot plate
-    box(g, 0.68, 0.16, 0.24, MAT.armor, sx, -2.38, 0.3);
-    box(g, 0.56, 0.04, 0.18, MAT.servo, sx, -2.32, 0.3);
-    // Heel section
-    box(g, 0.64, 0.18, 0.38, MAT.armor, sx, -2.38, -0.02);
-    box(g, 0.54, 0.06, 0.28, MAT.chrome, sx, -2.28, -0.02);
-    // Heel stabilizer fin
-    box(g, 0.08, 0.2, 0.15, MAT.darkChrome, sx, -2.32, -0.22);
-    // Sole thruster
-    box(g, 0.36, 0.1, 0.36, MAT.ventHot, sx, -2.5, 0.2);
-    torus(g, 0.12, 0.02, MAT.vent, sx, -2.5, 0.2);
-    // Ground sensors
-    sphere(g, 0.025, MAT.lens, sx, -2.44, 0.72);
-    sphere(g, 0.02, MAT.lens, sx + side * 0.22, -2.44, 0.5);
-    sphere(g, 0.02, MAT.lens, sx, -2.44, -0.15);
+    // Toe guard plate (protective front chrome bar)
+    box(g, 0.72, 0.1, 0.04, MAT.chrome, sx, -2.36, 0.8);
+    box(g, 0.56, 0.06, 0.03, MAT.armorRed, sx, -2.36, 0.82);
+    boltCluster(g, 4, 0.14, sx, -2.36, 0.82);
+
+    // ── METATARSAL BRIDGE (visible arch structure) ──
+    // Metatarsal hinge axle (connects toe plate to midfoot)
+    cyl(g, 0.05, 0.05, 0.65, MAT.joint, sx, -2.38, 0.5, 12);
+    rubberSeal(g, 0.045, 0.012, sx, -2.38, 0.5);
+    // Arch springs (visible coil springs under arch)
+    for (let s = -1; s <= 1; s += 2) {
+      cyl(g, 0.025, 0.025, 0.15, MAT.pistonMat, sx + s * 0.14, -2.42, 0.38, 8);
+      torus(g, 0.022, 0.005, MAT.chrome, sx + s * 0.14, -2.38, 0.38);
+      torus(g, 0.022, 0.005, MAT.chrome, sx + s * 0.14, -2.46, 0.38);
+    }
+
+    // ── MIDFOOT PLATE (armored bridge with internal servo) ──
+    box(g, 0.72, 0.16, 0.28, MAT.armor, sx, -2.38, 0.3);
+    box(g, 0.6, 0.04, 0.22, MAT.servo, sx, -2.32, 0.3);
+    box(g, 0.6, 0.04, 0.22, MAT.frameMat, sx, -2.44, 0.3);
+    // Midfoot lateral stabilizer wings
+    for (let s = -1; s <= 1; s += 2) {
+      box(g, 0.06, 0.12, 0.2, MAT.darkChrome, sx + s * 0.38, -2.36, 0.32);
+      rivet(g, sx + s * 0.38, -2.3, 0.38);
+    }
+    // Arch servo (flexion control)
+    servoDrum(g, 0.03, 0.16, sx, -2.36, 0.42);
+    // Panel lines
+    box(g, 0.04, 0.14, 0.24, MAT.panelLine, sx + side * 0.28, -2.38, 0.3);
+
+    // ── HEEL SECTION (shock-absorbing, armored) ──
+    box(g, 0.68, 0.18, 0.36, MAT.armor, sx, -2.38, 0.02);
+    box(g, 0.56, 0.05, 0.28, MAT.chrome, sx, -2.3, 0.02);
+    box(g, 0.56, 0.05, 0.28, MAT.darkChrome, sx, -2.46, 0.02);
+    // Heel shock absorber (visible damper cylinder)
+    cyl(g, 0.04, 0.04, 0.16, MAT.pistonMat, sx, -2.36, -0.1, 10);
+    cyl(g, 0.055, 0.055, 0.08, MAT.hydraulic, sx, -2.42, -0.1, 10);
+    rubberSeal(g, 0.05, 0.01, sx, -2.3, -0.1);
+    // Lateral dampers
+    for (let s = -1; s <= 1; s += 2) {
+      cyl(g, 0.025, 0.025, 0.12, MAT.pistonMat, sx + s * 0.2, -2.38, -0.06, 8);
+      rubberSeal(g, 0.022, 0.006, sx + s * 0.2, -2.32, -0.06);
+    }
+    // Heel stabilizer fins (twin vertical fins)
+    for (let s = -1; s <= 1; s += 2) {
+      box(g, 0.04, 0.22, 0.12, MAT.darkChrome, sx + s * 0.18, -2.32, -0.2);
+      box(g, 0.02, 0.16, 0.08, MAT.panelLine, sx + s * 0.18, -2.34, -0.24);
+    }
+    // Central heel ridge
+    box(g, 0.14, 0.04, 0.18, MAT.chrome, sx, -2.28, -0.12);
+    rivet(g, sx, -2.28, -0.2);
+
+    // ── SOLE (tread pattern + thrusters + ground sensors) ──
+    // Sole plate
+    box(g, 0.7, 0.04, 0.8, MAT.darkChrome, sx, -2.5, 0.2);
+    // Tread pads (rubber grip strips)
+    for (let i = 0; i < 6; i++) {
+      const pz = -0.08 + i * 0.14;
+      box(g, 0.56, 0.02, 0.06, MAT.rubber, sx, -2.52, pz);
+    }
+    // Cross-hatched tread (lateral ribs)
+    for (let s = -1; s <= 1; s += 2) {
+      for (let i = 0; i < 3; i++) {
+        box(g, 0.04, 0.02, 0.5, MAT.rubber, sx + s * (0.2 + i * 0.06), -2.52, 0.2);
+      }
+    }
+    // Primary thruster (central)
+    box(g, 0.3, 0.08, 0.3, MAT.ventHot, sx, -2.54, 0.22);
+    torus(g, 0.1, 0.015, MAT.vent, sx, -2.54, 0.22);
+    // Secondary micro-thrusters (heel + toe)
+    cyl(g, 0.06, 0.06, 0.04, MAT.ventHot, sx, -2.54, -0.05, 8);
+    cyl(g, 0.06, 0.06, 0.04, MAT.ventHot, sx, -2.54, 0.55, 8);
+    // Ground proximity sensors (5-sensor array)
+    sphere(g, 0.02, MAT.lens, sx, -2.52, 0.7);
+    sphere(g, 0.02, MAT.lens, sx + side * 0.24, -2.52, 0.5);
+    sphere(g, 0.018, MAT.lens, sx, -2.52, 0.3);
+    sphere(g, 0.018, MAT.lens, sx - side * 0.24, -2.52, 0.1);
+    sphere(g, 0.02, MAT.lens, sx, -2.52, -0.1);
     // Foot rivets
-    rivet(g, sx + side * 0.32, -2.26, 0.62); rivet(g, sx - side * 0.32, -2.26, 0.62);
-    rivet(g, sx + side * 0.28, -2.26, -0.14); rivet(g, sx - side * 0.28, -2.26, -0.14);
-    rivet(g, sx, -2.26, 0.42);
+    rivet(g, sx + side * 0.34, -2.28, 0.64); rivet(g, sx - side * 0.34, -2.28, 0.64);
+    rivet(g, sx + side * 0.3, -2.28, 0.02); rivet(g, sx - side * 0.3, -2.28, 0.02);
+    rivet(g, sx + side * 0.3, -2.28, -0.14); rivet(g, sx - side * 0.3, -2.28, -0.14);
+    rivet(g, sx, -2.28, 0.46);
   }
   buildLeg(-1);
   buildLeg(1);
