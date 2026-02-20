@@ -174,6 +174,9 @@ function buildMergedSkillIndex() {
             riskTier: Number(item.riskTier ?? 2),
             sourceUrl: String(item.sourceUrl || "").trim() || null,
             provenance: { publisher: "user", signed: false, addedBy: item.addedBy, addedByAgentId: item.addedByAgentId },
+            onchainTokenId: item.onchainTokenId || null,
+            onchainMintTx: item.onchainMintTx || null,
+            onchainPublishTx: item.onchainPublishTx || null,
           });
         }
       }

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClawBot Forge — ApeClaw</title>
+  <meta name="description" content="ClawBot Forge: see your autonomous agent as a 3D robot, shaped by its installed skills.">
+  <link rel="icon" type="image/svg+xml" href="/ui/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/ui/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/ui/favicon-180.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/ui/shared/sidebar-nav.css">
+  <script defer src="/ui/shared/sidebar-nav.js"></script>
+  <link rel="stylesheet" href="/ui/shared/motion.css">
+  <script defer src="/ui/shared/motion.js"></script>
+  <link rel="stylesheet" href="/ui/forge/css/forge.css">
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div id="sbNavMount"></div>
+
+  <div class="forge-app sb-content-offset">
+    <header class="forge-header ac-observe">
+      <div class="forge-header-left">
+        <h1 class="forge-title">ClawBot Forge</h1>
+        <span class="forge-agent-name" id="forgeAgentName">The Clawllector</span>
+      </div>
+      <div class="forge-header-right">
+        <div class="forge-progress">
+          <span class="forge-progress-label" id="forgeSkillCount">0 / 0</span>
+          <div class="forge-progress-bar">
+            <div class="forge-progress-fill ac-shimmer" id="forgeProgressFill"></div>
+          </div>
+        </div>
+        <span class="forge-status" id="forgeStatus">
+          <span class="forge-status-dot"></span>
+          <span class="forge-status-text">Loading...</span>
+        </span>
+      </div>
+    </header>
+
+    <div class="forge-viewport" id="forgeViewport">
+      <canvas id="forgeCanvas"></canvas>
+      <div id="forgeLabelLayer"></div>
+      <div class="forge-hud" id="forgeHud">
+        <button class="forge-hud-btn" id="forgeResetCam" type="button" data-ac-tip="Reset camera">&#x27F2;</button>
+        <button class="forge-hud-btn" id="forgeToggleRotate" type="button" data-ac-tip="Auto-rotate">&#x21BB;</button>
+        <button class="forge-hud-btn" id="forgeToggleBloom" type="button" data-ac-tip="Toggle bloom">&#x2726;</button>
+        <button class="forge-hud-btn forge-skills-btn" id="forgeSkillsBtn" type="button" data-ac-tip="Browse & install skills">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 5-9 5-9-5 9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg>
+        </button>
+        <button class="forge-hud-btn forge-share-btn" id="forgeShareBtn" type="button" data-ac-tip="Share to X">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </button>
+      </div>
+      <div class="forge-watermark" id="forgeWatermark">
+        <span class="forge-watermark-logo">APECLAW</span>
+        <span class="forge-watermark-sub">Powered by Clutch Labs</span>
+      </div>
+      <button class="forge-skip-btn" id="forgeSkipBtn" type="button" style="display:none">Skip Intro</button>
+    </div>
+
+    <div class="forge-bottom">
+      <aside class="forge-inspector forge-panel" id="forgeInspector">
+        <div class="forge-inspector-empty" id="forgeInspectorEmpty">
+          <div class="forge-inspector-empty-icon">&#x1F50D;</div>
+          <div>Click an attachment to inspect</div>
+        </div>
+        <div class="forge-inspector-content" id="forgeInspectorContent" style="display:none">
+          <div class="forge-inspector-header">
+            <span class="forge-inspector-cat-dot" id="forgeInsCatDot"></span>
+            <h3 class="forge-inspector-name" id="forgeInsName"></h3>
+            <span class="forge-inspector-badge ac-glow-pulse" id="forgeInsBadge"></span>
+          </div>
+          <div class="forge-inspector-slug" id="forgeInsSlug"></div>
+          <div class="forge-inspector-desc" id="forgeInsDesc"></div>
+          <div class="forge-inspector-meta" id="forgeInsMeta">
+            <span class="forge-inspector-tag" id="forgeInsCat"></span>
+            <span class="forge-inspector-tag" id="forgeInsOnchain"></span>
+            <span class="forge-inspector-tag" id="forgeInsVetted"></span>
+          </div>
+          <div class="forge-inspector-tier-bar" id="forgeInsTier"></div>
+          <div class="forge-inspector-docs" id="forgeInsDocs"></div>
+          <div class="forge-inspector-actions" id="forgeInsActions">
+            <button class="forge-btn forge-btn-danger" id="forgeInsUninstall" type="button">Uninstall Skill</button>
+          </div>
+        </div>
+      </aside>
+
+      <div class="forge-chat forge-panel" id="forgeChat">
+        <div class="forge-chat-header">
+          <span class="icon">&#x1F4AC;</span> Agent Chat
+          <span class="badge" id="forgeChatBadge">0</span>
+        </div>
+        <div class="forge-chat-messages" id="forgeChatMessages">
+          <div class="chat-empty">
+            <div class="chat-empty-icon">&#x1F4AC;</div>
+            <div>Talk to your agent</div>
+          </div>
+        </div>
+        <div class="forge-chat-input-bar">
+          <input type="text" id="forgeChatInput" placeholder="Message your agent..." maxlength="500" disabled>
+          <button class="chat-send-btn" id="forgeChatSendBtn" type="button" disabled>Send</button>
+        </div>
+        <div class="chat-input-meta">
+          <span class="chat-counter" id="forgeChatCounter">0/500</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Skill Browser Drawer -->
+    <div class="forge-drawer-backdrop" id="forgeDrawerBackdrop"></div>
+    <aside class="forge-drawer" id="forgeDrawer" data-open="0">
+      <div class="forge-drawer-header">
+        <h2 class="forge-drawer-title">Skill Library</h2>
+        <button class="forge-drawer-close" id="forgeDrawerClose" type="button">&times;</button>
+      </div>
+      <div class="forge-drawer-auth" id="forgeDrawerAuth">
+        <div class="forge-auth-row">
+          <input type="text" id="forgeAuthAgentId" placeholder="Agent ID" autocomplete="off">
+          <input type="password" id="forgeAuthAgentToken" placeholder="Agent Token" autocomplete="off">
+        </div>
+        <div class="forge-auth-hint">Required for install/uninstall. Get from <code>ape-claw clawbot list</code></div>
+      </div>
+      <div class="forge-drawer-search">
+        <input type="search" id="forgeSkillSearch" placeholder="Search 10,000+ skills..." autocomplete="off">
+        <div class="forge-search-filters">
+          <label class="forge-filter-check"><input type="checkbox" id="forgeFilterVetted"> Vetted only</label>
+          <label class="forge-filter-check"><input type="checkbox" id="forgeFilterOnchain"> Onchain only</label>
+          <select id="forgeFilterRisk" class="forge-filter-select">
+            <option value="">All risk</option>
+            <option value="1">Low risk</option>
+            <option value="2">Medium</option>
+            <option value="3">High risk</option>
+          </select>
+        </div>
+      </div>
+      <div class="forge-drawer-results" id="forgeDrawerResults">
+        <div class="forge-drawer-empty">Search skills above to browse the library</div>
+      </div>
+      <div class="forge-drawer-pagination" id="forgeDrawerPagination"></div>
+    </aside>
+
+    <!-- Toast notifications -->
+    <div class="forge-toast-container" id="forgeToasts"></div>
+
+    <footer class="forge-footer">
+      <div>ApeClaw Terminal &middot; ApeChain &middot; Powered by
+        <a href="https://x.com/ClutchMarkets" target="_blank" rel="noopener"
+           style="color:var(--accent);text-decoration:none;font-weight:700">Clutch Labs</a>
+      </div>
+      <div class="footer-links">
+        <a href="https://x.com/ClutchMarkets" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          ClutchMarkets
+        </a>
+        <a href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a>
+        <a href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
+        <a href="/docs" data-keep-query="1">Docs</a>
+      </div>
+    </footer>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="/ui/forge/js/forge-data.js"></script>
+  <script type="module" src="/ui/forge/js/forge-scene.js"></script>
+  <script type="module" src="/ui/forge/js/forge-chat.js"></script>
+</body>
+</html>

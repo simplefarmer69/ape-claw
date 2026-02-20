@@ -5,6 +5,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { ensureDir } from "../../lib/io.mjs";
+import { ROOT } from "../../lib/paths.mjs";
 import { getStorage } from "../storage/index.mjs";
 import { requireSkillWriteAuth } from "../middleware/auth.mjs";
 
@@ -37,6 +38,46 @@ function getPodStatus() {
 export function handlePodStatus(req, res) {
   res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
   return res.end(JSON.stringify(getPodStatus()));
+}
+
+export function handleStarterPack(req, res) {
+  const bundlePath = path.join(ROOT, "data", "starter-pack-bundle.json");
+  if (!fs.existsSync(bundlePath)) {
+    res.writeHead(200, { "content-type": "application/json" });
+    return res.end(JSON.stringify({ ok: true, skills: [] }));
+  }
+  try {
+    const raw = fs.readFileSync(bundlePath, "utf8");
+    const parsed = JSON.parse(raw);
+    const skills = Array.isArray(parsed) ? parsed : (parsed.skills || []);
+    res.writeHead(200, { "content-type": "application/json" });
+    return res.end(JSON.stringify({ ok: true, skills }));
+  } catch {
+    res.writeHead(200, { "content-type": "application/json" });
+    return res.end(JSON.stringify({ ok: true, skills: [] }));
+  }
+}
+
+export function handlePodFiles(req, res) {
+  const auth = requireSkillWriteAuth(req);
+  if (!auth.ok) {
+    res.writeHead(401, { "content-type": "application/json; charset=utf-8" });
+    return res.end(JSON.stringify({ ok: false, error: "unauthorized (set x-registration-key or x-agent-id/x-agent-token)" }));
+  }
+  const store = getStorage();
+  const wp = store.findPodWorkspaceDir();
+  if (!wp) {
+    res.writeHead(200, { "content-type": "application/json" });
+    return res.end(JSON.stringify({ ok: true, files: {} }));
+  }
+  const names = ["SOUL.md", "IDENTITY.md", "AGENTS.md", "TOOLS.md"];
+  const files = {};
+  for (const n of names) {
+    const p = path.join(wp, n);
+    if (fs.existsSync(p)) files[n] = fs.readFileSync(p, "utf8");
+  }
+  res.writeHead(200, { "content-type": "application/json" });
+  return res.end(JSON.stringify({ ok: true, files }));
 }
 
 export function handlePodStop(req, res) {

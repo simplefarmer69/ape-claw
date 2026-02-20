@@ -21,6 +21,115 @@ function safeVersion(v) {
   return s;
 }
 
+function resolveHumanizerSlug(allSlugs) {
+  const preferred = ["clawhub-humanizer", "clawhub-humanizer-2", "clawhub-afrexai-humanizer"];
+  for (const s of preferred) {
+    if (allSlugs.has(s)) return s;
+  }
+  return "";
+}
+
+function collectAutoInstallSlugs(skillcard, normalizedSlug, allSlugs) {
+  const out = new Set();
+  const requested = Array.isArray(skillcard?.autoInstallSkills) ? skillcard.autoInstallSkills : [];
+  for (const r of requested) {
+    const slug = toSlug(r);
+    if (!slug) continue;
+    if (slug === "humanizer") {
+      const resolved = resolveHumanizerSlug(allSlugs);
+      if (resolved) out.add(resolved);
+      continue;
+    }
+    if (allSlugs.has(slug)) out.add(slug);
+  }
+  // Product requirement: Lincoln AI always auto-installs a humanizer companion.
+  if (normalizedSlug === "lincoln-ai") {
+    const resolved = resolveHumanizerSlug(allSlugs);
+    if (resolved) out.add(resolved);
+  }
+  out.delete(normalizedSlug);
+  return [...out];
+}
+
+function readCardFromIndexMatch(store, match) {
+  if (!match?.fileName) return null;
+  const fp = store.resolveSkillFilePath(match.source, match.fileName);
+  if (!fp) return null;
+  try {
+    const parsed = JSON.parse(fs.readFileSync(fp, "utf8"));
+    return parsed?.card && typeof parsed.card === "object" ? parsed.card : parsed;
+  } catch {
+    return null;
+  }
+}
+
+function upsertUserSkill(store, auth, skillcard, sourceUrl, createdAt) {
+  const name = String(skillcard.name || "").trim();
+  if (!name) throw new Error("skillcard.name required");
+  const slug = toSlug(skillcard.slug || name);
+  if (!slug) throw new Error("skillcard.slug required");
+  const version = safeVersion(skillcard.version || "1.0.0");
+  if (!version) throw new Error("skillcard.version invalid (expected semver-ish)");
+  const desc = String(skillcard.description || "").trim();
+  const riskTierRaw = Number(skillcard?.constraints?.riskTier ?? skillcard?.riskTier ?? 2);
+  const riskTier = Number.isFinite(riskTierRaw) ? Math.max(1, Math.min(3, Math.round(riskTierRaw))) : 2;
+  const fileName = `${slug}.v${version}.json`;
+
+  store.writeUserSkillFile(fileName, { ...skillcard, slug, version, name, description: desc });
+
+  const idx = store.getUserSkillsIndex();
+  const skills = Array.isArray(idx?.skills) ? idx.skills : [];
+  const entry = {
+    fileName,
+    name,
+    slug,
+    version,
+    description: desc,
+    riskTier,
+    sourceUrl,
+    createdAt,
+    addedBy: auth.mode,
+    addedByAgentId: auth.agentId,
+    onchainTokenId: skillcard?.onchainTokenId ?? null,
+    onchainMintTx: skillcard?.onchainMintTx ?? null,
+    onchainPublishTx: skillcard?.onchainPublishTx ?? null,
+  };
+  const next = skills.filter((s) => String(s?.fileName || "") !== fileName);
+  next.unshift(entry);
+  store.writeUserSkillsIndex({ skills: next });
+  return entry;
+}
+
+function installOpenClawSkillCard(skillcard, fallbackSlug = "") {
+  const slugValue = toSlug(skillcard?.slug || fallbackSlug || skillcard?.name || "");
+  if (!slugValue) throw new Error("invalid slug for OpenClaw install");
+  const skillDir = path.join(PROJECT_ROOT, ".cursor", "skills", slugValue);
+  fs.mkdirSync(skillDir, { recursive: true });
+  const doc = String(skillcard?.documentation_md || "").trim();
+  const name = String(skillcard?.name || slugValue).trim();
+  const version = String(skillcard?.version || "1.0.0").trim();
+  const description = String(skillcard?.description || "").trim();
+  const content = doc || `---\nname: ${name}\nversion: ${version}\ndescription: ${description}\n---\n\n# ${name}\n\n${description}\n`;
+  fs.writeFileSync(path.join(skillDir, "SKILL.md"), content, "utf8");
+  return { slug: slugValue, skillDir };
+}
+
+function uninstallOpenClawSkillBySlug(slug) {
+  const s = toSlug(slug || "");
+  if (!s) return { removed: null, missing: null };
+  const skillDir = path.join(PROJECT_ROOT, ".cursor", "skills", s);
+  const skillMd = path.join(skillDir, "SKILL.md");
+  if (!fs.existsSync(skillMd)) {
+    return { removed: null, missing: { slug: s, reason: "SKILL.md not found" } };
+  }
+  fs.unlinkSync(skillMd);
+  try {
+    const leftover = fs.readdirSync(skillDir);
+    if (leftover.length === 0) fs.rmdirSync(skillDir);
+  } catch {}
+  return { removed: { slug: s, skillDir }, missing: null };
+}
+
 export function handleSkillsSearch(req, res, reqUrl) {
   try {
     const store = getStorage();
@@ -131,24 +240,73 @@ export async function handleSkillcardsUserAdd(req, res) {
     if (!name) throw new Error("skillcard.name required");
     const slug = toSlug(skillcard.slug || name);
     if (!slug) throw new Error("skillcard.slug required");
-    const version = safeVersion(skillcard.version || "1.0.0");
-    if (!version) throw new Error("skillcard.version invalid (expected semver-ish)");
-    const desc = String(skillcard.description || "").trim();
-    const riskTierRaw = Number(skillcard?.constraints?.riskTier ?? skillcard?.riskTier ?? 2);
-    const riskTier = Number.isFinite(riskTierRaw) ? Math.max(1, Math.min(3, Math.round(riskTierRaw))) : 2;
     const createdAt = new Date().toISOString();
-    const sourceUrl = String(body?.sourceUrl || skillcard?.provenance?.sourceUrl || "").trim();
-    const fileName = `${slug}.v${version}.json`;
     const store = getStorage();
-    store.writeUserSkillFile(fileName, { ...skillcard, slug, version, name, description: desc });
-    const idx = store.getUserSkillsIndex();
-    const skills = Array.isArray(idx?.skills) ? idx.skills : [];
-    const entry = { fileName, name, slug, version, description: desc, riskTier, sourceUrl, createdAt, addedBy: auth.mode, addedByAgentId: auth.agentId };
-    const next = skills.filter((s) => String(s?.fileName || "") !== fileName);
-    next.unshift(entry);
-    store.writeUserSkillsIndex({ skills: next });
+    const sourceUrl = String(body?.sourceUrl || skillcard?.provenance?.sourceUrl || "").trim();
+    const entry = upsertUserSkill(store, auth, { ...skillcard, slug, name }, sourceUrl, createdAt);
+
+    const merged = store.getMergedSkillIndex();
+    const allSlugs = new Set(merged.map((s) => String(s?.slug || "")));
+    const autoInstallSlugs = collectAutoInstallSlugs(skillcard, slug, allSlugs);
+    const autoInstalled = [];
+    const autoInstallMissing = [];
+    const openclawInstalled = [];
+    const openclawInstallMissing = [];
+
+    for (const depSlug of autoInstallSlugs) {
+      try {
+        const depMatch = merged.find((s) => s.slug === depSlug);
+        if (!depMatch) {
+          autoInstallMissing.push({ slug: depSlug, reason: "not found in merged index" });
+          continue;
+        }
+        const depCard = readCardFromIndexMatch(store, depMatch);
+        if (!depCard || typeof depCard !== "object") {
+          autoInstallMissing.push({ slug: depSlug, reason: "skill card file unreadable" });
+          continue;
+        }
+        const depSourceUrl = String(depMatch.sourceUrl || depCard?.provenance?.sourceUrl || "").trim();
+        const depEntry = upsertUserSkill(store, auth, depCard, depSourceUrl, createdAt);
+        autoInstalled.push({
+          slug: depEntry.slug,
+          name: depEntry.name,
+          version: depEntry.version,
+          fileName: depEntry.fileName,
+        });
+      } catch (depErr) {
+        autoInstallMissing.push({ slug: depSlug, reason: depErr?.message || "unknown dependency install error" });
+      }
+    }
+
+    try {
+      const oc = installOpenClawSkillCard(skillcard, slug);
+      openclawInstalled.push({ slug: oc.slug, skillDir: oc.skillDir });
+    } catch (ocErr) {
+      openclawInstallMissing.push({ slug, reason: ocErr?.message || "openclaw install failed" });
+    }
+    for (const depSlug of autoInstallSlugs) {
+      try {
+        const depMatch = merged.find((s) => s.slug === depSlug);
+        if (!depMatch) continue;
+        const depCard = readCardFromIndexMatch(store, depMatch);
+        if (!depCard) continue;
+        const oc = installOpenClawSkillCard(depCard, depSlug);
+        openclawInstalled.push({ slug: oc.slug, skillDir: oc.skillDir });
+      } catch (ocErr) {
+        openclawInstallMissing.push({ slug: depSlug, reason: ocErr?.message || "openclaw dependency install failed" });
+      }
+    }
+
     res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
-    return res.end(JSON.stringify({ ok: true, entry, fileHref: `/skillcards/user/${encodeURIComponent(fileName)}` }));
+    return res.end(JSON.stringify({
+      ok: true,
+      entry,
+      fileHref: `/skillcards/user/${encodeURIComponent(entry.fileName)}`,
+      autoInstalled,
+      autoInstallMissing,
+      openclawInstalled,
+      openclawInstallMissing,
+    }));
   } catch (err) {
     res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
     return res.end(JSON.stringify({ ok: false, error: err.message || "invalid request" }));
@@ -171,9 +329,15 @@ export async function handleSkillcardsUserDelete(req, res) {
     store.deleteUserSkillFile(fileName);
     const idx = store.getUserSkillsIndex();
     const skills = Array.isArray(idx?.skills) ? idx.skills : [];
+    const removed = skills.find((s) => String(s?.fileName || "") === fileName) || null;
     store.writeUserSkillsIndex({ skills: skills.filter((s) => String(s?.fileName || "") !== fileName) });
+    const openclawRemoved = [];
+    const openclawRemoveMissing = [];
+    const { removed: ocRemoved, missing: ocMissing } = uninstallOpenClawSkillBySlug(removed?.slug || "");
+    if (ocRemoved) openclawRemoved.push(ocRemoved);
+    if (ocMissing) openclawRemoveMissing.push(ocMissing);
     res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
-    return res.end(JSON.stringify({ ok: true }));
+    return res.end(JSON.stringify({ ok: true, openclawRemoved, openclawRemoveMissing }));
   } catch (err) {
     res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
     return res.end(JSON.stringify({ ok: false, error: err.message || "invalid request" }));

@@ -185,6 +185,9 @@ function buildMergedSkillIndex() {
             riskTier: Number(item.riskTier ?? 2),
             sourceUrl: String(item.sourceUrl || "").trim() || null,
             provenance: { publisher: "user", signed: false, addedBy: item.addedBy, addedByAgentId: item.addedByAgentId },
+            onchainTokenId: item.onchainTokenId || null,
+            onchainMintTx: item.onchainMintTx || null,
+            onchainPublishTx: item.onchainPublishTx || null,
           });
         }
       }
@@ -929,33 +932,148 @@ const server = http.createServer((req, res) => {
       const createdAt = new Date().toISOString();
       const sourceUrl = String(body?.sourceUrl || skillcard?.provenance?.sourceUrl || "").trim();
 
-      // Persist SkillCard JSON.
-      const fileName = `${slug}.v${version}.json`;
-      const filePath = path.join(SKILLCARDS_USER_DIR, fileName);
-      const payload = { ...skillcard, slug, version, name, description: desc };
-      fs.writeFileSync(filePath, JSON.stringify(payload, null, 2));
+      function upsertUserSkillCard(cardObj, sourceUrlValue = "") {
+        const n = String(cardObj.name || "").trim();
+        if (!n) throw new Error("skillcard.name required");
+        const s = toSlug(cardObj.slug || n);
+        if (!s) throw new Error("skillcard.slug required");
+        const v = safeVersion(cardObj.version || "1.0.0");
+        if (!v) throw new Error("skillcard.version invalid (expected semver-ish)");
+        const d = String(cardObj.description || "").trim();
+        const rtRaw = Number(cardObj?.constraints?.riskTier ?? cardObj?.riskTier ?? 2);
+        const rt = Number.isFinite(rtRaw) ? Math.max(1, Math.min(3, Math.round(rtRaw))) : 2;
+        const fn = `${s}.v${v}.json`;
+        const fp = path.join(SKILLCARDS_USER_DIR, fn);
+        fs.writeFileSync(fp, JSON.stringify({ ...cardObj, slug: s, version: v, name: n, description: d }, null, 2));
+        const idxRaw = JSON.parse(fs.readFileSync(SKILLCARDS_USER_INDEX_PATH, "utf8"));
+        const list = Array.isArray(idxRaw?.skills) ? idxRaw.skills : [];
+        const item = {
+          fileName: fn,
+          name: n,
+          slug: s,
+          version: v,
+          description: d,
+          riskTier: rt,
+          sourceUrl: sourceUrlValue,
+          createdAt,
+          addedBy: auth.mode,
+          addedByAgentId: auth.agentId,
+          onchainTokenId: cardObj?.onchainTokenId ?? null,
+          onchainMintTx: cardObj?.onchainMintTx ?? null,
+          onchainPublishTx: cardObj?.onchainPublishTx ?? null,
+        };
+        const nextList = list.filter((it) => String(it?.fileName || "") !== fn);
+        nextList.unshift(item);
+        atomicWriteJson(SKILLCARDS_USER_INDEX_PATH, { skills: nextList });
+        return item;
+      }
 
-      // Update index (append-only by default; replace if exact file exists).
-      const idx = JSON.parse(fs.readFileSync(SKILLCARDS_USER_INDEX_PATH, "utf8"));
-      const skills = Array.isArray(idx?.skills) ? idx.skills : [];
-      const entry = {
-        fileName,
-        name,
-        slug,
-        version,
-        description: desc,
-        riskTier,
-        sourceUrl,
-        createdAt,
-        addedBy: auth.mode,
-        addedByAgentId: auth.agentId,
-      };
-      const next = skills.filter((s) => String(s?.fileName || "") !== fileName);
-      next.unshift(entry);
-      atomicWriteJson(SKILLCARDS_USER_INDEX_PATH, { skills: next });
+      function resolveHumanizerSlug() {
+        const merged = getMergedSkillIndex();
+        const slugs = new Set(merged.map((s) => String(s?.slug || "")));
+        const preferred = ["clawhub-humanizer", "clawhub-humanizer-2", "clawhub-afrexai-humanizer"];
+        for (const s of preferred) if (slugs.has(s)) return s;
+        return "";
+      }
+
+      function readSourceCard(match) {
+        if (!match?.fileName) return null;
+        let sourceFile = "";
+        if (match.source === "seed") sourceFile = path.join(SKILLCARDS_SEED_DIR, match.fileName);
+        else if (match.source === "imported") sourceFile = path.join(ROOT, "skillcards", "imported", match.fileName);
+        else if (match.source === "user") sourceFile = path.join(SKILLCARDS_USER_DIR, match.fileName);
+        if (!sourceFile || !fs.existsSync(sourceFile)) return null;
+        try {
+          const parsed = JSON.parse(fs.readFileSync(sourceFile, "utf8"));
+          return parsed?.card && typeof parsed.card === "object" ? parsed.card : parsed;
+        } catch {
+          return null;
+        }
+      }
+
+      function installOpenClawSkillCard(cardObj, fallbackSlug = "") {
+        const slugValue = toSlug(cardObj?.slug || fallbackSlug || cardObj?.name || "");
+        if (!slugValue) throw new Error("invalid slug for OpenClaw install");
+        const skillDir = path.join(ROOT, ".cursor", "skills", slugValue);
+        fs.mkdirSync(skillDir, { recursive: true });
+        const doc = String(cardObj?.documentation_md || "").trim();
+        const nameValue = String(cardObj?.name || slugValue).trim();
+        const versionValue = String(cardObj?.version || "1.0.0").trim();
+        const descriptionValue = String(cardObj?.description || "").trim();
+        const content = doc || `---\nname: ${nameValue}\nversion: ${versionValue}\ndescription: ${descriptionValue}\n---\n\n# ${nameValue}\n\n${descriptionValue}\n`;
+        fs.writeFileSync(path.join(skillDir, "SKILL.md"), content, "utf8");
+        return { slug: slugValue, skillDir };
+      }
+
+      const entry = upsertUserSkillCard({ ...skillcard, slug, version, name, description: desc }, sourceUrl);
+      const autoInstalled = [];
+      const autoInstallMissing = [];
+      const openclawInstalled = [];
+      const openclawInstallMissing = [];
+      const merged = getMergedSkillIndex();
+      const requestedAuto = Array.isArray(skillcard?.autoInstallSkills) ? skillcard.autoInstallSkills.map((x) => toSlug(x)).filter(Boolean) : [];
+      if (slug === "lincoln-ai") requestedAuto.push("humanizer");
+      const resolvedAuto = new Set();
+      for (const dep of requestedAuto) {
+        if (dep === "humanizer") {
+          const hs = resolveHumanizerSlug();
+          if (hs) resolvedAuto.add(hs);
+          else autoInstallMissing.push({ slug: dep, reason: "no humanizer skill found" });
+        } else {
+          resolvedAuto.add(dep);
+        }
+      }
+      resolvedAuto.delete(slug);
+
+      for (const depSlug of resolvedAuto) {
+        const match = merged.find((m) => m.slug === depSlug);
+        if (!match) {
+          autoInstallMissing.push({ slug: depSlug, reason: "not found in merged index" });
+          continue;
+        }
+        const depCard = readSourceCard(match);
+        if (!depCard) {
+          autoInstallMissing.push({ slug: depSlug, reason: "could not read dependency card" });
+          continue;
+        }
+        try {
+          const depEntry = upsertUserSkillCard(depCard, String(match.sourceUrl || depCard?.provenance?.sourceUrl || "").trim());
+          autoInstalled.push({ slug: depEntry.slug, name: depEntry.name, version: depEntry.version, fileName: depEntry.fileName });
+        } catch (depErr) {
+          autoInstallMissing.push({ slug: depSlug, reason: depErr?.message || "dependency install failed" });
+        }
+      }
+
+      try {
+        const oc = installOpenClawSkillCard(skillcard, slug);
+        openclawInstalled.push({ slug: oc.slug, skillDir: oc.skillDir });
+      } catch (ocErr) {
+        openclawInstallMissing.push({ slug, reason: ocErr?.message || "openclaw install failed" });
+      }
+
+      for (const depSlug of resolvedAuto) {
+        const match = merged.find((m) => m.slug === depSlug);
+        if (!match) continue;
+        const depCard = readSourceCard(match);
+        if (!depCard) continue;
+        try {
+          const oc = installOpenClawSkillCard(depCard, depSlug);
+          openclawInstalled.push({ slug: oc.slug, skillDir: oc.skillDir });
+        } catch (ocErr) {
+          openclawInstallMissing.push({ slug: depSlug, reason: ocErr?.message || "openclaw dependency install failed" });
+        }
+      }
 
       res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
-      return res.end(JSON.stringify({ ok: true, entry, fileHref: `/skillcards/user/${encodeURIComponent(fileName)}` }));
+      return res.end(JSON.stringify({
+        ok: true,
+        entry,
+        fileHref: `/skillcards/user/${encodeURIComponent(entry.fileName)}`,
+        autoInstalled,
+        autoInstallMissing,
+        openclawInstalled,
+        openclawInstallMissing,
+      }));
     }).catch((err) => {
       res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: err.message || "invalid request" }));
@@ -980,10 +1098,32 @@ const server = http.createServer((req, res) => {
       }
       const idx = JSON.parse(fs.readFileSync(SKILLCARDS_USER_INDEX_PATH, "utf8"));
       const skills = Array.isArray(idx?.skills) ? idx.skills : [];
+      const removed = skills.find((s) => String(s?.fileName || "") === fileName) || null;
       const next = skills.filter((s) => String(s?.fileName || "") !== fileName);
       atomicWriteJson(SKILLCARDS_USER_INDEX_PATH, { skills: next });
+      const openclawRemoved = [];
+      const openclawRemoveMissing = [];
+      const removedSlug = toSlug(removed?.slug || "");
+      if (removedSlug) {
+        try {
+          const ocDir = path.join(ROOT, ".cursor", "skills", removedSlug);
+          const skillMd = path.join(ocDir, "SKILL.md");
+          if (fs.existsSync(skillMd)) {
+            fs.unlinkSync(skillMd);
+            try {
+              const leftover = fs.readdirSync(ocDir);
+              if (leftover.length === 0) fs.rmdirSync(ocDir);
+            } catch {}
+            openclawRemoved.push({ slug: removedSlug, skillDir: ocDir });
+          } else {
+            openclawRemoveMissing.push({ slug: removedSlug, reason: "SKILL.md not found" });
+          }
+        } catch (ocErr) {
+          openclawRemoveMissing.push({ slug: removedSlug, reason: ocErr?.message || "openclaw uninstall failed" });
+        }
+      }
       res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
-      return res.end(JSON.stringify({ ok: true }));
+      return res.end(JSON.stringify({ ok: true, openclawRemoved, openclawRemoveMissing }));
     }).catch((err) => {
       res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: err.message || "invalid request" }));
@@ -1519,6 +1659,7 @@ const server = http.createServer((req, res) => {
     "/docs": "/ui/docs.html",
     "/pod": "/ui/pod.html",
     "/skills": "/ui/skills.html",
+    "/forge": "/ui/forge/index.html",
     "/favicon-lobster.png": "/ui/favicon-lobster.png",
     "/ui/favicon.svg": "/ui/favicon.svg",
     "/ui/favicon-32.png": "/ui/favicon-32.png",

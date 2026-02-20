@@ -1,0 +1,79 @@
+{
+  "ok": true,
+  "card": {
+    "name": "Blender Forge Modeler",
+    "slug": "clawhub-blender-forge-modeler",
+    "version": "1.0.0",
+    "description": "Production-focused Blender workflow for designing, rigging, and exporting high-quality mecha bot parts for ApeClaw Forge. Covers blockout, hard-surface detail, clean topology, UVs, baking, PBR materials, LODs, and glTF export settings for stable real-time rendering.",
+    "documentation_md": "---\nname: blender-forge-modeler\nversion: 1.0.0\ncategory: Design\nrisk_tier: 2\n---\n\n# Blender Forge Modeler\n\nUse this skill to design cohesive, game-ready 3D bot models and attachments for ApeClaw Forge.\n\n## Mission\n\nTurn disconnected parts into a readable, cinematic mecha silhouette while keeping geometry efficient for browser rendering.\n\n## Core Workflow\n\n1. **Reference + Shape Language**\n   - Lock a clear silhouette first (head, torso, shoulders, pelvis, legs).\n   - Keep a consistent hard-surface motif: bevel hierarchy, panel breaks, vent language.\n\n2. **Blockout**\n   - Use simple primitives and mirror modifiers.\n   - Validate proportion from front/side/three-quarter cameras before detail pass.\n\n3. **High/Low Poly Strategy**\n   - High poly: support loops + weighted normals for crisp edges.\n   - Low poly: preserve silhouette; remove hidden/internal geometry.\n\n4. **Topology + Normals**\n   - Prefer quads on deforming regions; triangles allowed on rigid greebles.\n   - Use Auto Smooth + custom split normals for clean highlights.\n\n5. **UV + Bake**\n   - Keep texel density consistent.\n   - Bake normal/AO/curvature from high to low meshes.\n   - Pack UV islands with adequate padding for mip safety.\n\n6. **PBR Material Authoring**\n   - Separate armor/chrome/emissive masks.\n   - Use restrained roughness variation to avoid plastic look.\n   - Emissive areas should reinforce functional zones (visor, core, vents).\n\n7. **Rig + Attach Points**\n   - Build a simple mecha rig for idle motion tests.\n   - Add named attach points for skills (`socket_shoulder_l`, `socket_back_01`, `socket_forearm_r`, etc).\n\n8. **Performance Targets**\n   - Maintain practical triangle budgets for web use.\n   - Create LOD0/LOD1/LOD2 where possible.\n   - Remove non-visible backside detail on nested components.\n\n9. **Export for Forge**\n   - Export as glTF 2.0 (`.glb`) with embedded textures.\n   - Apply transforms, freeze scale, and verify axis orientation.\n   - Confirm material channels map correctly in Three.js.\n\n## Forge Visual Quality Rules\n\n- Prioritize silhouette readability over tiny greeble density.\n- Keep emissive composition intentional; do not let bloom erase structure.\n- Ensure attachments feel mounted to armor panels, not floating.\n\n## Input\n\n- Current Forge style constraints\n- Target skill count and attachment classes\n- Desired performance envelope (desktop-first / mixed / low-end)\n\n## Output\n\n- Modeling plan and checklist\n- Asset naming map (chassis, attachments, sockets, materials)\n- Export checklist for Three.js compatibility\n\n## Example prompts\n\n- \"Design a cohesive HV-MTL style chassis with clean silhouette and shoulder/back hardpoints.\"\n- \"Generate a low-poly pass for this attachment set and define LOD reductions.\"\n- \"Audit this bot model for topology, UV, normals, and export issues before Forge import.\"\n",
+    "inputs_schema": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "string",
+          "description": "Modeling objective or problem statement"
+        },
+        "style": {
+          "type": "string",
+          "description": "Visual direction such as HV-MTL, industrial, tactical, etc."
+        },
+        "poly_budget": {
+          "type": "string",
+          "description": "Approximate triangle budget target for web rendering"
+        },
+        "target_export": {
+          "type": "string",
+          "enum": ["glb", "gltf"],
+          "description": "Preferred export target format"
+        }
+      }
+    },
+    "outputs_schema": {
+      "type": "object",
+      "properties": {
+        "plan": { "type": "string", "description": "Step-by-step modeling and integration plan" },
+        "checks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Validation checklist for quality and performance"
+        },
+        "asset_map": { "type": "string", "description": "Recommended naming and socket map" }
+      }
+    },
+    "bindings": [
+      {
+        "type": "community",
+        "source": "clawhub-blender-forge-modeler",
+        "category": "Design"
+      }
+    ],
+    "constraints": {
+      "riskTier": 2,
+      "importedStub": false
+    },
+    "required_permissions": [
+      "file_read",
+      "file_write"
+    ],
+    "examples": [
+      {
+        "input": "Build a connected mecha body for Forge with shoulder and back hardpoints.",
+        "output": "Returns blockout-to-export checklist, socket naming map, and LOD guidance."
+      }
+    ],
+    "eval_packs": [],
+    "provenance": {
+      "publisher": "apeclaw",
+      "signed": false,
+      "source": "custom_skill",
+      "sourceUrl": "https://github.com/simplefarmer69/ape-claw",
+      "homepage": "https://openclaw.ai",
+      "license": "MIT",
+      "importedAt": "2026-02-20T15:30:00.000Z"
+    },
+    "vettedOk": true,
+    "onchainTokenId": null,
+    "onchainMintTx": null,
+    "onchainPublishTx": null
+  }
+}

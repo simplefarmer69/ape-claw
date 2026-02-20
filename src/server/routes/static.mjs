@@ -12,7 +12,7 @@ let allowlistIconCache = { expiresAt: 0, data: null, inFlight: null };
 
 const REWRITES = {
   "/ui": "/ui/index.html", "/app": "/ui/index.html",
-  "/docs": "/ui/docs.html", "/pod": "/ui/pod.html", "/skills": "/ui/skills.html",
+  "/docs": "/ui/docs.html", "/pod": "/ui/pod.html", "/skills": "/ui/skills.html", "/forge": "/ui/forge/index.html",
   "/favicon-lobster.png": "/ui/favicon-lobster.png",
   "/ui/favicon.svg": "/ui/favicon.svg", "/ui/favicon-32.png": "/ui/favicon-32.png",
   "/ui/favicon-180.png": "/ui/favicon-180.png", "/ui/favicon-192.png": "/ui/favicon-192.png",

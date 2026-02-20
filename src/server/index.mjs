@@ -31,7 +31,7 @@ import {
   handleChatPost, handleChatReact,
 } from "./routes/chat.mjs";
 import { handleV2ReceiptGet, handleV2Config } from "./routes/v2.mjs";
-import { handlePodStatus, handlePodStop } from "./routes/pod.mjs";
+import { handlePodStatus, handlePodStop, handlePodFiles, handleStarterPack } from "./routes/pod.mjs";
 import {
   handleCreateQuote, handleGetQuote, handlePatchQuote, handleQuotesSpendToday,
   handleCreateBridgeRequest, handleGetBridgeRequest, handlePatchBridgeRequest, handleBridgeSpendToday,
@@ -130,6 +130,8 @@ const server = http.createServer((req, res) => {
   if (pathname === "/api/v2/receipt/get" && req.method === "GET") return safeHandler(handleV2ReceiptGet)(req, res, reqUrl);
   if (pathname === "/api/v2/config" && req.method === "GET") return safeHandler(handleV2Config)(req, res);
   if (pathname === "/api/pod/status" && req.method === "GET") return safeHandler(handlePodStatus)(req, res);
+  if (pathname === "/api/pod/files" && req.method === "GET") return safeHandler(handlePodFiles)(req, res);
+  if (pathname === "/api/pod/starter-pack" && req.method === "GET") return safeHandler(handleStarterPack)(req, res);
   if (pathname === "/api/pod/stop" && req.method === "POST") return safeHandler(handlePodStop)(req, res);
 
   // ── Quote & bridge-request state APIs (M2) ──

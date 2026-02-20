@@ -27,6 +27,9 @@
     "skillcards/import-sources.json",
     "data/starter-pack.json",
     "data/starter-pack-bundle.json",
+    "data/skills/lincoln-ai.json",
+    "data/skills/clawhub-humanizer.json",
+    "data/skills/clawhub-blender-forge-modeler.json",
     ".cursor/skills/ape-claw/SKILL.md",
     "README.md"
   ],

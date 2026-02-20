@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { readJson, writeJson, randomId } from "./lib/io.mjs";
 import {
+  ROOT,
+  STATE_DIR,
   QUOTES_PATH,
   BRIDGE_REQUESTS_PATH,
   POLICY_PATH,
@@ -311,6 +313,134 @@ function installStarterPack({ packageRoot, skillsRoot }) {
   };
 }
 
+function toSlug(input) {
+  return String(input || "").toLowerCase().trim()
+    .replace(/®/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+function safeSkillVersion(v) {
+  const s = String(v || "").trim();
+  if (!s) return "";
+  if (!/^[0-9]+(\.[0-9]+){0,3}([\-+][0-9A-Za-z._-]+)?$/.test(s)) return "";
+  return s;
+}
+
+function resolveBundledSkillFile(packageRoot, slug) {
+  const skillsDataDir = path.join(packageRoot, "data", "skills");
+  const target = path.join(skillsDataDir, `${slug}.json`);
+  return fs.existsSync(target) ? target : "";
+}
+
+function resolveHumanizerDependencySlug(packageRoot) {
+  const preferred = ["clawhub-humanizer", "clawhub-humanizer-2", "clawhub-afrexai-humanizer"];
+  for (const slug of preferred) {
+    if (resolveBundledSkillFile(packageRoot, slug)) return slug;
+  }
+  return "";
+}
+
+function installBundledSkillBySlug({ packageRoot, slug, authMode = "cli", authAgentId = "local-cli" }) {
+  const normalizedSlug = toSlug(slug);
+  if (!normalizedSlug) throw new Error("invalid skill slug");
+
+  const skillsDataDir = path.join(packageRoot, "data", "skills");
+  if (!fs.existsSync(skillsDataDir)) {
+    throw new Error(`Bundled skills directory not found: ${skillsDataDir}`);
+  }
+
+  const userDir = path.join(STATE_DIR, "skillcards-user");
+  const userIndexPath = path.join(userDir, "index.json");
+  writeJson(userIndexPath, readJson(userIndexPath, { skills: [] }) || { skills: [] });
+
+  const installed = [];
+  const autoInstalled = [];
+  const autoInstallMissing = [];
+  const seen = new Set();
+
+  function upsertOne(targetSlug, isDependency = false) {
+    const s = toSlug(targetSlug);
+    if (!s || seen.has(s)) return null;
+    seen.add(s);
+
+    const filePath = resolveBundledSkillFile(packageRoot, s);
+    if (!filePath) {
+      if (isDependency) {
+        autoInstallMissing.push({ slug: s, reason: "bundled skill file not found" });
+        return null;
+      }
+      throw new Error(`Skill not found in bundled library: ${s}`);
+    }
+
+    const raw = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    const card = raw?.card && typeof raw.card === "object" ? raw.card : raw;
+    if (!card || typeof card !== "object") throw new Error(`Malformed skill card: ${s}`);
+
+    const name = String(card.name || "").trim();
+    if (!name) throw new Error(`skillcard.name required for ${s}`);
+    const cardSlug = toSlug(card.slug || name);
+    if (!cardSlug) throw new Error(`skillcard.slug required for ${s}`);
+    const version = safeSkillVersion(card.version || "1.0.0");
+    if (!version) throw new Error(`skillcard.version invalid for ${s}`);
+    const description = String(card.description || "").trim();
+    const riskTierRaw = Number(card?.constraints?.riskTier ?? card?.riskTier ?? 2);
+    const riskTier = Number.isFinite(riskTierRaw) ? Math.max(1, Math.min(3, Math.round(riskTierRaw))) : 2;
+    const createdAt = new Date().toISOString();
+    const sourceUrl = String(card?.provenance?.sourceUrl || "").trim();
+    const fileName = `${cardSlug}.v${version}.json`;
+
+    const payload = { ...card, slug: cardSlug, version, name, description };
+    writeJson(path.join(userDir, fileName), payload);
+
+    const idx = readJson(userIndexPath, { skills: [] }) || { skills: [] };
+    const skills = Array.isArray(idx.skills) ? idx.skills : [];
+    const entry = {
+      fileName,
+      name,
+      slug: cardSlug,
+      version,
+      description,
+      riskTier,
+      sourceUrl,
+      createdAt,
+      addedBy: authMode,
+      addedByAgentId: authAgentId,
+    };
+    const next = skills.filter((it) => String(it?.fileName || "") !== fileName);
+    next.unshift(entry);
+    writeJson(userIndexPath, { skills: next });
+
+    if (isDependency) autoInstalled.push(entry);
+    else installed.push(entry);
+
+    const deps = Array.isArray(card.autoInstallSkills) ? card.autoInstallSkills.map((x) => toSlug(x)).filter(Boolean) : [];
+    if (cardSlug === "lincoln-ai") deps.push("humanizer");
+    for (const dep of deps) {
+      let depSlug = dep;
+      if (dep === "humanizer") depSlug = resolveHumanizerDependencySlug(packageRoot);
+      if (!depSlug) {
+        autoInstallMissing.push({ slug: dep, reason: "dependency resolver could not find matching bundled skill" });
+        continue;
+      }
+      if (depSlug === cardSlug) continue;
+      upsertOne(depSlug, true);
+    }
+
+    return entry;
+  }
+
+  upsertOne(normalizedSlug, false);
+  return {
+    ok: true,
+    mode: "bundled-skill-install",
+    root: ROOT,
+    stateDir: STATE_DIR,
+    userSkillDir: userDir,
+    installed,
+    autoInstalled,
+    autoInstallMissing,
+  };
+}
+
 function promptUser(question) {
   return new Promise((resolve) => {
     const rl = createInterface({ input: process.stdin, output: process.stdout });
@@ -375,6 +505,39 @@ async function main() {
 
   // Allow skill installation in any directory without local ape-claw config.
   if (group === "skill" && sub === "install") {
+    const requestedSkillSlug = String(args._[2] || "").trim();
+    if (requestedSkillSlug) {
+      const here = path.dirname(fileURLToPath(import.meta.url));
+      const packageRoot = path.resolve(here, "..");
+      const result = installBundledSkillBySlug({
+        packageRoot,
+        slug: requestedSkillSlug,
+        authMode: "cli",
+        authAgentId: _agentId,
+      });
+      emitEvent({ eventType: "skill.install.slug.ran", command, dryRun: true, result });
+      if (asJson) return print(result, true);
+
+      console.log();
+      console.log(`\x1b[1m\x1b[33m  ✅  SKILL INSTALLED\x1b[0m`);
+      if (result.installed[0]) {
+        const s = result.installed[0];
+        console.log(`  \x1b[36mPrimary:\x1b[0m ${s.name} (${s.slug} v${s.version})`);
+      }
+      if (result.autoInstalled.length) {
+        console.log(`  \x1b[36mAuto-installed:\x1b[0m`);
+        for (const s of result.autoInstalled) console.log(`    - ${s.name} (${s.slug} v${s.version})`);
+      }
+      if (result.autoInstallMissing.length) {
+        console.log(`  \x1b[33mDependency warnings:\x1b[0m`);
+        for (const m of result.autoInstallMissing) console.log(`    - ${m.slug}: ${m.reason}`);
+      }
+      console.log(`  \x1b[36mState dir:\x1b[0m ${result.stateDir}`);
+      console.log(`  \x1b[36mUser skill index:\x1b[0m ${path.join(result.userSkillDir, "index.json")}`);
+      console.log();
+      return;
+    }
+
     const result = installApeClawSkill(args);
     emitEvent({ eventType: "skill.install.ran", command, dryRun: true, result });
 
@@ -1890,7 +2053,7 @@ async function main() {
       "bridge execute (autonomous)": "ape-claw bridge execute --request <requestId> --execute --autonomous --json",
       "bridge status": "ape-claw bridge status --request <requestId> --json",
       "allowlist audit": "ape-claw allowlist audit --json",
-      "skill install": "ape-claw skill install --scope local [--starter-pack | --no-starter-pack] --json",
+      "skill install": "ape-claw skill install [<slug>] [--scope local] [--starter-pack | --no-starter-pack] --json",
       "v2 skill mint": "ape-claw v2 skill mint --rpc <url> --privateKey 0x... --skillNft 0x... --registry 0x... [--parentId 0] [--royalty-receiver 0x... --royalty-bps 500] --json",
       "v2 skill publish": "ape-claw v2 skill publish --rpc <url> --privateKey 0x... --registry 0x... --skillId <id> --file <skillcard.json> [--uri ipfs://...] [--riskTier 1] --json",
       "v2 intent create": "ape-claw v2 intent create --rpc <url> --privateKey 0x... --intents 0x... --payload '{...}' [--expiresAt <unixSec>] --json",
