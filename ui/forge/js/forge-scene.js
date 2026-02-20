@@ -49,6 +49,12 @@ export const MAT = {
   development:   new M({ color: 0x4169E1, emissive: 0x4169E1, emissiveIntensity: 1.2, roughness: 0.3, metalness: 0.6 }),
   writing:       new M({ color: 0xFFF8DC, emissive: 0xFFF8DC, emissiveIntensity: 0.7, roughness: 0.4, metalness: 0.4 }),
   communication: new M({ color: 0x00BFFF, emissive: 0x00BFFF, emissiveIntensity: 1.2, roughness: 0.3, metalness: 0.6 }),
+  undersuit:  new M({ color: 0x1a1e28, roughness: 0.75, metalness: 0.2, emissive: 0x060810, emissiveIntensity: 0.1 }),
+  pistonMat:  new M({ color: 0xb08040, roughness: 0.3, metalness: 0.85, emissive: 0x302010, emissiveIntensity: 0.15 }),
+  cableMat:   new M({ color: 0x181822, roughness: 0.9, metalness: 0.1 }),
+  rivetMat:   new M({ color: 0xd0d8e0, roughness: 0.15, metalness: 0.95, emissive: 0x506080, emissiveIntensity: 0.25 }),
+  frameMat:   new M({ color: 0x283040, roughness: 0.6, metalness: 0.45, emissive: 0x0a1020, emissiveIntensity: 0.15 }),
+  darkChrome: new M({ color: 0x3a4555, roughness: 0.25, metalness: 0.7, emissive: 0x151e2a, emissiveIntensity: 0.3 }),
 };
 
 /* ══════════════════════════════════════════════════════════
@@ -136,6 +142,23 @@ function torus(g, r, tube, mat, x, y, z) {
   g.add(m);
   return m;
 }
+function pistonGeo(g, r, len, mat, x, y, z, rx, ry, rz) {
+  const shaft = cyl(g, r, r, len, mat, x, y, z, 8);
+  if (rx) shaft.rotation.x = rx; if (ry) shaft.rotation.y = ry; if (rz) shaft.rotation.z = rz;
+  const capG = new THREE.CylinderGeometry(r * 1.7, r * 1.7, len * 0.09, 8);
+  const c1 = new THREE.Mesh(capG, MAT.rivetMat); c1.position.y = len / 2; shaft.add(c1);
+  const c2 = new THREE.Mesh(capG, MAT.rivetMat); c2.position.y = -len / 2; shaft.add(c2);
+  return shaft;
+}
+function rivet(g, x, y, z) { return sphere(g, 0.028, MAT.rivetMat, x, y, z); }
+function ventSlits(g, w, n, sp, mat, x, y, z) {
+  for (let i = 0; i < n; i++) box(g, w, 0.02, 0.05, mat, x, y + i * sp, z);
+}
+function cableRun(g, r, len, x, y, z, rx, ry, rz) {
+  const m = cyl(g, r, r, len, MAT.cableMat, x, y, z, 6);
+  if (rx) m.rotation.x = rx; if (ry) m.rotation.y = ry; if (rz) m.rotation.z = rz;
+  return m;
+}
 
 /* ══════════════════════════════════════════════════════════
    Build chassis — HV-MTL Activated inspired mecha
@@ -147,94 +170,194 @@ function buildChassis() {
   exhaustFlames = [];
 
   // ── HEAD ──
-  // Helmet shell (angular, not boxy)
-  box(g, 1.1, 0.9, 0.9, MAT.armor, 0, 6.4, 0);
-  box(g, 1.2, 0.5, 0.95, MAT.armorLt, 0, 6.55, 0);  // crown plate
-  box(g, 0.9, 0.3, 0.6, MAT.chrome, 0, 6.0, 0.1);    // chin guard
+  box(g, 0.85, 0.72, 0.72, MAT.undersuit, 0, 6.4, 0);
+  // Helmet halves with center seam
+  box(g, 0.54, 0.88, 0.92, MAT.armor, -0.29, 6.42, 0);
+  box(g, 0.54, 0.88, 0.92, MAT.armor, 0.29, 6.42, 0);
+  box(g, 0.03, 0.9, 0.06, MAT.panelLine, 0, 6.42, 0.44);
+  // Crown ridge (layered)
+  box(g, 0.35, 0.14, 0.8, MAT.chrome, 0, 6.9, -0.04);
+  box(g, 0.22, 0.06, 0.6, MAT.darkChrome, 0, 6.98, -0.04);
+  // Brow plate
+  box(g, 1.12, 0.18, 0.35, MAT.armorLt, 0, 6.72, 0.28, -0.15, 0, 0);
+  box(g, 0.8, 0.06, 0.25, MAT.darkChrome, 0, 6.66, 0.32, -0.12, 0, 0);
+  // Chin guard + vent slits
+  box(g, 0.7, 0.22, 0.45, MAT.chrome, 0, 5.98, 0.15);
+  box(g, 0.5, 0.08, 0.35, MAT.darkChrome, 0, 5.9, 0.2);
+  ventSlits(g, 0.35, 3, 0.055, MAT.vent, 0, 5.88, 0.38);
+  // Cheek guards (inner + outer layer)
+  for (let side = -1; side <= 1; side += 2) {
+    box(g, 0.18, 0.45, 0.7, MAT.armorLt, side * 0.54, 6.3, 0.05, 0, 0, side * 0.06);
+    box(g, 0.06, 0.25, 0.55, MAT.darkChrome, side * 0.58, 6.22, 0.02, 0, 0, side * 0.06);
+    rivet(g, side * 0.46, 6.7, 0.36); rivet(g, side * 0.46, 6.15, 0.36);
+  }
+  // Ear vent arrays (3 glowing slits per side + housing)
+  for (let side = -1; side <= 1; side += 2) {
+    box(g, 0.08, 0.35, 0.18, MAT.frameMat, side * 0.63, 6.35, -0.12);
+    for (let i = 0; i < 3; i++)
+      box(g, 0.04, 0.055, 0.14, MAT.vent, side * 0.65, 6.32 + i * 0.1, -0.12);
+  }
+  // Visor — 3-segment with chrome frame dividers + inner glow layer
+  box(g, 0.42, 0.2, 0.05, MAT.visor, -0.32, 6.42, 0.47);
+  visorMesh = box(g, 0.38, 0.22, 0.06, MAT.visor, 0, 6.42, 0.48);
+  box(g, 0.42, 0.2, 0.05, MAT.visor, 0.32, 6.42, 0.47);
+  box(g, 0.03, 0.25, 0.08, MAT.chrome, -0.13, 6.42, 0.46);
+  box(g, 0.03, 0.25, 0.08, MAT.chrome, 0.13, 6.42, 0.46);
+  box(g, 1.0, 0.12, 0.02, MAT.coreInner, 0, 6.42, 0.42);
+  // Forehead glow
+  box(g, 0.6, 0.04, 0.05, MAT.panelLine, 0, 6.74, 0.38);
+  // Antenna fins (mount base + fin + glow strip)
+  for (let side = -1; side <= 1; side += 2) {
+    box(g, 0.06, 0.08, 0.14, MAT.frameMat, side * 0.5, 6.78, -0.1);
+    box(g, 0.05, 0.55, 0.2, MAT.chrome, side * 0.55, 6.88, -0.1, 0, 0, side * 0.2);
+    box(g, 0.02, 0.35, 0.04, MAT.panelLine, side * 0.56, 6.95, -0.05, 0, 0, side * 0.2);
+    rivet(g, side * 0.51, 6.78, -0.02);
+  }
+  // Back data ports (glowing connectors)
+  box(g, 0.8, 0.5, 0.1, MAT.darkChrome, 0, 6.4, -0.42);
+  for (let i = 0; i < 4; i++) {
+    cyl(g, 0.055, 0.055, 0.08, MAT.frameMat, -0.2 + i * 0.13, 6.4, -0.46, 8);
+    sphere(g, 0.022, MAT.vent, -0.2 + i * 0.13, 6.4, -0.5);
+  }
 
-  // Visor — wide glowing slit
-  visorMesh = box(g, 1.15, 0.22, 0.06, MAT.visor, 0, 6.42, 0.47);
-
-  // Antenna fins
-  box(g, 0.06, 0.55, 0.25, MAT.chrome, -0.55, 6.8, -0.1, 0, 0, 0.2);
-  box(g, 0.06, 0.55, 0.25, MAT.chrome, 0.55, 6.8, -0.1, 0, 0, -0.2);
-
-  // Glow strip on forehead
-  box(g, 0.6, 0.04, 0.06, MAT.panelLine, 0, 6.72, 0.42);
-
-  // ── NECK (mechanical joint) ──
-  cyl(g, 0.25, 0.35, 0.5, MAT.joint, 0, 5.85, 0);
+  // ── NECK ──
+  cyl(g, 0.22, 0.32, 0.5, MAT.joint, 0, 5.85, 0);
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2 + 0.4;
+    cableRun(g, 0.025, 0.45, Math.cos(a) * 0.28, 5.85, Math.sin(a) * 0.28);
+  }
   const neckRing = torus(g, 0.32, 0.04, MAT.vent, 0, 5.85, 0);
   glowRings.push(neckRing);
+  const neckRing2 = torus(g, 0.28, 0.025, MAT.panelLine, 0, 5.72, 0);
+  glowRings.push(neckRing2);
+  box(g, 1.6, 0.15, 0.8, MAT.darkChrome, 0, 5.6, 0);
 
-  // ── TORSO — layered armor plates ──
-  // Main chest block
-  box(g, 2.2, 2.6, 1.3, MAT.armor, 0, 4.0, 0);
-  // Upper chest accent plate
-  box(g, 2.0, 0.6, 0.15, MAT.chrome, 0, 5.0, 0.65);
+  // ── TORSO ──
+  // Endoskeleton (visible ribs between armor gaps)
+  box(g, 0.35, 5.0, 0.35, MAT.frameMat, 0, 3.6, -0.15);
+  for (let i = 0; i < 5; i++)
+    box(g, 1.4, 0.05, 0.22, MAT.frameMat, 0, 3.0 + i * 0.5, 0);
+  // Chest plates (L/R split with visible seam)
+  box(g, 1.08, 2.6, 1.3, MAT.armor, -0.55, 4.0, 0);
+  box(g, 1.08, 2.6, 1.3, MAT.armor, 0.55, 4.0, 0);
+  box(g, 0.04, 2.4, 0.06, MAT.panelLine, 0, 4.0, 0.65);
+  // Collar / gorget
+  box(g, 1.7, 0.2, 0.9, MAT.darkChrome, 0, 5.35, 0);
+  box(g, 1.4, 0.06, 0.5, MAT.panelLine, 0, 5.45, 0.35);
+  // Upper chest chevron accent
+  box(g, 2.0, 0.6, 0.12, MAT.chrome, 0, 5.0, 0.66);
+  box(g, 1.6, 0.35, 0.06, MAT.darkChrome, 0, 5.15, 0.7);
   // Lower chest plate
-  box(g, 1.8, 0.4, 0.15, MAT.armorLt, 0, 4.4, 0.7);
-  // Side chest plates (angled armor)
-  box(g, 0.3, 2.0, 1.1, MAT.armorLt, -1.15, 4.1, 0, 0, 0, -0.08);
-  box(g, 0.3, 2.0, 1.1, MAT.armorLt, 1.15, 4.1, 0, 0, 0, 0.08);
-  // Back plate
-  box(g, 1.8, 2.2, 0.2, MAT.chrome, 0, 4.1, -0.7);
-  // Panel line accents (glowing seams)
+  box(g, 1.8, 0.4, 0.12, MAT.armorLt, 0, 4.4, 0.7);
+  // Side flanks (angled outward)
+  for (let side = -1; side <= 1; side += 2) {
+    box(g, 0.28, 2.0, 1.1, MAT.armorLt, side * 1.15, 4.1, 0, 0, 0, side * -0.08);
+    box(g, 0.08, 1.6, 0.85, MAT.darkChrome, side * 1.22, 4.1, 0, 0, 0, side * -0.08);
+    rivet(g, side * 1.05, 5.0, 0.55); rivet(g, side * 1.05, 3.2, 0.55);
+  }
+  // Back plate (layered)
+  box(g, 1.8, 2.2, 0.18, MAT.chrome, 0, 4.1, -0.7);
+  box(g, 1.3, 1.6, 0.08, MAT.darkChrome, 0, 4.2, -0.76);
+  // Ab plates (3 per side)
+  for (let side = -1; side <= 1; side += 2) {
+    for (let i = 0; i < 3; i++) {
+      box(g, 0.42, 0.28, 0.12, MAT.armorLt, side * 0.35, 3.0 + i * 0.33, 0.68);
+    }
+  }
+  // Panel line accents
   box(g, 0.04, 1.8, 0.06, MAT.panelLine, -0.7, 4.0, 0.68);
   box(g, 0.04, 1.8, 0.06, MAT.panelLine, 0.7, 4.0, 0.68);
   box(g, 1.4, 0.04, 0.06, MAT.panelLine, 0, 3.2, 0.68);
+  box(g, 1.4, 0.04, 0.06, MAT.panelLine, 0, 4.8, 0.68);
 
-  // ── CORE REACTOR ──
+  // ── CORE REACTOR (multi-ring housing) ──
   coreMesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.3), MAT.coreInner);
   coreMesh.position.set(0, 4.5, 0.7);
   g.add(coreMesh);
-  // Core housing ring
   const coreRing = torus(g, 0.42, 0.05, MAT.core, 0, 4.5, 0.7);
   coreRing.rotation.x = 0;
   glowRings.push(coreRing);
-  // Core glow sphere (bloom bait)
+  const coreOuter = torus(g, 0.52, 0.03, MAT.vent, 0, 4.5, 0.7);
+  coreOuter.rotation.x = 0;
+  glowRings.push(coreOuter);
+  // Core housing plates (4 brackets)
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2;
+    const bx = Math.cos(a) * 0.38, bz = Math.sin(a) * 0.38;
+    box(g, 0.08, 0.12, 0.04, MAT.chrome, bx, 4.5, 0.7 + bz);
+  }
   const coreGlow = sphere(g, 0.18, MAT.core, 0, 4.5, 0.72);
   coreGlow.layers.enable(1);
+  sphere(g, 0.08, MAT.coreInner, 0, 4.5, 0.7);
 
   // ── WAIST / PELVIS ──
   box(g, 1.6, 0.7, 1.0, MAT.armorLt, 0, 2.35, 0);
+  box(g, 1.2, 0.5, 0.8, MAT.undersuit, 0, 2.35, 0);
   box(g, 1.8, 0.2, 0.15, MAT.chrome, 0, 2.7, 0.52);
+  // Hip guard skirts
+  for (let side = -1; side <= 1; side += 2) {
+    box(g, 0.45, 0.5, 0.7, MAT.armor, side * 0.7, 2.15, 0, 0, 0, side * -0.12);
+    box(g, 0.35, 0.12, 0.55, MAT.darkChrome, side * 0.72, 2.3, 0, 0, 0, side * -0.12);
+    rivet(g, side * 0.6, 2.5, 0.38);
+  }
   const waistRing = torus(g, 0.9, 0.04, MAT.vent, 0, 2.7, 0);
   glowRings.push(waistRing);
+  box(g, 0.8, 0.04, 0.06, MAT.panelLine, 0, 2.0, 0.52);
+  // Cable conduit across waist
+  cableRun(g, 0.02, 1.2, 0, 2.55, -0.48, 0, 0, Math.PI / 2);
 
-  // ── SHOULDER JOINTS ──
+  // ── SHOULDERS ──
   function buildShoulder(side) {
     const sx = side * 1.65;
-    // Joint ball
     sphere(g, 0.4, MAT.joint, sx, 5.25, 0);
     const shoulderRing = torus(g, 0.45, 0.04, MAT.vent, sx, 5.25, 0);
     glowRings.push(shoulderRing);
-    // Shoulder armor (angular pauldron)
+    // 2-layer pauldron (inner mount + outer plate)
+    box(g, 0.65, 0.35, 0.65, MAT.frameMat, sx + side * 0.2, 5.35, 0, 0, 0, side * -0.12);
     box(g, 0.95, 0.5, 0.85, MAT.armor, sx + side * 0.3, 5.4, 0, 0, 0, side * -0.15);
     box(g, 0.8, 0.15, 0.7, MAT.chrome, sx + side * 0.35, 5.65, 0, 0, 0, side * -0.15);
-    // Shoulder vent (glowing slit)
-    box(g, 0.5, 0.06, 0.5, MAT.vent, sx + side * 0.35, 5.3, 0);
+    box(g, 0.6, 0.04, 0.6, MAT.darkChrome, sx + side * 0.3, 5.55, 0, 0, 0, side * -0.15);
+    // Vent slit array
+    ventSlits(g, 0.4, 2, 0.08, MAT.vent, sx + side * 0.35, 5.26, 0);
+    // Shoulder piston (connects torso to pauldron)
+    pistonGeo(g, 0.04, 0.55, MAT.pistonMat, sx * 0.65, 5.3, -0.35, 0, 0, side * 0.6);
+    rivet(g, sx + side * 0.15, 5.6, 0.38); rivet(g, sx + side * 0.55, 5.6, -0.3);
   }
   buildShoulder(-1);
   buildShoulder(1);
 
-  // ── UPPER ARMS ──
+  // ── ARMS ──
   function buildArm(side) {
     const sx = side * 2.1;
-    // Upper arm
+    // Upper arm (inner visible + outer plates)
+    box(g, 0.35, 1.3, 0.35, MAT.undersuit, sx, 4.2, 0);
     box(g, 0.55, 1.4, 0.5, MAT.armorLt, sx, 4.2, 0);
+    box(g, 0.42, 0.45, 0.35, MAT.darkChrome, sx, 4.65, 0.18);
     box(g, 0.4, 0.06, 0.35, MAT.panelLine, sx, 4.5, 0.26);
-    // Elbow joint
+    // Bicep piston
+    pistonGeo(g, 0.03, 0.6, MAT.pistonMat, sx + side * 0.22, 4.2, -0.2);
+    cableRun(g, 0.018, 1.0, sx - side * 0.2, 4.2, 0.18);
+    // Elbow joint + ring + piston
     sphere(g, 0.28, MAT.joint, sx, 3.4, 0);
     const elbowRing = torus(g, 0.32, 0.03, MAT.vent, sx, 3.4, 0);
     glowRings.push(elbowRing);
-    // Forearm
+    pistonGeo(g, 0.025, 0.4, MAT.pistonMat, sx + side * 0.18, 3.4, -0.18, 0.3, 0, 0);
+    // Forearm (armor + rail mount + wrist band)
+    box(g, 0.3, 1.2, 0.3, MAT.undersuit, sx, 2.4, 0);
     box(g, 0.5, 1.3, 0.45, MAT.armor, sx, 2.4, 0);
-    box(g, 0.55, 0.3, 0.5, MAT.chrome, sx, 2.8, 0); // forearm plate
-    // Hand
-    box(g, 0.35, 0.4, 0.35, MAT.joint, sx, 1.55, 0);
-    // Forearm glow strip
+    box(g, 0.55, 0.3, 0.5, MAT.chrome, sx, 2.8, 0);
+    box(g, 0.12, 0.9, 0.12, MAT.darkChrome, sx + side * 0.28, 2.4, 0);
     box(g, 0.06, 0.8, 0.06, MAT.panelLine, sx + side * 0.26, 2.4, 0.22);
+    // Wrist tech band
+    torus(g, 0.22, 0.03, MAT.vent, sx, 1.85, 0);
+    box(g, 0.35, 0.08, 0.35, MAT.darkChrome, sx, 1.82, 0);
+    // Hand (palm + 3 finger stubs + thumb)
+    box(g, 0.3, 0.35, 0.3, MAT.joint, sx, 1.55, 0);
+    for (let f = -1; f <= 1; f++) {
+      box(g, 0.06, 0.22, 0.08, MAT.frameMat, sx + f * 0.1, 1.32, 0.08);
+    }
+    box(g, 0.06, 0.16, 0.08, MAT.frameMat, sx + side * 0.16, 1.42, -0.08);
+    rivet(g, sx - side * 0.2, 2.8, 0.25); rivet(g, sx + side * 0.2, 2.0, 0.22);
   }
   buildArm(-1);
   buildArm(1);
@@ -242,65 +365,105 @@ function buildChassis() {
   // ── LEGS ──
   function buildLeg(side) {
     const sx = side * 0.55;
-    // Hip joint
+    // Hip joint + ring
     sphere(g, 0.32, MAT.joint, sx, 1.95, 0);
     const hipRing = torus(g, 0.36, 0.03, MAT.vent, sx, 1.95, 0);
     glowRings.push(hipRing);
-    // Thigh armor
+    // Hip guard (angled skirt armor)
+    box(g, 0.55, 0.35, 0.55, MAT.armor, sx + side * 0.12, 1.82, 0.12, 0, 0, side * -0.1);
+    box(g, 0.4, 0.1, 0.4, MAT.darkChrome, sx + side * 0.12, 1.9, 0.15, 0, 0, side * -0.1);
+    // Thigh (inner undersuit + outer plates front/back)
+    box(g, 0.4, 1.5, 0.4, MAT.undersuit, sx, 0.8, 0);
     box(g, 0.65, 1.6, 0.65, MAT.armorLt, sx, 0.8, 0);
     box(g, 0.5, 0.12, 0.45, MAT.chrome, sx, 1.3, 0.33);
+    box(g, 0.45, 0.12, 0.4, MAT.darkChrome, sx, 0.5, 0.33);
     box(g, 0.06, 1.0, 0.06, MAT.panelLine, sx + side * 0.3, 0.8, 0.33);
-    // Knee joint
+    // Thigh cable conduit
+    cableRun(g, 0.018, 1.2, sx - side * 0.28, 0.8, -0.2);
+    rivet(g, sx + side * 0.25, 1.5, 0.3); rivet(g, sx + side * 0.25, 0.1, 0.3);
+    // Knee joint + ring + pistons (inner/outer)
     sphere(g, 0.26, MAT.joint, sx, -0.1, 0.1);
     const kneeRing = torus(g, 0.3, 0.03, MAT.vent, sx, -0.1, 0.1);
     glowRings.push(kneeRing);
-    // Shin (tapered)
+    pistonGeo(g, 0.025, 0.35, MAT.pistonMat, sx + side * 0.22, -0.1, -0.15, 0.25, 0, 0);
+    pistonGeo(g, 0.025, 0.3, MAT.pistonMat, sx - side * 0.22, -0.1, 0.2, -0.2, 0, 0);
+    // Shin (layered guard + inner + calf vents)
+    box(g, 0.35, 1.4, 0.35, MAT.undersuit, sx, -1.2, 0.08);
     box(g, 0.55, 1.5, 0.55, MAT.armor, sx, -1.2, 0.08);
-    box(g, 0.6, 0.6, 0.15, MAT.chrome, sx, -0.6, 0.35); // shin guard
+    box(g, 0.6, 0.6, 0.15, MAT.chrome, sx, -0.6, 0.35);
+    box(g, 0.5, 0.35, 0.08, MAT.darkChrome, sx, -0.85, 0.36);
     box(g, 0.06, 0.9, 0.06, MAT.panelLine, sx, -1.2, 0.36);
-    // Ankle
+    // Calf vent slits
+    ventSlits(g, 0.2, 3, 0.08, MAT.vent, sx - side * 0.28, -1.4, 0);
+    cableRun(g, 0.015, 1.1, sx + side * 0.22, -1.2, -0.18);
+    // Ankle (joint + twin pistons)
     cyl(g, 0.15, 0.2, 0.3, MAT.joint, sx, -2.1, 0.08);
-    // Foot (armored boot)
-    box(g, 0.65, 0.25, 1.0, MAT.armorLt, sx, -2.35, 0.25);
-    box(g, 0.6, 0.08, 0.6, MAT.chrome, sx, -2.2, 0.45);
-    // Foot thruster (glowing)
+    pistonGeo(g, 0.02, 0.25, MAT.pistonMat, sx + side * 0.12, -2.0, 0.22);
+    pistonGeo(g, 0.02, 0.25, MAT.pistonMat, sx - side * 0.12, -2.0, -0.08);
+    // Foot (toe segment + heel + mid plate + thruster)
+    box(g, 0.65, 0.22, 0.6, MAT.armorLt, sx, -2.35, 0.38);
+    box(g, 0.55, 0.18, 0.35, MAT.armorLt, sx, -2.35, -0.05);
+    box(g, 0.6, 0.08, 0.55, MAT.chrome, sx, -2.22, 0.4);
+    box(g, 0.45, 0.04, 0.35, MAT.darkChrome, sx, -2.18, 0.4);
     box(g, 0.3, 0.08, 0.3, MAT.ventHot, sx, -2.48, 0.15);
+    rivet(g, sx + side * 0.25, -2.2, 0.6); rivet(g, sx - side * 0.25, -2.2, 0.6);
   }
   buildLeg(-1);
   buildLeg(1);
 
-  // ── SPINE (glowing vertebrae) ──
+  // ── SPINE (vertebrae with cross-struts) ──
   spineSegments = [];
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 8; i++) {
     const mat = MAT.spineGlow.clone();
-    const seg = box(g, 0.12, 0.22, 0.12, mat, 0, 2.8 + i * 0.42, -0.72);
+    const seg = box(g, 0.12, 0.2, 0.12, mat, 0, 2.7 + i * 0.4, -0.72);
     spineSegments.push(seg);
+    if (i > 0) {
+      box(g, 0.22, 0.04, 0.06, MAT.frameMat, 0, 2.7 + i * 0.4 - 0.2, -0.72);
+    }
+    // Cross-struts to torso
+    if (i >= 2 && i <= 6) {
+      box(g, 0.04, 0.04, 0.2, MAT.frameMat, 0, 2.7 + i * 0.4, -0.6);
+    }
   }
 
-  // ── BACK THRUSTERS / EXHAUST ──
+  // ── BACK THRUSTERS / EXHAUST (detailed nozzles) ──
   for (let side = -1; side <= 1; side += 2) {
-    // Thruster housing
-    cyl(g, 0.25, 0.35, 0.8, MAT.chrome, side * 0.6, 3.8, -0.9, 12);
+    // Pylon connecting to back
+    box(g, 0.15, 0.6, 0.25, MAT.frameMat, side * 0.6, 3.9, -0.78);
+    // Nozzle housing (outer shell)
+    cyl(g, 0.28, 0.38, 0.85, MAT.chrome, side * 0.6, 3.8, -0.95, 12);
+    // Nozzle inner cone
+    cyl(g, 0.12, 0.22, 0.35, MAT.darkChrome, side * 0.6, 3.45, -0.95, 12);
     // Exhaust glow
-    const exhaust = cyl(g, 0.2, 0.3, 0.15, MAT.ventHot, side * 0.6, 3.35, -0.9, 12);
+    const exhaust = cyl(g, 0.2, 0.3, 0.15, MAT.ventHot, side * 0.6, 3.32, -0.95, 12);
     exhaustFlames.push(exhaust);
-    // Thruster ring
-    const thrustRing = torus(g, 0.3, 0.03, MAT.vent, side * 0.6, 3.35, -0.9);
+    // Multi-ring nozzle
+    const thrustRing = torus(g, 0.32, 0.03, MAT.vent, side * 0.6, 3.32, -0.95);
     glowRings.push(thrustRing);
+    const thrustRing2 = torus(g, 0.25, 0.02, MAT.panelLine, side * 0.6, 3.42, -0.95);
+    glowRings.push(thrustRing2);
+    // Fuel line
+    cableRun(g, 0.02, 0.7, side * 0.42, 3.8, -0.82);
+    rivet(g, side * 0.6 + side * 0.22, 4.15, -0.85);
   }
 
-  // ── SHOULDER HARDPOINTS (weapon mounts) ──
+  // ── SHOULDER HARDPOINTS (detailed weapon mounts) ──
   for (let side = -1; side <= 1; side += 2) {
     const sx = side * 2.0;
+    // Mount pylon
+    box(g, 0.12, 0.2, 0.12, MAT.frameMat, sx + side * 0.4, 5.5, -0.2);
     cyl(g, 0.12, 0.12, 0.7, MAT.hardpoint, sx + side * 0.4, 5.6, -0.2);
-    box(g, 0.2, 0.2, 0.6, MAT.hardpoint, sx + side * 0.4, 5.95, -0.2);
+    box(g, 0.22, 0.22, 0.65, MAT.hardpoint, sx + side * 0.4, 5.95, -0.2);
+    box(g, 0.16, 0.08, 0.55, MAT.darkChrome, sx + side * 0.4, 6.05, -0.2);
     box(g, 0.08, 0.06, 0.5, MAT.vent, sx + side * 0.4, 5.85, -0.2);
+    rivet(g, sx + side * 0.4, 5.95, 0.1);
   }
 
-  // ── CHEST ENERGY VENTS (3 per side) ──
+  // ── CHEST ENERGY VENTS (4 per side with housing) ──
   for (let side = -1; side <= 1; side += 2) {
-    for (let i = 0; i < 3; i++) {
-      box(g, 0.35, 0.04, 0.08, MAT.vent, side * 0.55, 4.6 - i * 0.25, 0.68);
+    box(g, 0.45, 0.85, 0.06, MAT.frameMat, side * 0.55, 4.45, 0.67);
+    for (let i = 0; i < 4; i++) {
+      box(g, 0.35, 0.04, 0.08, MAT.vent, side * 0.55, 4.65 - i * 0.2, 0.7);
     }
   }
 
@@ -1006,7 +1169,7 @@ export function initForgeScene() {
   composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
 
-  bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.85, 0.28, 0.9);
+  bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.7, 0.32, 0.88);
   composer.addPass(bloomPass);
 
   outlinePass = new OutlinePass(new THREE.Vector2(w, h), scene, camera);

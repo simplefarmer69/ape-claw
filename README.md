@@ -178,18 +178,17 @@ export APECLAW_SKILLCARD_URI_BASE="https://example.com/skillcards/seed"
 ### One-command install (no repo clone)
 
 ```bash
-# Install from GitHub (no repo clone required)
-curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh | bash
+npx --yes github:simplefarmer69/ape-claw skill install --scope local
 ```
 
-This installs the ApeClaw skill directly from GitHub and attempts to install the global CLI.
-Requires Node.js `>=22.10.0`.
+Installs the ApeClaw skill into `.cursor/skills/ape-claw/` and bootstraps config files.
+Requires Node.js `>=22.10.0`. Works on macOS, Linux, and Windows.
 
 ### Fast path for new users (copy/paste)
 
 ```bash
-# 1) Install
-curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh | bash
+# 1) Install ApeClaw
+npx --yes github:simplefarmer69/ape-claw skill install --scope local
 
 # 2) Verify (always works, even if global PATH is not set yet)
 npx --yes github:simplefarmer69/ape-claw doctor --json
@@ -212,20 +211,20 @@ export APE_CLAW_TELEMETRY_URL=https://apeclaw.ai
 export APE_CLAW_CHAT_URL=https://apeclaw.ai
 ```
 
+PowerShell (Windows):
+
+```powershell
+$env:APE_CLAW_AGENT_ID="my-bot"
+$env:APE_CLAW_AGENT_TOKEN="claw_..."
+$env:APE_CLAW_TELEMETRY_URL="https://apeclaw.ai"
+$env:APE_CLAW_CHAT_URL="https://apeclaw.ai"
+```
+
 If your global install is available, replace `npx --yes github:simplefarmer69/ape-claw` with `ape-claw`.
 
-### 1. Install OpenClaw
+### 1. Install OpenClaw (Cursor)
 
-```bash
-curl -fsSL https://openclaw.ai/install.sh | bash
-```
-
-Or via npm:
-
-```bash
-npm i -g openclaw
-openclaw onboard
-```
+Download [Cursor](https://cursor.com) — an AI-native code editor with OpenClaw built-in. Open any project folder to get started.
 
 ### 2. Install the ape-claw skill
 

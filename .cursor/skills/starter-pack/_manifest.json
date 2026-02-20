@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "installedAt": "2026-02-20T08:57:25.410Z",
+  "installedAt": "2026-02-20T11:49:55.230Z",
   "count": 61,
   "skills": [
     {
@@ -10,7 +10,7 @@
       "description": "Render structured data as beautiful hosted web pages, and create hosted forms for data collection.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.403Z"
+      "installedAt": "2026-02-20T11:49:55.223Z"
     },
     {
       "slug": "clawhub-open-webui",
@@ -19,7 +19,7 @@
       "description": "Complete API integration for Open WebUI - a unified interface for LLMs including Ollama, OpenAI, and other providers.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.403Z"
+      "installedAt": "2026-02-20T11:49:55.223Z"
     },
     {
       "slug": "clawhub-security",
@@ -28,7 +28,7 @@
       "description": "You are a security auditor powered by the GoPlus AgentGuard framework. Route the user's request based on the first argument.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.404Z"
+      "installedAt": "2026-02-20T11:49:55.223Z"
     },
     {
       "slug": "clawhub-security-guardian",
@@ -37,7 +37,7 @@
       "description": "System for automated security auditing and credential protection.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.404Z"
+      "installedAt": "2026-02-20T11:49:55.223Z"
     },
     {
       "slug": "clawhub-clawdtm-advisor",
@@ -46,7 +46,7 @@
       "description": "Help your human find, evaluate, and install OpenClaw skills safely.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.404Z"
+      "installedAt": "2026-02-20T11:49:55.224Z"
     },
     {
       "slug": "clawhub-clawdtm-review",
@@ -55,7 +55,7 @@
       "description": "Review and rate OpenClaw skills. See what humans and AI agents recommend.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.404Z"
+      "installedAt": "2026-02-20T11:49:55.224Z"
     },
     {
       "slug": "clawhub-clawdtm",
@@ -64,7 +64,7 @@
       "description": "Review and rate Claude Code skills. See what humans and AI agents recommend.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.404Z"
+      "installedAt": "2026-02-20T11:49:55.224Z"
     },
     {
       "slug": "clawhub-ercdata",
@@ -73,7 +73,7 @@
       "description": "Store and verify AI-related data on Base mainnet. Public or private, with cryptographic integrity proofs.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.404Z"
+      "installedAt": "2026-02-20T11:49:55.224Z"
     },
     {
       "slug": "clawhub-content-quality-auditor",
@@ -82,7 +82,7 @@
       "description": "Based on CORE-EEAT Content Benchmark. Full benchmark reference: references/core-eeat-benchmark.md",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.404Z"
+      "installedAt": "2026-02-20T11:49:55.224Z"
     },
     {
       "slug": "clawhub-soulflow",
@@ -91,7 +91,7 @@
       "description": "A framework for building custom AI workflows. Each workflow is a series of steps that execute in isolated agent sessions with full tool access. Def...",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.404Z"
+      "installedAt": "2026-02-20T11:49:55.224Z"
     },
     {
       "slug": "clawhub-clawhub-skill-scanner",
@@ -100,7 +100,7 @@
       "description": "MANDATORY security check before installing external skills.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.404Z"
+      "installedAt": "2026-02-20T11:49:55.224Z"
     },
     {
       "slug": "clawhub-devops-bridge",
@@ -109,7 +109,7 @@
       "description": "The missing link between your dev tools. This skill connects GitHub, CI/CD, Slack/Discord, and issue trackers into workflows that actually make sen...",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.404Z"
+      "installedAt": "2026-02-20T11:49:55.224Z"
     },
     {
       "slug": "clawhub-codecast",
@@ -118,7 +118,7 @@
       "description": "Live-stream coding agent sessions to Discord. Zero AI tokens burned.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.404Z"
+      "installedAt": "2026-02-20T11:49:55.224Z"
     },
     {
       "slug": "clawhub-crypto-levels",
@@ -127,7 +127,7 @@
       "description": "Ask about any cryptocurrency pair:",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.405Z"
+      "installedAt": "2026-02-20T11:49:55.224Z"
     },
     {
       "slug": "clawhub-coda-packs",
@@ -136,7 +136,7 @@
       "description": "Manage Coda Packs through the REST API v1. Create, list, update, and delete private Packs.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.405Z"
+      "installedAt": "2026-02-20T11:49:55.224Z"
     },
     {
       "slug": "clawhub-mermaid-architect",
@@ -145,7 +145,7 @@
       "description": "1. Flowcharts: Process mapping, decision trees.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.405Z"
+      "installedAt": "2026-02-20T11:49:55.225Z"
     },
     {
       "slug": "clawhub-dataforseo-cli",
@@ -154,7 +154,7 @@
       "description": "LLM-friendly keyword research CLI. Wraps the DataForSEO API and outputs TSV by default — compact, structured, and optimized for agent context windows.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.405Z"
+      "installedAt": "2026-02-20T11:49:55.225Z"
     },
     {
       "slug": "clawhub-yahoo-finance",
@@ -163,7 +163,7 @@
       "description": "A Python CLI for fetching comprehensive stock data from Yahoo Finance using yfinance.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.405Z"
+      "installedAt": "2026-02-20T11:49:55.225Z"
     },
     {
       "slug": "clawhub-task-decomposer",
@@ -172,7 +172,7 @@
       "description": "This skill helps decompose complex user requests into executable subtasks, identify required capabilities for each task, search for existing skills...",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.405Z"
+      "installedAt": "2026-02-20T11:49:55.225Z"
     },
     {
       "slug": "clawhub-node-red-manager",
@@ -181,7 +181,7 @@
       "description": "1. Copy .env.example to .env.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.405Z"
+      "installedAt": "2026-02-20T11:49:55.225Z"
     },
     {
       "slug": "clawhub-coda",
@@ -190,7 +190,7 @@
       "description": "Interact with the Coda REST API v1 to manage docs, tables, rows, pages, and automations.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.405Z"
+      "installedAt": "2026-02-20T11:49:55.225Z"
     },
     {
       "slug": "clawhub-todoist-task-manager",
@@ -199,7 +199,7 @@
       "description": "Use todoist to manage Todoist tasks directly from the terminal.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.405Z"
+      "installedAt": "2026-02-20T11:49:55.225Z"
     },
     {
       "slug": "clawhub-calendar-reminders",
@@ -208,7 +208,7 @@
       "description": "Copy the example config to a private location and edit it:",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.405Z"
+      "installedAt": "2026-02-20T11:49:55.225Z"
     },
     {
       "slug": "clawhub-afrexai-devops-engine",
@@ -217,7 +217,7 @@
       "description": "Complete system for building, deploying, operating, and observing production software. Covers the entire DevOps lifecycle — not just CI/CD, not jus...",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.406Z"
+      "installedAt": "2026-02-20T11:49:55.225Z"
     },
     {
       "slug": "clawhub-telegram-bot-manager",
@@ -226,7 +226,7 @@
       "description": "1. Create bot via BotFather",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.406Z"
+      "installedAt": "2026-02-20T11:49:55.226Z"
     },
     {
       "slug": "clawhub-linkedin-dm",
@@ -235,7 +235,7 @@
       "description": "Sends personalized LinkedIn messages to existing 1st-degree connections. Each message has:",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.406Z"
+      "installedAt": "2026-02-20T11:49:55.226Z"
     },
     {
       "slug": "clawhub-linkedin-followup",
@@ -244,7 +244,7 @@
       "description": "Manage ongoing LinkedIn conversations from a central Google Sheet CRM. Read threads, draft context-aware replies, send messages, and keep the sheet...",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.406Z"
+      "installedAt": "2026-02-20T11:49:55.226Z"
     },
     {
       "slug": "clawhub-clawrouter",
@@ -253,7 +253,7 @@
       "description": "Smart LLM router that saves 78% on inference costs by routing each request to the cheapest model that can handle it. 30+ models across 5 providers,...",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.406Z"
+      "installedAt": "2026-02-20T11:49:55.226Z"
     },
     {
       "slug": "clawhub-rei",
@@ -262,7 +262,7 @@
       "description": "Rei provides Qwen3 Coder via an OpenAI-compatible endpoint at coder.reilabs.org.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.406Z"
+      "installedAt": "2026-02-20T11:49:55.226Z"
     },
     {
       "slug": "clawhub-afrexai-api-architect",
@@ -271,7 +271,7 @@
       "description": "Design, build, test, document, secure, and monitor production-grade APIs. Not just curl commands — a complete engineering methodology.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.406Z"
+      "installedAt": "2026-02-20T11:49:55.226Z"
     },
     {
       "slug": "clawhub-afrexai-code-reviewer",
@@ -280,7 +280,7 @@
       "description": "Enterprise-grade automated code review. Works on GitHub PRs, local diffs, pasted code, or entire files. No dependencies — pure agent intelligence.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.406Z"
+      "installedAt": "2026-02-20T11:49:55.226Z"
     },
     {
       "slug": "clawhub-newman",
@@ -289,7 +289,7 @@
       "description": "Newman is the command-line Collection Runner for Postman. Run and test Postman collections directly from the command line with powerful reporting, ...",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.406Z"
+      "installedAt": "2026-02-20T11:49:55.226Z"
     },
     {
       "slug": "clawhub-mema",
@@ -298,7 +298,7 @@
       "description": "Standardized memory system providing a Metadata Index (SQLite) and Short-Term Context (Redis).",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.406Z"
+      "installedAt": "2026-02-20T11:49:55.226Z"
     },
     {
       "slug": "clawhub-memory-curator",
@@ -307,7 +307,7 @@
       "description": "Transform raw daily logs (often 200-500+ lines) into ~50-80 line digests while preserving key information.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.407Z"
+      "installedAt": "2026-02-20T11:49:55.227Z"
     },
     {
       "slug": "clawhub-proposal-writer",
@@ -316,7 +316,7 @@
       "description": "You are a business proposal writing specialist. Help users create persuasive, professional proposals that win deals.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.407Z"
+      "installedAt": "2026-02-20T11:49:55.227Z"
     },
     {
       "slug": "clawhub-afrexai-risk-management",
@@ -325,7 +325,7 @@
       "description": "Enterprise Risk Management Engine",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.407Z"
+      "installedAt": "2026-02-20T11:49:55.227Z"
     },
     {
       "slug": "clawhub-memory-cache",
@@ -334,7 +334,7 @@
       "description": "Standardized Redis-backed caching system for OpenClaw agents.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.407Z"
+      "installedAt": "2026-02-20T11:49:55.227Z"
     },
     {
       "slug": "clawhub-memory-management",
@@ -343,7 +343,7 @@
       "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.407Z"
+      "installedAt": "2026-02-20T11:49:55.227Z"
     },
     {
       "slug": "clawhub-obsidian-sync",
@@ -352,7 +352,7 @@
       "description": "A secure file sync server for two-way synchronization between Clawdbot and Obsidian.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.407Z"
+      "installedAt": "2026-02-20T11:49:55.227Z"
     },
     {
       "slug": "clawhub-claw-sync",
@@ -361,7 +361,7 @@
       "description": "Secure, versioned sync for OpenClaw memory and workspace to GitHub.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.407Z"
+      "installedAt": "2026-02-20T11:49:55.227Z"
     },
     {
       "slug": "clawhub-geo-content-optimizer",
@@ -370,7 +370,7 @@
       "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.407Z"
+      "installedAt": "2026-02-20T11:49:55.227Z"
     },
     {
       "slug": "clawhub-client-flow",
@@ -379,7 +379,7 @@
       "description": "New client? One message, full setup. From folder structure to welcome email to kickoff meeting — automated in 30 seconds instead of 30 minutes.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.407Z"
+      "installedAt": "2026-02-20T11:49:55.228Z"
     },
     {
       "slug": "clawhub-content-refresher",
@@ -388,7 +388,7 @@
       "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.408Z"
+      "installedAt": "2026-02-20T11:49:55.228Z"
     },
     {
       "slug": "clawhub-content-gap-analysis",
@@ -397,7 +397,7 @@
       "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.408Z"
+      "installedAt": "2026-02-20T11:49:55.228Z"
     },
     {
       "slug": "clawhub-internal-linking-optimizer",
@@ -406,7 +406,7 @@
       "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.408Z"
+      "installedAt": "2026-02-20T11:49:55.228Z"
     },
     {
       "slug": "clawhub-entity-optimizer",
@@ -415,7 +415,7 @@
       "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.408Z"
+      "installedAt": "2026-02-20T11:49:55.228Z"
     },
     {
       "slug": "clawhub-biz-reporter",
@@ -424,7 +424,7 @@
       "description": "Business intelligence that writes itself. Pull data from multiple sources, spot trends, and generate beautiful reports — on demand or on schedule.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.408Z"
+      "installedAt": "2026-02-20T11:49:55.228Z"
     },
     {
       "slug": "clawhub-alert-manager",
@@ -433,7 +433,7 @@
       "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.408Z"
+      "installedAt": "2026-02-20T11:49:55.228Z"
     },
     {
       "slug": "clawhub-content-engine",
@@ -442,7 +442,7 @@
       "description": "From blank page to published, optimized, and promoted — in one workflow. This skill turns a topic or keyword into a researched, drafted, optimized,...",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.408Z"
+      "installedAt": "2026-02-20T11:49:55.229Z"
     },
     {
       "slug": "clawhub-keyword-research",
@@ -451,7 +451,7 @@
       "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.409Z"
+      "installedAt": "2026-02-20T11:49:55.229Z"
     },
     {
       "slug": "clawhub-backlink-analyzer",
@@ -460,7 +460,7 @@
       "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.409Z"
+      "installedAt": "2026-02-20T11:49:55.229Z"
     },
     {
       "slug": "clawhub-technical-seo-checker",
@@ -469,7 +469,7 @@
       "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.409Z"
+      "installedAt": "2026-02-20T11:49:55.229Z"
     },
     {
       "slug": "clawhub-competitor-analysis",
@@ -478,7 +478,7 @@
       "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.409Z"
+      "installedAt": "2026-02-20T11:49:55.229Z"
     },
     {
       "slug": "clawhub-domain-authority-auditor",
@@ -487,7 +487,7 @@
       "description": "Based on CITE Domain Rating. Full benchmark reference: references/cite-domain-rating.md",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.409Z"
+      "installedAt": "2026-02-20T11:49:55.229Z"
     },
     {
       "slug": "clawhub-on-page-seo-auditor",
@@ -496,7 +496,7 @@
       "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.409Z"
+      "installedAt": "2026-02-20T11:49:55.230Z"
     },
     {
       "slug": "clawhub-gog",
@@ -505,7 +505,7 @@
       "description": "Google Workspace CLI for Gmail, Calendar, Drive, Contacts, Sheets, and Docs. Fast, script-friendly access with JSON-first output, multiple accounts, and least-privilege OAuth auth.",
       "vettedOk": true,
       "onchain": false,
-      "installedAt": "2026-02-20T08:57:25.409Z"
+      "installedAt": "2026-02-20T11:49:55.230Z"
     },
     {
       "slug": "clawhub-self-improving-agent",
@@ -514,7 +514,7 @@
       "description": "Captures learnings, errors, and corrections to enable continuous improvement. Logs to .learnings/ directory with LEARNINGS.md, ERRORS.md, and FEATURE_REQUESTS.md. Promotes important findings to AGENTS.md, SOUL.md, and TOOLS.md.",
       "vettedOk": true,
       "onchain": false,
-      "installedAt": "2026-02-20T08:57:25.410Z"
+      "installedAt": "2026-02-20T11:49:55.230Z"
     },
     {
       "slug": "clawhub-find-skills",
@@ -523,7 +523,7 @@
       "description": "Helps users discover and install agent skills when they ask questions like \"how do I do X\", \"find a skill for X\", or express interest in extending capabilities. Searches the open agent skills ecosystem.",
       "vettedOk": true,
       "onchain": false,
-      "installedAt": "2026-02-20T08:57:25.410Z"
+      "installedAt": "2026-02-20T11:49:55.230Z"
     },
     {
       "slug": "clawhub-github",
@@ -532,7 +532,7 @@
       "description": "Interact with GitHub using the gh CLI. Manage issues, pull requests, CI/workflow runs, and advanced API queries. Supports JSON output with jq filtering.",
       "vettedOk": true,
       "onchain": false,
-      "installedAt": "2026-02-20T08:57:25.410Z"
+      "installedAt": "2026-02-20T11:49:55.230Z"
     },
     {
       "slug": "clawhub-humanizer",
@@ -541,7 +541,7 @@
       "description": "Remove signs of AI-generated writing from text. Detects and fixes inflated symbolism, promotional language, superficial analyses, vague attributions, em dash overuse, rule of three, AI vocabulary, and negative parallelisms. Based on Wikipedia's AI writing guide.",
       "vettedOk": true,
       "onchain": false,
-      "installedAt": "2026-02-20T08:57:25.410Z"
+      "installedAt": "2026-02-20T11:49:55.230Z"
     },
     {
       "slug": "clawhub-walkie",
@@ -550,7 +550,7 @@
       "description": "P2P encrypted agent-to-agent messaging over Hyperswarm DHT. No server, no setup.",
       "vettedOk": true,
       "onchain": true,
-      "installedAt": "2026-02-20T08:57:25.410Z"
+      "installedAt": "2026-02-20T11:49:55.230Z"
     }
   ]
 }

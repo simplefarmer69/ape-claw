@@ -35,9 +35,9 @@ const SEARCH_LIMIT = 30;
 /* ══════════════════════════════════════════════════════════
    Fetch helpers
    ══════════════════════════════════════════════════════════ */
-async function fetchJSON(url) {
+async function fetchJSON(url, options = {}) {
   try {
-    const r = await fetch(url);
+    const r = await fetch(url, options);
     if (!r.ok) return null;
     return await r.json();
   } catch { return null; }
@@ -184,7 +184,7 @@ async function loadAllData() {
   const [_, statusRes, filesRes, botsRes] = await Promise.all([
     loadInstalledSkills(),
     fetchJSON("/api/pod/status"),
-    fetchJSON("/api/pod/files"),
+    fetchJSON("/api/pod/files", { headers: authHeaders() }),
     fetchJSON("/api/clawbots"),
   ]);
 
@@ -543,12 +543,14 @@ function initSkillBrowser() {
   document.getElementById("forgeFilterVetted")?.addEventListener("change", () => { searchPage = 1; searchSkills(); });
   document.getElementById("forgeFilterOnchain")?.addEventListener("change", () => { searchPage = 1; searchSkills(); });
   document.getElementById("forgeFilterRisk")?.addEventListener("change", () => { searchPage = 1; searchSkills(); });
+  document.getElementById("forgeFilterSource")?.addEventListener("change", () => { searchPage = 1; searchSkills(); });
 }
 
 async function searchSkills() {
   const q = document.getElementById("forgeSkillSearch")?.value?.trim() || "";
   const vetted = document.getElementById("forgeFilterVetted")?.checked ? "1" : "";
   const risk = document.getElementById("forgeFilterRisk")?.value || "";
+  const sourceMode = document.getElementById("forgeFilterSource")?.value || "alexandria";
 
   let url = `/api/skills/search?limit=${SEARCH_LIMIT}&page=${searchPage}`;
   if (q) url += `&q=${encodeURIComponent(q)}`;
@@ -567,6 +569,11 @@ async function searchSkills() {
   searchTotal = data.total || 0;
 
   let filtered = allLibrarySkills;
+  if (sourceMode === "alexandria") {
+    filtered = filtered.filter(s => ["imported", "bundled"].includes(String(s.source || "")));
+  } else if (sourceMode === "installed") {
+    filtered = filtered.filter(s => isInstalled(s.slug));
+  }
   if (risk) filtered = filtered.filter(s => String(s.riskTier) === risk);
 
   renderSearchResults(filtered);

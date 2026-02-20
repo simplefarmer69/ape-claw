@@ -5,7 +5,14 @@ Complete reference for all `ape-claw` CLI commands.
 ## Installation
 
 ```bash
-npm install -g openclaw
+npx --yes github:simplefarmer69/ape-claw skill install --scope local
+npx --yes github:simplefarmer69/ape-claw doctor --json
+```
+
+PowerShell (Windows):
+
+```powershell
+npx --yes github:simplefarmer69/ape-claw skill install --scope local
 npx --yes github:simplefarmer69/ape-claw doctor --json
 ```
 

@@ -765,7 +765,22 @@
       <div class="grid ac-stagger">
         <div class="card ac-observe">
           <div class="cardhead">
-            <h3>1) Browse the Library</h3>
+            <h3>1) Install ApeClaw</h3>
+            <span class="badge live">LIVE</span>
+          </div>
+          <p>
+            Open a terminal in <a href="https://cursor.com" target="_blank" rel="noopener">Cursor</a> (AI code editor with OpenClaw built-in) and run:
+          </p>
+          <div class="code"><span class="k">npx</span> --yes github:simplefarmer69/ape-claw skill install --scope local</div>
+          <div class="tools" aria-label="Install instructions">
+            <a class="pill" href="#" data-copy='npx --yes github:simplefarmer69/ape-claw skill install --scope local'>Copy command</a>
+            <a class="pill" href="/docs?doc=CLI_GUIDE.md" data-keep-query="1">Install docs</a>
+          </div>
+          <div class="note" style="margin-top:8px">Add <code>--starter-pack</code> to include 61 curated skills. Works on macOS, Linux, and Windows.</div>
+        </div>
+        <div class="card ac-observe">
+          <div class="cardhead">
+            <h3>2) Browse the Library</h3>
             <span class="badge live">LIVE</span>
           </div>
           <p>
@@ -777,18 +792,17 @@
         </div>
         <div class="card ac-observe">
           <div class="cardhead">
-            <h3>2) Install a Skill</h3>
+            <h3>3) Install a Skill</h3>
             <span class="badge live">LIVE</span>
           </div>
           <p>
-            Download any SkillCard JSON from the API by slug, then drop it into your agent's skill directory. Works with any ACP-compatible agent.
+            Install any skill by slug from the command line, or browse below and click <strong>Install</strong> to add to your agent.
           </p>
-          <div class="code"><span class="k">curl</span> -fsSL "https://apeclaw.ai/api/skills/&lt;slug&gt;" -o ./&lt;slug&gt;.json</div>
+          <div class="code"><span class="k">npx</span> --yes github:simplefarmer69/ape-claw skill install lincoln-ai</div>
           <div class="tools" aria-label="Install instructions">
-            <a class="pill" href="#" data-copy='curl -fsSL "https://apeclaw.ai/api/skills/<slug>" -o ./<slug>.json'>Copy curl</a>
-            <a class="pill" href="/docs?doc=SKILLCARDS_AND_IMPORTER.md" data-keep-query="1">Install docs</a>
+            <a class="pill" href="#" data-copy='npx --yes github:simplefarmer69/ape-claw skill install lincoln-ai'>Copy command</a>
+            <a class="pill" href="/docs?doc=SKILLCARDS_AND_IMPORTER.md" data-keep-query="1">Skill docs</a>
           </div>
-          <div class="note" style="margin-top:8px">Or browse the skill cards below and click <strong>JSON</strong> to view any skill directly in your browser.</div>
         </div>
         <div class="card ac-observe">
           <div class="cardhead">

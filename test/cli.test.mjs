@@ -292,3 +292,36 @@ test("doctor uses local auth profile for private key readiness", () => {
   assert.equal(data.execution.privateKeyProvided, true);
   assert.equal(data.market.openseaApiKeyProvided, true);
 });
+
+test("skill install <slug> syncs bundled skills to OpenClaw", () => {
+  const fakeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "apeclaw-root-"));
+  const fakeState = path.join(fakeRoot, "state");
+  fs.mkdirSync(fakeState, { recursive: true });
+
+  const out = runWithEnv("node ./src/cli.mjs skill install lincoln-ai --json", {
+    APE_CLAW_ROOT: fakeRoot,
+    APE_CLAW_STATE_DIR: fakeState,
+  });
+  const data = JSON.parse(out);
+  assert.equal(data.ok, true);
+  assert.equal(data.mode, "bundled-skill-install");
+  assert.ok(Array.isArray(data.installed));
+  assert.ok(Array.isArray(data.autoInstalled));
+  assert.ok(Array.isArray(data.openclawInstalled));
+
+  const primary = data.installed.find((s) => s.slug === "lincoln-ai");
+  assert.ok(primary, "lincoln-ai should be installed");
+
+  const installedSlugs = new Set(data.openclawInstalled.map((s) => s.slug));
+  assert.ok(installedSlugs.has("lincoln-ai"), "lincoln-ai should be synced to OpenClaw");
+
+  const lincolnSkill = path.join(fakeRoot, ".cursor", "skills", "lincoln-ai", "SKILL.md");
+  assert.ok(fs.existsSync(lincolnSkill), "OpenClaw SKILL.md should exist for lincoln-ai");
+
+  if (data.autoInstalled.length > 0) {
+    for (const dep of data.autoInstalled) {
+      const depSkill = path.join(fakeRoot, ".cursor", "skills", dep.slug, "SKILL.md");
+      assert.ok(fs.existsSync(depSkill), `OpenClaw SKILL.md should exist for dependency ${dep.slug}`);
+    }
+  }
+});

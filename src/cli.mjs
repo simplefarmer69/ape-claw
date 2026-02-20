@@ -211,8 +211,25 @@ function installApeClawSkill(args) {
   };
 }
 
+function syncSkillToOpenClaw(cardObj, slug, skillsRoot) {
+  const s = String(slug || cardObj?.slug || cardObj?.name || "").toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  if (!s) return null;
+  const skillDir = path.join(skillsRoot, s);
+  fs.mkdirSync(skillDir, { recursive: true });
+  const doc = String(cardObj?.documentation_md || "").trim();
+  const nameValue = String(cardObj?.name || s).trim();
+  const versionValue = String(cardObj?.version || "1.0.0").trim();
+  const descriptionValue = String(cardObj?.description || "").trim();
+  const content = doc || `---\nname: ${nameValue}\nversion: ${versionValue}\ndescription: ${descriptionValue}\n---\n\n# ${nameValue}\n\n${descriptionValue}\n`;
+  fs.writeFileSync(path.join(skillDir, "SKILL.md"), content, "utf8");
+  return { slug: s, skillDir };
+}
+
 function installStarterPack({ packageRoot, skillsRoot }) {
   const starterPackInstalled = [];
+  const openclawSynced = [];
+  const openclawSyncFailed = [];
   const bundlePath = path.join(packageRoot, "data", "starter-pack-bundle.json");
   const legacyPackPath = path.join(packageRoot, "data", "starter-pack.json");
 
@@ -225,6 +242,31 @@ function installStarterPack({ packageRoot, skillsRoot }) {
       const curatedPack = JSON.parse(fs.readFileSync(legacyPackPath, "utf8"));
       curatedSkills = Array.isArray(curatedPack?.skills) ? curatedPack.skills : [];
     } catch {}
+  }
+
+  function processEntry(entry, cardObj) {
+    const slug = String(entry.slug || "").trim();
+    manifestEntries.push({
+      slug,
+      name: entry.name,
+      category: entry.category,
+      description: entry.description,
+      vettedOk: entry.vettedOk,
+      onchain: entry.onchain,
+      installedAt: new Date().toISOString(),
+    });
+    starterPackInstalled.push({
+      slug,
+      name: entry.name,
+      category: entry.category,
+      description: entry.description,
+    });
+    try {
+      const result = syncSkillToOpenClaw(cardObj, slug, skillsRoot);
+      if (result) openclawSynced.push(result);
+    } catch (err) {
+      openclawSyncFailed.push({ slug, reason: err?.message || "sync failed" });
+    }
   }
 
   if (fs.existsSync(bundlePath)) {
@@ -243,21 +285,9 @@ function installStarterPack({ packageRoot, skillsRoot }) {
       if (!slug || !entry.fullJson) continue;
       const targetJson = path.join(starterDir, `${slug}.json`);
       fs.writeFileSync(targetJson, JSON.stringify(entry.fullJson));
-      manifestEntries.push({
-        slug,
-        name: entry.name,
-        category: entry.category,
-        description: entry.description,
-        vettedOk: entry.vettedOk,
-        onchain: entry.onchain,
-        installedAt: new Date().toISOString(),
-      });
-      starterPackInstalled.push({
-        slug,
-        name: entry.name,
-        category: entry.category,
-        description: entry.description,
-      });
+      const card = entry.fullJson?.card && typeof entry.fullJson.card === "object"
+        ? entry.fullJson.card : entry.fullJson;
+      processEntry(entry, card);
     }
   } else if (fs.existsSync(legacyPackPath)) {
     const pack = JSON.parse(fs.readFileSync(legacyPackPath, "utf8"));
@@ -269,21 +299,9 @@ function installStarterPack({ packageRoot, skillsRoot }) {
       if (!fs.existsSync(sourceJson)) continue;
       const targetJson = path.join(starterDir, `${slug}.json`);
       fs.copyFileSync(sourceJson, targetJson);
-      manifestEntries.push({
-        slug,
-        name: entry.name,
-        category: entry.category,
-        description: entry.description,
-        vettedOk: entry.vettedOk,
-        onchain: entry.onchain,
-        installedAt: new Date().toISOString(),
-      });
-      starterPackInstalled.push({
-        slug,
-        name: entry.name,
-        category: entry.category,
-        description: entry.description,
-      });
+      let card = {};
+      try { const raw = JSON.parse(fs.readFileSync(sourceJson, "utf8")); card = raw?.card || raw; } catch {}
+      processEntry(entry, card);
     }
   }
 
@@ -310,6 +328,8 @@ function installStarterPack({ packageRoot, skillsRoot }) {
     skipped: false,
     categories: categorySummary,
     skills: starterPackInstalled,
+    openclawSynced: openclawSynced.length,
+    openclawSyncFailed,
   };
 }
 
@@ -339,6 +359,11 @@ function resolveHumanizerDependencySlug(packageRoot) {
   return "";
 }
 
+function installOpenClawSkillCard(cardObj, fallbackSlug = "") {
+  const skillsRoot = path.join(ROOT, ".cursor", "skills");
+  return syncSkillToOpenClaw(cardObj, fallbackSlug, skillsRoot);
+}
+
 function installBundledSkillBySlug({ packageRoot, slug, authMode = "cli", authAgentId = "local-cli" }) {
   const normalizedSlug = toSlug(slug);
   if (!normalizedSlug) throw new Error("invalid skill slug");
@@ -355,6 +380,8 @@ function installBundledSkillBySlug({ packageRoot, slug, authMode = "cli", authAg
   const installed = [];
   const autoInstalled = [];
   const autoInstallMissing = [];
+  const openclawInstalled = [];
+  const openclawInstallMissing = [];
   const seen = new Set();
 
   function upsertOne(targetSlug, isDependency = false) {
@@ -412,6 +439,13 @@ function installBundledSkillBySlug({ packageRoot, slug, authMode = "cli", authAg
     if (isDependency) autoInstalled.push(entry);
     else installed.push(entry);
 
+    try {
+      const oc = installOpenClawSkillCard(card, cardSlug);
+      openclawInstalled.push({ slug: oc.slug, skillDir: oc.skillDir });
+    } catch (ocErr) {
+      openclawInstallMissing.push({ slug: cardSlug, reason: ocErr?.message || "openclaw install failed" });
+    }
+
     const deps = Array.isArray(card.autoInstallSkills) ? card.autoInstallSkills.map((x) => toSlug(x)).filter(Boolean) : [];
     if (cardSlug === "lincoln-ai") deps.push("humanizer");
     for (const dep of deps) {
@@ -438,6 +472,8 @@ function installBundledSkillBySlug({ packageRoot, slug, authMode = "cli", authAg
     installed,
     autoInstalled,
     autoInstallMissing,
+    openclawInstalled,
+    openclawInstallMissing,
   };
 }
 
@@ -532,6 +568,13 @@ async function main() {
         console.log(`  \x1b[33mDependency warnings:\x1b[0m`);
         for (const m of result.autoInstallMissing) console.log(`    - ${m.slug}: ${m.reason}`);
       }
+      if (result.openclawInstalled.length) {
+        console.log(`  \x1b[36mOpenClaw synced:\x1b[0m ${result.openclawInstalled.length}`);
+      }
+      if (result.openclawInstallMissing.length) {
+        console.log(`  \x1b[33mOpenClaw sync warnings:\x1b[0m`);
+        for (const m of result.openclawInstallMissing) console.log(`    - ${m.slug}: ${m.reason}`);
+      }
       console.log(`  \x1b[36mState dir:\x1b[0m ${result.stateDir}`);
       console.log(`  \x1b[36mUser skill index:\x1b[0m ${path.join(result.userSkillDir, "index.json")}`);
       console.log();
@@ -617,6 +660,15 @@ async function main() {
       }
       console.log(`  ${line}`);
       console.log(`  \x1b[1m\x1b[32m${sp.installed} skills ready\x1b[0m across \x1b[33m${catOrder.length} categories\x1b[0m`);
+      if (sp.openclawSynced > 0) {
+        console.log(`  \x1b[36mOpenClaw synced:\x1b[0m ${sp.openclawSynced} skill folders written to ${result.skillsRoot}`);
+      }
+      if (sp.openclawSyncFailed && sp.openclawSyncFailed.length > 0) {
+        console.log(`  \x1b[33mOpenClaw sync warnings:\x1b[0m ${sp.openclawSyncFailed.length} failed`);
+        for (const f of sp.openclawSyncFailed.slice(0, 5)) {
+          console.log(`    - ${f.slug}: ${f.reason}`);
+        }
+      }
 
       const featured = [
         { name: "Gog", desc: "Gmail, Calendar, Drive, Sheets, Docs via CLI" },
@@ -655,18 +707,21 @@ async function main() {
     console.log(`    • Communicate P2P with other agents via encrypted channels`);
 
     console.log();
+    const runner = `npx --yes github:simplefarmer69/ape-claw`;
     console.log(`\x1b[1m  📋  NEXT STEPS:\x1b[0m`);
     console.log(`  ${thinLine}`);
-    console.log(`    \x1b[36m1.\x1b[0m Configure your wallet & RPC endpoint:`);
-    console.log(`       \x1b[2mSet APE_CLAW_RPC_URL and APE_CLAW_WALLET_KEY in your .env\x1b[0m`);
-    console.log(`    \x1b[36m2.\x1b[0m Review your policy file:`);
+    console.log(`    \x1b[36m1.\x1b[0m Register your clawbot (saves agent identity):`);
+    console.log(`       \x1b[32m${runner} clawbot register --agent-id my-bot --name "My ClawBot" --api https://apeclaw.ai --json\x1b[0m`);
+    console.log(`    \x1b[36m2.\x1b[0m Set runtime env (for telemetry/chat):`);
+    console.log(`       \x1b[2mAPE_CLAW_AGENT_ID=my-bot, APE_CLAW_AGENT_TOKEN=claw_...\x1b[0m`);
+    console.log(`    \x1b[36m3.\x1b[0m Review policy file (limits + safety gates):`);
     console.log(`       \x1b[2m${path.join(process.cwd(), "config", "policy.json")}\x1b[0m`);
-    console.log(`    \x1b[36m3.\x1b[0m Start your clawbot:`);
-    console.log(`       \x1b[32mape-claw clawbot register --agent-id my-bot --name "My ClawBot"\x1b[0m`);
-    console.log(`    \x1b[36m4.\x1b[0m Browse all skills:`);
-    console.log(`       \x1b[32mape-claw skill list\x1b[0m   \x1b[2mor visit\x1b[0m  \x1b[4mhttps://apeclaw.ai/skills\x1b[0m`);
-    console.log(`    \x1b[36m5.\x1b[0m Try a quote (dry-run):`);
-    console.log(`       \x1b[32mape-claw quote --collection boredapeyachtclub --budget 5\x1b[0m`);
+    console.log(`    \x1b[36m4.\x1b[0m Browse/install skills:`);
+    console.log(`       \x1b[32m${runner} skill install <slug>\x1b[0m   \x1b[2mor visit\x1b[0m  \x1b[4mhttps://apeclaw.ai/skills\x1b[0m`);
+    console.log(`    \x1b[36m5.\x1b[0m Run a safe read-only check:`);
+    console.log(`       \x1b[32m${runner} market collections --recommended --json\x1b[0m`);
+    console.log(`    \x1b[36m6.\x1b[0m Optional for onchain execute commands only:`);
+    console.log(`       \x1b[2mSet APE_CLAW_RPC_URL and APE_CLAW_WALLET_KEY in your .env\x1b[0m`);
 
     console.log();
     console.log(`  \x1b[2mDocs:\x1b[0m  https://apeclaw.ai/docs`);

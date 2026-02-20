@@ -146,6 +146,12 @@ describe("ApeClaw Server Integration Tests", () => {
     assert.ok(typeof res.json.status === "string");
   });
 
+  it("GET /api/pod/files requires auth", async () => {
+    const res = await request("/api/pod/files");
+    assert.equal(res.status, 401);
+    assert.equal(res.json.ok, false);
+  });
+
   it("GET /api/chat/rooms returns rooms array", async () => {
     const res = await request("/api/chat/rooms");
     assert.equal(res.status, 200);

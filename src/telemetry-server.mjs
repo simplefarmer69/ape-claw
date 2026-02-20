@@ -94,6 +94,7 @@ if (!fs.existsSync(SKILLCARDS_USER_INDEX_PATH)) {
 
 // SkillCards paths
 const SKILLCARDS_SEED_DIR = path.join(ROOT, "skillcards", "seed");
+const SKILLCARDS_BUNDLED_DIR = path.join(ROOT, "data", "skills");
 const SKILLCARDS_IMPORTED_INDEX_PATH = path.join(ROOT, "skillcards", "imported", "index.json");
 
 // Cache for merged skill index (60 seconds TTL)
@@ -137,7 +138,42 @@ function buildMergedSkillIndex() {
     // Skip if seed directory doesn't exist or can't be read
   }
 
-  // 2. Read imported skills from skillcards/imported/index.json
+  // 2. Read bundled skills from data/skills/*.json
+  try {
+    if (fs.existsSync(SKILLCARDS_BUNDLED_DIR)) {
+      const bundledFiles = fs.readdirSync(SKILLCARDS_BUNDLED_DIR).filter((f) => f.endsWith(".json")).sort();
+      for (const fileName of bundledFiles) {
+        try {
+          const raw = fs.readFileSync(path.join(SKILLCARDS_BUNDLED_DIR, fileName), "utf8");
+          const parsed = JSON.parse(raw);
+          const card = parsed?.card && typeof parsed.card === "object" ? parsed.card : parsed;
+          if (card && typeof card === "object" && card.name && card.slug) {
+            merged.push({
+              name: String(card.name || "").trim(),
+              slug: String(card.slug || "").trim(),
+              description: String(card.description || "").trim(),
+              fileName: String(fileName || "").trim() || null,
+              source: "bundled",
+              vettedOk: Boolean(card.vettedOk),
+              importOk: true,
+              riskTier: Number(card?.constraints?.riskTier ?? card?.riskTier ?? 2),
+              sourceUrl: String(card?.provenance?.sourceUrl || "").trim() || null,
+              provenance: card.provenance || { publisher: "apeclaw", signed: false },
+              onchainTokenId: card?.onchainTokenId || null,
+              onchainMintTx: card?.onchainMintTx || null,
+              onchainPublishTx: card?.onchainPublishTx || null,
+            });
+          }
+        } catch {
+          // Skip malformed bundled files
+        }
+      }
+    }
+  } catch {
+    // Skip if bundled directory doesn't exist or can't be read
+  }
+
+  // 3. Read imported skills from skillcards/imported/index.json
   try {
     if (fs.existsSync(SKILLCARDS_IMPORTED_INDEX_PATH)) {
       const raw = fs.readFileSync(SKILLCARDS_IMPORTED_INDEX_PATH, "utf8");
@@ -167,7 +203,7 @@ function buildMergedSkillIndex() {
     // Skip if imported index doesn't exist or can't be read
   }
 
-  // 3. Read user skills from state/skillcards-user/*.json files
+  // 4. Read user skills from state/skillcards-user/*.json files
   try {
     if (fs.existsSync(SKILLCARDS_USER_INDEX_PATH)) {
       const raw = fs.readFileSync(SKILLCARDS_USER_INDEX_PATH, "utf8");
@@ -196,7 +232,15 @@ function buildMergedSkillIndex() {
     // Skip if user index doesn't exist or can't be read
   }
 
-  return merged;
+  // Deduplicate by slug while preserving source precedence:
+  // seed < imported < user (later entries override earlier ones).
+  const bySlug = new Map();
+  for (const item of merged) {
+    const slug = String(item?.slug || "").trim();
+    if (!slug) continue;
+    bySlug.set(slug, item);
+  }
+  return [...bySlug.values()];
 }
 
 function getMergedSkillIndex() {
@@ -801,7 +845,7 @@ const server = http.createServer((req, res) => {
       let results = getMergedSkillIndex();
 
       // Filter by source
-      if (sourceFilter && ["seed", "imported", "user"].includes(sourceFilter)) {
+      if (sourceFilter && ["seed", "bundled", "imported", "user"].includes(sourceFilter)) {
         results = results.filter((s) => s.source === sourceFilter);
       }
 
@@ -859,6 +903,7 @@ const server = http.createServer((req, res) => {
       let fullCard = null;
       const bucketDirs = {
         seed: SKILLCARDS_SEED_DIR,
+        bundled: SKILLCARDS_BUNDLED_DIR,
         imported: path.join(ROOT, "skillcards", "imported"),
         user: SKILLCARDS_USER_DIR,
       };
@@ -880,6 +925,7 @@ const server = http.createServer((req, res) => {
     try {
       const all = getMergedSkillIndex();
       const seed = all.filter((s) => s.source === "seed").length;
+      const bundled = all.filter((s) => s.source === "bundled").length;
       const imported = all.filter((s) => s.source === "imported").length;
       const user = all.filter((s) => s.source === "user").length;
       const vetted = all.filter((s) => s.vettedOk === true).length;
@@ -892,7 +938,7 @@ const server = http.createServer((req, res) => {
         onchainTokenId: s.onchainTokenId ?? null,
       }));
       res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
-      return res.end(JSON.stringify({ ok: true, total: all.length, seed, imported, user, vetted, onchain, recent }));
+      return res.end(JSON.stringify({ ok: true, total: all.length, seed, bundled, imported, user, vetted, onchain, recent }));
     } catch (err) {
       res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
       return res.end(JSON.stringify({ ok: false, error: err.message || "stats failed" }));
@@ -1238,6 +1284,45 @@ const server = http.createServer((req, res) => {
     return res.end(JSON.stringify(status));
   }
 
+  if (pathname === "/api/pod/starter-pack" && req.method === "GET") {
+    const bundlePath = path.join(ROOT, "data", "starter-pack-bundle.json");
+    if (!fs.existsSync(bundlePath)) {
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+      return res.end(JSON.stringify({ ok: true, skills: [] }));
+    }
+    try {
+      const raw = fs.readFileSync(bundlePath, "utf8");
+      const parsed = JSON.parse(raw);
+      const skills = Array.isArray(parsed) ? parsed : (parsed.skills || []);
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+      return res.end(JSON.stringify({ ok: true, skills }));
+    } catch {
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+      return res.end(JSON.stringify({ ok: true, skills: [] }));
+    }
+  }
+
+  if (pathname === "/api/pod/files" && req.method === "GET") {
+    const auth = requireSkillWriteAuth(req);
+    if (!auth.ok) {
+      res.writeHead(401, { "content-type": "application/json; charset=utf-8" });
+      return res.end(JSON.stringify({ ok: false, error: "unauthorized (set x-registration-key or x-agent-id/x-agent-token)" }));
+    }
+    const workspacePath = findPodWorkspaceDir();
+    if (!workspacePath) {
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+      return res.end(JSON.stringify({ ok: true, files: {} }));
+    }
+    const names = ["SOUL.md", "IDENTITY.md", "AGENTS.md", "TOOLS.md"];
+    const files = {};
+    for (const n of names) {
+      const p = path.join(workspacePath, n);
+      if (fs.existsSync(p)) files[n] = fs.readFileSync(p, "utf8");
+    }
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+    return res.end(JSON.stringify({ ok: true, files }));
+  }
+
   // ── Pod stop endpoint ─────────────────────────────────────────
   if (pathname === "/api/pod/stop" && req.method === "POST") {
     const auth = requireSkillWriteAuth(req);
@@ -1333,6 +1418,7 @@ const server = http.createServer((req, res) => {
     const fileName = segments.length > 1 ? decodeURIComponent(segments.slice(1).join("/")) : "";
     const ALLOWED_BUCKETS = {
       user: SKILLCARDS_USER_DIR,
+      bundled: SKILLCARDS_BUNDLED_DIR,
       imported: path.join(ROOT, "skillcards", "imported"),
       seed: SKILLCARDS_SEED_DIR,
     };

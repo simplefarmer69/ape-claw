@@ -139,7 +139,7 @@ export function handleSkillsSearch(req, res, reqUrl) {
     const page = Math.max(1, Number(reqUrl.searchParams.get("page") || 1));
     const limit = Math.min(5000, Math.max(1, Number(reqUrl.searchParams.get("limit") || 50)));
     let results = store.getMergedSkillIndex();
-    if (sourceFilter && ["seed", "imported", "user"].includes(sourceFilter)) results = results.filter((s) => s.source === sourceFilter);
+    if (sourceFilter && ["seed", "bundled", "imported", "user"].includes(sourceFilter)) results = results.filter((s) => s.source === sourceFilter);
     if (vettedFilter === "1") results = results.filter((s) => s.vettedOk === true);
     if (query) {
       results = results.filter((s) => {
@@ -186,6 +186,7 @@ export function handleSkillsStats(req, res) {
     const store = getStorage();
     const all = store.getMergedSkillIndex();
     const seed = all.filter((s) => s.source === "seed").length;
+    const bundled = all.filter((s) => s.source === "bundled").length;
     const imported = all.filter((s) => s.source === "imported").length;
     const user = all.filter((s) => s.source === "user").length;
     const vetted = all.filter((s) => s.vettedOk === true).length;
@@ -198,7 +199,7 @@ export function handleSkillsStats(req, res) {
       onchainTokenId: s.onchainTokenId ?? null,
     }));
     res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
-    return res.end(JSON.stringify({ ok: true, total: all.length, seed, imported, user, vetted, onchain, recent }));
+    return res.end(JSON.stringify({ ok: true, total: all.length, seed, bundled, imported, user, vetted, onchain, recent }));
   } catch (err) {
     res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
     return res.end(JSON.stringify({ ok: false, error: err.message || "stats failed" }));
@@ -385,6 +386,7 @@ export function handleSkillcardFile(req, res, pathname) {
   const fileName = segments.length > 1 ? decodeURIComponent(segments.slice(1).join("/")) : "";
   const ALLOWED_BUCKETS = {
     user: store.SKILLCARDS_USER_DIR,
+    bundled: path.join(PROJECT_ROOT, "data", "skills"),
     imported: path.join(PROJECT_ROOT, "skillcards", "imported"),
     seed: store.SKILLCARDS_SEED_DIR,
   };

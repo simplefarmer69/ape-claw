@@ -46,3 +46,21 @@ test-ui.mjs
 # Logs
 *.log
 npm-debug.log*
+
+# Public repo hygiene: local debug artifacts and scratch outputs
+.cursor/plans/
+.cursor/skills/lincoln-ai/
+.cursor/skills/clawhub-humanizer/
+browser-test-results.json
+skills-page-test-report.json
+forge-*.png
+crash-check-*.png
+mecha-*.png
+report-*.png
+stability*.png
+test-*-*.png
+scripts/forge-envmap-test.mjs
+SECURITY-AUDIT-REPORT.md
+SECURITY-REVIEW-cli.mjs.md
+docs/DESIGN_TOKENS_EXTRACT.md
+data/robot-skill-mapping.md

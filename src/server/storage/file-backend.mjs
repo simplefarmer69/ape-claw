@@ -19,6 +19,7 @@ import { storageEvents } from "./index.mjs";
 const SKILLCARDS_USER_DIR = path.join(STATE_DIR, "skillcards-user");
 const SKILLCARDS_USER_INDEX_PATH = path.join(SKILLCARDS_USER_DIR, "index.json");
 const SKILLCARDS_SEED_DIR = path.join(PROJECT_ROOT, "skillcards", "seed");
+const SKILLCARDS_BUNDLED_DIR = path.join(PROJECT_ROOT, "data", "skills");
 const SKILLCARDS_IMPORTED_INDEX_PATH = path.join(PROJECT_ROOT, "skillcards", "imported", "index.json");
 
 const MERGED_INDEX_CACHE_TTL_MS = 60_000;
@@ -59,6 +60,35 @@ function buildMergedSkillIndex() {
               onchainTokenId: String(seedTokenId),
             });
             seedTokenId++;
+          }
+        } catch { /* skip malformed */ }
+      }
+    }
+  } catch { /* skip */ }
+
+  try {
+    if (fs.existsSync(SKILLCARDS_BUNDLED_DIR)) {
+      const bundledFiles = fs.readdirSync(SKILLCARDS_BUNDLED_DIR).filter((f) => f.endsWith(".json")).sort();
+      for (const fileName of bundledFiles) {
+        try {
+          const raw = JSON.parse(fs.readFileSync(path.join(SKILLCARDS_BUNDLED_DIR, fileName), "utf8"));
+          const card = raw?.card && typeof raw.card === "object" ? raw.card : raw;
+          if (card && typeof card === "object" && card.name && card.slug) {
+            merged.push({
+              name: String(card.name || "").trim(),
+              slug: String(card.slug || "").trim(),
+              description: String(card.description || "").trim(),
+              fileName,
+              source: "bundled",
+              vettedOk: Boolean(card?.vettedOk),
+              importOk: true,
+              riskTier: Number(card?.constraints?.riskTier ?? card?.riskTier ?? 2),
+              sourceUrl: String(card?.provenance?.sourceUrl || "").trim() || null,
+              provenance: card.provenance || { publisher: "apeclaw", signed: false },
+              onchainTokenId: card?.onchainTokenId || null,
+              onchainMintTx: card?.onchainMintTx || null,
+              onchainPublishTx: card?.onchainPublishTx || null,
+            });
           }
         } catch { /* skip malformed */ }
       }
@@ -116,7 +146,15 @@ function buildMergedSkillIndex() {
     }
   } catch { /* skip */ }
 
-  return merged;
+  // Deduplicate by slug while preserving source precedence:
+  // seed < imported < user (later entries override earlier ones).
+  const bySlug = new Map();
+  for (const item of merged) {
+    const slug = String(item?.slug || "").trim();
+    if (!slug) continue;
+    bySlug.set(slug, item);
+  }
+  return [...bySlug.values()];
 }
 
 export function createFileBackend(opts = {}) {
@@ -193,6 +231,7 @@ export function createFileBackend(opts = {}) {
     resolveSkillFilePath(source, fileName) {
       const dirs = {
         seed: SKILLCARDS_SEED_DIR,
+        bundled: SKILLCARDS_BUNDLED_DIR,
         imported: path.join(PROJECT_ROOT, "skillcards", "imported"),
         user: SKILLCARDS_USER_DIR,
       };

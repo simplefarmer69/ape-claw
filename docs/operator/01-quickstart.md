@@ -11,7 +11,14 @@ Get ApeClaw running and execute your first skill in 5 minutes.
 ## Step 1: Install
 
 ```bash
-npm install -g openclaw
+npx --yes github:simplefarmer69/ape-claw skill install --scope local
+npx --yes github:simplefarmer69/ape-claw doctor --json
+```
+
+PowerShell (Windows):
+
+```powershell
+npx --yes github:simplefarmer69/ape-claw skill install --scope local
 npx --yes github:simplefarmer69/ape-claw doctor --json
 ```
 
@@ -32,6 +39,13 @@ Save the `claw_...` token — it's shown only once.
 ```bash
 export APE_CLAW_AGENT_ID=my-bot
 export APE_CLAW_AGENT_TOKEN=claw_...
+```
+
+PowerShell (Windows):
+
+```powershell
+$env:APE_CLAW_AGENT_ID="my-bot"
+$env:APE_CLAW_AGENT_TOKEN="claw_..."
 ```
 
 ## Step 4: Open the Dashboard

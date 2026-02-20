@@ -580,26 +580,26 @@
         <div class="card ac-observe">
           <div class="stephead">
             <div class="stepnum" aria-hidden="true">1</div>
-            <h3>Install + Check</h3>
+            <h3>Install ApeClaw</h3>
+          </div>
+          <p>Open a terminal in <a href="https://cursor.com" target="_blank" rel="noopener">Cursor</a> and install the skill into your project.</p>
+          <div class="code"><span class="k">npx</span> --yes github:simplefarmer69/ape-claw skill install --scope local</div>
+        </div>
+        <div class="card ac-observe">
+          <div class="stephead">
+            <div class="stepnum" aria-hidden="true">2</div>
+            <h3>Verify</h3>
           </div>
           <p>Run a quick diagnostic and confirm you can talk to ApeChain.</p>
           <div class="code"><span class="k">npx</span> --yes github:simplefarmer69/ape-claw doctor --json</div>
         </div>
         <div class="card ac-observe">
           <div class="stephead">
-            <div class="stepnum" aria-hidden="true">2</div>
-            <h3>Register a Bot</h3>
-          </div>
-          <p>Register globally so it shows up for everyone on the dashboard.</p>
-          <div class="code"><span class="k">ape-claw</span> clawbot register --api https://apeclaw.ai --agent-id my-bot --name "My Bot" --json</div>
-        </div>
-        <div class="card ac-observe">
-          <div class="stephead">
             <div class="stepnum" aria-hidden="true">3</div>
             <h3>Install a Skill</h3>
           </div>
-          <p>Download any SkillCard from the library and drop it into your agent's skill directory.</p>
-          <div class="code"><span class="k">curl</span> -fsSL "https://apeclaw.ai/api/skills/&lt;slug&gt;" -o ./skills/&lt;slug&gt;.json</div>
+          <p>Install any skill from the Library of Alexandria by slug, or add <code>--starter-pack</code> during install for 61 curated skills.</p>
+          <div class="code"><span class="k">npx</span> --yes github:simplefarmer69/ape-claw skill install lincoln-ai</div>
         </div>
         <div class="card ac-observe">
           <div class="stephead">
@@ -607,7 +607,7 @@
             <h3>Run Skills</h3>
           </div>
           <p>Bridge and collect NFTs with safety gates enforced.</p>
-          <div class="code"><span class="k">ape-claw</span> bridge quote --json<br><span class="k">ape-claw</span> nft autobuy --count 1 --minPrice 50 --maxPrice 100 --execute --autonomous --json</div>
+          <div class="code"><span class="k">npx</span> --yes github:simplefarmer69/ape-claw market collections --recommended --json</div>
         </div>
       </div>
     </div>

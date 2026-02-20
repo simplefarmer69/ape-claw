@@ -115,7 +115,7 @@
     <div class="forge-drawer-backdrop" id="forgeDrawerBackdrop"></div>
     <aside class="forge-drawer" id="forgeDrawer" data-open="0">
       <div class="forge-drawer-header">
-        <h2 class="forge-drawer-title">Skill Library</h2>
+        <h2 class="forge-drawer-title">Library of Alexandria</h2>
         <button class="forge-drawer-close" id="forgeDrawerClose" type="button">&times;</button>
       </div>
       <div class="forge-drawer-auth" id="forgeDrawerAuth">
@@ -126,8 +126,13 @@
         <div class="forge-auth-hint">Required for install/uninstall. Get from <code>ape-claw clawbot list</code></div>
       </div>
       <div class="forge-drawer-search">
-        <input type="search" id="forgeSkillSearch" placeholder="Search 10,000+ skills..." autocomplete="off">
+        <input type="search" id="forgeSkillSearch" placeholder="Search Library of Alexandria skills..." autocomplete="off">
         <div class="forge-search-filters">
+          <select id="forgeFilterSource" class="forge-filter-select">
+            <option value="alexandria" selected>Alexandria</option>
+            <option value="all">All sources</option>
+            <option value="installed">Installed only</option>
+          </select>
           <label class="forge-filter-check"><input type="checkbox" id="forgeFilterVetted"> Vetted only</label>
           <label class="forge-filter-check"><input type="checkbox" id="forgeFilterOnchain"> Onchain only</label>
           <select id="forgeFilterRisk" class="forge-filter-select">

@@ -9,7 +9,7 @@ metadata:
 
 An [OpenClaw](https://openclaw.ai) skill for ApeChain NFT buying and bridging.
 
-Install OpenClaw first (`curl -fsSL https://openclaw.ai/install.sh | bash`), then add this skill. Your agent can then discover, quote, simulate, and buy NFTs on ApeChain. Safety gating and telemetry are on by default.
+Install [Cursor](https://cursor.com) (which includes OpenClaw), then add this skill. Your agent can then discover, quote, simulate, and buy NFTs on ApeChain. Safety gating and telemetry are on by default.
 
 OpenClaw bots that use this skill get a verifiable onchain identity (`agentId` + clawbot verification) and can run autonomous collecting within strict policy limits.
 
@@ -28,7 +28,7 @@ One-command installer (fresh machine, no repo clone):
 
 ```bash
 # Works everywhere. Installs everything. You're welcome. 🦞
-curl -fsSL https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/install.sh | bash
+npx --yes github:simplefarmer69/ape-claw skill install --scope local
 ```
 
 ### 1a. Resolve CLI binary
@@ -315,7 +315,7 @@ curl -N -sS "$APE_CLAW_CHAT_URL/api/chat/stream?room=general"
 
 This skill is distributed as an [OpenClaw](https://openclaw.ai) skill. Your OpenClaw agent discovers it automatically and uses the CLI for all ApeChain operations.
 
-- **Install OpenClaw**: `curl -fsSL https://openclaw.ai/install.sh | bash` or `npm i -g openclaw && openclaw onboard`
+- **Install OpenClaw**: Download [Cursor](https://cursor.com) (OpenClaw is built-in)
 - **OpenClaw website**: [https://openclaw.ai](https://openclaw.ai)
 - **OpenClaw GitHub**: [https://github.com/openclaw/openclaw](https://github.com/openclaw/openclaw)
 - **ApeClaw GitHub**: [https://github.com/simplefarmer69/ape-claw](https://github.com/simplefarmer69/ape-claw)
