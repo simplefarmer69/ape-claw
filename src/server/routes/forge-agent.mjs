@@ -423,6 +423,23 @@ export function initForgeAgent() {
 }
 
 /* ══════════════════════════════════════════════════════════
+   Status — GET /api/forge/status
+   Lets the frontend know if the forge agent is configured
+   ══════════════════════════════════════════════════════════ */
+
+export function handleForgeStatus(req, res) {
+  res.writeHead(200, { "content-type": "application/json" });
+  res.end(JSON.stringify({
+    configured: Boolean(PERPLEXITY_API_KEY),
+    agentId: FORGE_AGENT_ID,
+    agentName: FORGE_AGENT_DISPLAY_NAME,
+    verified: runtimeAgentVerified,
+    model: PERPLEXITY_MODEL,
+    skills: cachedSkills.summaries.length + (cachedSkills.apeClawFull ? 1 : 0),
+  }));
+}
+
+/* ══════════════════════════════════════════════════════════
    Handler — POST /api/forge/chat
    ══════════════════════════════════════════════════════════ */
 

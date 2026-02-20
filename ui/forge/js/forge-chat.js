@@ -1,9 +1,10 @@
 /**
  * forge-chat.js — Agent chat panel for ClawBot Forge.
  *
- * Dual-mode:
- * - Website (apeclaw.ai): talks to The Clawllector via POST /api/forge/chat (Perplexity-backed OpenClaw agent)
- * - Local (localhost): talks to the existing chat endpoint POST /api/chat
+ * Three modes (auto-detected):
+ * 1. Website (apeclaw.ai / vercel.app): always uses /api/forge/chat (The Clawllector)
+ * 2. Local + PERPLEXITY_API_KEY set: uses /api/forge/chat (your own OpenClaw agent)
+ * 3. Local without key: falls back to /api/chat (basic message relay)
  */
 
 /* ══════════════════════════════════════════════════════════
@@ -17,6 +18,8 @@ const badge = () => document.getElementById("forgeChatBadge");
 
 let unread = 0;
 let streaming = false;
+let forgeAgentAvailable = null; // null = unknown, true/false after probe
+let localAgentName = "Agent";
 
 const conversationHistory = [];
 
@@ -25,7 +28,19 @@ const conversationHistory = [];
    ══════════════════════════════════════════════════════════ */
 function isWebsiteMode() {
   const host = window.location.hostname;
-  return host.includes("apeclaw.ai") || host.includes("vercel.app");
+  return host.includes("apeclaw.ai") || host.includes("vercel.app") || host.includes("railway.app");
+}
+
+async function probeForgeAgent() {
+  try {
+    const res = await fetch("/api/forge/status", { signal: AbortSignal.timeout(3000) });
+    if (!res.ok) return false;
+    const data = await res.json();
+    if (data.agentName) localAgentName = data.agentName;
+    return data.configured === true;
+  } catch {
+    return false;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -50,8 +65,10 @@ function appendMsg(role, text) {
   name.className = "chat-msg-name";
   if (role === "user") {
     name.textContent = "You";
+  } else if (isWebsiteMode()) {
+    name.textContent = "The Clawllector";
   } else {
-    name.textContent = isWebsiteMode() ? "The Clawllector" : "Agent";
+    name.textContent = forgeAgentAvailable ? localAgentName : "Agent";
   }
   header.appendChild(name);
 
@@ -95,7 +112,7 @@ async function sendMessage() {
   const btn = sendBtn();
   if (btn) btn.disabled = true;
 
-  if (isWebsiteMode()) {
+  if (isWebsiteMode() || forgeAgentAvailable) {
     await sendToForgeAgent(text);
   } else {
     await sendToLocalChat(text);
@@ -103,7 +120,7 @@ async function sendMessage() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   Website mode: POST /api/forge/chat (SSE stream)
+   Forge agent: POST /api/forge/chat (SSE stream)
    ══════════════════════════════════════════════════════════ */
 async function sendToForgeAgent(text) {
   const btn = sendBtn();
@@ -180,7 +197,7 @@ async function sendToForgeAgent(text) {
 }
 
 /* ══════════════════════════════════════════════════════════
-   Local mode: POST /api/chat (existing behavior)
+   Local fallback: POST /api/chat (basic message relay)
    ══════════════════════════════════════════════════════════ */
 async function sendToLocalChat(text) {
   const btn = sendBtn();
@@ -263,20 +280,40 @@ function updateCounter() {
 /* ══════════════════════════════════════════════════════════
    Init
    ══════════════════════════════════════════════════════════ */
-function init() {
+async function init() {
   const inp = input();
   const btn = sendBtn();
+  const indicator = document.getElementById("forgeChatAgentIndicator");
 
   if (isWebsiteMode()) {
+    forgeAgentAvailable = true;
     if (inp) inp.disabled = false;
     if (btn) btn.disabled = false;
     if (inp) inp.placeholder = "Ask The Clawllector anything...";
-    const indicator = document.getElementById("forgeChatAgentIndicator");
-    if (indicator) indicator.style.display = "block";
+    if (indicator) {
+      indicator.textContent = "\u{1F99E} Talking to The Clawllector (OpenClaw agent)";
+      indicator.style.display = "block";
+    }
   } else {
-    // Preserve previous local behavior: forge-data enables chat once local auth/state is ready.
-    if (inp) inp.disabled = true;
-    if (btn) btn.disabled = true;
+    forgeAgentAvailable = await probeForgeAgent();
+
+    if (forgeAgentAvailable) {
+      if (inp) { inp.disabled = false; inp.placeholder = `Ask ${localAgentName} anything...`; }
+      if (btn) btn.disabled = false;
+      if (indicator) {
+        indicator.textContent = `\u{1F99E} Connected to ${localAgentName} (OpenClaw forge agent)`;
+        indicator.style.display = "block";
+      }
+    } else {
+      if (inp) inp.disabled = true;
+      if (btn) btn.disabled = true;
+      if (indicator) {
+        indicator.innerHTML =
+          '\u{1F512} Forge agent not configured. Set <code style="color:var(--neon-cyan,#63d7ff)">PERPLEXITY_API_KEY</code> to connect your OpenClaw bot. ' +
+          '<a href="/docs" style="color:var(--accent,#cfff04)">Setup guide</a>';
+        indicator.style.display = "block";
+      }
+    }
   }
 
   if (inp) {

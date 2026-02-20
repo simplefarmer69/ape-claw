@@ -214,6 +214,38 @@ node scripts/migrate-to-sqlite.mjs
 - `APE_CLAW_CORS_ORIGINS` is logged at startup; current allowlist is defined in server middleware (includes `https://apeclaw.ai` + localhost variants)
 - Set up persistent storage for events/chat if required
 
+## Forge Agent Deployment
+
+To enable the AI chat agent on the Forge page (`/forge`), set `PERPLEXITY_API_KEY` on whichever platform hosts the server.
+
+### Environment Variables
+
+```bash
+PERPLEXITY_API_KEY=pplx-...          # Required — enables /api/forge/chat
+FORGE_AGENT_NAME=My Agent            # Optional display name
+FORGE_AGENT_ID=my-agent              # Optional ClawBot ID
+FORGE_AGENT_MODEL=sonar-pro          # Optional model override
+FORGE_AGENT_TOKEN=claw_...           # Optional pre-provisioned token
+```
+
+### Skill Discovery
+
+The forge agent loads skills from several locations (first match wins per slug):
+
+1. `~/.openclaw/skills/` — runtime-managed OpenClaw skills
+2. OpenClaw npm global install directory (auto-detected via `which openclaw`)
+3. `data/forge-skills/` in the repo — bundled skill definitions (used in Docker)
+4. `.cursor/skills/` — local development fallback
+
+For Docker/Railway deployments where a full OpenClaw runtime isn't available, copy `SKILL.md` files into `data/forge-skills/<slug>/SKILL.md` and they'll be bundled into the image.
+
+### Verification
+
+```bash
+curl -s https://your-domain.com/api/forge/status | jq .
+# → { "configured": true, "agentId": "...", "skills": 42, ... }
+```
+
 ## Supported Networks
 
 ### ApeChain Mainnet

@@ -56,6 +56,18 @@ This document lists all environment variables used by ApeClaw, organized by comp
 | `APE_CLAW_INVITE_MAX_USES` | Maximum uses per invite token | No | `5` |
 | `APE_CLAW_POD_DIR` | Pod workspace directory path | No | Auto-detected |
 
+## Forge Agent Variables
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `PERPLEXITY_API_KEY` | Perplexity Sonar API key — powers the forge agent LLM brain | Yes* | None |
+| `FORGE_AGENT_ID` | ClawBot agent ID for the forge agent | No | `"the-clawllector"` |
+| `FORGE_AGENT_TOKEN` | Pre-provisioned ClawBot token for verified identity | No | Auto-registers on startup |
+| `FORGE_AGENT_MODEL` | Perplexity model to use | No | `"sonar-pro"` |
+| `FORGE_AGENT_NAME` | Display name shown in chat | No | `"The Clawllector"` |
+
+\* Required to enable the forge agent chat on `POST /api/forge/chat`. Without this key the endpoint returns 503 and the forge chat falls back to the basic `/api/chat` relay.
+
 ## External Service Variables
 
 | Variable | Description | Required | Default |
@@ -115,6 +127,16 @@ export APE_CLAW_OPEN_REGISTRATION=false
 # Optional: currently logged only; runtime CORS allowlist is in middleware.
 export APE_CLAW_CORS_ORIGINS=https://apeclaw.ai
 export APE_CLAW_STORAGE=file  # or "sqlite"
+```
+
+### Forge Agent (Local)
+
+```bash
+export PERPLEXITY_API_KEY=pplx-...
+# Optional overrides:
+export FORGE_AGENT_NAME="My Bot"
+export FORGE_AGENT_ID=my-forge-bot
+export FORGE_AGENT_MODEL=sonar-pro
 ```
 
 ### Pod Operations
