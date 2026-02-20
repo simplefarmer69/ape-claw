@@ -211,6 +211,15 @@ function installApeClawSkill(args) {
   };
 }
 
+function yamlSafe(val) {
+  const s = String(val);
+  if (!s) return '""';
+  if (/[:{}\[\]#&*!|>'"%@`,\n]/.test(s) || s.startsWith(" ") || s.endsWith(" ")) {
+    return `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+  }
+  return s;
+}
+
 function syncSkillToOpenClaw(cardObj, slug, skillsRoot) {
   const s = String(slug || cardObj?.slug || cardObj?.name || "").toLowerCase().trim()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -221,8 +230,7 @@ function syncSkillToOpenClaw(cardObj, slug, skillsRoot) {
   const descriptionValue = String(cardObj?.description || "").trim();
   const descOneLine = descriptionValue.replace(/\n/g, " ").slice(0, 300);
 
-  // OpenClaw expects: name = slug, description in frontmatter
-  const openclawFrontmatter = `---\nname: ${s}\nversion: ${versionValue}\ndescription: ${descOneLine}\n---\n`;
+  const openclawFrontmatter = `---\nname: ${s}\nversion: ${yamlSafe(versionValue)}\ndescription: ${yamlSafe(descOneLine)}\n---\n`;
 
   let content;
   if (rawDoc) {
