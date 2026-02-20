@@ -10,51 +10,54 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 
 /* ══════════════════════════════════════════════════════════
    Material palette — HV-MTL inspired chrome + neon
    ══════════════════════════════════════════════════════════ */
 const M = THREE.MeshStandardMaterial;
+const P = THREE.MeshPhysicalMaterial;
 
 const GLOW = 0xcfff04;
 const CYAN = 0x63d7ff;
 const HOT  = 0xff3344;
 
 export const MAT = {
-  armor:     new M({ color: 0x556070, roughness: 0.45, metalness: 0.4, emissive: 0x1a2030, emissiveIntensity: 0.5 }),
-  armorLt:   new M({ color: 0x6a7585, roughness: 0.5, metalness: 0.35, emissive: 0x1e2535, emissiveIntensity: 0.5 }),
-  chrome:    new M({ color: 0x8090a0, roughness: 0.3, metalness: 0.5, emissive: 0x2a3545, emissiveIntensity: 0.6 }),
-  joint:     new M({ color: 0x404550, roughness: 0.6, metalness: 0.3, emissive: GLOW, emissiveIntensity: 0.25 }),
-  visor:     new M({ color: CYAN, transparent: true, opacity: 0.6, emissive: CYAN, emissiveIntensity: 2.5, roughness: 0.1, metalness: 0.2 }),
-  core:      new M({ color: GLOW, emissive: GLOW, emissiveIntensity: 3.0, roughness: 0.0, metalness: 0.0 }),
-  coreInner: new M({ color: 0xffffff, emissive: GLOW, emissiveIntensity: 4.0, transparent: true, opacity: 0.9 }),
-  vent:      new M({ color: GLOW, emissive: GLOW, emissiveIntensity: 2.5, transparent: true, opacity: 0.8 }),
-  ventHot:   new M({ color: HOT, emissive: HOT, emissiveIntensity: 3.0, transparent: true, opacity: 0.7 }),
-  panelLine: new M({ color: GLOW, emissive: GLOW, emissiveIntensity: 2.0, transparent: true, opacity: 0.7 }),
-  spineGlow: new M({ color: GLOW, emissive: GLOW, emissiveIntensity: 2.5 }),
-  hardpoint: new M({ color: 0x505560, roughness: 0.4, metalness: 0.4, emissive: CYAN, emissiveIntensity: 0.5 }),
-  security:      new M({ color: 0xFFB347, emissive: 0xFFB347, emissiveIntensity: 1.2, roughness: 0.3, metalness: 0.7 }),
-  analytics:     new M({ color: 0x63d7ff, emissive: 0x63d7ff, emissiveIntensity: 1.2, roughness: 0.3, metalness: 0.6 }),
-  automation:    new M({ color: 0x00ff00, emissive: 0x00ff00, emissiveIntensity: 1.2, roughness: 0.3, metalness: 0.6 }),
-  devtools:      new M({ color: 0x4169E1, emissive: 0x4169E1, emissiveIntensity: 1.2, roughness: 0.3, metalness: 0.6 }),
-  nft:           new M({ color: 0xb026ff, emissive: 0xb026ff, emissiveIntensity: 1.5, roughness: 0.3, metalness: 0.7 }),
-  social:        new M({ color: 0xFF7F50, emissive: 0xFF7F50, emissiveIntensity: 1.2, roughness: 0.3, metalness: 0.5 }),
-  storage:       new M({ color: 0x6A5ACD, emissive: 0x6A5ACD, emissiveIntensity: 1.0, roughness: 0.4, metalness: 0.5 }),
-  productivity:  new M({ color: 0xE6F3FF, emissive: 0xE6F3FF, emissiveIntensity: 0.8, roughness: 0.3, metalness: 0.4 }),
-  bridge:        new M({ color: 0xFF8C00, emissive: 0xFF8C00, emissiveIntensity: 1.2, roughness: 0.3, metalness: 0.6 }),
-  trading:       new M({ color: 0xFFD700, emissive: 0xFFD700, emissiveIntensity: 1.0, roughness: 0.3, metalness: 0.7 }),
-  governance:    new M({ color: 0x4B0082, emissive: 0x4B0082, emissiveIntensity: 1.2, roughness: 0.3, metalness: 0.6 }),
-  wallet:        new M({ color: 0x50C878, emissive: 0x50C878, emissiveIntensity: 1.0, roughness: 0.4, metalness: 0.5 }),
-  defi:          new M({ color: 0x32CD32, emissive: 0x32CD32, emissiveIntensity: 1.2, roughness: 0.3, metalness: 0.6 }),
-  development:   new M({ color: 0x4169E1, emissive: 0x4169E1, emissiveIntensity: 1.2, roughness: 0.3, metalness: 0.6 }),
-  writing:       new M({ color: 0xFFF8DC, emissive: 0xFFF8DC, emissiveIntensity: 0.7, roughness: 0.4, metalness: 0.4 }),
-  communication: new M({ color: 0x00BFFF, emissive: 0x00BFFF, emissiveIntensity: 1.2, roughness: 0.3, metalness: 0.6 }),
+  armor:     new P({ color: 0x556070, roughness: 0.35, metalness: 0.6, emissive: 0x1a2030, emissiveIntensity: 0.5, clearcoat: 0.3, clearcoatRoughness: 0.4 }),
+  armorLt:   new P({ color: 0x6a7585, roughness: 0.4, metalness: 0.55, emissive: 0x1e2535, emissiveIntensity: 0.5, clearcoat: 0.25, clearcoatRoughness: 0.45 }),
+  chrome:    new P({ color: 0x8090a0, roughness: 0.12, metalness: 0.9, emissive: 0x2a3545, emissiveIntensity: 0.6, clearcoat: 1.0, clearcoatRoughness: 0.05 }),
+  joint:     new P({ color: 0x404550, roughness: 0.4, metalness: 0.5, emissive: GLOW, emissiveIntensity: 0.25, clearcoat: 0.5, clearcoatRoughness: 0.25, sheen: 0.5, sheenColor: new THREE.Color(GLOW), sheenRoughness: 0.4 }),
+  visor:     new P({ color: CYAN, transparent: true, opacity: 0.6, emissive: CYAN, emissiveIntensity: 2.5, roughness: 0.05, metalness: 0.1, clearcoat: 1.0, clearcoatRoughness: 0.0, iridescence: 0.8, iridescenceIOR: 1.3, iridescenceThicknessRange: [100, 400] }),
+  core:      new P({ color: GLOW, emissive: GLOW, emissiveIntensity: 3.0, roughness: 0.0, metalness: 0.0, clearcoat: 1.0, clearcoatRoughness: 0.0 }),
+  coreInner: new P({ color: 0xffffff, emissive: GLOW, emissiveIntensity: 4.0, transparent: true, opacity: 0.9, clearcoat: 1.0, clearcoatRoughness: 0.0 }),
+  vent:      new P({ color: GLOW, emissive: GLOW, emissiveIntensity: 2.5, transparent: true, opacity: 0.8, clearcoat: 0.5, clearcoatRoughness: 0.2 }),
+  ventHot:   new P({ color: HOT, emissive: HOT, emissiveIntensity: 3.0, transparent: true, opacity: 0.7, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
+  panelLine: new P({ color: GLOW, emissive: GLOW, emissiveIntensity: 2.0, transparent: true, opacity: 0.7 }),
+  spineGlow: new P({ color: GLOW, emissive: GLOW, emissiveIntensity: 2.5, clearcoat: 0.4, clearcoatRoughness: 0.3 }),
+  hardpoint: new P({ color: 0x505560, roughness: 0.3, metalness: 0.6, emissive: CYAN, emissiveIntensity: 0.5, clearcoat: 0.4, clearcoatRoughness: 0.3 }),
+  security:      new P({ color: 0xFFB347, emissive: 0xFFB347, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.7, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
+  analytics:     new P({ color: 0x63d7ff, emissive: 0x63d7ff, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.6, clearcoat: 0.4, clearcoatRoughness: 0.2 }),
+  automation:    new P({ color: 0x00ff00, emissive: 0x00ff00, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.6, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
+  devtools:      new P({ color: 0x4169E1, emissive: 0x4169E1, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.6, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
+  nft:           new P({ color: 0xb026ff, emissive: 0xb026ff, emissiveIntensity: 1.5, roughness: 0.2, metalness: 0.7, clearcoat: 0.5, clearcoatRoughness: 0.15, iridescence: 0.4, iridescenceIOR: 1.5 }),
+  social:        new P({ color: 0xFF7F50, emissive: 0xFF7F50, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.5, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
+  storage:       new P({ color: 0x6A5ACD, emissive: 0x6A5ACD, emissiveIntensity: 1.0, roughness: 0.35, metalness: 0.5, clearcoat: 0.2, clearcoatRoughness: 0.4 }),
+  productivity:  new P({ color: 0xE6F3FF, emissive: 0xE6F3FF, emissiveIntensity: 0.8, roughness: 0.25, metalness: 0.4, clearcoat: 0.4, clearcoatRoughness: 0.2 }),
+  bridge:        new P({ color: 0xFF8C00, emissive: 0xFF8C00, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.6, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
+  trading:       new P({ color: 0xFFD700, emissive: 0xFFD700, emissiveIntensity: 1.0, roughness: 0.2, metalness: 0.8, clearcoat: 0.6, clearcoatRoughness: 0.1 }),
+  governance:    new P({ color: 0x4B0082, emissive: 0x4B0082, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.6, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
+  wallet:        new P({ color: 0x50C878, emissive: 0x50C878, emissiveIntensity: 1.0, roughness: 0.3, metalness: 0.5, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
+  defi:          new P({ color: 0x32CD32, emissive: 0x32CD32, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.6, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
+  development:   new P({ color: 0x4169E1, emissive: 0x4169E1, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.6, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
+  writing:       new P({ color: 0xFFF8DC, emissive: 0xFFF8DC, emissiveIntensity: 0.7, roughness: 0.3, metalness: 0.4, clearcoat: 0.2, clearcoatRoughness: 0.4 }),
+  communication: new P({ color: 0x00BFFF, emissive: 0x00BFFF, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.6, clearcoat: 0.4, clearcoatRoughness: 0.2 }),
   undersuit:  new M({ color: 0x1a1e28, roughness: 0.75, metalness: 0.2, emissive: 0x060810, emissiveIntensity: 0.1 }),
-  pistonMat:  new M({ color: 0xb08040, roughness: 0.3, metalness: 0.85, emissive: 0x302010, emissiveIntensity: 0.15 }),
+  pistonMat:  new P({ color: 0xb08040, roughness: 0.2, metalness: 0.9, emissive: 0x302010, emissiveIntensity: 0.15, clearcoat: 0.6, clearcoatRoughness: 0.15 }),
   cableMat:   new M({ color: 0x181822, roughness: 0.9, metalness: 0.1 }),
-  rivetMat:   new M({ color: 0xd0d8e0, roughness: 0.15, metalness: 0.95, emissive: 0x506080, emissiveIntensity: 0.25 }),
+  rivetMat:   new P({ color: 0xd0d8e0, roughness: 0.08, metalness: 0.95, emissive: 0x506080, emissiveIntensity: 0.25, clearcoat: 1.0, clearcoatRoughness: 0.0 }),
   frameMat:   new M({ color: 0x283040, roughness: 0.6, metalness: 0.45, emissive: 0x0a1020, emissiveIntensity: 0.15 }),
-  darkChrome: new M({ color: 0x3a4555, roughness: 0.25, metalness: 0.7, emissive: 0x151e2a, emissiveIntensity: 0.3 }),
+  darkChrome: new P({ color: 0x3a4555, roughness: 0.18, metalness: 0.8, emissive: 0x151e2a, emissiveIntensity: 0.3, clearcoat: 0.8, clearcoatRoughness: 0.1 }),
 };
 
 /* ══════════════════════════════════════════════════════════
@@ -115,7 +118,11 @@ export function tweenVector3(obj, from, to, durationMs, easeFn, onDone) {
    Geometry helpers
    ══════════════════════════════════════════════════════════ */
 function box(g, w, h, d, mat, x, y, z, rx, ry, rz) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  const minDim = Math.min(w, h, d);
+  const geo = minDim > 0.08
+    ? new RoundedBoxGeometry(w, h, d, 2, minDim * 0.12)
+    : new THREE.BoxGeometry(w, h, d);
+  const m = new THREE.Mesh(geo, mat);
   m.position.set(x, y, z);
   if (rx) m.rotation.x = rx;
   if (ry) m.rotation.y = ry;
@@ -124,19 +131,19 @@ function box(g, w, h, d, mat, x, y, z, rx, ry, rz) {
   return m;
 }
 function cyl(g, rT, rB, h, mat, x, y, z, segs) {
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(rT, rB, h, segs || 16), mat);
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rT, rB, h, segs || 24), mat);
   m.position.set(x, y, z);
   g.add(m);
   return m;
 }
 function sphere(g, r, mat, x, y, z) {
-  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), mat);
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 24), mat);
   m.position.set(x, y, z);
   g.add(m);
   return m;
 }
 function torus(g, r, tube, mat, x, y, z) {
-  const m = new THREE.Mesh(new THREE.TorusGeometry(r, tube, 16, 48), mat);
+  const m = new THREE.Mesh(new THREE.TorusGeometry(r, tube, 24, 64), mat);
   m.position.set(x, y, z);
   m.rotation.x = Math.PI / 2;
   g.add(m);
@@ -886,7 +893,7 @@ function initHUD() {
   });
   document.getElementById("forgeToggleBloom")?.addEventListener("click", (e) => {
     bloomEnabled = !bloomEnabled;
-    bloomPass.strength = bloomEnabled ? 1.2 : 0;
+    bloomPass.strength = bloomEnabled ? 0.55 : 0;
     e.currentTarget.classList.toggle("active", bloomEnabled);
   });
 }
@@ -1064,7 +1071,7 @@ export function initForgeScene() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.setSize(w, h);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.1;
+  renderer.toneMappingExposure = 1.05;
 
   css2dRenderer = new CSS2DRenderer({ element: document.getElementById("forgeLabelLayer") });
   css2dRenderer.setSize(w, h);
@@ -1079,22 +1086,56 @@ export function initForgeScene() {
   controls.autoRotate = true;
   controls.autoRotateSpeed = 0.5;
 
-  // ── Environment map for metallic surface reflections ──
+  // ── Rich procedural environment map for PBR reflections ──
   const pmremGenerator = new THREE.PMREMGenerator(renderer);
   const envScene = new THREE.Scene();
-  envScene.background = new THREE.Color(0x1a2030);
-  const envGlow = new THREE.Mesh(
-    new THREE.SphereGeometry(10, 16, 8),
-    new THREE.MeshBasicMaterial({ color: 0x3a5060, side: THREE.BackSide })
-  );
-  envScene.add(envGlow);
-  const envTop = new THREE.PointLight(0x7090b0, 2, 20);
-  envTop.position.set(0, 8, 0);
-  envScene.add(envTop);
-  const envSide = new THREE.PointLight(GLOW, 0.5, 20);
-  envSide.position.set(5, 0, 5);
-  envScene.add(envSide);
-  const envMap = pmremGenerator.fromScene(envScene).texture;
+  envScene.background = new THREE.Color(0x0a1420);
+
+  // Gradient sky dome via vertex colors
+  const skyGeo = new THREE.SphereGeometry(10, 32, 16);
+  const skyPos = skyGeo.attributes.position;
+  const skyCol = new Float32Array(skyPos.count * 3);
+  const _cTop = new THREE.Color(0x1a3050);
+  const _cMid = new THREE.Color(0x0a1828);
+  const _cBot = new THREE.Color(0x050510);
+  const _cTmp = new THREE.Color();
+  for (let i = 0; i < skyPos.count; i++) {
+    const ny = skyPos.getY(i) / 10;
+    const t = ny * 0.5 + 0.5;
+    _cTmp.copy(t > 0.5 ? _cTop : _cMid).lerp(t > 0.5 ? _cMid : _cBot, t > 0.5 ? (1 - t) * 2 : (0.5 - t) * 2);
+    skyCol[i * 3] = _cTmp.r; skyCol[i * 3 + 1] = _cTmp.g; skyCol[i * 3 + 2] = _cTmp.b;
+  }
+  skyGeo.setAttribute("color", new THREE.BufferAttribute(skyCol, 3));
+  envScene.add(new THREE.Mesh(skyGeo, new THREE.MeshBasicMaterial({ side: THREE.BackSide, vertexColors: true })));
+
+  // Studio-style reflection panels for crisp metallic highlights
+  const panelGeo = new THREE.PlaneGeometry(5, 8);
+  const brightPanel = new THREE.Mesh(panelGeo, new THREE.MeshBasicMaterial({ color: 0x8090b0 }));
+  brightPanel.position.set(7, 4, 0); brightPanel.rotation.y = -Math.PI / 2;
+  envScene.add(brightPanel);
+  const fillPanel = new THREE.Mesh(panelGeo.clone(), new THREE.MeshBasicMaterial({ color: 0x405060 }));
+  fillPanel.position.set(-7, 2, 2); fillPanel.rotation.y = Math.PI / 2;
+  envScene.add(fillPanel);
+  const topPanel = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), new THREE.MeshBasicMaterial({ color: 0x607080 }));
+  topPanel.position.set(0, 9, 0); topPanel.rotation.x = Math.PI / 2;
+  envScene.add(topPanel);
+
+  // Multiple point lights for varied reflection hotspots
+  const envLights = [
+    [0xaabcdd, 3, [5, 8, 3]],
+    [0x506880, 1.5, [-4, 3, 5]],
+    [GLOW, 0.8, [0, -2, -8]],
+    [CYAN, 0.6, [-5, 5, -3]],
+    [0xffaa66, 0.4, [3, -3, 6]],
+    [0xb026ff, 0.3, [6, 1, -5]],
+  ];
+  for (const [c, i, pos] of envLights) {
+    const l = new THREE.PointLight(c, i, 22);
+    l.position.set(...pos);
+    envScene.add(l);
+  }
+
+  const envMap = pmremGenerator.fromScene(envScene, 0.04).texture;
   scene.environment = envMap;
   pmremGenerator.dispose();
 
@@ -1137,10 +1178,10 @@ export function initForgeScene() {
   sideAccent2.position.set(-6, 3, -3);
   scene.add(sideAccent2);
 
-  // Ground
+  // Ground — subtle reflective floor for grounding
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(40, 40),
-    new M({ color: 0x050505, roughness: 0.95, metalness: 0.0 })
+    new P({ color: 0x060608, roughness: 0.55, metalness: 0.15, clearcoat: 0.15, clearcoatRoughness: 0.7 })
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -2.8;
@@ -1165,11 +1206,11 @@ export function initForgeScene() {
   energyStreams = createEnergyStreams();
   scene.add(energyStreams);
 
-  // ── Post-processing (heavy bloom) ──
+  // ── Post-processing (tuned bloom + proper color output) ──
   composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
 
-  bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.7, 0.32, 0.88);
+  bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.55, 0.38, 0.92);
   composer.addPass(bloomPass);
 
   outlinePass = new OutlinePass(new THREE.Vector2(w, h), scene, camera);
@@ -1179,6 +1220,8 @@ export function initForgeScene() {
   outlinePass.visibleEdgeColor.set(GLOW);
   outlinePass.hiddenEdgeColor.set(GLOW);
   composer.addPass(outlinePass);
+
+  composer.addPass(new OutputPass());
 
   viewportEl().addEventListener("click", onCanvasClick);
   viewportEl().addEventListener("pointermove", onCanvasHover);

@@ -7,6 +7,7 @@
  * floating disconnected in space.
  */
 import * as THREE from "three";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { MAT } from "./forge-scene.js";
 
 /* ══════════════════════════════════════════════════════════
@@ -95,9 +96,12 @@ const RIVET_C = 0xd0d8e0;
 
 function armorPlate(mat, w, h, d) {
   const group = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  const minDim = Math.min(w, h, d);
+  const bodyGeo = minDim > 0.08
+    ? new RoundedBoxGeometry(w, h, d, 2, minDim * 0.12)
+    : new THREE.BoxGeometry(w, h, d);
+  const body = new THREE.Mesh(bodyGeo, mat);
   group.add(body);
-  // Raised edge frame
   const frameMat = mat.clone();
   frameMat.color = new THREE.Color(FRAME_C);
   frameMat.emissiveIntensity = (frameMat.emissiveIntensity || 0) * 0.4;
@@ -106,14 +110,12 @@ function armorPlate(mat, w, h, d) {
   group.add(new THREE.Mesh(new THREE.BoxGeometry(w + bw * 2, bw, d + bw), frameMat).translateY(-h / 2));
   group.add(new THREE.Mesh(new THREE.BoxGeometry(bw, h, d + bw), frameMat).translateX(w / 2));
   group.add(new THREE.Mesh(new THREE.BoxGeometry(bw, h, d + bw), frameMat).translateX(-w / 2));
-  // Center glow line
   const glowMat = mat.clone();
   glowMat.emissiveIntensity = (glowMat.emissiveIntensity || 0.5) * 2.5;
   glowMat.transparent = true; glowMat.opacity = 0.7;
   group.add(new THREE.Mesh(new THREE.BoxGeometry(w * 0.6, 0.015, d * 0.3), glowMat).translateZ(d / 2 + 0.005));
-  // Mounting rivets
-  const rMat = new THREE.MeshStandardMaterial({ color: RIVET_C, metalness: 0.9, roughness: 0.15 });
-  const rGeo = new THREE.SphereGeometry(0.018, 5, 3);
+  const rMat = new THREE.MeshPhysicalMaterial({ color: RIVET_C, metalness: 0.95, roughness: 0.08, clearcoat: 1.0, clearcoatRoughness: 0.0 });
+  const rGeo = new THREE.SphereGeometry(0.018, 8, 6);
   for (const [rx, ry] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
     const rv = new THREE.Mesh(rGeo, rMat);
     rv.position.set(rx * w * 0.4, ry * h * 0.35, d / 2 + 0.01);
@@ -125,21 +127,18 @@ function armorPlate(mat, w, h, d) {
 function hexPlate(mat, r, h) {
   const group = new THREE.Group();
   group.add(new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 6), mat));
-  // Inner hex detail (recessed)
   const innerMat = mat.clone();
   innerMat.emissiveIntensity = (innerMat.emissiveIntensity || 0.5) * 1.8;
   innerMat.transparent = true; innerMat.opacity = 0.6;
   const inner = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.55, r * 0.55, h + 0.01, 6), innerMat);
   group.add(inner);
-  // Center glow dot
   const dotMat = mat.clone();
   dotMat.emissiveIntensity = (dotMat.emissiveIntensity || 0.5) * 3;
-  group.add(new THREE.Mesh(new THREE.SphereGeometry(r * 0.18, 8, 6), dotMat).translateY(h / 2 + 0.01));
-  // Edge ring
+  group.add(new THREE.Mesh(new THREE.SphereGeometry(r * 0.18, 12, 8), dotMat).translateY(h / 2 + 0.01));
   const edgeMat = mat.clone();
   edgeMat.emissiveIntensity = (edgeMat.emissiveIntensity || 0.5) * 2;
   edgeMat.transparent = true; edgeMat.opacity = 0.5;
-  const edge = new THREE.Mesh(new THREE.TorusGeometry(r, r * 0.06, 6, 6), edgeMat);
+  const edge = new THREE.Mesh(new THREE.TorusGeometry(r, r * 0.06, 10, 6), edgeMat);
   edge.rotation.x = Math.PI / 2; edge.position.y = h / 2 + 0.005;
   group.add(edge);
   return group;
@@ -147,25 +146,21 @@ function hexPlate(mat, r, h) {
 
 function energyModule(mat, r) {
   const group = new THREE.Group();
-  const core = new THREE.Mesh(new THREE.OctahedronGeometry(r * 0.6), mat);
+  const core = new THREE.Mesh(new THREE.OctahedronGeometry(r * 0.6, 1), mat);
   group.add(core);
-  // Inner glow sphere
   const gMat = mat.clone();
   gMat.emissiveIntensity = (gMat.emissiveIntensity || 1) * 3;
   gMat.transparent = true; gMat.opacity = 0.5;
-  group.add(new THREE.Mesh(new THREE.SphereGeometry(r * 0.3, 10, 8), gMat));
-  // Primary ring
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(r, r * 0.1, 8, 24), mat.clone());
+  group.add(new THREE.Mesh(new THREE.SphereGeometry(r * 0.3, 16, 12), gMat));
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(r, r * 0.1, 12, 32), mat.clone());
   ring.material.transparent = true; ring.material.opacity = 0.6;
   ring.rotation.x = Math.PI / 2;
   group.add(ring);
-  // Secondary ring (orthogonal)
-  const ring2 = new THREE.Mesh(new THREE.TorusGeometry(r * 0.8, r * 0.06, 6, 18), mat.clone());
+  const ring2 = new THREE.Mesh(new THREE.TorusGeometry(r * 0.8, r * 0.06, 10, 24), mat.clone());
   ring2.material.transparent = true; ring2.material.opacity = 0.4;
   ring2.rotation.z = Math.PI / 2;
   group.add(ring2);
-  // Mounting bracket (small arm)
-  const bMat = new THREE.MeshStandardMaterial({ color: FRAME_C, metalness: 0.5, roughness: 0.5 });
+  const bMat = new THREE.MeshPhysicalMaterial({ color: FRAME_C, metalness: 0.6, roughness: 0.4, clearcoat: 0.3, clearcoatRoughness: 0.4 });
   group.add(new THREE.Mesh(new THREE.BoxGeometry(0.03, r * 1.2, 0.03), bMat).translateX(-r * 0.9));
   return group;
 }
@@ -195,24 +190,20 @@ function bladeFin(mat, h, w) {
     transparent: true, opacity: 0.6,
     blending: THREE.AdditiveBlending,
   })));
-  // Mount base
-  const bMat = new THREE.MeshStandardMaterial({ color: FRAME_C, metalness: 0.5, roughness: 0.5 });
-  group.add(new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.04, 0.06, 6), bMat).translateY(-h / 2 - 0.03));
+  const bMat = new THREE.MeshPhysicalMaterial({ color: FRAME_C, metalness: 0.6, roughness: 0.4, clearcoat: 0.3, clearcoatRoughness: 0.4 });
+  group.add(new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.04, 0.06, 8), bMat).translateY(-h / 2 - 0.03));
   return group;
 }
 
 function turretModule(mat, r) {
   const group = new THREE.Group();
-  // Barrel
-  const bMat = new THREE.MeshStandardMaterial({ color: FRAME_C, metalness: 0.6, roughness: 0.4 });
-  group.add(new THREE.Mesh(new THREE.CylinderGeometry(r * 0.18, r * 0.22, r * 2.5, 8), bMat).rotateX(Math.PI / 2).translateY(r * 0.6));
-  // Mount base
-  group.add(new THREE.Mesh(new THREE.CylinderGeometry(r * 0.6, r * 0.7, r * 0.4, 8), mat));
-  // Glow ring around base
+  const bMat = new THREE.MeshPhysicalMaterial({ color: FRAME_C, metalness: 0.7, roughness: 0.3, clearcoat: 0.4, clearcoatRoughness: 0.3 });
+  group.add(new THREE.Mesh(new THREE.CylinderGeometry(r * 0.18, r * 0.22, r * 2.5, 12), bMat).rotateX(Math.PI / 2).translateY(r * 0.6));
+  group.add(new THREE.Mesh(new THREE.CylinderGeometry(r * 0.6, r * 0.7, r * 0.4, 12), mat));
   const gMat = mat.clone();
   gMat.emissiveIntensity = (gMat.emissiveIntensity || 0.5) * 2.5;
   gMat.transparent = true; gMat.opacity = 0.5;
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(r * 0.65, r * 0.06, 6, 16), gMat);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(r * 0.65, r * 0.06, 10, 24), gMat);
   ring.rotation.x = Math.PI / 2;
   group.add(ring);
   return group;
@@ -220,17 +211,14 @@ function turretModule(mat, r) {
 
 function sensorDome(mat, r) {
   const group = new THREE.Group();
-  group.add(new THREE.Mesh(new THREE.SphereGeometry(r, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat));
-  // Base ring
-  const bMat = new THREE.MeshStandardMaterial({ color: FRAME_C, metalness: 0.5, roughness: 0.5 });
-  group.add(new THREE.Mesh(new THREE.CylinderGeometry(r * 1.1, r * 1.1, r * 0.15, 10), bMat));
-  // Antenna spike
-  group.add(new THREE.Mesh(new THREE.ConeGeometry(r * 0.08, r * 1.2, 5), mat.clone()).translateY(r * 0.9));
-  // Glow band
+  group.add(new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2), mat));
+  const bMat = new THREE.MeshPhysicalMaterial({ color: FRAME_C, metalness: 0.6, roughness: 0.4, clearcoat: 0.3, clearcoatRoughness: 0.4 });
+  group.add(new THREE.Mesh(new THREE.CylinderGeometry(r * 1.1, r * 1.1, r * 0.15, 16), bMat));
+  group.add(new THREE.Mesh(new THREE.ConeGeometry(r * 0.08, r * 1.2, 8), mat.clone()).translateY(r * 0.9));
   const gMat = mat.clone();
   gMat.emissiveIntensity = (gMat.emissiveIntensity || 0.5) * 2.5;
   gMat.transparent = true; gMat.opacity = 0.5;
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(r * 0.7, r * 0.04, 6, 16), gMat);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(r * 0.7, r * 0.04, 10, 24), gMat);
   ring.rotation.x = Math.PI / 2; ring.position.y = r * 0.3;
   group.add(ring);
   return group;
