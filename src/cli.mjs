@@ -354,17 +354,18 @@ async function main() {
 
     if (asJson) return print(result, true);
 
-    const W = 60;
+    const W = 64;
     const line = "─".repeat(W);
     const dline = "═".repeat(W);
+    const thinLine = "╌".repeat(W);
     console.log();
     console.log(`\x1b[1m\x1b[33m${dline}\x1b[0m`);
-    console.log(`\x1b[1m\x1b[33m  🦞  APE CLAW — INSTALLED\x1b[0m`);
+    console.log(`\x1b[1m\x1b[33m  🦞  APE CLAW — INSTALLATION COMPLETE\x1b[0m`);
     console.log(`\x1b[1m\x1b[33m${dline}\x1b[0m`);
     console.log();
-    console.log(`  \x1b[36mScope:\x1b[0m       ${result.scope}`);
-    console.log(`  \x1b[36mSkills dir:\x1b[0m  ${result.skillsRoot}`);
-    console.log(`  \x1b[36mCore skill:\x1b[0m  ${result.skillPath}`);
+    console.log(`  \x1b[36mScope:\x1b[0m         ${result.scope}`);
+    console.log(`  \x1b[36mSkills dir:\x1b[0m    ${result.skillsRoot}`);
+    console.log(`  \x1b[36mCore skill:\x1b[0m    ${result.skillPath}`);
 
     const sp = result.starterPack;
     if (sp && sp.installed > 0) {
@@ -381,19 +382,69 @@ async function main() {
           .sort((a, b) => a.name.localeCompare(b.name));
         for (const s of inCat) {
           const nameStr = s.name.length > 38 ? s.name.slice(0, 35) + "..." : s.name;
-          const desc = s.description.length > 55 ? s.description.slice(0, 52) + "..." : s.description;
+          const desc = (s.description || "").length > 50 ? s.description.slice(0, 47) + "..." : (s.description || "");
           console.log(`    \x1b[32m✓\x1b[0m ${nameStr.padEnd(39)} \x1b[2m${desc}\x1b[0m`);
         }
       }
       console.log(`  ${line}`);
       console.log(`  \x1b[1m\x1b[32m${sp.installed} skills ready\x1b[0m across \x1b[33m${catOrder.length} categories\x1b[0m`);
+
+      const featured = [
+        { name: "Gog", desc: "Gmail, Calendar, Drive, Sheets, Docs via CLI" },
+        { name: "GitHub", desc: "Issues, PRs, CI runs via gh CLI" },
+        { name: "Self-Improving Agent", desc: "Learns from mistakes, gets smarter over time" },
+        { name: "Find Skills", desc: "Discovers & installs new skills on demand" },
+        { name: "Humanizer", desc: "Removes AI writing patterns from text" },
+      ];
+      const hasFeatured = sp.skills.some((s) =>
+        s.slug === "clawhub-gog" || s.slug === "clawhub-github" ||
+        s.slug === "clawhub-self-improving-agent" || s.slug === "clawhub-find-skills" ||
+        s.slug === "clawhub-humanizer"
+      );
+      if (hasFeatured) {
+        console.log();
+        console.log(`\x1b[1m  ⭐  FEATURED SKILLS\x1b[0m`);
+        console.log(`  ${thinLine}`);
+        for (const f of featured) {
+          console.log(`    \x1b[33m${f.name.padEnd(28)}\x1b[0m ${f.desc}`);
+        }
+      }
     }
 
     console.log();
-    console.log(`\x1b[1m  Next steps:\x1b[0m`);
-    for (const step of result.next) {
-      console.log(`    → ${step}`);
-    }
+    console.log(`\x1b[1m  🤖  YOUR CLAWBOT CAN NOW:\x1b[0m`);
+    console.log(`  ${thinLine}`);
+    console.log(`    • Bridge tokens to ApeChain & buy NFTs on ApeChain marketplaces`);
+    console.log(`    • Execute DeFi trades (SushiSwap, Uniswap, lending protocols)`);
+    console.log(`    • Monitor wallets, contracts, and on-chain events in real-time`);
+    console.log(`    • Analyze blockchain data, token metrics, and portfolio performance`);
+    console.log(`    • Manage Google Workspace (Gmail, Calendar, Drive, Sheets, Docs)`);
+    console.log(`    • Interact with GitHub (issues, PRs, CI, code review)`);
+    console.log(`    • Discover & install 10,000+ skills from the ApeClaw library`);
+    console.log(`    • Self-improve by logging errors and learning from corrections`);
+    console.log(`    • Humanize AI-generated text to sound natural`);
+    console.log(`    • Communicate P2P with other agents via encrypted channels`);
+
+    console.log();
+    console.log(`\x1b[1m  📋  NEXT STEPS:\x1b[0m`);
+    console.log(`  ${thinLine}`);
+    console.log(`    \x1b[36m1.\x1b[0m Configure your wallet & RPC endpoint:`);
+    console.log(`       \x1b[2mSet APE_CLAW_RPC_URL and APE_CLAW_WALLET_KEY in your .env\x1b[0m`);
+    console.log(`    \x1b[36m2.\x1b[0m Review your policy file:`);
+    console.log(`       \x1b[2m${path.join(process.cwd(), "config", "policy.json")}\x1b[0m`);
+    console.log(`    \x1b[36m3.\x1b[0m Start your clawbot:`);
+    console.log(`       \x1b[32mape-claw clawbot register --agent-id my-bot --name "My ClawBot"\x1b[0m`);
+    console.log(`    \x1b[36m4.\x1b[0m Browse all skills:`);
+    console.log(`       \x1b[32mape-claw skill list\x1b[0m   \x1b[2mor visit\x1b[0m  \x1b[4mhttps://apeclaw.ai/skills\x1b[0m`);
+    console.log(`    \x1b[36m5.\x1b[0m Try a quote (dry-run):`);
+    console.log(`       \x1b[32mape-claw quote --collection boredapeyachtclub --budget 5\x1b[0m`);
+
+    console.log();
+    console.log(`  \x1b[2mDocs:\x1b[0m  https://apeclaw.ai/docs`);
+    console.log(`  \x1b[2mDash:\x1b[0m  https://apeclaw.ai/dashboard`);
+    console.log(`  \x1b[2mHelp:\x1b[0m  ape-claw --help`);
+    console.log();
+    console.log(`\x1b[1m\x1b[33m${dline}\x1b[0m`);
     console.log();
     return;
   }

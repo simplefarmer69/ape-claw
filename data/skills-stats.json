@@ -1,12 +1,42 @@
 {
   "ok": true,
-  "total": 10027,
+  "total": 10032,
   "seed": 8,
-  "imported": 10019,
+  "imported": 10024,
   "user": 0,
-  "vetted": 10004,
+  "vetted": 10009,
   "onchain": 10024,
   "recent": [
+    {
+      "name": "Humanizer — Remove AI Writing Patterns",
+      "slug": "clawhub-humanizer",
+      "source": "github_repo_skill_md",
+      "importedAt": "2026-02-20T12:00:00.000Z"
+    },
+    {
+      "name": "GitHub — gh CLI Integration",
+      "slug": "clawhub-github",
+      "source": "github_repo_skill_md",
+      "importedAt": "2026-02-20T12:00:00.000Z"
+    },
+    {
+      "name": "Find Skills — Skill Discovery",
+      "slug": "clawhub-find-skills",
+      "source": "github_repo_skill_md",
+      "importedAt": "2026-02-20T12:00:00.000Z"
+    },
+    {
+      "name": "Self-Improving Agent",
+      "slug": "clawhub-self-improving-agent",
+      "source": "github_repo_skill_md",
+      "importedAt": "2026-02-20T12:00:00.000Z"
+    },
+    {
+      "name": "Gog — Google Workspace CLI",
+      "slug": "clawhub-gog",
+      "source": "github_repo_skill_md",
+      "importedAt": "2026-02-20T12:00:00.000Z"
+    },
     {
       "name": "Walkie — Agent P2P Communication",
       "slug": "clawhub-walkie",

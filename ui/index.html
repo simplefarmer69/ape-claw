@@ -943,7 +943,7 @@ python3 pod/run_agent.py \
 <div class="platform-stats-bar reveal reveal-2 ac-observe" id="platformStatsBar">
   <div class="platform-stat highlight">
     <span class="ps-icon">📚</span>
-    <span class="ps-val" id="psSkillsTotal">10,027</span>
+    <span class="ps-val" id="psSkillsTotal">10,032</span>
     <span class="ps-label">Skills in Library</span>
   </div>
   <div class="platform-stat">
@@ -1055,7 +1055,7 @@ python3 pod/run_agent.py \
   <!-- ── Skills Library ── -->
   <div class="panel reveal reveal-4 ac-observe" style="grid-column:1/-1">
     <div class="panel-header">
-      <span class="icon">📚</span> Skills Library <span class="badge" id="skillCountBadge">10,027</span>
+      <span class="icon">📚</span> Skills Library <span class="badge" id="skillCountBadge">10,032</span>
       <span class="panel-actions">
         <input class="mini-input" id="skillSearchInput" type="search" placeholder="Search skills…" aria-label="Search skills">
         <select class="mini-select" id="skillSourceFilter" aria-label="Filter by source">
@@ -1070,7 +1070,7 @@ python3 pod/run_agent.py \
     <div class="panel-body">
       <div class="skills-summary-row" id="skillsSummaryRow">
         <div class="skills-summary-stat"><span class="ss-num" id="ssSeed">8</span><span class="ss-label">Seed</span></div>
-        <div class="skills-summary-stat"><span class="ss-num" id="ssImported">10,019</span><span class="ss-label">Community</span></div>
+        <div class="skills-summary-stat"><span class="ss-num" id="ssImported">10,024</span><span class="ss-label">Community</span></div>
         <div class="skills-summary-stat"><span class="ss-num" id="ssUser">0</span><span class="ss-label">User</span></div>
         <div class="skills-summary-stat"><span class="ss-num" id="ssOnchain">10,024</span><span class="ss-label">Onchain</span></div>
         <div class="skills-summary-stat"><span class="ss-num" id="ssVetted">10,004</span><span class="ss-label">Vetted</span></div>
@@ -2857,12 +2857,12 @@ async function fetchSkillsStats() {
   } catch (err) {
     console.warn('[skills-stats]', err.message);
     const setIf = (id, val) => { const el = document.getElementById(id); if (el && (el.textContent === '—' || el.textContent === '0')) el.textContent = val; };
-    setIf('psSkillsTotal', '10,027');
+    setIf('psSkillsTotal', '10,032');
     setIf('psSkillsOnchain', '10,024');
     setIf('psSkillsVetted', '10,004');
-    setIf('skillCountBadge', '10,027');
+    setIf('skillCountBadge', '10,032');
     setIf('ssSeed', '8');
-    setIf('ssImported', '10,019');
+    setIf('ssImported', '10,024');
     setIf('ssUser', '0');
     setIf('ssOnchain', '10,024');
     setIf('ssVetted', '10,004');
