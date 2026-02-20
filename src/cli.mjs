@@ -142,6 +142,7 @@ function installApeClawSkill(args) {
   }
 
   const scope = String(args.scope || "local").toLowerCase();
+  const skipStarterPack = Boolean(args["no-starter-pack"]);
   const explicitSkillsDir = args["skills-dir"] ? String(args["skills-dir"]) : "";
   let skillsRoot;
   if (explicitSkillsDir) skillsRoot = path.resolve(explicitSkillsDir);
@@ -153,7 +154,6 @@ function installApeClawSkill(args) {
   fs.mkdirSync(targetSkillDir, { recursive: true });
   fs.copyFileSync(sourceSkillPath, targetSkillPath);
 
-  // Also bootstrap config/policy.json from example if not present
   const localPolicyPath = path.join(process.cwd(), "config", "policy.json");
   const examplePolicyPath = path.join(packageRoot, "config", "policy.example.json");
   if (!fs.existsSync(localPolicyPath) && fs.existsSync(examplePolicyPath)) {
@@ -161,7 +161,6 @@ function installApeClawSkill(args) {
     fs.copyFileSync(examplePolicyPath, localPolicyPath);
   }
 
-  // Also bootstrap allowlist if not present
   const localAllowlistPath = path.join(process.cwd(), "allowlists", "recommended.apechain.json");
   const sourceAllowlistPath = path.join(packageRoot, "allowlists", "recommended.apechain.json");
   if (!fs.existsSync(localAllowlistPath) && fs.existsSync(sourceAllowlistPath)) {
@@ -169,11 +168,64 @@ function installApeClawSkill(args) {
     fs.copyFileSync(sourceAllowlistPath, localAllowlistPath);
   }
 
-  // Also bootstrap clawbots config from example if not present
   const localClawbotsPath = path.join(process.cwd(), "config", "clawbots.json");
   const exampleClawbotsPath = path.join(packageRoot, "config", "clawbots.example.json");
   if (!fs.existsSync(localClawbotsPath) && fs.existsSync(exampleClawbotsPath)) {
     fs.copyFileSync(exampleClawbotsPath, localClawbotsPath);
+  }
+
+  // ── Starter Pack: install top 100 curated skills ──
+  const starterPackInstalled = [];
+  const starterPackPath = path.join(packageRoot, "data", "starter-pack.json");
+  if (!skipStarterPack && fs.existsSync(starterPackPath)) {
+    try {
+      const pack = JSON.parse(fs.readFileSync(starterPackPath, "utf8"));
+      const skillsDataDir = path.join(packageRoot, "data", "skills");
+      const starterDir = path.join(skillsRoot, "starter-pack");
+      fs.mkdirSync(starterDir, { recursive: true });
+
+      const manifestEntries = [];
+      for (const entry of (pack.skills || [])) {
+        const slug = String(entry.slug || "").trim();
+        if (!slug) continue;
+
+        const sourceJson = path.join(skillsDataDir, `${slug}.json`);
+        if (!fs.existsSync(sourceJson)) continue;
+
+        const targetJson = path.join(starterDir, `${slug}.json`);
+        fs.copyFileSync(sourceJson, targetJson);
+        manifestEntries.push({
+          slug,
+          name: entry.name,
+          category: entry.category,
+          description: entry.description,
+          vettedOk: entry.vettedOk,
+          onchain: entry.onchain,
+          installedAt: new Date().toISOString(),
+        });
+        starterPackInstalled.push({
+          slug,
+          name: entry.name,
+          category: entry.category,
+          description: entry.description,
+        });
+      }
+
+      if (manifestEntries.length > 0) {
+        const manifest = {
+          version: 1,
+          installedAt: new Date().toISOString(),
+          count: manifestEntries.length,
+          skills: manifestEntries,
+        };
+        fs.writeFileSync(
+          path.join(starterDir, "_manifest.json"),
+          JSON.stringify(manifest, null, 2),
+        );
+      }
+    } catch {
+      // Non-fatal: starter pack install failure shouldn't block core install
+    }
   }
 
   const check = spawnSync("openclaw", ["skills", "check"], {
@@ -183,12 +235,24 @@ function installApeClawSkill(args) {
   const openclawAvailable = !check.error && typeof check.status === "number";
   const openclawCheckOk = openclawAvailable && check.status === 0;
 
+  // Build category summary for the starter pack
+  const categorySummary = {};
+  for (const s of starterPackInstalled) {
+    categorySummary[s.category] = (categorySummary[s.category] || 0) + 1;
+  }
+
   return {
     installed: true,
     scope,
     sourceSkillPath,
     skillsRoot,
     skillPath: targetSkillPath,
+    starterPack: {
+      installed: starterPackInstalled.length,
+      skipped: skipStarterPack,
+      categories: categorySummary,
+      skills: starterPackInstalled,
+    },
     openclawAvailable,
     openclawCheckOk,
     openclawCheckOutput: openclawAvailable
@@ -262,7 +326,51 @@ async function main() {
   if (group === "skill" && sub === "install") {
     const result = installApeClawSkill(args);
     emitEvent({ eventType: "skill.install.ran", command, dryRun: true, result });
-    return print(result, asJson);
+
+    if (asJson) return print(result, true);
+
+    const W = 60;
+    const line = "─".repeat(W);
+    const dline = "═".repeat(W);
+    console.log();
+    console.log(`\x1b[1m\x1b[33m${dline}\x1b[0m`);
+    console.log(`\x1b[1m\x1b[33m  🦞  APE CLAW — INSTALLED\x1b[0m`);
+    console.log(`\x1b[1m\x1b[33m${dline}\x1b[0m`);
+    console.log();
+    console.log(`  \x1b[36mScope:\x1b[0m       ${result.scope}`);
+    console.log(`  \x1b[36mSkills dir:\x1b[0m  ${result.skillsRoot}`);
+    console.log(`  \x1b[36mCore skill:\x1b[0m  ${result.skillPath}`);
+
+    const sp = result.starterPack;
+    if (sp && sp.installed > 0) {
+      console.log();
+      console.log(`\x1b[1m  📦  STARTER PACK — ${sp.installed} skills installed\x1b[0m`);
+      console.log(`  ${line}`);
+
+      const catOrder = Object.entries(sp.categories)
+        .sort((a, b) => b[1] - a[1]);
+      for (const [cat, count] of catOrder) {
+        console.log(`  \x1b[33m${cat}\x1b[0m (${count})`);
+        const inCat = sp.skills
+          .filter((s) => s.category === cat)
+          .sort((a, b) => a.name.localeCompare(b.name));
+        for (const s of inCat) {
+          const nameStr = s.name.length > 38 ? s.name.slice(0, 35) + "..." : s.name;
+          const desc = s.description.length > 55 ? s.description.slice(0, 52) + "..." : s.description;
+          console.log(`    \x1b[32m✓\x1b[0m ${nameStr.padEnd(39)} \x1b[2m${desc}\x1b[0m`);
+        }
+      }
+      console.log(`  ${line}`);
+      console.log(`  \x1b[1m\x1b[32m${sp.installed} skills ready\x1b[0m across \x1b[33m${catOrder.length} categories\x1b[0m`);
+    }
+
+    console.log();
+    console.log(`\x1b[1m  Next steps:\x1b[0m`);
+    for (const step of result.next) {
+      console.log(`    → ${step}`);
+    }
+    console.log();
+    return;
   }
 
   // ── Clawbot commands (before policy load so they work in any directory)
@@ -437,7 +545,7 @@ async function main() {
     const openseaRequired = String(policy.market.dataSource || "").toLowerCase() === "opensea";
     const clawbotsConfig = loadClawbotsConfig() || {};
     const registeredAgent = Boolean(clawbotsConfig?.agents?.[agentId]);
-    const sharedKeyConfigured = Boolean(clawbotsConfig?.sharedOpenseaApiKey);
+    const sharedKeyConfigured = Boolean(clawbotsConfig?.sharedOpenseaApiKey || process.env.APE_CLAW_SHARED_OPENSEA_KEY);
     const sharedKeyInjected = Boolean(sharedOpenseaKey);
     const openseaProvided = Boolean(openseaKey);
     const openseaMissing = openseaRequired && !openseaProvided;
@@ -1640,7 +1748,7 @@ async function main() {
       "bridge execute (autonomous)": "ape-claw bridge execute --request <requestId> --execute --autonomous --json",
       "bridge status": "ape-claw bridge status --request <requestId> --json",
       "allowlist audit": "ape-claw allowlist audit --json",
-      "skill install": "ape-claw skill install --scope local --json",
+      "skill install": "ape-claw skill install --scope local [--no-starter-pack] --json",
       "v2 skill mint": "ape-claw v2 skill mint --rpc <url> --privateKey 0x... --skillNft 0x... --registry 0x... [--parentId 0] [--royalty-receiver 0x... --royalty-bps 500] --json",
       "v2 skill publish": "ape-claw v2 skill publish --rpc <url> --privateKey 0x... --registry 0x... --skillId <id> --file <skillcard.json> [--uri ipfs://...] [--riskTier 1] --json",
       "v2 intent create": "ape-claw v2 intent create --rpc <url> --privateKey 0x... --intents 0x... --payload '{...}' [--expiresAt <unixSec>] --json",
