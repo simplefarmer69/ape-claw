@@ -872,7 +872,7 @@ const server = http.createServer((req, res) => {
       const sourceFilter = String(reqUrl.searchParams.get("source") || "").trim().toLowerCase();
       const vettedFilter = String(reqUrl.searchParams.get("vetted") || "").trim();
       const page = Math.max(1, Number(reqUrl.searchParams.get("page") || 1));
-      const limit = Math.min(5000, Math.max(1, Number(reqUrl.searchParams.get("limit") || 50)));
+      const limit = Math.min(15000, Math.max(1, Number(reqUrl.searchParams.get("limit") || 50)));
 
       let results = getMergedSkillIndex();
 

@@ -2045,7 +2045,7 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
           });
       }
 
-      fetch(apiBase + '/api/skills/search?limit=5000', { headers: { 'accept': 'application/json' } })
+      fetch(apiBase + '/api/skills/search?limit=15000', { headers: { 'accept': 'application/json' } })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) {
           var results = (j && j.ok && Array.isArray(j.results)) ? j.results : [];

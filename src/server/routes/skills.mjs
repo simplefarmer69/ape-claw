@@ -154,7 +154,7 @@ export function handleSkillsSearch(req, res, reqUrl) {
     const sourceFilter = String(reqUrl.searchParams.get("source") || "").trim().toLowerCase();
     const vettedFilter = String(reqUrl.searchParams.get("vetted") || "").trim();
     const page = Math.max(1, Number(reqUrl.searchParams.get("page") || 1));
-    const limit = Math.min(5000, Math.max(1, Number(reqUrl.searchParams.get("limit") || 50)));
+    const limit = Math.min(15000, Math.max(1, Number(reqUrl.searchParams.get("limit") || 50)));
     let results = store.getMergedSkillIndex();
     if (sourceFilter && ["seed", "bundled", "imported", "user"].includes(sourceFilter)) results = results.filter((s) => s.source === sourceFilter);
     if (vettedFilter === "1") results = results.filter((s) => s.vettedOk === true);
