@@ -15,6 +15,8 @@ COPY skillcards ./skillcards
 COPY data ./data
 COPY scripts ./scripts
 
+RUN apk add --no-cache git && npm i -g openclaw
+
 COPY <<'ENTRYPOINT' /app/entrypoint.sh
 #!/bin/sh
 set -e
