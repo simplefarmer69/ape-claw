@@ -1453,22 +1453,29 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
         }, 2500);
       }
 
+      var FALLBACK_STATS = { total: 10033, vetted: 10019, onchain: 7056, user: 0 };
       // Load global stats from API
       (function loadGlobalStats() {
         fetch(apiBase + '/api/skills/stats', { headers: { 'accept': 'application/json' } })
           .then(function (r) { return r.ok ? r.json() : null; })
           .then(function (d) {
-            if (!d || !d.ok) return;
+            if (!d || !d.ok || !d.total) {
+              setStatCountUp(statTotal, FALLBACK_STATS.total);
+              setStatCountUp(statVetted, FALLBACK_STATS.vetted);
+              setStatCountUp(statOnchain, FALLBACK_STATS.onchain);
+              setStatCountUp(statContributed, FALLBACK_STATS.user);
+              return;
+            }
             setStatCountUp(statTotal, d.total || 0);
             setStatCountUp(statVetted, d.vetted || 0);
             setStatCountUp(statOnchain, d.onchain || 0);
             setStatCountUp(statContributed, d.user || 0);
           })
           .catch(function () {
-            setStatCountUp(statTotal, 10032);
-            setStatCountUp(statVetted, 10009);
-            setStatCountUp(statOnchain, 7056);
-            setStatCountUp(statContributed, 0);
+            setStatCountUp(statTotal, FALLBACK_STATS.total);
+            setStatCountUp(statVetted, FALLBACK_STATS.vetted);
+            setStatCountUp(statOnchain, FALLBACK_STATS.onchain);
+            setStatCountUp(statContributed, FALLBACK_STATS.user);
           });
       })();
 
@@ -1982,52 +1989,71 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
       window.addEventListener('hashchange', function () {
         try { openFromHash(); } catch (e) {}
       });
+      function hydrateFromResults(results) {
+        importedAll = (Array.isArray(results) ? results : []).map(function (s, idx) {
+          return {
+            name: s.name || s.slug || 'Skill',
+            slug: s.slug || '',
+            description: s.description || s.desc || '',
+            desc: s.description || s.desc || '',
+            riskTier: s.riskTier || 2,
+            source: s.source || 'imported',
+            sourceUrl: s.sourceUrl || '',
+            fileName: s.fileName || '',
+            version: s.version || '1',
+            importOk: true,
+            vettedOk: Boolean(s.vettedOk !== false && s.vetted !== false),
+            addedAt: s.addedAt || s.importedAt || s.createdAt || '',
+            importedAt: s.importedAt || s.addedAt || '',
+            createdAt: s.createdAt || '',
+            _indexOrder: idx,
+            onchainTokenId: s.onchainTokenId || null,
+            onchainMintTx: s.onchainMintTx || null,
+            onchainPublishTx: s.onchainPublishTx || null
+          };
+        });
+        publishedBySlug = {};
+        for (var pi = 0; pi < importedAll.length; pi++) {
+          var si = importedAll[pi];
+          if (si && si.slug && si.onchainTokenId) {
+            publishedBySlug[si.slug] = {
+              skillId: si.onchainTokenId,
+              txs: { mint: si.onchainMintTx || null, publish: si.onchainPublishTx || null }
+            };
+          }
+        }
+        applyImportedFilters();
+        if (importedBadge) importedBadge.textContent = importedAll.length ? (importedAll.length + ' SKILLS') : 'NONE';
+        try { openFromHash(); } catch (e) {}
+      }
+
+      function loadFromStaticFallback() {
+        return fetch('/data/skills-search.json', { headers: { 'accept': 'application/json' } })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (j) {
+            var results = (j && Array.isArray(j.results)) ? j.results : [];
+            if (!results.length) {
+              if (importedBadge) importedBadge.textContent = 'UNAVAILABLE';
+              return;
+            }
+            hydrateFromResults(results);
+            if (importedBadge) importedBadge.textContent = importedAll.length + ' SKILLS';
+            setStatCountUp(statTotal, importedAll.length);
+          })
+          .catch(function () {
+            if (importedBadge) importedBadge.textContent = 'UNAVAILABLE';
+          });
+      }
+
       fetch(apiBase + '/api/skills/search?limit=5000', { headers: { 'accept': 'application/json' } })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) {
-          if (!j || !j.ok) {
-            if (importedBadge) importedBadge.textContent = 'UNAVAILABLE';
-            return;
-          }
-          var results = j.results || [];
-          importedAll = results.map(function (s, idx) {
-            return {
-              name: s.name || s.slug || 'Skill',
-              slug: s.slug || '',
-              description: s.description || s.desc || '',
-              desc: s.description || s.desc || '',
-              riskTier: s.riskTier || 2,
-              source: s.source || 'imported',
-              sourceUrl: s.sourceUrl || '',
-              fileName: s.fileName || '',
-              version: s.version || '1',
-              importOk: true,
-              vettedOk: Boolean(s.vettedOk !== false && s.vetted !== false),
-              addedAt: s.addedAt || s.importedAt || s.createdAt || '',
-              importedAt: s.importedAt || s.addedAt || '',
-              createdAt: s.createdAt || '',
-              _indexOrder: idx,
-              onchainTokenId: s.onchainTokenId || null,
-              onchainMintTx: s.onchainMintTx || null,
-              onchainPublishTx: s.onchainPublishTx || null
-            };
-          });
-          publishedBySlug = {};
-          for (var pi = 0; pi < importedAll.length; pi++) {
-            var si = importedAll[pi];
-            if (si && si.slug && si.onchainTokenId) {
-              publishedBySlug[si.slug] = {
-                skillId: si.onchainTokenId,
-                txs: { mint: si.onchainMintTx || null, publish: si.onchainPublishTx || null }
-              };
-            }
-          }
-          applyImportedFilters();
-          if (importedBadge) importedBadge.textContent = importedAll.length ? (importedAll.length + ' SKILLS') : 'NONE';
-          try { openFromHash(); } catch (e) {}
+          var results = (j && j.ok && Array.isArray(j.results)) ? j.results : [];
+          if (!results.length) return loadFromStaticFallback();
+          hydrateFromResults(results);
         })
         .catch(function () {
-          if (importedBadge) importedBadge.textContent = 'UNAVAILABLE';
+          return loadFromStaticFallback();
         });
 
       if (importedSearch) {
