@@ -145,6 +145,7 @@ async function sendMessage() {
   updateCounter();
 
   streaming = true;
+  if (window.__forgeSetSpeaking) window.__forgeSetSpeaking(true);
   const btn = sendBtn();
   if (btn) btn.disabled = true;
 
@@ -288,6 +289,7 @@ async function sendToLocalChat(text) {
 
 function finishStreaming() {
   streaming = false;
+  if (window.__forgeSetSpeaking) window.__forgeSetSpeaking(false);
   const btn = sendBtn();
   if (btn) btn.disabled = false;
   input()?.focus();
