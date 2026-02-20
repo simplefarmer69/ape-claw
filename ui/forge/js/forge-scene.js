@@ -290,12 +290,40 @@ export function tweenVector3(obj, from, to, durationMs, easeFn, onDone) {
 /* ══════════════════════════════════════════════════════════
    Geometry helpers
    ══════════════════════════════════════════════════════════ */
-function box(g, w, h, d, mat, x, y, z, rx, ry, rz) {
+/* ══════════════════════════════════════════════════════════
+   Geometry cache — reuse identical geometries across all parts.
+   Keys encode shape + dimensions to share GPU buffers.
+   ══════════════════════════════════════════════════════════ */
+const _geoCache = new Map();
+function _cachedGeo(key, factory) {
+  if (!_geoCache.has(key)) _geoCache.set(key, factory());
+  return _geoCache.get(key);
+}
+function _boxGeo(w, h, d) {
   const minDim = Math.min(w, h, d);
-  const geo = minDim > 0.08
+  const useRounded = minDim > 0.08;
+  const k = `b${w.toFixed(3)}_${h.toFixed(3)}_${d.toFixed(3)}_${useRounded ? 1 : 0}`;
+  return _cachedGeo(k, () => useRounded
     ? new RoundedBoxGeometry(w, h, d, 2, minDim * 0.12)
-    : new THREE.BoxGeometry(w, h, d);
-  const m = new THREE.Mesh(geo, mat);
+    : new THREE.BoxGeometry(w, h, d));
+}
+function _cylGeo(rT, rB, h, segs) {
+  const k = `c${rT.toFixed(3)}_${rB.toFixed(3)}_${h.toFixed(3)}_${segs}`;
+  return _cachedGeo(k, () => new THREE.CylinderGeometry(rT, rB, h, segs));
+}
+function _sphereGeo(r, ws, hs) {
+  const k = `s${r.toFixed(4)}_${ws}_${hs}`;
+  return _cachedGeo(k, () => new THREE.SphereGeometry(r, ws, hs));
+}
+function _torusGeo(r, tube, rs, ts) {
+  const k = `t${r.toFixed(4)}_${tube.toFixed(4)}_${rs}_${ts}`;
+  return _cachedGeo(k, () => new THREE.TorusGeometry(r, tube, rs, ts));
+}
+
+const _DETAIL_THRESHOLD = 0.06;
+
+function box(g, w, h, d, mat, x, y, z, rx, ry, rz) {
+  const m = new THREE.Mesh(_boxGeo(w, h, d), mat);
   m.position.set(x, y, z);
   if (rx) m.rotation.x = rx;
   if (ry) m.rotation.y = ry;
@@ -304,55 +332,63 @@ function box(g, w, h, d, mat, x, y, z, rx, ry, rz) {
   return m;
 }
 function cyl(g, rT, rB, h, mat, x, y, z, segs) {
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(rT, rB, h, segs || 24), mat);
+  const s = segs || (Math.max(rT, rB) < _DETAIL_THRESHOLD ? 8 : 16);
+  const m = new THREE.Mesh(_cylGeo(rT, rB, h, s), mat);
   m.position.set(x, y, z);
   g.add(m);
   return m;
 }
 function sphere(g, r, mat, x, y, z) {
-  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 24), mat);
+  const lod = r < 0.02 ? [8, 6] : r < _DETAIL_THRESHOLD ? [12, 8] : [20, 14];
+  const m = new THREE.Mesh(_sphereGeo(r, lod[0], lod[1]), mat);
   m.position.set(x, y, z);
   g.add(m);
   return m;
 }
 function torus(g, r, tube, mat, x, y, z) {
-  const m = new THREE.Mesh(new THREE.TorusGeometry(r, tube, 24, 64), mat);
+  const rs = tube < 0.015 ? 6 : 10;
+  const ts = r < _DETAIL_THRESHOLD ? 16 : 28;
+  const m = new THREE.Mesh(_torusGeo(r, tube, rs, ts), mat);
   m.position.set(x, y, z);
   m.rotation.x = Math.PI / 2;
   g.add(m);
   return m;
 }
 function pistonGeo(g, r, len, mat, x, y, z, rx, ry, rz) {
-  const shaft = cyl(g, r, r, len, mat, x, y, z, 8);
+  const shaft = cyl(g, r, r, len, mat, x, y, z, 6);
   if (rx) shaft.rotation.x = rx; if (ry) shaft.rotation.y = ry; if (rz) shaft.rotation.z = rz;
-  const capG = new THREE.CylinderGeometry(r * 1.7, r * 1.7, len * 0.09, 8);
+  const capG = _cylGeo(r * 1.7, r * 1.7, len * 0.09, 6);
   const c1 = new THREE.Mesh(capG, MAT.rivetMat); c1.position.y = len / 2; shaft.add(c1);
   const c2 = new THREE.Mesh(capG, MAT.rivetMat); c2.position.y = -len / 2; shaft.add(c2);
   return shaft;
 }
-function rivet(g, x, y, z) { return sphere(g, 0.028, MAT.rivetMat, x, y, z); }
+function rivet(g, x, y, z) {
+  const m = new THREE.Mesh(_sphereGeo(0.028, 6, 4), MAT.rivetMat);
+  m.position.set(x, y, z); m.userData._detail = true; g.add(m); return m;
+}
 function ventSlits(g, w, n, sp, mat, x, y, z) {
   for (let i = 0; i < n; i++) box(g, w, 0.02, 0.05, mat, x, y + i * sp, z);
 }
 function cableRun(g, r, len, x, y, z, rx, ry, rz) {
-  const m = cyl(g, r, r, len, MAT.cableMat, x, y, z, 6);
+  const m = cyl(g, r, r, len, MAT.cableMat, x, y, z, 4);
+  m.userData._detail = true;
   if (rx) m.rotation.x = rx; if (ry) m.rotation.y = ry; if (rz) m.rotation.z = rz;
   return m;
 }
 function servoDrum(g, r, w, x, y, z, rz) {
-  const drum = cyl(g, r, r, w, MAT.servo, x, y, z, 16);
+  const drum = cyl(g, r, r, w, MAT.servo, x, y, z, 10);
   if (rz) drum.rotation.z = rz; else drum.rotation.z = Math.PI / 2;
-  const cap1 = cyl(g, r * 0.5, r * 0.5, w * 0.15, MAT.chrome, x, y, z, 8);
+  const cap1 = cyl(g, r * 0.5, r * 0.5, w * 0.15, MAT.chrome, x, y, z, 6);
   cap1.rotation.z = drum.rotation.z;
   torus(g, r * 0.85, r * 0.08, MAT.darkChrome, x, y, z);
   return drum;
 }
 function hydraulicRam(g, r, len, x, y, z, rx, ry, rz) {
-  const outer = cyl(g, r, r, len * 0.55, MAT.hydraulic, x, y, z, 10);
+  const outer = cyl(g, r, r, len * 0.55, MAT.hydraulic, x, y, z, 8);
   if (rx) outer.rotation.x = rx; if (ry) outer.rotation.y = ry; if (rz) outer.rotation.z = rz;
-  const inner = cyl(g, r * 0.6, r * 0.6, len * 0.65, MAT.pistonMat, x, y, z, 8);
+  const inner = cyl(g, r * 0.6, r * 0.6, len * 0.65, MAT.pistonMat, x, y, z, 6);
   inner.rotation.x = outer.rotation.x; inner.rotation.y = outer.rotation.y; inner.rotation.z = outer.rotation.z;
-  const seal = cyl(g, r * 1.2, r * 1.2, len * 0.06, MAT.rubber, x, y, z, 12);
+  const seal = cyl(g, r * 1.2, r * 1.2, len * 0.06, MAT.rubber, x, y, z, 8);
   seal.rotation.x = outer.rotation.x; seal.rotation.y = outer.rotation.y; seal.rotation.z = outer.rotation.z;
   return outer;
 }
@@ -373,8 +409,9 @@ function boltCluster(g, count, radius, x, y, z) {
   }
 }
 function rubberSeal(g, r, tube, x, y, z) {
-  const m = new THREE.Mesh(new THREE.TorusGeometry(r, tube, 12, 32), MAT.rubber);
-  m.position.set(x, y, z); m.rotation.x = Math.PI / 2; g.add(m); return m;
+  const m = new THREE.Mesh(_torusGeo(r, tube, 6, 16), MAT.rubber);
+  m.position.set(x, y, z); m.rotation.x = Math.PI / 2;
+  m.userData._detail = true; g.add(m); return m;
 }
 function cableBundle(g, count, r, len, x, y, z, rx, ry, rz) {
   for (let i = 0; i < count; i++) {
@@ -1594,7 +1631,7 @@ function buildChassis() {
   g.add(_hp); g.add(_lp); g.add(_rp);
   headPivotRef = _hp; leftArmPivotRef = _lp; rightArmPivotRef = _rp;
 
-  // Add subtle edge highlights so the full mecha silhouette is always readable.
+  // Edge highlights on major armor pieces only (skip rivets, cables, small detail).
   const edgeMat = new THREE.LineBasicMaterial({
     color: 0x3355aa,
     transparent: true,
@@ -1602,10 +1639,17 @@ function buildChassis() {
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
+  const _edgeCache = new Map();
   g.traverse((node) => {
     if (!node.isMesh || !node.geometry) return;
-    const edges = new THREE.EdgesGeometry(node.geometry, 28);
-    const lines = new THREE.LineSegments(edges, edgeMat.clone());
+    if (node.userData._detail) return;
+    const s = node.geometry.boundingSphere;
+    if (!s) node.geometry.computeBoundingSphere();
+    if (node.geometry.boundingSphere && node.geometry.boundingSphere.radius < 0.04) return;
+    const geoId = node.geometry.uuid;
+    let edgeGeo = _edgeCache.get(geoId);
+    if (!edgeGeo) { edgeGeo = new THREE.EdgesGeometry(node.geometry, 28); _edgeCache.set(geoId, edgeGeo); }
+    const lines = new THREE.LineSegments(edgeGeo, edgeMat);
     lines.renderOrder = 2;
     node.add(lines);
   });
@@ -2385,7 +2429,6 @@ export function initForgeScene() {
   scene.add(platformGroup);
 
   robotGroup = new THREE.Group();
-  robotGroup.add(buildChassis());
   scene.add(robotGroup);
 
   attachmentGroup = new THREE.Group();
@@ -2399,6 +2442,16 @@ export function initForgeScene() {
 
   energyStreams = createEnergyStreams();
   scene.add(energyStreams);
+
+  // Build chassis asynchronously so the browser can paint a frame first
+  const _chassisReady = new Promise(resolve => {
+    requestAnimationFrame(() => {
+      const t0 = performance.now();
+      robotGroup.add(buildChassis());
+      console.log(`[forge] chassis built in ${(performance.now() - t0).toFixed(0)}ms, geo cache: ${_geoCache.size} entries`);
+      resolve();
+    });
+  });
 
   // ── Post-processing: SSAO → bloom → outline → film grain → output ──
   composer = new EffectComposer(renderer);
@@ -2456,9 +2509,11 @@ export function initForgeScene() {
 
   window.__forgeSetSpeaking = setAgentSpeaking;
 
-  playCinematicIntro(() => {
-    window.__forgeSceneReady = true;
-    window.dispatchEvent(new CustomEvent("forge:ready"));
+  _chassisReady.then(() => {
+    playCinematicIntro(() => {
+      window.__forgeSceneReady = true;
+      window.dispatchEvent(new CustomEvent("forge:ready"));
+    });
   });
 
   initialized = true;
