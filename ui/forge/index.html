@@ -173,6 +173,7 @@
   <!-- Forge requires a local server to discover installed skills -->
   <div class="forge-offline-gate" id="forgeOfflineGate" style="display:none">
     <div class="forge-offline-card">
+      <button class="forge-offline-close" id="forgeOfflineClose" type="button" aria-label="Close">&times;</button>
       <div class="forge-offline-icon">&#x1F916;</div>
       <h2 class="forge-offline-title">ClawBot Forge</h2>
       <p class="forge-offline-sub">Your 3D agent — shaped by the skills you install</p>
@@ -222,12 +223,16 @@
   (async function detectLocal() {
     try {
       const r = await fetch("/api/health", { signal: AbortSignal.timeout(4000) });
-      if (r.ok) return; // local server running — load the forge normally
+      if (r.ok) return;
     } catch {}
-    // Not local — show the offline gate and hide the forge app
     document.getElementById("forgeOfflineGate").style.display = "";
     const app = document.querySelector(".forge-app");
     if (app) app.style.display = "none";
+
+    document.getElementById("forgeOfflineClose").addEventListener("click", function() {
+      document.getElementById("forgeOfflineGate").style.display = "none";
+      if (app) app.style.display = "";
+    });
   })();
   </script>
 
