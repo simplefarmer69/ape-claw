@@ -5,15 +5,15 @@ Complete reference for all `ape-claw` CLI commands.
 ## Installation
 
 ```bash
-npx --yes github:simplefarmer69/ape-claw skill install --scope local
-npx --yes github:simplefarmer69/ape-claw doctor --json
+npx ape-claw skill install --scope local
+npx ape-claw doctor --json
 ```
 
 PowerShell (Windows):
 
 ```powershell
-npx --yes github:simplefarmer69/ape-claw skill install --scope local
-npx --yes github:simplefarmer69/ape-claw doctor --json
+npx ape-claw skill install --scope local
+npx ape-claw doctor --json
 ```
 
 ## Global Flags

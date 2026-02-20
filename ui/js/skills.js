@@ -387,7 +387,7 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
           if (mintTx) html += '<div class="note">mint tx: <a href="https://apescan.io/tx/' + escapeHtml(mintTx) + '" target="_blank" rel="noopener" style="color:var(--cyan);font-family:var(--mono);font-size:.75rem;word-break:break-all">' + escapeHtml(mintTx) + ' &#8599;</a></div>';
           if (pubTx) html += '<div class="note">publish tx: <a href="https://apescan.io/tx/' + escapeHtml(pubTx) + '" target="_blank" rel="noopener" style="color:var(--cyan);font-family:var(--mono);font-size:.75rem;word-break:break-all">' + escapeHtml(pubTx) + ' &#8599;</a></div>';
           if (slug) {
-            var installCmd = 'curl -fsSL "' + apiBase + '/api/skills/' + slug + '" -o ./' + slug + '.json';
+            var installCmd = 'npx ape-claw skill install ' + slug;
             html += '<div class="note" style="margin-top:14px;padding:10px;background:rgba(207,255,4,.06);border:1px solid rgba(207,255,4,.2);border-radius:3px">';
             html += '<strong style="color:#cfff04">Install this skill</strong><br>';
             html += '<code style="font-size:.75rem;word-break:break-all">' + escapeHtml(installCmd) + '</code>';
@@ -424,10 +424,10 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
           var rawSlug = String(it.slug || '');
           var slug = escapeHtml(rawSlug);
           var fileName = it.fileName || rawSlug + '.json';
-          var installCmd = 'curl -fsSL "' + (apiBase || 'https://apeclaw.ai') + '/api/skills/' + rawSlug + '" -o ./' + fileName;
+          var installCmd = 'npx ape-claw skill install ' + rawSlug;
           var html = '';
           html += '<div style="margin-bottom:16px"><strong style="color:#cfff04;font-size:14px">' + escapeHtml(it.name || it.slug) + '</strong></div>';
-          html += '<div class="note" style="margin-bottom:12px;color:var(--muted);font-size:12px">Copy the command below and run it in your terminal to install this skill.</div>';
+          html += '<div class="note" style="margin-bottom:12px;color:var(--muted);font-size:12px">Copy the command below and run it in your terminal to install this skill to Cursor &amp; OpenClaw.</div>';
           html += '<div style="position:relative;background:rgba(0,0,0,.5);border:1px solid rgba(207,255,4,.15);border-radius:6px;padding:14px 16px;margin-bottom:12px">';
           html += '<code style="font-size:11px;color:var(--cyan);word-break:break-all;line-height:1.6;display:block">' + escapeHtml(installCmd) + '</code>';
           html += '</div>';
@@ -1309,7 +1309,7 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
           var created = it.createdAt ? (' · ' + String(it.createdAt)) : '';
           var onchainMeta = (it.onchain && it.onchain.skillId) ? (' · onchain: skillId=' + String(it.onchain.skillId)) : '';
           var meta = ['slug: ' + (it.slug || '?'), 'v' + (it.version || '?')].join(' · ') + onchainMeta + created;
-          var dlCmd = it.slug ? ('curl -fsSL \"' + apiBase + '/api/skills/' + encodeURIComponent(it.slug) + '\" -o \"./' + (it.fileName || it.slug + '.json') + '\"') : '';
+          var dlCmd = it.slug ? ('npx ape-claw skill install ' + encodeURIComponent(it.slug)) : '';
           var rpc = v2RpcUrl ? String(v2RpcUrl.value || '').trim() : '';
           var nft = v2SkillNft ? String(v2SkillNft.value || '').trim() : '';
           var reg = v2Registry ? String(v2Registry.value || '').trim() : '';

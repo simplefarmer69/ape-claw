@@ -715,26 +715,25 @@ async function main() {
     console.log(`    • Communicate P2P with other agents via encrypted channels`);
 
     console.log();
-    const runner = `npx --yes github:simplefarmer69/ape-claw`;
+    const runner = `npx ape-claw`;
     console.log(`\x1b[1m  📋  NEXT STEPS:\x1b[0m`);
     console.log(`  ${thinLine}`);
-    console.log(`    \x1b[36m1.\x1b[0m Register your clawbot (saves agent identity):`);
-    console.log(`       \x1b[32m${runner} clawbot register --agent-id my-bot --name "My ClawBot" --api https://apeclaw.ai --json\x1b[0m`);
-    console.log(`    \x1b[36m2.\x1b[0m Set runtime env (for telemetry/chat):`);
-    console.log(`       \x1b[2mAPE_CLAW_AGENT_ID=my-bot, APE_CLAW_AGENT_TOKEN=claw_...\x1b[0m`);
-    console.log(`    \x1b[36m3.\x1b[0m Review policy file (limits + safety gates):`);
-    console.log(`       \x1b[2m${path.join(process.cwd(), "config", "policy.json")}\x1b[0m`);
-    console.log(`    \x1b[36m4.\x1b[0m Browse/install skills:`);
-    console.log(`       \x1b[32m${runner} skill install <slug>\x1b[0m   \x1b[2mor visit\x1b[0m  \x1b[4mhttps://apeclaw.ai/skills\x1b[0m`);
-    console.log(`    \x1b[36m5.\x1b[0m Run a safe read-only check:`);
-    console.log(`       \x1b[32m${runner} market collections --recommended --json\x1b[0m`);
-    console.log(`    \x1b[36m6.\x1b[0m Optional for onchain execute commands only:`);
-    console.log(`       \x1b[2mSet APE_CLAW_RPC_URL and APE_CLAW_WALLET_KEY in your .env\x1b[0m`);
+    console.log(`    \x1b[36m1.\x1b[0m Install a skill by name:`);
+    console.log(`       \x1b[32m${runner} skill install <slug>\x1b[0m`);
+    console.log(`    \x1b[36m2.\x1b[0m Browse all 10,000+ skills:`);
+    console.log(`       \x1b[4mhttps://apeclaw.ai/skills\x1b[0m`);
+    console.log(`    \x1b[36m3.\x1b[0m Register your clawbot (optional — enables telemetry + dashboard):`);
+    console.log(`       \x1b[32m${runner} clawbot register --agent-id my-bot --name "My ClawBot" --json\x1b[0m`);
+    console.log(`    \x1b[36m4.\x1b[0m Verify your setup:`);
+    console.log(`       \x1b[32m${runner} doctor --json\x1b[0m`);
+    console.log(`    \x1b[36m5.\x1b[0m Optional — for onchain execute/bridge commands:`);
+    console.log(`       \x1b[2mexport APE_CLAW_RPC_URL=https://rpc.apechain.com/http\x1b[0m`);
+    console.log(`       \x1b[2mexport APE_CLAW_WALLET_KEY=0x...\x1b[0m`);
 
     console.log();
     console.log(`  \x1b[2mDocs:\x1b[0m  https://apeclaw.ai/docs`);
     console.log(`  \x1b[2mDash:\x1b[0m  https://apeclaw.ai/dashboard`);
-    console.log(`  \x1b[2mHelp:\x1b[0m  ape-claw --help`);
+    console.log(`  \x1b[2mHelp:\x1b[0m  ${runner} --help`);
     console.log();
     console.log(`\x1b[1m\x1b[33m${dline}\x1b[0m`);
     console.log();
@@ -1006,7 +1005,7 @@ async function main() {
     const executeReady = !openseaMissing && !privateKeyMissing;
     const readOnlyReady = true;
 
-    const runner = "npx --yes github:simplefarmer69/ape-claw";
+    const runner = "npx ape-claw";
     const suggested = [
       `${runner} doctor --json`,
       `${runner} clawbot register --agent-id my-bot --name "My Bot" --json`,

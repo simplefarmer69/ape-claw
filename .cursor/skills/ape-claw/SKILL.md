@@ -28,7 +28,7 @@ One-command installer (fresh machine, no repo clone):
 
 ```bash
 # Works everywhere. Installs everything. You're welcome. 🦞
-npx --yes github:simplefarmer69/ape-claw skill install --scope local
+npx ape-claw skill install --scope local
 ```
 
 ### 1a. Resolve CLI binary
@@ -42,7 +42,7 @@ ape-claw quickstart --json
 If not found:
 
 ```bash
-npx --yes github:simplefarmer69/ape-claw quickstart --json
+npx ape-claw quickstart --json
 ```
 
 Use the working form as `$CLI` for all subsequent commands.

@@ -79,7 +79,7 @@ if ! command -v ape-claw >/dev/null 2>&1; then
     else
       echo "⚠️  Global install not available on this machine (usually npm permissions)."
       echo "    You can still run ApeClaw immediately via npx:"
-      echo "    npx --yes github:simplefarmer69/ape-claw doctor --json"
+      echo "    npx ape-claw doctor --json"
     fi
   fi
 fi

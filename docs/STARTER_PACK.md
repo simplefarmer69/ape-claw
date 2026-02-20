@@ -13,7 +13,7 @@ Install the starter pack? [Y/n]
 Press Enter. 61 skills install in about four seconds. You skip the marketplace browsing entirely.
 
 ```bash
-npx --yes github:simplefarmer69/ape-claw skill install --scope local
+npx ape-claw skill install --scope local
 ```
 
 That's it. Your agent has a working toolkit in under a minute.
@@ -273,13 +273,13 @@ The starter pack is always opt-in. Three ways to control it:
 
 ```bash
 # Interactive: you'll be prompted (default)
-npx --yes github:simplefarmer69/ape-claw skill install --scope local
+npx ape-claw skill install --scope local
 
 # Auto-install: skip the prompt, just install everything
-npx --yes github:simplefarmer69/ape-claw skill install --scope local --starter-pack
+npx ape-claw skill install --scope local --starter-pack
 
 # Skip entirely: core skill only, no prompt
-npx --yes github:simplefarmer69/ape-claw skill install --scope local --no-starter-pack
+npx ape-claw skill install --scope local --no-starter-pack
 ```
 
 Install later at any time by running with `--starter-pack`.
@@ -291,7 +291,7 @@ Install later at any time by running with `--starter-pack`.
 Most agent platforms give you a blank setup and a marketplace. We ask one question after install: want 61 vetted skills? Press Enter or skip it.
 
 ```bash
-npx --yes github:simplefarmer69/ape-claw skill install --scope local
+npx ape-claw skill install --scope local
 ```
 
 Browse the full library: [apeclaw.ai/skills](https://apeclaw.ai/skills)

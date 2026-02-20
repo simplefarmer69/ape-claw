@@ -609,7 +609,7 @@ function renderAgents() {
       <div style="font-size:2.5rem;margin-bottom:8px">🦞</div>
       <div>No Clawllectors registered yet</div>
       <div style="font-size:.68rem;margin-top:6px">Set up your <a href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a> agent, then register a Clawllector:</div>
-      <div style="margin-top:8px"><code>npx --yes github:simplefarmer69/ape-claw clawbot register --agent-id my-clawllector --json</code></div>
+      <div style="margin-top:8px"><code>npx ape-claw clawbot register --agent-id my-clawllector --json</code></div>
     </div>`;
     return;
   }
@@ -651,7 +651,7 @@ function renderNftGrid() {
   if (collectedNfts.length === 0) {
     el.innerHTML = `<div style="grid-column:1/-1;color:var(--dim);font-size:.78rem;text-align:center;padding:24px">
       <div style="font-size:2rem;margin-bottom:6px">🖼️</div>
-      No NFTs collected yet.<br>Purchases from <code>npx --yes github:simplefarmer69/ape-claw nft buy --execute</code> appear here in real time.
+      No NFTs collected yet.<br>Purchases from <code>npx ape-claw nft buy --execute</code> appear here in real time.
     </div>`;
     return;
   }
@@ -677,7 +677,7 @@ function renderBridge() {
   if (bridgeOps.length === 0) {
     el.innerHTML = `<div style="color:var(--dim);font-size:.75rem;padding:12px">
       <div style="font-size:1.5rem;margin-bottom:4px">🌉</div>
-      No bridge operations yet.<br>Bridge executions from <code>npx --yes github:simplefarmer69/ape-claw bridge execute</code> appear here.
+      No bridge operations yet.<br>Bridge executions from <code>npx ape-claw bridge execute</code> appear here.
     </div>`;
     return;
   }

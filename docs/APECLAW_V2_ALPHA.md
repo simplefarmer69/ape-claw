@@ -192,7 +192,7 @@ This is the minimum substrate for crash recovery and persistent operation.
 If you don't have `ape-claw` on PATH yet, you can run v2 commands via:
 
 ```bash
-npx --yes github:simplefarmer69/ape-claw pod init --dir ./pod-workspace --json
+npx ape-claw pod init --dir ./pod-workspace --json
 ```
 
 ## Compatibility guardrails (do not break v1)

@@ -439,7 +439,7 @@
           <p>
             10,032 skills with 10,024 minted onchain on ApeChain with immutable versioning. SkillCards are content-hashed and published as NFTs. Provenance is explicit and verifiable onchain.
           </p>
-          <div class="code"><span class="k">curl</span> -fsSL "https://apeclaw.ai/api/skills/&lt;slug&gt;" -o ./skills/&lt;slug&gt;.json</div>
+          <div class="code"><span class="k">npx</span> ape-claw skill install &lt;slug&gt;</div>
           <div class="cta" style="margin-top:10px">
             <a class="btn primary" href="/skills" data-keep-query="1">Browse Skills</a>
           </div>
@@ -582,8 +582,8 @@
             <div class="stepnum" aria-hidden="true">1</div>
             <h3>Install ApeClaw</h3>
           </div>
-          <p>Open a terminal in <a href="https://cursor.com" target="_blank" rel="noopener">Cursor</a> and install the skill into your project.</p>
-          <div class="code"><span class="k">npx</span> --yes github:simplefarmer69/ape-claw skill install --scope local</div>
+          <p>Open any terminal and install ApeClaw:</p>
+          <div class="code"><span class="k">npx</span> ape-claw skill install</div>
         </div>
         <div class="card ac-observe">
           <div class="stephead">
@@ -591,15 +591,15 @@
             <h3>Verify</h3>
           </div>
           <p>Run a quick diagnostic and confirm you can talk to ApeChain.</p>
-          <div class="code"><span class="k">npx</span> --yes github:simplefarmer69/ape-claw doctor --json</div>
+          <div class="code"><span class="k">npx</span> ape-claw doctor --json</div>
         </div>
         <div class="card ac-observe">
           <div class="stephead">
             <div class="stepnum" aria-hidden="true">3</div>
             <h3>Install a Skill</h3>
           </div>
-          <p>Install any skill from the Library of Alexandria by slug, or add <code>--starter-pack</code> during install for 61 curated skills.</p>
-          <div class="code"><span class="k">npx</span> --yes github:simplefarmer69/ape-claw skill install lincoln-ai</div>
+          <p>Install any skill by slug, or add <code>--starter-pack</code> during install for 61 curated skills.</p>
+          <div class="code"><span class="k">npx</span> ape-claw skill install lincoln-ai</div>
         </div>
         <div class="card ac-observe">
           <div class="stephead">
@@ -607,7 +607,7 @@
             <h3>Run Skills</h3>
           </div>
           <p>Bridge and collect NFTs with safety gates enforced.</p>
-          <div class="code"><span class="k">npx</span> --yes github:simplefarmer69/ape-claw market collections --recommended --json</div>
+          <div class="code"><span class="k">npx</span> ape-claw market collections --recommended --json</div>
         </div>
       </div>
     </div>

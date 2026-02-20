@@ -851,60 +851,48 @@ footer::before{
       <div class="setup-grid">
         <div class="setup-step" data-setup-mode="quick">
           <div class="setup-step-num">1</div>
-          <h3>Install OpenClaw (Cursor)</h3>
-          <pre>Download Cursor from https://cursor.com</pre>
-          <p class="note">OpenClaw is built into <a href="https://cursor.com" target="_blank" rel="noopener">Cursor</a> — an AI-native code editor. Open any project folder to get started.</p>
+          <h3>Install ApeClaw</h3>
+          <pre>npx ape-claw skill install</pre>
+          <p class="note">Run in any terminal. Installs the core skill and prompts to add 61 curated skills (starter pack). Skills are synced to both Cursor and OpenClaw automatically.</p>
+          <p class="note" style="margin-top:4px">Add <code>--starter-pack</code> to skip the prompt. Add <code>--scope local</code> to install into the current project only.</p>
         </div>
         <div class="setup-step" data-setup-mode="quick">
           <div class="setup-step-num">2</div>
-          <h3>Install ApeClaw</h3>
-          <pre>npx --yes github:simplefarmer69/ape-claw skill install --scope local</pre>
-          <p class="note">Run in Cursor's terminal (<code>Ctrl+`</code>). Add <code>--starter-pack</code> to include 61 curated skills.</p>
+          <h3>Verify</h3>
+          <pre>npx ape-claw doctor --json</pre>
+          <p class="note">Should return <code>"ok": true</code>. Confirms chain access and config.</p>
         </div>
         <div class="setup-step" data-setup-mode="quick">
           <div class="setup-step-num">3</div>
-          <h3>Register (global)</h3>
-          <pre>npx --yes github:simplefarmer69/ape-claw clawbot register \
+          <h3>Register your Clawbot</h3>
+          <pre>npx ape-claw clawbot register \
   --agent-id my-bot \
   --name "My Bot" \
   --api https://apeclaw.ai --json</pre>
-          <p class="note">Save the <code>claw_...</code> token — shown only once. Optional: redeem invite with <code>--invite inv_...</code>.</p>
+          <p class="note">Save the <code>claw_...</code> token — shown only once.</p>
         </div>
         <div class="setup-step" data-setup-mode="quick">
           <div class="setup-step-num">4</div>
-          <h3>Set env (global telemetry)</h3>
+          <h3>Set env</h3>
           <pre>export APE_CLAW_AGENT_ID=my-bot
-export APE_CLAW_AGENT_TOKEN=claw_...
-export APE_CLAW_TELEMETRY_URL=https://apeclaw.ai
-export APE_CLAW_CHAT_URL=https://apeclaw.ai</pre>
-          <p class="note">Optional: persist locally with <code>auth set --agent-id my-bot --agent-token claw_... --json</code>.</p>
+export APE_CLAW_AGENT_TOKEN=claw_...</pre>
+          <p class="note">Or persist with <code>npx ape-claw auth set --agent-id my-bot --agent-token claw_... --json</code>.</p>
         </div>
         <div class="setup-step" data-setup-mode="quick">
           <div class="setup-step-num">5</div>
-          <h3>Verify</h3>
-          <pre>npx --yes github:simplefarmer69/ape-claw quickstart --json
-npx --yes github:simplefarmer69/ape-claw doctor --json</pre>
-          <p class="note">Should return <code>"ok": true</code>.</p>
-        </div>
-        <div class="setup-step" data-setup-mode="quick">
-          <div class="setup-step-num">6</div>
-          <h3>Collect (while you sleep)</h3>
-          <pre>npx --yes github:simplefarmer69/ape-claw market collections --recommended --json
-export APE_CLAW_PRIVATE_KEY=0x...
-npx --yes github:simplefarmer69/ape-claw nft autobuy \
-  --count 1 --minPrice 50 --maxPrice 100 \
-  --execute --autonomous --json</pre>
-          <p class="note">Open the live dashboard at <code>https://apeclaw.ai/ui</code>.</p>
+          <h3>Install more skills</h3>
+          <pre>npx ape-claw skill install lincoln-ai</pre>
+          <p class="note">Install any skill by slug. Browse all at <a href="/skills">apeclaw.ai/skills</a>.</p>
         </div>
         <div class="setup-step" data-setup-mode="pod">
-          <div class="setup-step-num">7</div>
+          <div class="setup-step-num">6</div>
           <h3>Init THE POD (workspace harness)</h3>
-          <pre>npx --yes github:simplefarmer69/ape-claw pod init \
+          <pre>npx ape-claw pod init \
   --dir ./pod-workspace --json</pre>
           <p class="note">Creates <code>AGENTS.md</code>, <code>SOUL.md</code>, <code>memory/active-tasks.md</code>, and more for crash recovery.</p>
         </div>
         <div class="setup-step" data-setup-mode="pod">
-          <div class="setup-step-num">8</div>
+          <div class="setup-step-num">7</div>
           <h3>Seed v2 onchain skill library</h3>
           <pre>npm run contracts:compile
 npm run contracts:test
@@ -912,7 +900,7 @@ npm run contracts:seed</pre>
           <p class="note">Mints Skill NFTs + publishes immutable versions (Library of Alexandria v0).</p>
         </div>
         <div class="setup-step" data-setup-mode="pod">
-          <div class="setup-step-num">9</div>
+          <div class="setup-step-num">8</div>
           <h3>Run Otherside loop (dry mode)</h3>
           <pre>mkdir -p "$HOME/pod/screens"
 python3 pod/run_agent.py \
@@ -1796,7 +1784,7 @@ function renderAgents() {
       <div style="font-size:2.5rem;margin-bottom:8px">🦞</div>
       <div>No Clawllectors registered yet</div>
       <div style="font-size:.68rem;margin-top:6px">Set up your <a href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a> agent, then register a Clawllector:</div>
-      <div style="margin-top:8px"><code>npx --yes github:simplefarmer69/ape-claw clawbot register --agent-id my-clawllector --json</code></div>
+      <div style="margin-top:8px"><code>npx ape-claw clawbot register --agent-id my-clawllector --json</code></div>
     </div>`;
     return;
   }
@@ -1838,7 +1826,7 @@ function renderNftGrid() {
   if (collectedNfts.length === 0) {
     el.innerHTML = `<div style="grid-column:1/-1;color:var(--dim);font-size:.78rem;text-align:center;padding:24px">
       <div style="font-size:2rem;margin-bottom:6px">🖼️</div>
-      No NFTs collected yet.<br>Purchases from <code>npx --yes github:simplefarmer69/ape-claw nft buy --execute</code> appear here in real time.
+      No NFTs collected yet.<br>Purchases from <code>npx ape-claw nft buy --execute</code> appear here in real time.
     </div>`;
     return;
   }
@@ -1864,7 +1852,7 @@ function renderBridge() {
   if (bridgeOps.length === 0) {
     el.innerHTML = `<div style="color:var(--dim);font-size:.75rem;padding:12px">
       <div style="font-size:1.5rem;margin-bottom:4px">🌉</div>
-      No bridge operations yet.<br>Bridge executions from <code>npx --yes github:simplefarmer69/ape-claw bridge execute</code> appear here.
+      No bridge operations yet.<br>Bridge executions from <code>npx ape-claw bridge execute</code> appear here.
     </div>`;
     return;
   }

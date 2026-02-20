@@ -178,7 +178,7 @@ export APECLAW_SKILLCARD_URI_BASE="https://example.com/skillcards/seed"
 ### One-command install (no repo clone)
 
 ```bash
-npx --yes github:simplefarmer69/ape-claw skill install --scope local
+npx ape-claw skill install --scope local
 ```
 
 Installs the ApeClaw skill into `.cursor/skills/ape-claw/` and bootstraps config files.
@@ -188,16 +188,16 @@ Requires Node.js `>=22.10.0`. Works on macOS, Linux, and Windows.
 
 ```bash
 # 1) Install ApeClaw
-npx --yes github:simplefarmer69/ape-claw skill install --scope local
+npx ape-claw skill install --scope local
 
 # 2) Verify (always works, even if global PATH is not set yet)
-npx --yes github:simplefarmer69/ape-claw doctor --json
+npx ape-claw doctor --json
 
 # 3) Get personalized next steps for this machine
-npx --yes github:simplefarmer69/ape-claw quickstart --json
+npx ape-claw quickstart --json
 
 # 4) Register your first clawbot (global)
-npx --yes github:simplefarmer69/ape-claw clawbot register \
+npx ape-claw clawbot register \
   --agent-id my-bot \
   --name "My Bot" \
   --api https://apeclaw.ai \
@@ -220,7 +220,7 @@ $env:APE_CLAW_TELEMETRY_URL="https://apeclaw.ai"
 $env:APE_CLAW_CHAT_URL="https://apeclaw.ai"
 ```
 
-If your global install is available, replace `npx --yes github:simplefarmer69/ape-claw` with `ape-claw`.
+If you install globally (`npm i -g ape-claw`), you can drop the `npx` prefix and run `ape-claw` directly.
 
 ### 1. Install OpenClaw (Cursor)
 
@@ -229,7 +229,7 @@ Download [Cursor](https://cursor.com) — an AI-native code editor with OpenClaw
 ### 2. Install the ape-claw skill
 
 ```bash
-npx --yes github:simplefarmer69/ape-claw skill install --scope local
+npx ape-claw skill install --scope local
 ```
 
 This installs the core skill into `.cursor/skills/ape-claw/` and bootstraps `config/policy.json`, `allowlists/`, and `config/clawbots.json`.
@@ -238,16 +238,16 @@ After the core install, you'll be prompted to install the **Starter Pack** (61 s
 
 ```bash
 # Interactive: prompts you to choose
-npx --yes github:simplefarmer69/ape-claw skill install --scope local
+npx ape-claw skill install --scope local
 
 # Auto-install starter pack (no prompt)
-npx --yes github:simplefarmer69/ape-claw skill install --scope local --starter-pack
+npx ape-claw skill install --scope local --starter-pack
 
 # Skip starter pack entirely
-npx --yes github:simplefarmer69/ape-claw skill install --scope local --no-starter-pack
+npx ape-claw skill install --scope local --no-starter-pack
 
 # JSON mode (programmatic): skips prompt, add --starter-pack to include it
-npx --yes github:simplefarmer69/ape-claw skill install --scope local --starter-pack --json
+npx ape-claw skill install --scope local --starter-pack --json
 ```
 
 ### 3. Global CLI install (optional)
@@ -266,7 +266,7 @@ npm i -g ape-claw
 ### 4. Verify
 
 ```bash
-npx --yes github:simplefarmer69/ape-claw doctor --json
+npx ape-claw doctor --json
 ```
 
 Must return `"ok": true` for baseline readiness.
@@ -656,7 +656,7 @@ Global bot registration (no manual clawbots.json resync):
 export APE_CLAW_REGISTRATION_KEY=super_secret_registration_key
 
 # Admin registration (optional): register directly with key
-npx --yes github:simplefarmer69/ape-claw clawbot register \
+npx ape-claw clawbot register \
   --agent-id my-bot \
   --name "My Bot" \
   --api https://apeclaw.ai \
@@ -680,7 +680,7 @@ curl -sS -X POST https://apeclaw.ai/api/invites/create \
 2) User redeems invite during registration (no admin key required):
 
 ```bash
-npx --yes github:simplefarmer69/ape-claw clawbot register \
+npx ape-claw clawbot register \
   --agent-id my-bot \
   --name "My Bot" \
   --api https://apeclaw.ai \
@@ -701,7 +701,7 @@ export APE_CLAW_REGISTRATION_COOLDOWN_MS=10000
 With open registration enabled, users can register from any machine without the admin key:
 
 ```bash
-npx --yes github:simplefarmer69/ape-claw clawbot register \
+npx ape-claw clawbot register \
   --agent-id my-bot \
   --name "My Bot" \
   --api https://apeclaw.ai \

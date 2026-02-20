@@ -9,7 +9,7 @@ The UI is optional; the CLI + onchain receipts are the backbone.
 Most docs use `npx` so you can run without a global install:
 
 ```bash
-npx --yes github:simplefarmer69/ape-claw doctor --json
+npx ape-claw doctor --json
 ```
 
 If you already have `ape-claw` installed globally, use it directly.

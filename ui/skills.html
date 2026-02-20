@@ -769,14 +769,14 @@
             <span class="badge live">LIVE</span>
           </div>
           <p>
-            Open a terminal in <a href="https://cursor.com" target="_blank" rel="noopener">Cursor</a> (AI code editor with OpenClaw built-in) and run:
+            Open any terminal and run:
           </p>
-          <div class="code"><span class="k">npx</span> --yes github:simplefarmer69/ape-claw skill install --scope local</div>
+          <div class="code"><span class="k">npx</span> ape-claw skill install</div>
           <div class="tools" aria-label="Install instructions">
-            <a class="pill" href="#" data-copy='npx --yes github:simplefarmer69/ape-claw skill install --scope local'>Copy command</a>
+            <a class="pill" href="#" data-copy='npx ape-claw skill install'>Copy command</a>
             <a class="pill" href="/docs?doc=CLI_GUIDE.md" data-keep-query="1">Install docs</a>
           </div>
-          <div class="note" style="margin-top:8px">Add <code>--starter-pack</code> to include 61 curated skills. Works on macOS, Linux, and Windows.</div>
+          <div class="note" style="margin-top:8px">Add <code>--starter-pack</code> for 61 curated skills. Skills sync to <a href="https://cursor.com" target="_blank" rel="noopener">Cursor</a> &amp; OpenClaw automatically. Works on macOS, Linux, and Windows (PowerShell).</div>
         </div>
         <div class="card ac-observe">
           <div class="cardhead">
@@ -800,7 +800,7 @@
           </p>
           <div class="code"><span class="k">npx</span> --yes github:simplefarmer69/ape-claw skill install lincoln-ai</div>
           <div class="tools" aria-label="Install instructions">
-            <a class="pill" href="#" data-copy='npx --yes github:simplefarmer69/ape-claw skill install lincoln-ai'>Copy command</a>
+            <a class="pill" href="#" data-copy='npx ape-claw skill install lincoln-ai'>Copy command</a>
             <a class="pill" href="/docs?doc=SKILLCARDS_AND_IMPORTER.md" data-keep-query="1">Skill docs</a>
           </div>
         </div>
@@ -1616,7 +1616,7 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
           if (mintTx) html += '<div class="note">mint tx: <a href="https://apescan.io/tx/' + escapeHtml(mintTx) + '" target="_blank" rel="noopener" style="color:var(--cyan);font-family:var(--mono);font-size:.75rem;word-break:break-all">' + escapeHtml(mintTx) + ' &#8599;</a></div>';
           if (pubTx) html += '<div class="note">publish tx: <a href="https://apescan.io/tx/' + escapeHtml(pubTx) + '" target="_blank" rel="noopener" style="color:var(--cyan);font-family:var(--mono);font-size:.75rem;word-break:break-all">' + escapeHtml(pubTx) + ' &#8599;</a></div>';
           if (slug) {
-            var installCmd = 'curl -fsSL "' + apiBase + '/api/skills/' + slug + '" -o ./' + slug + '.json';
+            var installCmd = 'npx ape-claw skill install ' + slug;
             html += '<div class="note" style="margin-top:14px;padding:10px;background:rgba(207,255,4,.06);border:1px solid rgba(207,255,4,.2);border-radius:3px">';
             html += '<strong style="color:#cfff04">Install this skill</strong><br>';
             html += '<code style="font-size:.75rem;word-break:break-all">' + escapeHtml(installCmd) + '</code>';
@@ -1652,24 +1652,16 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
         function showInstallModal(it) {
           var rawSlug = String(it.slug || '');
           var slug = escapeHtml(rawSlug);
-          var fileName = it.fileName || rawSlug + '.json';
-          var ghRaw = 'https://raw.githubusercontent.com/simplefarmer69/ape-claw/main/data/skills/' + encodeURIComponent(rawSlug) + '.json';
-          var installCmd = 'curl -fsSL "' + apiBase + '/api/skills/' + rawSlug + '" -o ./' + fileName;
-          var installCmdSimple = 'curl -fsSL "' + ghRaw + '" -o ./' + rawSlug + '.json';
+          var installCmd = 'npx ape-claw skill install ' + rawSlug;
           var html = '';
           html += '<div style="margin-bottom:16px"><strong style="color:#cfff04;font-size:14px">' + escapeHtml(it.name || it.slug) + '</strong></div>';
-          html += '<div class="note" style="margin-bottom:14px;color:var(--muted);font-size:12px">Run one of the commands below in your terminal to install this skill.</div>';
-          html += '<div style="margin-bottom:6px;color:var(--lime);font-size:11px;font-weight:700;letter-spacing:.5px">INSTALL VIA API</div>';
+          html += '<div class="note" style="margin-bottom:14px;color:var(--muted);font-size:12px">Run the command below in your terminal to install this skill to Cursor &amp; OpenClaw.</div>';
+          html += '<div style="margin-bottom:6px;color:var(--lime);font-size:11px;font-weight:700;letter-spacing:.5px">INSTALL</div>';
           html += '<div style="position:relative;background:rgba(0,0,0,.5);border:1px solid rgba(207,255,4,.15);border-radius:6px;padding:14px 16px;margin-bottom:14px">';
           html += '<code style="font-size:11px;color:var(--cyan);word-break:break-all;line-height:1.6;display:block">' + escapeHtml(installCmd) + '</code>';
           html += '</div>';
-          html += '<div style="margin-bottom:6px;color:var(--lime);font-size:11px;font-weight:700;letter-spacing:.5px">ALTERNATIVE (GitHub raw)</div>';
-          html += '<div style="position:relative;background:rgba(0,0,0,.5);border:1px solid rgba(207,255,4,.15);border-radius:6px;padding:14px 16px;margin-bottom:14px">';
-          html += '<code style="font-size:11px;color:var(--cyan);word-break:break-all;line-height:1.6;display:block">' + escapeHtml(installCmdSimple) + '</code>';
-          html += '</div>';
           html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
           html += '<a class="pill install-btn" href="#" data-copy-raw="install" style="font-weight:800;font-size:11px;padding:8px 14px">COPY INSTALL CMD</a>';
-          html += '<a class="pill" href="#" data-copy-raw="quick" style="font-size:11px;padding:8px 14px">Copy quick download</a>';
           if (it.sourceUrl) {
             html += '<a class="pill" href="' + escapeHtml(it.sourceUrl) + '" target="_blank" rel="noopener" style="font-size:11px;padding:8px 14px">View source</a>';
           }
@@ -1685,7 +1677,7 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
                 btn.addEventListener('click', function (ev) {
                   ev.preventDefault();
                   var which = btn.getAttribute('data-copy-raw');
-                  copyText(which === 'quick' ? installCmdSimple : installCmd);
+                  copyText(installCmd);
                   showToast('Copied to clipboard');
                 });
               })(btns[bi]);
@@ -2552,7 +2544,7 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
           var created = it.createdAt ? (' · ' + String(it.createdAt)) : '';
           var onchainMeta = (it.onchain && it.onchain.skillId) ? (' · onchain: skillId=' + String(it.onchain.skillId)) : '';
           var meta = ['slug: ' + (it.slug || '?'), 'v' + (it.version || '?')].join(' · ') + onchainMeta + created;
-          var dlCmd = it.slug ? ('curl -fsSL \"' + apiBase + '/api/skills/' + encodeURIComponent(it.slug) + '\" -o \"./' + (it.fileName || it.slug + '.json') + '\"') : '';
+          var dlCmd = it.slug ? ('npx ape-claw skill install ' + encodeURIComponent(it.slug)) : '';
           var rpc = v2RpcUrl ? String(v2RpcUrl.value || '').trim() : '';
           var nft = v2SkillNft ? String(v2SkillNft.value || '').trim() : '';
           var reg = v2Registry ? String(v2Registry.value || '').trim() : '';

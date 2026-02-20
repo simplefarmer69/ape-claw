@@ -51,10 +51,10 @@ Press Enter or type `y` to install all 61 skills. Type `n` to skip — you can a
 
 ```bash
 # Install later (auto-approve, no prompt)
-npx --yes github:simplefarmer69/ape-claw skill install --scope local --starter-pack
+npx ape-claw skill install --scope local --starter-pack
 
 # Never install
-npx --yes github:simplefarmer69/ape-claw skill install --scope local --no-starter-pack
+npx ape-claw skill install --scope local --no-starter-pack
 ```
 
 The starter pack excludes niche, platform-specific, or region-locked skills (single-chain DeFi, specific hardware requirements, etc.) to keep the install lean and relevant. Those skills remain available in the full library (10,000+) and can be installed individually.

@@ -15,7 +15,7 @@ Press Enter. 61 skills load in about four seconds.
 That's it. You have a working agent. No browsing a marketplace for an hour.
 
 ```
-npx --yes github:simplefarmer69/ape-claw skill install --scope local
+npx ape-claw skill install --scope local
 ```
 
 Here's what you actually get (thread)
@@ -152,8 +152,8 @@ Still in the library at apeclaw.ai/skills. Just not in the box you get on day on
 
 The prompt defaults to yes, but you have options:
 
-npx --yes github:simplefarmer69/ape-claw skill install --scope local --starter-pack installs without asking
-npx --yes github:simplefarmer69/ape-claw skill install --scope local --no-starter-pack skips it
+npx ape-claw skill install --scope local --starter-pack installs without asking
+npx ape-claw skill install --scope local --no-starter-pack skips it
 No flag means it asks you
 
 You can install it later. You can also skip it entirely and pick from 10,000+ skills one at a time.
