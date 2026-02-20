@@ -827,141 +827,269 @@ function buildChassis() {
   buildShoulder(la, -1);
   buildShoulder(ra, 1);
 
-  // ── ARMS (actuators, cable bundles, articulated fingers, servo drums) ──
+  // ══════════════════════════════════════════════════════════
+  // ARMS — layered armor, exposed actuators, articulated hands
+  // ══════════════════════════════════════════════════════════
   function buildArm(tgt, side) {
     const sx = side * 2.2;
-    // Upper arm — undersuit + blue armor shell
-    box(tgt, 0.38, 1.35, 0.38, MAT.undersuit, sx, 4.2, 0);
-    box(tgt, 0.62, 1.46, 0.56, MAT.armor, sx, 4.2, 0);
-    box(tgt, 0.5, 0.52, 0.42, MAT.darkChrome, sx, 4.7, 0.2);
-    box(tgt, 0.46, 0.08, 0.4, MAT.panelLine, sx, 4.54, 0.28);
+
+    // ── UPPER ARM ──
+    // Inner skeleton
+    box(tgt, 0.3, 1.35, 0.3, MAT.undersuit, sx, 4.2, 0);
+    cyl(tgt, 0.1, 0.1, 1.3, MAT.frameMat, sx, 4.2, 0, 8);
+    // Outer armor shell (front + back plates)
+    box(tgt, 0.64, 1.48, 0.58, MAT.armor, sx, 4.2, 0);
+    // Chrome accent band at top
+    box(tgt, 0.52, 0.54, 0.44, MAT.darkChrome, sx, 4.72, 0.2);
+    box(tgt, 0.48, 0.08, 0.42, MAT.panelLine, sx, 4.56, 0.28);
+    // Inner armor plate (visible in gap)
+    box(tgt, 0.3, 0.8, 0.2, MAT.servo, sx - side * 0.15, 4.2, -0.2);
     // Bicep piston + hydraulic ram
-    pistonGeo(tgt, 0.035, 0.68, MAT.pistonMat, sx + side * 0.24, 4.2, -0.22);
-    hydraulicRam(tgt, 0.028, 0.6, sx - side * 0.2, 4.3, -0.18);
-    // Cable harness down arm
-    cableBundle(tgt, 4, 0.01, 1.2, sx - side * 0.2, 4.2, 0.22);
-    // Bicep servo mount
-    servoDrum(tgt, 0.06, 0.1, sx + side * 0.18, 4.6, -0.06);
-    // Elbow — ball joint + servo + rubber seal
-    sphere(tgt, 0.34, MAT.joint, sx, 3.4, 0);
-    rubberSeal(tgt, 0.32, 0.02, sx, 3.4, 0);
-    servoDrum(tgt, 0.1, 0.14, sx, 3.4, 0.18);
-    const elbowRing = torus(tgt, 0.38, 0.04, MAT.vent, sx, 3.4, 0);
+    pistonGeo(tgt, 0.036, 0.72, MAT.pistonMat, sx + side * 0.26, 4.2, -0.24);
+    hydraulicRam(tgt, 0.03, 0.65, sx - side * 0.22, 4.32, -0.2);
+    // Cable harness (inner channel)
+    cableBundle(tgt, 5, 0.009, 1.3, sx - side * 0.18, 4.2, 0.24);
+    // Bicep servo
+    servoDrum(tgt, 0.07, 0.12, sx + side * 0.2, 4.62, -0.08);
+    // Panel lines + rivets
+    box(tgt, 0.04, 1.2, 0.04, MAT.panelLine, sx + side * 0.3, 4.2, 0.26);
+    rivet(tgt, sx + side * 0.28, 4.8, 0.28); rivet(tgt, sx + side * 0.28, 3.65, 0.28);
+    rivet(tgt, sx - side * 0.28, 4.5, 0.28); rivet(tgt, sx - side * 0.28, 3.9, 0.28);
+
+    // ── ELBOW (multi-component joint) ──
+    // Ball joint core
+    sphere(tgt, 0.36, MAT.joint, sx, 3.4, 0);
+    rubberSeal(tgt, 0.34, 0.022, sx, 3.4, 0);
+    // Two servos (flexion + rotation)
+    servoDrum(tgt, 0.11, 0.16, sx, 3.4, 0.2);
+    servoDrum(tgt, 0.08, 0.1, sx + side * 0.18, 3.4, -0.1);
+    const elbowRing = torus(tgt, 0.4, 0.045, MAT.vent, sx, 3.4, 0);
     glowRings.push(elbowRing);
-    // Elbow actuators (dual pistons)
-    pistonGeo(tgt, 0.028, 0.42, MAT.pistonMat, sx + side * 0.22, 3.4, -0.2, 0.3, 0, 0);
-    pistonGeo(tgt, 0.025, 0.35, MAT.pistonMat, sx - side * 0.18, 3.4, -0.18, -0.25, 0, 0);
-    // Forearm — MASSIVE chrome gauntlet
-    box(tgt, 0.36, 1.32, 0.36, MAT.undersuit, sx, 2.4, 0);
-    box(tgt, 0.66, 1.42, 0.62, MAT.chrome, sx, 2.4, 0);
-    box(tgt, 0.72, 0.36, 0.66, MAT.armorRed, sx, 2.86, 0);
-    box(tgt, 0.16, 1.02, 0.16, MAT.darkChrome, sx + side * 0.33, 2.4, 0);
-    box(tgt, 0.08, 0.92, 0.08, MAT.panelLine, sx + side * 0.31, 2.4, 0.3);
-    // Forearm internal: cable conduit visible
-    cableBundle(tgt, 3, 0.008, 0.9, sx - side * 0.25, 2.4, -0.22);
-    // Forearm cooling vents
-    ventSlits(tgt, 0.25, 3, 0.08, MAT.vent, sx + side * 0.34, 2.2, 0.2);
-    rivet(tgt, sx - side * 0.24, 2.86, 0.32); rivet(tgt, sx + side * 0.24, 2.04, 0.3);
-    rivet(tgt, sx, 2.65, 0.33); rivet(tgt, sx, 2.15, 0.33);
-    // Wrist — rotational servo + rubber seal
-    torus(tgt, 0.3, 0.045, MAT.vent, sx, 1.8, 0);
-    rubberSeal(tgt, 0.28, 0.018, sx, 1.76, 0);
-    servoDrum(tgt, 0.08, 0.12, sx, 1.8, 0.12);
-    box(tgt, 0.44, 0.12, 0.44, MAT.darkChrome, sx, 1.78, 0);
-    // Hand — articulated fingers with individual joints
-    box(tgt, 0.36, 0.3, 0.36, MAT.joint, sx, 1.55, 0);
-    box(tgt, 0.3, 0.06, 0.3, MAT.servo, sx, 1.62, 0);
-    // 4 fingers (knuckle + 2 segments each)
+    // Triple actuator assembly
+    pistonGeo(tgt, 0.03, 0.44, MAT.pistonMat, sx + side * 0.24, 3.4, -0.22, 0.3, 0, 0);
+    pistonGeo(tgt, 0.028, 0.38, MAT.pistonMat, sx - side * 0.2, 3.4, -0.2, -0.25, 0, 0);
+    hydraulicRam(tgt, 0.022, 0.35, sx, 3.4, -0.28, 0, 0, side * 0.2);
+    // Elbow guard plate
+    box(tgt, 0.45, 0.22, 0.15, MAT.darkChrome, sx - side * 0.05, 3.4, -0.22);
+
+    // ── FOREARM (chrome gauntlet with layered plating) ──
+    // Inner skeleton
+    box(tgt, 0.32, 1.34, 0.32, MAT.undersuit, sx, 2.4, 0);
+    cyl(tgt, 0.08, 0.08, 1.2, MAT.frameMat, sx, 2.4, 0, 8);
+    // Main chrome shell
+    box(tgt, 0.68, 1.44, 0.64, MAT.chrome, sx, 2.4, 0);
+    // Red accent band (upper forearm)
+    box(tgt, 0.74, 0.38, 0.68, MAT.armorRed, sx, 2.88, 0);
+    box(tgt, 0.56, 0.12, 0.5, MAT.darkChrome, sx, 3.02, 0.1);
+    // Outer ridge (running down arm)
+    box(tgt, 0.18, 1.06, 0.18, MAT.darkChrome, sx + side * 0.35, 2.4, 0);
+    box(tgt, 0.08, 0.96, 0.08, MAT.panelLine, sx + side * 0.33, 2.4, 0.32);
+    // Inner conduit channel (exposed cables)
+    box(tgt, 0.12, 0.9, 0.08, MAT.servo, sx - side * 0.28, 2.4, -0.24);
+    cableBundle(tgt, 4, 0.008, 1.0, sx - side * 0.26, 2.4, -0.24);
+    // Cooling vents (lateral)
+    ventSlits(tgt, 0.28, 4, 0.065, MAT.vent, sx + side * 0.36, 2.15, 0.18);
+    // Forearm hydraulic ram
+    hydraulicRam(tgt, 0.022, 0.8, sx - side * 0.1, 2.4, -0.28);
+    // Panel rivets
+    rivet(tgt, sx - side * 0.26, 2.88, 0.34); rivet(tgt, sx + side * 0.26, 2.06, 0.32);
+    rivet(tgt, sx, 2.68, 0.35); rivet(tgt, sx, 2.18, 0.35);
+    rivet(tgt, sx + side * 0.34, 2.68, 0); rivet(tgt, sx + side * 0.34, 2.12, 0);
+
+    // ── WRIST (rotation assembly) ──
+    torus(tgt, 0.32, 0.05, MAT.vent, sx, 1.78, 0);
+    rubberSeal(tgt, 0.3, 0.02, sx, 1.74, 0);
+    rubberSeal(tgt, 0.3, 0.02, sx, 1.82, 0);
+    servoDrum(tgt, 0.09, 0.14, sx, 1.78, 0.14);
+    box(tgt, 0.46, 0.14, 0.46, MAT.darkChrome, sx, 1.78, 0);
+    boltCluster(tgt, 6, 0.18, sx, 1.78, 0);
+
+    // ── HAND (articulated mechanical fingers) ──
+    // Palm structure
+    box(tgt, 0.38, 0.22, 0.38, MAT.joint, sx, 1.58, 0);
+    box(tgt, 0.32, 0.04, 0.32, MAT.servo, sx, 1.66, 0);
+    box(tgt, 0.28, 0.04, 0.28, MAT.frameMat, sx, 1.5, 0);
+    // Finger tendon servo (top of palm)
+    servoDrum(tgt, 0.04, 0.22, sx, 1.64, 0.06);
+
+    // 4 fingers: each has knuckle ball + 3 phalanx segments + tip cap
     for (let f = 0; f < 4; f++) {
-      const fz = -0.1 + f * 0.07;
-      // Knuckle ball
-      sphere(tgt, 0.025, MAT.joint, sx + 0.0, 1.38, fz);
-      // Proximal segment
-      box(tgt, 0.045, 0.14, 0.05, MAT.frameMat, sx + 0.0, 1.28, fz);
-      // Distal segment
-      box(tgt, 0.04, 0.1, 0.045, MAT.chrome, sx + 0.0, 1.18, fz);
+      const fz = -0.12 + f * 0.08;
+      const fCurl = 0.08 + f * 0.02;
+      // Knuckle (ball joint)
+      sphere(tgt, 0.028, MAT.joint, sx, 1.44, fz);
+      // Proximal phalanx (longest)
+      box(tgt, 0.048, 0.13, 0.05, MAT.chrome, sx, 1.34, fz);
+      // Mid joint
+      sphere(tgt, 0.018, MAT.joint, sx, 1.275, fz);
+      // Middle phalanx
+      box(tgt, 0.042, 0.1, 0.046, MAT.frameMat, sx, 1.22, fz);
+      // Distal joint
+      sphere(tgt, 0.015, MAT.joint, sx, 1.168, fz);
+      // Distal phalanx (fingertip)
+      box(tgt, 0.038, 0.07, 0.042, MAT.chrome, sx, 1.13, fz);
+      // Fingertip pad
+      sphere(tgt, 0.016, MAT.rubber, sx, 1.1, fz);
+      // Tendon cable
+      cableRun(tgt, 0.004, 0.32, sx - side * 0.02, 1.3, fz);
     }
-    // Thumb (opposite side)
-    sphere(tgt, 0.028, MAT.joint, sx + side * 0.18, 1.45, -0.15);
-    box(tgt, 0.05, 0.12, 0.06, MAT.frameMat, sx + side * 0.2, 1.36, -0.15);
-    box(tgt, 0.045, 0.09, 0.05, MAT.chrome, sx + side * 0.22, 1.28, -0.15);
+    // Thumb — 2-segment, offset outward
+    sphere(tgt, 0.03, MAT.joint, sx + side * 0.19, 1.48, -0.16);
+    box(tgt, 0.055, 0.11, 0.06, MAT.chrome, sx + side * 0.21, 1.4, -0.16);
+    sphere(tgt, 0.02, MAT.joint, sx + side * 0.22, 1.34, -0.16);
+    box(tgt, 0.05, 0.09, 0.055, MAT.frameMat, sx + side * 0.23, 1.28, -0.16);
+    sphere(tgt, 0.018, MAT.rubber, sx + side * 0.24, 1.24, -0.16);
+    cableRun(tgt, 0.004, 0.2, sx + side * 0.18, 1.38, -0.16);
   }
   buildArm(la, -1);
   buildArm(ra, 1);
 
-  // ── LEGS (hydraulic thigh rams, shock absorber knee, articulated feet) ──
+  // ══════════════════════════════════════════════════════════
+  // LEGS — layered armor, shock absorber knee, articulated feet
+  // ══════════════════════════════════════════════════════════
   function buildLeg(side) {
     const sx = side * 0.6;
-    // Hip joint — ball + rubber seal + servo
-    sphere(g, 0.36, MAT.joint, sx, 1.95, 0);
-    rubberSeal(g, 0.34, 0.02, sx, 1.95, 0);
-    servoDrum(g, 0.1, 0.14, sx + side * 0.08, 1.95, -0.12);
-    const hipRing = torus(g, 0.42, 0.045, MAT.vent, sx, 1.95, 0);
+
+    // ── HIP JOINT (multi-axis) ──
+    sphere(g, 0.38, MAT.joint, sx, 1.95, 0);
+    rubberSeal(g, 0.36, 0.022, sx, 1.95, 0);
+    servoDrum(g, 0.12, 0.16, sx + side * 0.1, 1.95, -0.14);
+    servoDrum(g, 0.08, 0.1, sx - side * 0.06, 1.95, 0.14);
+    const hipRing = torus(g, 0.44, 0.05, MAT.vent, sx, 1.95, 0);
     glowRings.push(hipRing);
-    // Hip skirt armor
-    box(g, 0.62, 0.42, 0.62, MAT.armor, sx + side * 0.12, 1.82, 0.12, 0, 0, side * -0.1);
-    box(g, 0.47, 0.13, 0.47, MAT.darkChrome, sx + side * 0.12, 1.92, 0.15, 0, 0, side * -0.1);
-    boltCluster(g, 4, 0.14, sx + side * 0.12, 1.82, 0.38);
-    // Thigh — blue plates with hydraulic ram running down front
-    box(g, 0.44, 1.55, 0.44, MAT.undersuit, sx, 0.8, 0);
-    box(g, 0.72, 1.66, 0.72, MAT.armor, sx, 0.8, 0);
-    box(g, 0.56, 0.15, 0.52, MAT.chrome, sx, 1.36, 0.36);
-    box(g, 0.52, 0.15, 0.47, MAT.darkChrome, sx, 0.5, 0.36);
-    box(g, 0.07, 1.12, 0.07, MAT.panelLine, sx + side * 0.34, 0.8, 0.36);
-    // Thigh hydraulic ram (front, visible through panel gap)
-    hydraulicRam(g, 0.03, 1.2, sx, 0.8, 0.38);
-    // Cable conduit (rear)
-    cableBundle(g, 3, 0.01, 1.3, sx - side * 0.28, 0.8, -0.25);
-    rivet(g, sx + side * 0.3, 1.52, 0.35); rivet(g, sx + side * 0.3, 0.08, 0.35);
-    rivet(g, sx - side * 0.3, 1.2, 0.35); rivet(g, sx - side * 0.3, 0.4, 0.35);
-    // Knee joint — shock absorber assembly
-    sphere(g, 0.32, MAT.joint, sx, -0.1, 0.1);
-    rubberSeal(g, 0.3, 0.02, sx, -0.1, 0.1);
-    const kneeRing = torus(g, 0.36, 0.045, MAT.vent, sx, -0.1, 0.1);
+
+    // ── HIP SKIRT ARMOR ──
+    box(g, 0.64, 0.44, 0.64, MAT.armor, sx + side * 0.12, 1.82, 0.12, 0, 0, side * -0.1);
+    box(g, 0.48, 0.14, 0.48, MAT.darkChrome, sx + side * 0.12, 1.94, 0.15, 0, 0, side * -0.1);
+    box(g, 0.38, 0.08, 0.38, MAT.servo, sx + side * 0.12, 1.72, 0.12, 0, 0, side * -0.1);
+    boltCluster(g, 5, 0.16, sx + side * 0.12, 1.82, 0.4);
+    // Hip panel line
+    box(g, 0.03, 0.4, 0.04, MAT.panelLine, sx + side * 0.35, 1.82, 0.35);
+
+    // ── THIGH (blue plates, layered armor, exposed hydraulics) ──
+    // Inner skeleton + undersuit
+    box(g, 0.4, 1.55, 0.4, MAT.undersuit, sx, 0.8, 0);
+    cyl(g, 0.1, 0.1, 1.45, MAT.frameMat, sx, 0.8, 0, 8);
+    // Outer armor (front + back + sides)
+    box(g, 0.74, 1.68, 0.74, MAT.armor, sx, 0.8, 0);
+    // Chrome accent plates (top & bottom of thigh)
+    box(g, 0.58, 0.16, 0.54, MAT.chrome, sx, 1.38, 0.38);
+    box(g, 0.54, 0.16, 0.5, MAT.darkChrome, sx, 0.48, 0.38);
+    // Lateral panel lines
+    box(g, 0.07, 1.14, 0.07, MAT.panelLine, sx + side * 0.36, 0.8, 0.38);
+    box(g, 0.07, 1.14, 0.07, MAT.panelLine, sx - side * 0.36, 0.8, 0.38);
+    // Thigh hydraulic ram (front, through armor gap)
+    hydraulicRam(g, 0.032, 1.25, sx, 0.8, 0.4);
+    // Secondary inner piston
+    pistonGeo(g, 0.025, 0.8, MAT.pistonMat, sx + side * 0.15, 0.8, -0.28);
+    // Rear cable conduit
+    cableBundle(g, 4, 0.01, 1.4, sx - side * 0.3, 0.8, -0.28);
+    // Inner mech visible in side gap
+    box(g, 0.06, 0.6, 0.2, MAT.servo, sx + side * 0.32, 0.9, -0.12);
+    // Rivets (8 total per thigh)
+    rivet(g, sx + side * 0.32, 1.54, 0.37); rivet(g, sx + side * 0.32, 0.06, 0.37);
+    rivet(g, sx - side * 0.32, 1.22, 0.37); rivet(g, sx - side * 0.32, 0.38, 0.37);
+    rivet(g, sx + side * 0.32, 1.0, -0.37); rivet(g, sx + side * 0.32, 0.6, -0.37);
+    rivet(g, sx, 1.48, 0.37); rivet(g, sx, 0.12, 0.37);
+
+    // ── KNEE (shock absorber + multi-actuator + guard) ──
+    // Ball joint
+    sphere(g, 0.34, MAT.joint, sx, -0.1, 0.1);
+    rubberSeal(g, 0.32, 0.022, sx, -0.1, 0.1);
+    const kneeRing = torus(g, 0.38, 0.05, MAT.vent, sx, -0.1, 0.1);
     glowRings.push(kneeRing);
-    // Dual knee actuators
-    pistonGeo(g, 0.032, 0.4, MAT.pistonMat, sx + side * 0.26, -0.1, -0.2, 0.25, 0, 0);
-    pistonGeo(g, 0.032, 0.34, MAT.pistonMat, sx - side * 0.26, -0.1, 0.24, -0.2, 0, 0);
-    // Shock absorber (chrome cylinder behind knee)
-    cyl(g, 0.05, 0.05, 0.5, MAT.pistonMat, sx, -0.1, -0.25, 10);
-    cyl(g, 0.065, 0.065, 0.2, MAT.hydraulic, sx, -0.2, -0.25, 10);
-    rubberSeal(g, 0.06, 0.012, sx, 0.05, -0.25);
-    // Knee guard — chrome + red accent, bolted
-    box(g, 0.74, 0.56, 0.24, MAT.chrome, sx, -0.1, 0.4);
-    box(g, 0.6, 0.38, 0.12, MAT.armorRed, sx, -0.08, 0.5);
-    box(g, 0.5, 0.09, 0.07, MAT.darkChrome, sx, -0.28, 0.46);
-    boltCluster(g, 4, 0.1, sx, -0.1, 0.52);
-    // Shin — blue armor with visible cable run
-    box(g, 0.42, 1.46, 0.42, MAT.undersuit, sx, -1.2, 0.08);
-    box(g, 0.62, 1.56, 0.62, MAT.armor, sx, -1.2, 0.08);
-    box(g, 0.67, 0.66, 0.18, MAT.chrome, sx, -0.6, 0.4);
-    box(g, 0.57, 0.4, 0.12, MAT.darkChrome, sx, -0.85, 0.42);
-    box(g, 0.07, 1.02, 0.07, MAT.panelLine, sx, -1.2, 0.42);
-    // Shin coolant lines
-    cableBundle(g, 2, 0.008, 1.0, sx + side * 0.26, -1.2, -0.22);
-    ventSlits(g, 0.24, 4, 0.075, MAT.vent, sx - side * 0.32, -1.4, 0);
-    // Ankle — servo + rubber seal
-    cyl(g, 0.2, 0.24, 0.34, MAT.joint, sx, -2.1, 0.08);
-    rubberSeal(g, 0.22, 0.015, sx, -2.0, 0.08);
-    servoDrum(g, 0.065, 0.1, sx + side * 0.1, -2.1, 0.2);
-    pistonGeo(g, 0.025, 0.3, MAT.pistonMat, sx + side * 0.15, -2.0, 0.26);
-    pistonGeo(g, 0.025, 0.3, MAT.pistonMat, sx - side * 0.15, -2.0, -0.12);
-    // Foot — 2-part articulated (toe plate + heel plate)
-    // Toe plate
-    box(g, 0.72, 0.22, 0.5, MAT.chrome, sx, -2.36, 0.5);
-    box(g, 0.58, 0.08, 0.4, MAT.darkChrome, sx, -2.24, 0.52);
-    // Midfoot joint (visible hinge)
-    cyl(g, 0.04, 0.04, 0.55, MAT.joint, sx, -2.36, 0.22, 8);
-    // Heel plate
-    box(g, 0.62, 0.2, 0.4, MAT.armor, sx, -2.36, -0.05);
-    box(g, 0.52, 0.06, 0.3, MAT.chrome, sx, -2.24, -0.05);
+    // Triple actuator assembly
+    pistonGeo(g, 0.034, 0.44, MAT.pistonMat, sx + side * 0.28, -0.1, -0.22, 0.25, 0, 0);
+    pistonGeo(g, 0.034, 0.38, MAT.pistonMat, sx - side * 0.28, -0.1, 0.26, -0.2, 0, 0);
+    hydraulicRam(g, 0.025, 0.35, sx, -0.1, -0.3, 0.15, 0, 0);
+    // Shock absorber (dual-tube behind knee)
+    cyl(g, 0.055, 0.055, 0.55, MAT.pistonMat, sx + side * 0.08, -0.1, -0.28, 12);
+    cyl(g, 0.04, 0.04, 0.55, MAT.chrome, sx - side * 0.08, -0.1, -0.28, 12);
+    cyl(g, 0.07, 0.07, 0.22, MAT.hydraulic, sx + side * 0.08, -0.22, -0.28, 12);
+    cyl(g, 0.055, 0.055, 0.18, MAT.hydraulic, sx - side * 0.08, -0.22, -0.28, 12);
+    rubberSeal(g, 0.065, 0.014, sx + side * 0.08, 0.06, -0.28);
+    rubberSeal(g, 0.05, 0.012, sx - side * 0.08, 0.06, -0.28);
+    // Caliper brake disc (front of knee)
+    cyl(g, 0.18, 0.18, 0.03, MAT.darkChrome, sx, -0.1, 0.26, 24);
+    torus(g, 0.14, 0.012, MAT.chrome, sx, -0.1, 0.26);
+    // Knee guard (layered: chrome + red + dark)
+    box(g, 0.76, 0.58, 0.26, MAT.chrome, sx, -0.1, 0.42);
+    box(g, 0.62, 0.4, 0.14, MAT.armorRed, sx, -0.08, 0.52);
+    box(g, 0.52, 0.1, 0.08, MAT.darkChrome, sx, -0.3, 0.48);
+    box(g, 0.52, 0.1, 0.08, MAT.darkChrome, sx, 0.1, 0.48);
+    boltCluster(g, 6, 0.12, sx, -0.1, 0.54);
+    // Knee panel line
+    box(g, 0.04, 0.5, 0.04, MAT.panelLine, sx + side * 0.36, -0.1, 0.38);
+
+    // ── SHIN (blue armor, exposed cable runs, cooling vents) ──
+    // Inner skeleton
+    box(g, 0.38, 1.48, 0.38, MAT.undersuit, sx, -1.2, 0.08);
+    cyl(g, 0.09, 0.09, 1.4, MAT.frameMat, sx, -1.2, 0.08, 8);
+    // Outer armor
+    box(g, 0.64, 1.58, 0.64, MAT.armor, sx, -1.2, 0.08);
+    // Chrome shin guard (front plate)
+    box(g, 0.69, 0.68, 0.2, MAT.chrome, sx, -0.58, 0.42);
+    box(g, 0.59, 0.42, 0.14, MAT.darkChrome, sx, -0.84, 0.44);
+    // Panel line down shin
+    box(g, 0.07, 1.04, 0.07, MAT.panelLine, sx, -1.2, 0.44);
+    box(g, 0.07, 1.04, 0.07, MAT.panelLine, sx + side * 0.3, -1.2, 0.28);
+    // Shin coolant lines (rear)
+    cableBundle(g, 3, 0.009, 1.1, sx + side * 0.28, -1.2, -0.24);
+    cableBundle(g, 2, 0.007, 0.8, sx - side * 0.2, -1.2, -0.22);
+    // Cooling vents (lateral)
+    ventSlits(g, 0.26, 5, 0.065, MAT.vent, sx - side * 0.34, -1.35, 0);
+    // Inner mech visible
+    box(g, 0.04, 0.5, 0.12, MAT.servo, sx + side * 0.28, -1.0, -0.08);
+    // Shin rivets
+    rivet(g, sx + side * 0.28, -0.55, 0.38); rivet(g, sx + side * 0.28, -1.85, 0.38);
+    rivet(g, sx - side * 0.28, -0.75, 0.38); rivet(g, sx - side * 0.28, -1.65, 0.38);
+    rivet(g, sx, -0.55, -0.32); rivet(g, sx, -1.85, -0.32);
+
+    // ── ANKLE (servo + dual axis) ──
+    cyl(g, 0.22, 0.26, 0.36, MAT.joint, sx, -2.1, 0.08);
+    rubberSeal(g, 0.24, 0.016, sx, -1.96, 0.08);
+    rubberSeal(g, 0.24, 0.016, sx, -2.24, 0.08);
+    servoDrum(g, 0.075, 0.12, sx + side * 0.12, -2.1, 0.22);
+    servoDrum(g, 0.06, 0.08, sx - side * 0.1, -2.1, -0.06);
+    // Ankle actuators
+    pistonGeo(g, 0.028, 0.32, MAT.pistonMat, sx + side * 0.16, -2.0, 0.28);
+    pistonGeo(g, 0.028, 0.32, MAT.pistonMat, sx - side * 0.16, -2.0, -0.14);
+    hydraulicRam(g, 0.02, 0.25, sx, -2.04, -0.16);
+    // Ankle guard
+    box(g, 0.35, 0.18, 0.3, MAT.darkChrome, sx, -2.02, 0.26);
+
+    // ── FOOT (3-part articulated: toes + midfoot + heel) ──
+    // Toe section (armored)
+    box(g, 0.74, 0.2, 0.32, MAT.chrome, sx, -2.38, 0.58);
+    box(g, 0.6, 0.06, 0.24, MAT.darkChrome, sx, -2.28, 0.6);
+    // Individual toe segments (3)
+    for (let t = -1; t <= 1; t++) {
+      box(g, 0.18, 0.12, 0.14, MAT.chrome, sx + t * 0.2, -2.42, 0.72);
+      sphere(g, 0.025, MAT.joint, sx + t * 0.2, -2.38, 0.64);
+      sphere(g, 0.015, MAT.rubber, sx + t * 0.2, -2.46, 0.76);
+    }
+    // Midfoot joint (visible hinge axle)
+    cyl(g, 0.045, 0.045, 0.6, MAT.joint, sx, -2.38, 0.36, 10);
+    rubberSeal(g, 0.04, 0.01, sx, -2.38, 0.36);
+    // Midfoot plate
+    box(g, 0.68, 0.16, 0.24, MAT.armor, sx, -2.38, 0.3);
+    box(g, 0.56, 0.04, 0.18, MAT.servo, sx, -2.32, 0.3);
+    // Heel section
+    box(g, 0.64, 0.18, 0.38, MAT.armor, sx, -2.38, -0.02);
+    box(g, 0.54, 0.06, 0.28, MAT.chrome, sx, -2.28, -0.02);
+    // Heel stabilizer fin
+    box(g, 0.08, 0.2, 0.15, MAT.darkChrome, sx, -2.32, -0.22);
     // Sole thruster
-    box(g, 0.34, 0.1, 0.34, MAT.ventHot, sx, -2.48, 0.15);
-    // Toe tip sensor
-    sphere(g, 0.03, MAT.lens, sx, -2.4, 0.72);
-    // Rivets
-    rivet(g, sx + side * 0.3, -2.22, 0.64); rivet(g, sx - side * 0.3, -2.22, 0.64);
-    rivet(g, sx + side * 0.25, -2.22, -0.18); rivet(g, sx - side * 0.25, -2.22, -0.18);
+    box(g, 0.36, 0.1, 0.36, MAT.ventHot, sx, -2.5, 0.2);
+    torus(g, 0.12, 0.02, MAT.vent, sx, -2.5, 0.2);
+    // Ground sensors
+    sphere(g, 0.025, MAT.lens, sx, -2.44, 0.72);
+    sphere(g, 0.02, MAT.lens, sx + side * 0.22, -2.44, 0.5);
+    sphere(g, 0.02, MAT.lens, sx, -2.44, -0.15);
+    // Foot rivets
+    rivet(g, sx + side * 0.32, -2.26, 0.62); rivet(g, sx - side * 0.32, -2.26, 0.62);
+    rivet(g, sx + side * 0.28, -2.26, -0.14); rivet(g, sx - side * 0.28, -2.26, -0.14);
+    rivet(g, sx, -2.26, 0.42);
   }
   buildLeg(-1);
   buildLeg(1);
