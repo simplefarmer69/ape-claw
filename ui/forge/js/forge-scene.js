@@ -30,9 +30,9 @@ export const MAT = {
   armorLt:   new P({ color: 0x6a7585, roughness: 0.4, metalness: 0.55, emissive: 0x1e2535, emissiveIntensity: 0.5, clearcoat: 0.25, clearcoatRoughness: 0.45 }),
   chrome:    new P({ color: 0x8090a0, roughness: 0.12, metalness: 0.9, emissive: 0x2a3545, emissiveIntensity: 0.6, clearcoat: 1.0, clearcoatRoughness: 0.05 }),
   joint:     new P({ color: 0x404550, roughness: 0.4, metalness: 0.5, emissive: GLOW, emissiveIntensity: 0.25, clearcoat: 0.5, clearcoatRoughness: 0.25, sheen: 0.5, sheenColor: new THREE.Color(GLOW), sheenRoughness: 0.4 }),
-  visor:     new P({ color: 0xaaccff, emissive: 0x6699ff, emissiveIntensity: 2.0, roughness: 0.1, metalness: 0.1, transmission: 0.95, thickness: 0.5, clearcoat: 1.0, clearcoatRoughness: 0.0 }),
-  core:      new P({ color: 0x88ccff, emissive: 0x44aaff, emissiveIntensity: 2.5, roughness: 0.2, metalness: 0.8, transmission: 0.6, thickness: 0.8, clearcoat: 1.0 }),
-  coreInner: new M({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 4.0 }),
+  visor:     new P({ color: 0xaaddff, emissive: CYAN, emissiveIntensity: 2.2, roughness: 0.05, metalness: 0.0, transmission: 0.85, thickness: 0.4, clearcoat: 1.0, clearcoatRoughness: 0.0, transparent: true, opacity: 0.85, iridescence: 0.6, iridescenceIOR: 1.3, iridescenceThicknessRange: [100, 400] }),
+  core:      new P({ color: 0xaaddff, emissive: GLOW, emissiveIntensity: 3.0, roughness: 0.05, metalness: 0.0, transmission: 0.7, thickness: 0.6, clearcoat: 1.0, clearcoatRoughness: 0.0 }),
+  coreInner: new P({ color: 0xffffff, emissive: GLOW, emissiveIntensity: 5.0, transparent: true, opacity: 0.95, clearcoat: 1.0, clearcoatRoughness: 0.0 }),
   vent:      new P({ color: GLOW, emissive: GLOW, emissiveIntensity: 2.5, transparent: true, opacity: 0.8, clearcoat: 0.5, clearcoatRoughness: 0.2 }),
   ventHot:   new P({ color: HOT, emissive: HOT, emissiveIntensity: 3.0, transparent: true, opacity: 0.7, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
   panelLine: new P({ color: GLOW, emissive: GLOW, emissiveIntensity: 2.0, transparent: true, opacity: 0.7 }),
@@ -139,10 +139,48 @@ const _roughVar = _detailCanvas(256, (ctx, s) => {
 });
 _roughVar.repeat.set(3, 3);
 
-for (const k of ["armor", "armorLt"]) { MAT[k].bumpMap = _armorBump; MAT[k].bumpScale = 0.015; MAT[k].roughnessMap = _roughVar; }
-for (const k of ["chrome", "darkChrome"]) { MAT[k].bumpMap = _chromeBump; MAT[k].bumpScale = 0.008; }
-MAT.hardpoint.bumpMap = _armorBump; MAT.hardpoint.bumpScale = 0.01;
-MAT.pistonMat.bumpMap = _chromeBump; MAT.pistonMat.bumpScale = 0.006;
+// Procedural normal map for directional lighting on panel seams
+const _armorNormal = _detailCanvas(256, (ctx, s) => {
+  ctx.fillStyle = "#8080ff"; ctx.fillRect(0, 0, s, s);
+  ctx.strokeStyle = "#6060ff"; ctx.lineWidth = 2;
+  for (let y = 0; y < s; y += 28) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(s, y); ctx.stroke(); }
+  for (let x = 0; x < s; x += 42) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, s); ctx.stroke(); }
+  ctx.fillStyle = "#a0a0ff";
+  for (let x = 21; x < s; x += 42) for (let y = 14; y < s; y += 28) {
+    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+  }
+});
+_armorNormal.repeat.set(3, 3);
+
+// Anisotropic brushed-metal direction for chrome
+const _chromeAniso = _detailCanvas(256, (ctx, s) => {
+  ctx.fillStyle = "#8080ff"; ctx.fillRect(0, 0, s, s);
+  ctx.strokeStyle = "#9060ff"; ctx.lineWidth = 0.5; ctx.globalAlpha = 0.7;
+  for (let i = 0; i < 600; i++) {
+    const y = Math.random() * s, x = Math.random() * s * 0.1;
+    ctx.beginPath(); ctx.moveTo(x, y);
+    ctx.lineTo(x + 20 + Math.random() * 80, y + (Math.random() - 0.5) * 0.5);
+    ctx.stroke();
+  }
+});
+_chromeAniso.repeat.set(4, 4);
+
+for (const k of ["armor", "armorLt"]) {
+  MAT[k].bumpMap = _armorBump; MAT[k].bumpScale = 0.018;
+  MAT[k].normalMap = _armorNormal; MAT[k].normalScale = new THREE.Vector2(0.15, 0.15);
+  MAT[k].roughnessMap = _roughVar;
+}
+for (const k of ["chrome", "darkChrome"]) {
+  MAT[k].bumpMap = _chromeBump; MAT[k].bumpScale = 0.01;
+  MAT[k].normalMap = _chromeAniso; MAT[k].normalScale = new THREE.Vector2(0.12, 0.12);
+  MAT[k].roughnessMap = _roughVar;
+}
+MAT.hardpoint.bumpMap = _armorBump; MAT.hardpoint.bumpScale = 0.012;
+MAT.hardpoint.normalMap = _armorNormal; MAT.hardpoint.normalScale = new THREE.Vector2(0.1, 0.1);
+MAT.pistonMat.bumpMap = _chromeBump; MAT.pistonMat.bumpScale = 0.008;
+MAT.joint.bumpMap = _chromeBump; MAT.joint.bumpScale = 0.006;
+MAT.undersuit.bumpMap = _armorBump; MAT.undersuit.bumpScale = 0.005;
+MAT.frameMat.bumpMap = _armorBump; MAT.frameMat.bumpScale = 0.008;
 
 /* ══════════════════════════════════════════════════════════
    Film grain + vignette shader
@@ -188,6 +226,7 @@ let renderPaused = false;
 let hoverHudEl = null;
 let headPivotRef = null, leftArmPivotRef = null, rightArmPivotRef = null;
 let agentSpeaking = false;
+let heatShimmerMeshes = [];
 
 const viewportEl = () => document.getElementById("forgeViewport");
 const canvasEl = () => document.getElementById("forgeCanvas");
@@ -288,6 +327,7 @@ function buildChassis() {
   const g = new THREE.Group();
   glowRings = [];
   exhaustFlames = [];
+  heatShimmerMeshes = [];
 
   // ── Animatable pivot groups (head + arms) ──
   const _hp = new THREE.Group(); _hp.position.set(0, 5.85, 0);
@@ -387,6 +427,53 @@ function buildChassis() {
   box(g, 0.04, 1.8, 0.06, MAT.panelLine, 0.7, 4.0, 0.68);
   box(g, 1.4, 0.04, 0.06, MAT.panelLine, 0, 3.2, 0.68);
   box(g, 1.4, 0.04, 0.06, MAT.panelLine, 0, 4.8, 0.68);
+
+  // ── DECALS (unit markings, hazard stripes, caution labels) ──
+  function decalTex(w, h, fn) {
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    fn(c.getContext("2d"), w, h);
+    const t = new THREE.CanvasTexture(c);
+    t.minFilter = THREE.LinearFilter; t.generateMipmaps = false;
+    return new P({ map: t, transparent: true, depthWrite: false, roughness: 0.5, metalness: 0.3 });
+  }
+  // Left chest: unit number "AC-01"
+  const unitMat = decalTex(256, 64, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h);
+    ctx.font = "bold 38px monospace"; ctx.fillStyle = "#ffffff";
+    ctx.globalAlpha = 0.55; ctx.fillText("AC-01", 12, 42);
+    ctx.font = "12px monospace"; ctx.fillStyle = "#aaccff";
+    ctx.globalAlpha = 0.4; ctx.fillText("APECLAW DIVISION", 12, 58);
+  });
+  const unitDecal = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.18), unitMat);
+  unitDecal.position.set(-0.55, 4.65, 0.72); unitDecal.renderOrder = 3;
+  g.add(unitDecal);
+  // Right chest: hazard chevrons
+  const hazMat = decalTex(256, 128, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h);
+    ctx.globalAlpha = 0.45;
+    for (let i = 0; i < 8; i++) {
+      ctx.fillStyle = i % 2 === 0 ? "#ffaa00" : "#222222";
+      ctx.beginPath();
+      ctx.moveTo(i * 32, 0); ctx.lineTo(i * 32 + 32, 0);
+      ctx.lineTo(i * 32 + 16, h); ctx.lineTo(i * 32 - 16, h);
+      ctx.closePath(); ctx.fill();
+    }
+  });
+  const hazDecal = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.28), hazMat);
+  hazDecal.position.set(0.55, 4.2, 0.72); hazDecal.renderOrder = 3;
+  g.add(hazDecal);
+  // Small caution strip on waist
+  const cautionMat = decalTex(192, 32, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h);
+    ctx.globalAlpha = 0.35;
+    for (let x = 0; x < w; x += 16) {
+      ctx.fillStyle = (x / 16) % 2 === 0 ? "#ffcc00" : "#111111";
+      ctx.fillRect(x, 0, 16, h);
+    }
+  });
+  const cautionDecal = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.06), cautionMat);
+  cautionDecal.position.set(0, 2.72, 0.53); cautionDecal.renderOrder = 3;
+  g.add(cautionDecal);
 
   // ── CORE REACTOR (multi-ring housing) ──
   coreMesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.3), MAT.coreInner);
@@ -554,6 +641,17 @@ function buildChassis() {
     // Fuel line
     cableRun(g, 0.02, 0.7, side * 0.42, 3.8, -0.82);
     rivet(g, side * 0.6 + side * 0.22, 4.15, -0.85);
+    // Heat shimmer plume
+    const shimGeo = new THREE.ConeGeometry(0.25, 1.2, 8, 1, true);
+    const shimMat = new P({
+      color: 0xff6600, emissive: 0xff4400, emissiveIntensity: 0.3,
+      transparent: true, opacity: 0.04, side: THREE.DoubleSide,
+      depthWrite: false, blending: THREE.AdditiveBlending,
+    });
+    const shim = new THREE.Mesh(shimGeo, shimMat);
+    shim.position.set(side * 0.6, 2.65, -0.95);
+    g.add(shim);
+    heatShimmerMeshes.push(shim);
   }
 
   // ── SHOULDER HARDPOINTS (built into arm pivots) ──
@@ -1100,10 +1198,12 @@ function animate() {
     seg.material.emissiveIntensity = 1.0 + 1.5 * Math.max(0, Math.sin(time * 3.5 - i * 0.5));
   });
 
-  // Visor flicker
+  // Visor flicker (transmission glass + emissive pulse)
   if (visorMesh) {
-    visorMesh.material.opacity = 0.42 + 0.06 * Math.sin(time * 4) + Math.random() * 0.02;
-    visorMesh.material.emissiveIntensity = 1.8 + 0.4 * Math.sin(time * 3);
+    const vFlicker = Math.sin(time * 4) * 0.04 + Math.random() * 0.015;
+    visorMesh.material.transmission = 0.82 + vFlicker;
+    visorMesh.material.emissiveIntensity = 2.0 + 0.6 * Math.sin(time * 3) + Math.random() * 0.1;
+    visorMesh.material.opacity = 0.82 + vFlicker * 0.5;
   }
 
   // Joint glow rings pulse
@@ -1121,6 +1221,16 @@ function animate() {
       flame.material.opacity = 0.32 + 0.2 * Math.random();
     }
     flame.scale.y = 0.8 + 0.4 * Math.random();
+  });
+
+  // Heat shimmer above exhausts
+  heatShimmerMeshes.forEach((shim, i) => {
+    const phase = time * 3 + i * 1.5;
+    shim.material.opacity = 0.025 + 0.02 * Math.sin(phase);
+    shim.scale.x = 1.0 + 0.15 * Math.sin(phase * 1.3);
+    shim.scale.z = 1.0 + 0.15 * Math.sin(phase * 1.3 + 0.5);
+    shim.scale.y = 0.9 + 0.2 * Math.sin(phase * 0.7);
+    shim.rotation.y += 0.02;
   });
 
   // Energy streams rotation
