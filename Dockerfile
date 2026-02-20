@@ -20,6 +20,19 @@ set -e
 STATE="${APE_CLAW_STATE_DIR:-/data/state}"
 mkdir -p "$STATE"
 
+# If APE_CLAW_ROOT differs from /app (e.g. Railway volume at /data),
+# symlink the static data directories so the server finds them.
+ROOT="${APE_CLAW_ROOT:-/app}"
+if [ "$ROOT" != "/app" ]; then
+  echo "[init] APE_CLAW_ROOT=$ROOT — linking static data from /app"
+  for dir in skillcards data allowlists config; do
+    if [ -d "/app/$dir" ] && [ ! -e "$ROOT/$dir" ]; then
+      ln -sf "/app/$dir" "$ROOT/$dir"
+      echo "[init]   linked $ROOT/$dir -> /app/$dir"
+    fi
+  done
+fi
+
 if [ ! -f "$STATE/events.jsonl" ] && [ -f /app/data/events-backlog.json ]; then
   echo "[seed] Seeding events.jsonl from backlog..."
   node -e "
