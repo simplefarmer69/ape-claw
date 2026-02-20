@@ -22,6 +22,7 @@ import { CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
 let skills = [];
 let allLibrarySkills = [];
 let podStatus = null;
+let forgeAgentOnline = false;
 let podFiles = {};
 let clawbots = [];
 let agentName = "The Clawllector";
@@ -204,14 +205,16 @@ async function loadInstalledSkills() {
 }
 
 async function loadAllData() {
-  const [_, statusRes, filesRes, botsRes] = await Promise.all([
+  const [_, statusRes, filesRes, botsRes, forgeRes] = await Promise.all([
     loadInstalledSkills(),
     fetchJSON("/api/pod/status"),
     fetchJSON("/api/pod/files", { headers: authHeaders() }),
     fetchJSON("/api/clawbots"),
+    fetchJSON("/api/forge/status"),
   ]);
 
   podStatus = statusRes;
+  forgeAgentOnline = !!(forgeRes?.configured);
   if (filesRes?.files) podFiles = filesRes.files;
   if (botsRes && Array.isArray(botsRes.clawbots)) clawbots = botsRes.clawbots;
 
@@ -241,7 +244,7 @@ function updateHeader() {
   if (statusEl) {
     const dot = statusEl.querySelector(".forge-status-dot");
     const txt = statusEl.querySelector(".forge-status-text");
-    const running = podStatus && podStatus.running;
+    const running = (podStatus && podStatus.running) || forgeAgentOnline;
     if (dot) dot.className = `forge-status-dot ${running ? "running" : "stopped"}`;
     if (txt) txt.textContent = running ? "ONLINE" : "OFFLINE";
   }
@@ -368,7 +371,7 @@ function buildIdentityPlate() {
   const statusDiv = document.createElement("div");
   statusDiv.className = "forge-identity-status";
   const dot = document.createElement("span");
-  const running = podStatus && podStatus.running;
+  const running = (podStatus && podStatus.running) || forgeAgentOnline;
   dot.className = `forge-identity-dot ${running ? "running" : podStatus ? "stopped" : "uninitialized"}`;
   statusDiv.appendChild(dot);
   const txt = document.createElement("span");
