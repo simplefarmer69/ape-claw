@@ -11,6 +11,8 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { SSAOPass } from "three/addons/postprocessing/SSAOPass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 
 /* ══════════════════════════════════════════════════════════
@@ -61,12 +63,107 @@ export const MAT = {
 };
 
 /* ══════════════════════════════════════════════════════════
+   Procedural surface detail — bump + roughness maps
+   Adds panel grooves, bolt heads, micro-scratches, and
+   worn-metal roughness variation to chassis materials.
+   ══════════════════════════════════════════════════════════ */
+function _detailCanvas(size, fn) {
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  fn(c.getContext("2d"), size);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+
+const _armorBump = _detailCanvas(256, (ctx, s) => {
+  ctx.fillStyle = "#808080"; ctx.fillRect(0, 0, s, s);
+  ctx.strokeStyle = "#5e5e5e"; ctx.lineWidth = 1.5;
+  for (let y = 0; y < s; y += 28) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(s, y); ctx.stroke(); }
+  for (let x = 0; x < s; x += 42) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, s); ctx.stroke(); }
+  ctx.fillStyle = "#949494";
+  for (let x = 21; x < s; x += 42) for (let y = 14; y < s; y += 28) {
+    ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.strokeStyle = "#727272"; ctx.lineWidth = 0.4; ctx.globalAlpha = 0.7;
+  for (let i = 0; i < 50; i++) {
+    const sx = Math.random() * s, sy = Math.random() * s;
+    ctx.beginPath(); ctx.moveTo(sx, sy);
+    ctx.lineTo(sx + (Math.random() - 0.5) * 35, sy + (Math.random() - 0.5) * 4);
+    ctx.stroke();
+  }
+});
+_armorBump.repeat.set(3, 3);
+
+const _chromeBump = _detailCanvas(256, (ctx, s) => {
+  ctx.fillStyle = "#808080"; ctx.fillRect(0, 0, s, s);
+  ctx.strokeStyle = "#747474"; ctx.lineWidth = 0.3; ctx.globalAlpha = 0.6;
+  for (let i = 0; i < 400; i++) {
+    const y = Math.random() * s, x = Math.random() * s * 0.15;
+    ctx.beginPath(); ctx.moveTo(x, y);
+    ctx.lineTo(x + 25 + Math.random() * 70, y + (Math.random() - 0.5) * 1);
+    ctx.stroke();
+  }
+});
+_chromeBump.repeat.set(4, 4);
+
+const _roughVar = _detailCanvas(256, (ctx, s) => {
+  ctx.fillStyle = "#8a8a8a"; ctx.fillRect(0, 0, s, s);
+  ctx.fillStyle = "#555555"; ctx.globalAlpha = 0.35;
+  for (let i = 0; i < 10; i++) {
+    ctx.beginPath();
+    ctx.ellipse(Math.random() * s, Math.random() * s, 12 + Math.random() * 20, 6 + Math.random() * 10, Math.random() * Math.PI, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.strokeStyle = "#c0c0c0"; ctx.lineWidth = 1.2; ctx.globalAlpha = 0.25;
+  for (let i = 0; i < 25; i++) {
+    const sx = Math.random() * s, sy = Math.random() * s;
+    ctx.beginPath(); ctx.moveTo(sx, sy);
+    ctx.lineTo(sx + (Math.random() - 0.5) * 50, sy + (Math.random() - 0.5) * 12);
+    ctx.stroke();
+  }
+});
+_roughVar.repeat.set(3, 3);
+
+for (const k of ["armor", "armorLt"]) { MAT[k].bumpMap = _armorBump; MAT[k].bumpScale = 0.015; MAT[k].roughnessMap = _roughVar; }
+for (const k of ["chrome", "darkChrome"]) { MAT[k].bumpMap = _chromeBump; MAT[k].bumpScale = 0.008; }
+MAT.hardpoint.bumpMap = _armorBump; MAT.hardpoint.bumpScale = 0.01;
+MAT.pistonMat.bumpMap = _chromeBump; MAT.pistonMat.bumpScale = 0.006;
+
+/* ══════════════════════════════════════════════════════════
+   Film grain + vignette shader
+   ══════════════════════════════════════════════════════════ */
+const FilmGrainShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    time: { value: 0 },
+    intensity: { value: 0.03 },
+  },
+  vertexShader: /* glsl */ `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: /* glsl */ `
+    uniform sampler2D tDiffuse;
+    uniform float time;
+    uniform float intensity;
+    varying vec2 vUv;
+    float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+    void main() {
+      vec4 c = texture2D(tDiffuse, vUv);
+      float grain = (hash(vUv * 1000.0 + time) - 0.5) * intensity;
+      vec2 uv = vUv * 2.0 - 1.0;
+      float vig = 1.0 - dot(uv * 0.55, uv * 0.55);
+      c.rgb = c.rgb * vig + grain;
+      gl_FragColor = c;
+    }
+  `,
+};
+
+/* ══════════════════════════════════════════════════════════
    Scene globals (exported for other modules)
    ══════════════════════════════════════════════════════════ */
 export let scene, camera, renderer, composer, controls, outlinePass, css2dRenderer;
 export let robotGroup, attachmentGroup, energyNetworkGroup, platformGroup;
 export let coreMesh, visorMesh, spineSegments = [];
-let ambientParticles, energyStreams, bloomPass;
+let ambientParticles, energyStreams, bloomPass, ssaoPass, filmGrainPass;
 let autoRotateTimer = null;
 let bloomEnabled = true;
 let selectedAttachment = null;
@@ -586,40 +683,52 @@ function buildPlatform() {
    Ambient particles + energy streams
    ══════════════════════════════════════════════════════════ */
 function createAmbientParticles() {
-  const count = 300;
+  const count = 500;
   const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
   const sizes = new Float32Array(count);
+  const palette = [
+    new THREE.Color(GLOW),
+    new THREE.Color(CYAN),
+    new THREE.Color(0x8fbfff),
+    new THREE.Color(0xb026ff),
+  ];
   for (let i = 0; i < count; i++) {
-    positions[i * 3]     = (Math.random() - 0.5) * 20;
-    positions[i * 3 + 1] = Math.random() * 16 - 3;
-    positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
-    sizes[i] = 0.02 + Math.random() * 0.06;
+    positions[i * 3]     = (Math.random() - 0.5) * 22;
+    positions[i * 3 + 1] = Math.random() * 18 - 3;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 22;
+    sizes[i] = 0.015 + Math.random() * 0.06;
+    const c = palette[Math.floor(Math.random() * palette.length)];
+    colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   return new THREE.Points(geo, new THREE.PointsMaterial({
-    color: GLOW, size: 0.05, transparent: true, opacity: 0.25,
-    blending: THREE.AdditiveBlending, depthWrite: false,
+    size: 0.045, transparent: true, opacity: 0.3, vertexColors: true,
+    blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
   }));
 }
 
 function createEnergyStreams() {
   const group = new THREE.Group();
-  for (let i = 0; i < 8; i++) {
+  const streamColors = [GLOW, CYAN, 0x8fbfff, GLOW, GLOW, CYAN, 0xb026ff, GLOW, CYAN, GLOW, GLOW, 0x8fbfff];
+  for (let i = 0; i < 12; i++) {
     const pts = [];
-    const angle = (i / 8) * Math.PI * 2;
-    const r = 2.5 + Math.random() * 1.5;
-    for (let j = 0; j <= 20; j++) {
-      const t = j / 20;
+    const angle = (i / 12) * Math.PI * 2;
+    const r = 2.2 + Math.random() * 2.0;
+    const twist = 0.3 + Math.random() * 0.4;
+    for (let j = 0; j <= 28; j++) {
+      const t = j / 28;
       pts.push(new THREE.Vector3(
-        Math.cos(angle + t * Math.PI * 0.5) * r * (1 - t * 0.3),
-        -2.5 + t * 12,
-        Math.sin(angle + t * Math.PI * 0.5) * r * (1 - t * 0.3),
+        Math.cos(angle + t * Math.PI * twist) * r * (1 - t * 0.35),
+        -2.5 + t * 14,
+        Math.sin(angle + t * Math.PI * twist) * r * (1 - t * 0.35),
       ));
     }
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
     const mat = new THREE.LineBasicMaterial({
-      color: GLOW, transparent: true, opacity: 0.04,
+      color: streamColors[i % streamColors.length], transparent: true, opacity: 0.03,
       blending: THREE.AdditiveBlending,
     });
     const line = new THREE.Line(geo, mat);
@@ -1023,6 +1132,8 @@ function animate() {
 
   if (idleAnimatorFn) idleAnimatorFn(time);
 
+  if (filmGrainPass) filmGrainPass.uniforms.time.value = time;
+
   composer.render();
   css2dRenderer.render(scene, camera);
 }
@@ -1039,6 +1150,7 @@ function onResize() {
   camera.updateProjectionMatrix();
   renderer.setSize(w, h);
   composer.setSize(w, h);
+  if (ssaoPass) { ssaoPass.width = w; ssaoPass.height = h; }
   css2dRenderer.setSize(w, h);
 }
 
@@ -1206,9 +1318,18 @@ export function initForgeScene() {
   energyStreams = createEnergyStreams();
   scene.add(energyStreams);
 
-  // ── Post-processing (tuned bloom + proper color output) ──
+  // ── Post-processing: SSAO → bloom → outline → film grain → output ──
   composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
+
+  try {
+    ssaoPass = new SSAOPass(scene, camera, w, h);
+    ssaoPass.kernelRadius = 12;
+    ssaoPass.minDistance = 0.003;
+    ssaoPass.maxDistance = 0.12;
+    ssaoPass.output = SSAOPass.OUTPUT.Default;
+    composer.addPass(ssaoPass);
+  } catch { /* SSAO unavailable — continue without it */ }
 
   bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.55, 0.38, 0.92);
   composer.addPass(bloomPass);
@@ -1220,6 +1341,9 @@ export function initForgeScene() {
   outlinePass.visibleEdgeColor.set(GLOW);
   outlinePass.hiddenEdgeColor.set(GLOW);
   composer.addPass(outlinePass);
+
+  filmGrainPass = new ShaderPass(FilmGrainShader);
+  composer.addPass(filmGrainPass);
 
   composer.addPass(new OutputPass());
 
