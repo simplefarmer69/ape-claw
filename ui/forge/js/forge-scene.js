@@ -1306,61 +1306,185 @@ function buildChassis() {
   }
 
   // ══════════════════════════════════════════════════════════
-  // BACK THRUSTERS — twin engine pods with gimbal mounts
+  // JETPACK — full backpack assembly with engines, fuel, RCS, wings
   // ══════════════════════════════════════════════════════════
+
+  // ── CENTRAL BACKPACK FRAME ──
+  // Main housing (bolted to back plate)
+  box(g, 1.4, 2.2, 0.44, MAT.armor, 0, 4.0, -0.94);
+  box(g, 1.26, 2.0, 0.36, MAT.darkChrome, 0, 4.0, -0.98);
+  box(g, 1.1, 1.8, 0.1, MAT.servo, 0, 4.0, -1.02);
+  // Mounting rail (horizontal bar across upper back)
+  box(g, 1.6, 0.1, 0.2, MAT.chrome, 0, 5.0, -0.9);
+  boltCluster(g, 8, 0.32, 0, 5.0, -0.84);
+  // Lower mounting rail
+  box(g, 1.2, 0.08, 0.16, MAT.chrome, 0, 3.0, -0.9);
+  boltCluster(g, 6, 0.24, 0, 3.0, -0.84);
+  // Vertical structural ribs
   for (let side = -1; side <= 1; side += 2) {
-    const px = side * 0.6;
-    // Pylon mount (armored, bolted to back plate)
-    box(g, 0.18, 0.65, 0.28, MAT.frameMat, px, 3.92, -0.8);
-    box(g, 0.22, 0.12, 0.32, MAT.darkChrome, px, 4.18, -0.8);
-    boltCluster(g, 4, 0.1, px, 4.18, -0.76);
-    // Pylon hydraulic gimbal (allows thrust vectoring)
-    sphere(g, 0.1, MAT.joint, px, 3.6, -0.88);
-    rubberSeal(g, 0.09, 0.01, px, 3.6, -0.88);
-    // Fuel manifold
-    box(g, 0.06, 0.14, 0.06, MAT.hydraulic, px - side * 0.12, 3.72, -0.82);
-    // Engine nacelle (outer cowling — layered)
-    cyl(g, 0.3, 0.4, 0.9, MAT.chrome, px, 3.78, -0.98, 16);
-    cyl(g, 0.26, 0.34, 0.7, MAT.darkChrome, px, 3.7, -0.98, 16);
-    // Intake grille ring (top)
-    torus(g, 0.32, 0.025, MAT.chrome, px, 4.2, -0.98);
-    // Combustion chamber (inner visible through nozzle)
-    cyl(g, 0.18, 0.18, 0.5, MAT.servo, px, 3.65, -0.98, 12);
-    // Nozzle convergent-divergent cone
-    cyl(g, 0.14, 0.24, 0.38, MAT.darkChrome, px, 3.42, -0.98, 14);
+    box(g, 0.06, 2.0, 0.12, MAT.frameMat, side * 0.52, 4.0, -0.96);
+    box(g, 0.03, 1.8, 0.06, MAT.weldSeam, side * 0.52, 4.0, -1.02);
+  }
+  // Backpack panel lines
+  box(g, 0.04, 2.0, 0.06, MAT.panelLine, 0, 4.0, -1.14);
+  for (let side = -1; side <= 1; side += 2) {
+    box(g, 0.04, 1.6, 0.06, MAT.panelLine, side * 0.3, 4.0, -1.14);
+    box(g, 0.6, 0.04, 0.06, MAT.panelLine, side * 0.3, 4.8, -1.14);
+    box(g, 0.6, 0.04, 0.06, MAT.panelLine, side * 0.3, 3.2, -1.14);
+  }
+
+  // ── FUEL TANKS (cylindrical, flanking center) ──
+  for (let side = -1; side <= 1; side += 2) {
+    const ftx = side * 0.42;
+    // Tank body
+    cyl(g, 0.14, 0.14, 1.5, MAT.chrome, ftx, 3.9, -1.14, 16);
+    // Tank end caps (hemispherical)
+    sphere(g, 0.14, MAT.chrome, ftx, 4.65, -1.14);
+    sphere(g, 0.14, MAT.chrome, ftx, 3.15, -1.14);
+    // Tank bands (reinforcement straps)
+    torus(g, 0.155, 0.015, MAT.darkChrome, ftx, 4.3, -1.14);
+    torus(g, 0.155, 0.015, MAT.darkChrome, ftx, 3.9, -1.14);
+    torus(g, 0.155, 0.015, MAT.darkChrome, ftx, 3.5, -1.14);
+    // Fuel gauge (small window)
+    box(g, 0.03, 0.2, 0.02, MAT.visor, ftx + side * 0.13, 3.9, -1.14);
+    // Filler cap
+    cyl(g, 0.04, 0.04, 0.03, MAT.darkChrome, ftx, 4.66, -1.14, 8);
+    rivet(g, ftx, 4.68, -1.14);
+    // Feed line from tank to engine
+    cableRun(g, 0.016, 0.8, ftx, 3.5, -1.08);
+    cableRun(g, 0.01, 0.6, ftx + side * 0.08, 3.6, -1.04);
+  }
+
+  // ── MAIN ENGINE PODS (twin turbines) ──
+  for (let side = -1; side <= 1; side += 2) {
+    const px = side * 0.72;
+    // Engine pylon (connecting to backpack frame)
+    box(g, 0.14, 0.55, 0.22, MAT.frameMat, px, 3.95, -0.98);
+    box(g, 0.18, 0.1, 0.26, MAT.darkChrome, px, 4.18, -0.98);
+    boltCluster(g, 4, 0.08, px, 4.18, -0.94);
+    // Gimbal mount (thrust vectoring ball joint)
+    sphere(g, 0.12, MAT.joint, px, 3.58, -1.06);
+    rubberSeal(g, 0.11, 0.012, px, 3.58, -1.06);
+    servoDrum(g, 0.04, 0.08, px, 3.58, -0.96);
+    // Fuel manifold block
+    box(g, 0.08, 0.12, 0.08, MAT.hydraulic, px - side * 0.14, 3.72, -1.0);
+    cableBundle(g, 2, 0.008, 0.3, px - side * 0.1, 3.72, -0.94);
+
+    // Outer nacelle (3-layer cowling)
+    cyl(g, 0.32, 0.42, 0.95, MAT.chrome, px, 3.78, -1.16, 18);
+    cyl(g, 0.28, 0.36, 0.75, MAT.darkChrome, px, 3.7, -1.16, 18);
+    cyl(g, 0.24, 0.3, 0.5, MAT.armor, px, 3.68, -1.16, 16);
+    // Intake grille (top of nacelle)
+    torus(g, 0.34, 0.028, MAT.chrome, px, 4.22, -1.16);
+    torus(g, 0.3, 0.012, MAT.vent, px, 4.2, -1.16);
+    // Intake vane blades (visible fan)
+    for (let v = 0; v < 6; v++) {
+      const va = (v / 6) * Math.PI * 2;
+      const vx = Math.cos(va) * 0.18, vy = Math.sin(va) * 0.18;
+      box(g, 0.04, 0.16, 0.015, MAT.chrome, px + vx, 4.18 + vy * 0.3, -1.16, va, 0, 0);
+    }
+    // Combustion chamber (inner glow tube)
+    cyl(g, 0.2, 0.2, 0.55, MAT.servo, px, 3.65, -1.16, 14);
+    cyl(g, 0.12, 0.12, 0.4, MAT.ventHot, px, 3.6, -1.16, 12);
+    // Turbine exhaust stages
+    cyl(g, 0.16, 0.26, 0.2, MAT.darkChrome, px, 3.42, -1.16, 16);
+    cyl(g, 0.2, 0.3, 0.15, MAT.chrome, px, 3.35, -1.16, 16);
+    // Nozzle (convergent-divergent)
+    cyl(g, 0.15, 0.28, 0.35, MAT.darkChrome, px, 3.22, -1.16, 16);
     // Nozzle exit ring (polished)
-    torus(g, 0.26, 0.022, MAT.chrome, px, 3.28, -0.98);
-    // Exhaust glow cone
-    const exhaust = cyl(g, 0.22, 0.32, 0.14, MAT.ventHot, px, 3.28, -0.98, 14);
+    torus(g, 0.3, 0.025, MAT.chrome, px, 3.08, -1.16);
+    // Exhaust glow
+    const exhaust = cyl(g, 0.24, 0.34, 0.12, MAT.ventHot, px, 3.08, -1.16, 16);
     exhaustFlames.push(exhaust);
-    // Multi-ring nozzle details (3 concentric glow rings)
-    const thrustRing = torus(g, 0.34, 0.03, MAT.vent, px, 3.28, -0.98);
+    // Nozzle glow rings (4 concentric)
+    const thrustRing = torus(g, 0.36, 0.032, MAT.vent, px, 3.08, -1.16);
     glowRings.push(thrustRing);
-    const thrustRing2 = torus(g, 0.28, 0.018, MAT.panelLine, px, 3.38, -0.98);
+    const thrustRing2 = torus(g, 0.3, 0.02, MAT.panelLine, px, 3.18, -1.16);
     glowRings.push(thrustRing2);
-    torus(g, 0.2, 0.012, MAT.vent, px, 3.34, -0.98);
+    torus(g, 0.22, 0.014, MAT.vent, px, 3.14, -1.16);
+    torus(g, 0.16, 0.01, MAT.coreInner, px, 3.1, -1.16);
+
     // Engine cowling panel lines + rivets
-    box(g, 0.04, 0.7, 0.04, MAT.panelLine, px + side * 0.28, 3.78, -0.98);
-    box(g, 0.04, 0.7, 0.04, MAT.panelLine, px, 3.78, -0.98 - 0.3);
-    rivet(g, px + side * 0.24, 4.1, -0.88); rivet(g, px + side * 0.24, 3.46, -0.88);
-    rivet(g, px - side * 0.12, 4.1, -1.14); rivet(g, px - side * 0.12, 3.46, -1.14);
-    // Fuel / coolant lines (dual)
-    cableRun(g, 0.018, 0.75, px - side * 0.08, 3.82, -0.84);
-    cableRun(g, 0.012, 0.6, px + side * 0.16, 3.72, -0.86);
-    // Cooling vents on nacelle side
-    ventSlits(g, 0.18, 3, 0.06, MAT.vent, px + side * 0.32, 3.82, -0.98);
-    // Heat shimmer plume
-    const shimGeo = new THREE.ConeGeometry(0.28, 1.4, 10, 1, true);
+    box(g, 0.04, 0.8, 0.04, MAT.panelLine, px + side * 0.3, 3.78, -1.16);
+    box(g, 0.04, 0.8, 0.04, MAT.panelLine, px, 3.78, -1.44);
+    rivet(g, px + side * 0.26, 4.12, -1.06); rivet(g, px + side * 0.26, 3.44, -1.06);
+    rivet(g, px - side * 0.14, 4.12, -1.3); rivet(g, px - side * 0.14, 3.44, -1.3);
+    rivet(g, px + side * 0.3, 3.78, -1.06); rivet(g, px - side * 0.14, 3.78, -1.3);
+    // Cooling vents on nacelle
+    ventSlits(g, 0.2, 4, 0.055, MAT.vent, px + side * 0.34, 3.85, -1.16);
+    coolingFins(g, 6, 0.18, 0.04, 0.035, px - side * 0.3, 3.5, -1.16, true);
+
+    // Heat shimmer plume (larger, more dramatic)
+    const shimGeo = new THREE.ConeGeometry(0.32, 1.6, 12, 1, true);
     const shimMat = new P({
-      color: 0xff6600, emissive: 0xff4400, emissiveIntensity: 0.35,
-      transparent: true, opacity: 0.04, side: THREE.DoubleSide,
+      color: 0xff6600, emissive: 0xff4400, emissiveIntensity: 0.4,
+      transparent: true, opacity: 0.045, side: THREE.DoubleSide,
       depthWrite: false, blending: THREE.AdditiveBlending,
     });
     const shim = new THREE.Mesh(shimGeo, shimMat);
-    shim.position.set(px, 2.5, -0.98);
+    shim.position.set(px, 2.2, -1.16);
     g.add(shim);
     heatShimmerMeshes.push(shim);
   }
+
+  // ── WING PANELS (folded flight surfaces) ──
+  for (let side = -1; side <= 1; side += 2) {
+    const wx = side * 0.9;
+    // Wing root hinge
+    sphere(g, 0.06, MAT.joint, wx, 4.2, -1.04);
+    servoDrum(g, 0.03, 0.08, wx, 4.2, -0.98);
+    // Main wing panel (angled slightly outward)
+    box(g, 0.7, 0.04, 0.35, MAT.armor, wx + side * 0.3, 4.2, -1.14, 0, 0, side * -0.15);
+    box(g, 0.6, 0.02, 0.28, MAT.darkChrome, wx + side * 0.32, 4.2, -1.14, 0, 0, side * -0.15);
+    // Aileron (trailing edge)
+    box(g, 0.55, 0.025, 0.1, MAT.chrome, wx + side * 0.34, 4.2, -1.32, 0, 0, side * -0.15);
+    // Wing tip light
+    sphere(g, 0.02, side === -1 ? MAT.armorRed : MAT.coreInner, wx + side * 0.64, 4.2, -1.14);
+    // Wing panel lines
+    box(g, 0.3, 0.01, 0.03, MAT.panelLine, wx + side * 0.22, 4.22, -1.08, 0, 0, side * -0.15);
+    box(g, 0.3, 0.01, 0.03, MAT.panelLine, wx + side * 0.22, 4.18, -1.22, 0, 0, side * -0.15);
+    rivet(g, wx + side * 0.08, 4.22, -1.08); rivet(g, wx + side * 0.54, 4.22, -1.08);
+  }
+
+  // ── RCS ATTITUDE THRUSTERS (6 micro-thrusters for maneuvering) ──
+  // Upper pair (yaw control)
+  for (let side = -1; side <= 1; side += 2) {
+    cyl(g, 0.06, 0.08, 0.12, MAT.chrome, side * 0.62, 4.9, -1.08, 10);
+    cyl(g, 0.04, 0.06, 0.06, MAT.darkChrome, side * 0.62, 4.84, -1.08, 10);
+    cyl(g, 0.05, 0.07, 0.04, MAT.ventHot, side * 0.62, 4.82, -1.08, 10);
+    torus(g, 0.065, 0.008, MAT.vent, side * 0.62, 4.82, -1.08);
+  }
+  // Lower pair (pitch control)
+  for (let side = -1; side <= 1; side += 2) {
+    cyl(g, 0.055, 0.07, 0.1, MAT.chrome, side * 0.58, 3.1, -1.08, 10);
+    cyl(g, 0.035, 0.055, 0.05, MAT.darkChrome, side * 0.58, 3.06, -1.08, 10);
+    cyl(g, 0.045, 0.06, 0.035, MAT.ventHot, side * 0.58, 3.04, -1.08, 10);
+    torus(g, 0.06, 0.007, MAT.vent, side * 0.58, 3.04, -1.08);
+  }
+  // Dorsal pair (roll control — on wing roots)
+  for (let side = -1; side <= 1; side += 2) {
+    cyl(g, 0.04, 0.05, 0.08, MAT.chrome, side * 0.88, 4.35, -1.3, 8);
+    cyl(g, 0.03, 0.04, 0.04, MAT.ventHot, side * 0.88, 4.35, -1.34, 8);
+  }
+
+  // ── BACKPACK EXTERIOR DETAIL ──
+  // Hazard stripe band across top
+  box(g, 1.36, 0.06, 0.06, MAT.armorRed, 0, 5.06, -1.0);
+  // Warning chevrons (bottom)
+  box(g, 1.16, 0.06, 0.06, MAT.armorRed, 0, 2.94, -1.0);
+  // Grab handles (chrome rungs on sides)
+  for (let side = -1; side <= 1; side += 2) {
+    cyl(g, 0.02, 0.02, 0.22, MAT.chrome, side * 0.68, 4.4, -0.98, 6);
+    cyl(g, 0.02, 0.02, 0.22, MAT.chrome, side * 0.68, 3.6, -0.98, 6);
+    sphere(g, 0.025, MAT.joint, side * 0.68, 4.4, -0.88);
+    sphere(g, 0.025, MAT.joint, side * 0.68, 3.6, -0.88);
+    sphere(g, 0.025, MAT.joint, side * 0.68, 4.4, -1.08);
+    sphere(g, 0.025, MAT.joint, side * 0.68, 3.6, -1.08);
+  }
+  // Central exhaust port (waste heat vent)
+  cyl(g, 0.1, 0.1, 0.06, MAT.darkChrome, 0, 3.5, -1.16, 12);
+  cyl(g, 0.06, 0.06, 0.04, MAT.ventHot, 0, 3.5, -1.18, 10);
+  torus(g, 0.08, 0.01, MAT.vent, 0, 3.5, -1.16);
 
   // ══════════════════════════════════════════════════════════
   // SHOULDER HARDPOINTS — weapon/tool mounts on arm pivots
@@ -1409,45 +1533,61 @@ function buildChassis() {
   }
 
   // ══════════════════════════════════════════════════════════
-  // BACK AUXILIARY SYSTEMS — reactor housing, data hub, dorsal fin
+  // JETPACK INTERNAL SYSTEMS — reactor, flight computer, power bus
   // ══════════════════════════════════════════════════════════
-  // Central reactor housing (between thruster pylons)
-  box(g, 0.5, 0.6, 0.3, MAT.darkChrome, 0, 3.9, -0.92);
-  box(g, 0.4, 0.5, 0.2, MAT.servo, 0, 3.9, -0.92);
-  // Reactor glow core
-  sphere(g, 0.08, MAT.coreInner, 0, 3.9, -0.96);
-  torus(g, 0.12, 0.015, MAT.vent, 0, 3.9, -0.96);
-  // Reactor coolant manifold
+  // Central reactor housing (visible through backpack center)
+  box(g, 0.54, 0.64, 0.24, MAT.darkChrome, 0, 3.9, -1.0);
+  box(g, 0.44, 0.54, 0.16, MAT.servo, 0, 3.9, -1.0);
+  // Reactor glow core (larger, multi-ring)
+  sphere(g, 0.1, MAT.coreInner, 0, 3.9, -1.06);
+  torus(g, 0.14, 0.018, MAT.vent, 0, 3.9, -1.06);
+  torus(g, 0.1, 0.01, MAT.coreInner, 0, 3.9, -1.08);
+  // Reactor coolant manifold (feeds engines)
   for (let side = -1; side <= 1; side += 2) {
-    cyl(g, 0.03, 0.03, 0.18, MAT.hydraulic, side * 0.18, 3.9, -1.0, 8);
-    cableRun(g, 0.01, 0.5, side * 0.22, 3.9, -0.96);
+    cyl(g, 0.035, 0.035, 0.2, MAT.hydraulic, side * 0.2, 3.9, -1.1, 8);
+    cableRun(g, 0.012, 0.6, side * 0.24, 3.9, -1.06);
+    // Coolant to engine feed
+    cableRun(g, 0.014, 0.4, side * 0.36, 3.9, -1.06);
   }
-  boltCluster(g, 6, 0.18, 0, 3.9, -0.88);
+  boltCluster(g, 6, 0.2, 0, 3.9, -0.94);
 
-  // Data hub module (upper back)
-  box(g, 0.36, 0.28, 0.16, MAT.darkChrome, 0, 4.8, -0.88);
-  box(g, 0.28, 0.2, 0.1, MAT.servo, 0, 4.8, -0.88);
-  // Data port array (4 connectors)
-  for (let i = 0; i < 4; i++) {
-    const dx = -0.1 + i * 0.07;
-    cyl(g, 0.025, 0.025, 0.04, MAT.frameMat, dx, 4.8, -0.96, 6);
-    sphere(g, 0.01, MAT.vent, dx, 4.8, -0.98);
+  // Flight computer module (upper backpack)
+  box(g, 0.4, 0.3, 0.18, MAT.darkChrome, 0, 4.72, -1.0);
+  box(g, 0.32, 0.22, 0.12, MAT.servo, 0, 4.72, -1.0);
+  // Data port array (6 connectors)
+  for (let i = 0; i < 6; i++) {
+    const dx = -0.14 + i * 0.056;
+    cyl(g, 0.022, 0.022, 0.04, MAT.frameMat, dx, 4.72, -1.1, 6);
+    sphere(g, 0.009, MAT.vent, dx, 4.72, -1.12);
   }
-  // Status LEDs on data hub
-  sphere(g, 0.01, MAT.coreInner, 0.12, 4.9, -0.88);
-  sphere(g, 0.01, MAT.ventHot, -0.12, 4.9, -0.88);
+  // Status LEDs
+  sphere(g, 0.012, MAT.coreInner, 0.14, 4.84, -1.0);
+  sphere(g, 0.012, MAT.ventHot, -0.14, 4.84, -1.0);
+  sphere(g, 0.01, MAT.vent, 0, 4.84, -1.0);
 
-  // Dorsal stabilizer fin (upper spine, between shoulders)
-  box(g, 0.06, 0.5, 0.22, MAT.chrome, 0, 5.4, -0.72);
-  box(g, 0.03, 0.4, 0.16, MAT.panelLine, 0, 5.4, -0.74);
+  // Dorsal stabilizer fin (tall, between shoulders)
+  box(g, 0.07, 0.6, 0.28, MAT.chrome, 0, 5.4, -0.88);
+  box(g, 0.04, 0.5, 0.22, MAT.panelLine, 0, 5.4, -0.92);
+  box(g, 0.04, 0.35, 0.14, MAT.darkChrome, 0, 5.5, -0.96);
   // Fin tip beacon
-  sphere(g, 0.018, MAT.coreInner, 0, 5.62, -0.72);
+  sphere(g, 0.022, MAT.coreInner, 0, 5.68, -0.88);
+  // Fin base bolts
+  rivet(g, 0.03, 5.12, -0.86); rivet(g, -0.03, 5.12, -0.86);
 
-  // Lumbar support braces (lower back reinforcement)
+  // Power distribution bus (horizontal bar, lower backpack)
+  box(g, 0.9, 0.08, 0.1, MAT.frameMat, 0, 3.2, -1.04);
+  for (let i = 0; i < 5; i++) {
+    const bx = -0.3 + i * 0.15;
+    cyl(g, 0.018, 0.018, 0.06, MAT.hydraulic, bx, 3.2, -1.1, 6);
+    sphere(g, 0.008, MAT.vent, bx, 3.2, -1.14);
+  }
+
+  // Lumbar support braces (lower back reinforcement, connecting to jetpack)
   for (let side = -1; side <= 1; side += 2) {
-    box(g, 0.15, 0.8, 0.12, MAT.frameMat, side * 0.35, 2.9, -0.72);
-    hydraulicRam(g, 0.02, 0.6, side * 0.35, 2.9, -0.66);
-    rivet(g, side * 0.35, 3.24, -0.68); rivet(g, side * 0.35, 2.56, -0.68);
+    box(g, 0.16, 0.85, 0.14, MAT.frameMat, side * 0.36, 2.9, -0.76);
+    hydraulicRam(g, 0.022, 0.65, side * 0.36, 2.9, -0.7);
+    box(g, 0.06, 0.6, 0.06, MAT.panelLine, side * 0.36, 2.9, -0.82);
+    rivet(g, side * 0.36, 3.28, -0.72); rivet(g, side * 0.36, 2.52, -0.72);
   }
 
   // ── Attach pivot groups and store refs ──
