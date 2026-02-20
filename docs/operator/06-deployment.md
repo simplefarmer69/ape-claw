@@ -216,16 +216,31 @@ node scripts/migrate-to-sqlite.mjs
 
 ## Forge Agent Deployment
 
-To enable the AI chat agent on the Forge page (`/forge`), set `PERPLEXITY_API_KEY` on whichever platform hosts the server.
+To enable the AI chat agent on the Forge page (`/forge`), set any supported LLM API key on whichever platform hosts the server.
 
 ### Environment Variables
 
+Set **one** LLM provider key (first detected wins):
+
 ```bash
-PERPLEXITY_API_KEY=pplx-...          # Required — enables /api/forge/chat
-FORGE_AGENT_NAME=My Agent            # Optional display name
-FORGE_AGENT_ID=my-agent              # Optional ClawBot ID
-FORGE_AGENT_MODEL=sonar-pro          # Optional model override
-FORGE_AGENT_TOKEN=claw_...           # Optional pre-provisioned token
+PERPLEXITY_API_KEY=pplx-...          # Perplexity Sonar (web-grounded)
+OPENAI_API_KEY=sk-...                # OpenAI GPT-4o
+ANTHROPIC_API_KEY=sk-ant-...         # Anthropic Claude
+GROQ_API_KEY=gsk_...                 # Groq (fast Llama)
+TOGETHER_API_KEY=...                 # Together AI
+OLLAMA_HOST=http://host:11434        # Ollama (no key needed)
+# Or any OpenAI-compatible endpoint:
+FORGE_LLM_API_URL=https://...       # Custom endpoint URL
+FORGE_LLM_API_KEY=...               # Custom API key
+FORGE_LLM_MODEL=...                 # Custom model name
+```
+
+Optional identity overrides:
+
+```bash
+FORGE_AGENT_NAME=My Agent            # Display name
+FORGE_AGENT_ID=my-agent              # ClawBot ID
+FORGE_AGENT_TOKEN=claw_...           # Pre-provisioned token
 ```
 
 ### Skill Discovery

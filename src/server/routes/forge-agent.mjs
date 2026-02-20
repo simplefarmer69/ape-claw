@@ -1,11 +1,12 @@
 /**
- * Routes: POST /api/forge/chat
+ * Routes: POST /api/forge/chat, GET /api/forge/status
  *
  * Real OpenClaw agent wrapper for the Forge page.
+ * - Auto-detects LLM provider from environment (Perplexity, OpenAI, Anthropic, Ollama, Groq, or any OpenAI-compatible endpoint)
  * - Loads skills from ~/.openclaw/skills/ at startup
  * - Registered ClawBot identity (FORGE_AGENT_ID / FORGE_AGENT_TOKEN)
  * - Fetches live telemetry snapshot on each request
- * - Streams responses via Perplexity Sonar API
+ * - Streams responses back to the browser via SSE
  * - Posts conversations to chat log + emits telemetry events
  */
 
@@ -19,18 +20,14 @@ import { CLAWBOTS_PATH } from "../../lib/paths.mjs";
 import { registerClawbot, verifyClawbot } from "../../lib/clawbots.mjs";
 import logger from "../logger.mjs";
 
-const PERPLEXITY_API_URL = "https://api.perplexity.ai/chat/completions";
-const PERPLEXITY_MODEL = String(process.env.FORGE_AGENT_MODEL || "sonar-pro").trim();
 const SKILL_RESCAN_INTERVAL_MS = 5 * 60 * 1000;
 const MAX_HISTORY_TURNS = 10;
 const MAX_MESSAGE_LENGTH = 500;
 
 const FORGE_AGENT_ID = String(process.env.FORGE_AGENT_ID || "the-clawllector").trim();
 const FORGE_AGENT_TOKEN = String(process.env.FORGE_AGENT_TOKEN || "").trim();
-const PERPLEXITY_API_KEY = String(process.env.PERPLEXITY_API_KEY || "").trim();
 const FORGE_AGENT_DISPLAY_NAME = String(process.env.FORGE_AGENT_NAME || "The Clawllector").trim();
 
-// IP rate limiting for unauthenticated visitors
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 10;
 const rateBuckets = new Map();
@@ -38,6 +35,115 @@ const rateBuckets = new Map();
 let cachedSkills = { apeClawFull: "", summaries: [], loadedAt: 0 };
 let runtimeAgentToken = FORGE_AGENT_TOKEN;
 let runtimeAgentVerified = false;
+
+/* ══════════════════════════════════════════════════════════
+   LLM Provider Detection
+   Auto-detects from env vars. Priority:
+   1. Explicit FORGE_LLM_* overrides (any OpenAI-compatible endpoint)
+   2. PERPLEXITY_API_KEY
+   3. OPENAI_API_KEY
+   4. ANTHROPIC_API_KEY
+   5. GROQ_API_KEY
+   6. TOGETHER_API_KEY
+   7. OLLAMA_HOST / OLLAMA_BASE_URL (no key needed)
+   ══════════════════════════════════════════════════════════ */
+
+const PROVIDER_DEFAULTS = {
+  custom:     { url: null,                                           model: "gpt-4o" },
+  perplexity: { url: "https://api.perplexity.ai/chat/completions",   model: "sonar-pro" },
+  openai:     { url: "https://api.openai.com/v1/chat/completions",   model: "gpt-4o" },
+  anthropic:  { url: "https://api.anthropic.com/v1/messages",        model: "claude-sonnet-4-20250514" },
+  groq:       { url: "https://api.groq.com/openai/v1/chat/completions", model: "llama-3.3-70b-versatile" },
+  together:   { url: "https://api.together.xyz/v1/chat/completions", model: "meta-llama/Llama-3.3-70B-Instruct-Turbo" },
+  ollama:     { url: "http://localhost:11434/v1/chat/completions",   model: "llama3.2" },
+};
+
+function detectLlmProvider() {
+  const explicit = (process.env.FORGE_LLM_API_URL || "").trim();
+  const explicitKey = (process.env.FORGE_LLM_API_KEY || "").trim();
+  const explicitModel = (process.env.FORGE_LLM_MODEL || process.env.FORGE_AGENT_MODEL || "").trim();
+
+  if (explicit) {
+    return {
+      provider: "custom",
+      apiUrl: explicit,
+      apiKey: explicitKey,
+      model: explicitModel || PROVIDER_DEFAULTS.custom.model,
+      isAnthropic: explicit.includes("anthropic.com"),
+    };
+  }
+
+  const perplexity = (process.env.PERPLEXITY_API_KEY || "").trim();
+  if (perplexity) {
+    return {
+      provider: "perplexity",
+      apiUrl: PROVIDER_DEFAULTS.perplexity.url,
+      apiKey: perplexity,
+      model: explicitModel || PROVIDER_DEFAULTS.perplexity.model,
+      isAnthropic: false,
+    };
+  }
+
+  const openai = (process.env.OPENAI_API_KEY || "").trim();
+  if (openai) {
+    return {
+      provider: "openai",
+      apiUrl: PROVIDER_DEFAULTS.openai.url,
+      apiKey: openai,
+      model: explicitModel || PROVIDER_DEFAULTS.openai.model,
+      isAnthropic: false,
+    };
+  }
+
+  const anthropic = (process.env.ANTHROPIC_API_KEY || "").trim();
+  if (anthropic) {
+    return {
+      provider: "anthropic",
+      apiUrl: PROVIDER_DEFAULTS.anthropic.url,
+      apiKey: anthropic,
+      model: explicitModel || PROVIDER_DEFAULTS.anthropic.model,
+      isAnthropic: true,
+    };
+  }
+
+  const groq = (process.env.GROQ_API_KEY || "").trim();
+  if (groq) {
+    return {
+      provider: "groq",
+      apiUrl: PROVIDER_DEFAULTS.groq.url,
+      apiKey: groq,
+      model: explicitModel || PROVIDER_DEFAULTS.groq.model,
+      isAnthropic: false,
+    };
+  }
+
+  const together = (process.env.TOGETHER_API_KEY || "").trim();
+  if (together) {
+    return {
+      provider: "together",
+      apiUrl: PROVIDER_DEFAULTS.together.url,
+      apiKey: together,
+      model: explicitModel || PROVIDER_DEFAULTS.together.model,
+      isAnthropic: false,
+    };
+  }
+
+  const ollamaHost = (process.env.OLLAMA_HOST || process.env.OLLAMA_BASE_URL || "").trim();
+  if (ollamaHost) {
+    const base = ollamaHost.replace(/\/+$/, "");
+    return {
+      provider: "ollama",
+      apiUrl: `${base}/v1/chat/completions`,
+      apiKey: "",
+      model: explicitModel || PROVIDER_DEFAULTS.ollama.model,
+      isAnthropic: false,
+    };
+  }
+
+  return null;
+}
+
+const llmConfig = detectLlmProvider();
 
 /* ══════════════════════════════════════════════════════════
    Skill Loader — reads from ~/.openclaw/skills/ and fallback
@@ -162,7 +268,6 @@ function ensureForgeAgentIdentity() {
     logger.warn({ reason: check.reason }, "FORGE_AGENT_TOKEN provided but verification failed");
   }
 
-  // Auto-register fallback for first startup if token not pre-provisioned.
   try {
     const reg = registerClawbot({ agentId: FORGE_AGENT_ID, displayName: FORGE_AGENT_DISPLAY_NAME });
     runtimeAgentToken = reg.token;
@@ -285,13 +390,15 @@ function formatTelemetryContext(snapshot) {
 function buildSystemPrompt(snapshot) {
   refreshSkillCache();
 
+  const providerLabel = llmConfig ? `${llmConfig.provider} (${llmConfig.model})` : "unknown";
+
   const parts = [
-    `You are The Clawllector, a real OpenClaw agent running on apeclaw.ai with the ape-claw skill set installed. You are a registered ClawBot (agentId: ${FORGE_AGENT_ID}) powered by Perplexity Sonar.`,
+    `You are ${FORGE_AGENT_DISPLAY_NAME}, a real OpenClaw agent with the ape-claw skill set installed. You are a registered ClawBot (agentId: ${FORGE_AGENT_ID}).`,
     "",
     "## Identity",
     `- Registered ClawBot: ${FORGE_AGENT_ID}`,
     "- Framework: OpenClaw (openclaw.ai) — a personal AI assistant framework that runs on your machine",
-    "- LLM brain: Perplexity Sonar (web-grounded)",
+    `- LLM provider: ${providerLabel}`,
     `- Skills installed: ${cachedSkills.summaries.length + (cachedSkills.apeClawFull ? 1 : 0)}`,
     "",
   ];
@@ -361,7 +468,7 @@ function emitTelemetryEvent(userMessage, responseLength) {
       command: "forge-chat",
       dryRun: false,
       chainId: 33139,
-      payload: { messageLength: userMessage.length, responseLength },
+      payload: { messageLength: userMessage.length, responseLength, provider: llmConfig?.provider },
       result: { ok: true },
       ok: true,
       error: null,
@@ -392,7 +499,6 @@ function checkForgeRateLimit(req) {
   return null;
 }
 
-// Purge stale buckets every 2 minutes
 setInterval(() => {
   const cutoff = Date.now() - RATE_LIMIT_WINDOW_MS * 2;
   for (const [ip, bucket] of rateBuckets) {
@@ -401,12 +507,153 @@ setInterval(() => {
 }, 120_000).unref();
 
 /* ══════════════════════════════════════════════════════════
+   LLM Streaming — OpenAI-compatible (covers most providers)
+   ══════════════════════════════════════════════════════════ */
+
+async function streamOpenAICompatible(messages, res) {
+  const headers = { "content-type": "application/json" };
+  if (llmConfig.apiKey) headers["authorization"] = `Bearer ${llmConfig.apiKey}`;
+
+  const upstream = await fetch(llmConfig.apiUrl, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ model: llmConfig.model, messages, stream: true }),
+  });
+
+  if (!upstream.ok) {
+    const errText = await upstream.text().catch(() => "");
+    logger.error({ status: upstream.status, body: errText.slice(0, 500), provider: llmConfig.provider }, "LLM API error");
+    res.writeHead(502, { "content-type": "application/json" });
+    return res.end(JSON.stringify({ error: "upstream API error", status: upstream.status }));
+  }
+
+  res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", "connection": "keep-alive" });
+
+  let fullResponse = "";
+  const reader = upstream.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+
+    for (const line of lines) {
+      if (!line.startsWith("data: ")) continue;
+      const data = line.slice(6).trim();
+      if (data === "[DONE]") { res.write("data: [DONE]\n\n"); continue; }
+      try {
+        const chunk = JSON.parse(data);
+        const text = chunk.choices?.[0]?.delta?.content || "";
+        if (text) {
+          fullResponse += text;
+          res.write(`data: ${JSON.stringify({ text })}\n\n`);
+        }
+      } catch {}
+    }
+  }
+
+  if (buffer.trim()) {
+    const remaining = buffer.trim();
+    if (remaining.startsWith("data: ") && remaining.slice(6).trim() !== "[DONE]") {
+      try {
+        const chunk = JSON.parse(remaining.slice(6).trim());
+        const text = chunk.choices?.[0]?.delta?.content || "";
+        if (text) { fullResponse += text; res.write(`data: ${JSON.stringify({ text })}\n\n`); }
+      } catch {}
+    }
+  }
+
+  if (!res.writableEnded) { res.write("data: [DONE]\n\n"); res.end(); }
+  return fullResponse;
+}
+
+/* ══════════════════════════════════════════════════════════
+   LLM Streaming — Anthropic Messages API
+   ══════════════════════════════════════════════════════════ */
+
+async function streamAnthropic(systemPrompt, messages, res) {
+  const anthropicMessages = messages
+    .filter((m) => m.role !== "system")
+    .map((m) => ({ role: m.role, content: m.content }));
+
+  const upstream = await fetch(llmConfig.apiUrl, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": llmConfig.apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: llmConfig.model,
+      max_tokens: 2048,
+      system: systemPrompt,
+      messages: anthropicMessages,
+      stream: true,
+    }),
+  });
+
+  if (!upstream.ok) {
+    const errText = await upstream.text().catch(() => "");
+    logger.error({ status: upstream.status, body: errText.slice(0, 500), provider: "anthropic" }, "Anthropic API error");
+    res.writeHead(502, { "content-type": "application/json" });
+    return res.end(JSON.stringify({ error: "upstream API error", status: upstream.status }));
+  }
+
+  res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", "connection": "keep-alive" });
+
+  let fullResponse = "";
+  const reader = upstream.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+
+    for (const line of lines) {
+      if (line.startsWith("event: ")) continue;
+      if (!line.startsWith("data: ")) continue;
+      const data = line.slice(6).trim();
+      if (!data) continue;
+      try {
+        const evt = JSON.parse(data);
+        if (evt.type === "content_block_delta" && evt.delta?.text) {
+          fullResponse += evt.delta.text;
+          res.write(`data: ${JSON.stringify({ text: evt.delta.text })}\n\n`);
+        }
+        if (evt.type === "message_stop") {
+          res.write("data: [DONE]\n\n");
+        }
+      } catch {}
+    }
+  }
+
+  if (!res.writableEnded) { res.write("data: [DONE]\n\n"); res.end(); }
+  return fullResponse;
+}
+
+/* ══════════════════════════════════════════════════════════
    Init — called at server startup
    ══════════════════════════════════════════════════════════ */
 
 export function initForgeAgent() {
-  if (!PERPLEXITY_API_KEY) {
-    logger.warn("PERPLEXITY_API_KEY not set — forge agent will return 503");
+  if (!llmConfig) {
+    logger.warn(
+      "No LLM provider detected — forge agent will return 503. " +
+      "Set one of: PERPLEXITY_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, GROQ_API_KEY, " +
+      "TOGETHER_API_KEY, OLLAMA_HOST, or FORGE_LLM_API_URL",
+    );
+  } else {
+    logger.info({ provider: llmConfig.provider, model: llmConfig.model, hasKey: Boolean(llmConfig.apiKey) }, "LLM provider detected");
   }
   ensureForgeAgentIdentity();
   refreshSkillCache();
@@ -414,8 +661,8 @@ export function initForgeAgent() {
     {
       agentId: FORGE_AGENT_ID,
       verified: runtimeAgentVerified,
-      hasApiKey: Boolean(PERPLEXITY_API_KEY),
-      model: PERPLEXITY_MODEL,
+      provider: llmConfig?.provider || "none",
+      model: llmConfig?.model,
       skills: cachedSkills.summaries.length + (cachedSkills.apeClawFull ? 1 : 0),
     },
     "Forge agent initialized",
@@ -424,17 +671,17 @@ export function initForgeAgent() {
 
 /* ══════════════════════════════════════════════════════════
    Status — GET /api/forge/status
-   Lets the frontend know if the forge agent is configured
    ══════════════════════════════════════════════════════════ */
 
 export function handleForgeStatus(req, res) {
   res.writeHead(200, { "content-type": "application/json" });
   res.end(JSON.stringify({
-    configured: Boolean(PERPLEXITY_API_KEY),
+    configured: Boolean(llmConfig),
+    provider: llmConfig?.provider || null,
     agentId: FORGE_AGENT_ID,
     agentName: FORGE_AGENT_DISPLAY_NAME,
     verified: runtimeAgentVerified,
-    model: PERPLEXITY_MODEL,
+    model: llmConfig?.model || null,
     skills: cachedSkills.summaries.length + (cachedSkills.apeClawFull ? 1 : 0),
   }));
 }
@@ -444,9 +691,11 @@ export function handleForgeStatus(req, res) {
    ══════════════════════════════════════════════════════════ */
 
 export async function handleForgeChat(req, res) {
-  if (!PERPLEXITY_API_KEY) {
+  if (!llmConfig) {
     res.writeHead(503, { "content-type": "application/json" });
-    return res.end(JSON.stringify({ error: "forge agent not configured (missing PERPLEXITY_API_KEY)" }));
+    return res.end(JSON.stringify({
+      error: "Forge agent not configured. Set one of: PERPLEXITY_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, GROQ_API_KEY, TOGETHER_API_KEY, OLLAMA_HOST, or FORGE_LLM_API_URL",
+    }));
   }
 
   const rl = checkForgeRateLimit(req);
@@ -486,80 +735,12 @@ export async function handleForgeChat(req, res) {
   postToChat("forge", userMessage, "user");
 
   try {
-    const perplexityRes = await fetch(PERPLEXITY_API_URL, {
-      method: "POST",
-      headers: {
-        "authorization": `Bearer ${PERPLEXITY_API_KEY}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: PERPLEXITY_MODEL,
-        messages,
-        stream: true,
-      }),
-    });
+    let fullResponse;
 
-    if (!perplexityRes.ok) {
-      const errText = await perplexityRes.text().catch(() => "");
-      logger.error({ status: perplexityRes.status, body: errText.slice(0, 500) }, "Perplexity API error");
-      res.writeHead(502, { "content-type": "application/json" });
-      return res.end(JSON.stringify({ error: "upstream API error", status: perplexityRes.status }));
-    }
-
-    res.writeHead(200, {
-      "content-type": "text/event-stream",
-      "cache-control": "no-cache",
-      "connection": "keep-alive",
-    });
-
-    let fullResponse = "";
-    const reader = perplexityRes.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
-
-      for (const line of lines) {
-        if (!line.startsWith("data: ")) continue;
-        const data = line.slice(6).trim();
-        if (data === "[DONE]") {
-          res.write("data: [DONE]\n\n");
-          continue;
-        }
-        try {
-          const chunk = JSON.parse(data);
-          const text = chunk.choices?.[0]?.delta?.content || "";
-          if (text) {
-            fullResponse += text;
-            res.write(`data: ${JSON.stringify({ text })}\n\n`);
-          }
-        } catch {}
-      }
-    }
-
-    if (buffer.trim()) {
-      const remaining = buffer.trim();
-      if (remaining.startsWith("data: ") && remaining.slice(6).trim() !== "[DONE]") {
-        try {
-          const chunk = JSON.parse(remaining.slice(6).trim());
-          const text = chunk.choices?.[0]?.delta?.content || "";
-          if (text) {
-            fullResponse += text;
-            res.write(`data: ${JSON.stringify({ text })}\n\n`);
-          }
-        } catch {}
-      }
-    }
-
-    if (!res.writableEnded) {
-      res.write("data: [DONE]\n\n");
-      res.end();
+    if (llmConfig.isAnthropic) {
+      fullResponse = await streamAnthropic(systemPrompt, messages, res);
+    } else {
+      fullResponse = await streamOpenAICompatible(messages, res);
     }
 
     if (fullResponse) {
@@ -567,7 +748,7 @@ export async function handleForgeChat(req, res) {
       emitTelemetryEvent(userMessage, fullResponse.length);
     }
   } catch (err) {
-    logger.error({ err }, "Forge agent stream error");
+    logger.error({ err, provider: llmConfig.provider }, "Forge agent stream error");
     if (!res.headersSent) {
       res.writeHead(500, { "content-type": "application/json" });
       return res.end(JSON.stringify({ error: "internal error" }));

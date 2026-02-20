@@ -75,24 +75,37 @@ The Forge page at `/forge` includes an AI chat panel. On the live website (apecl
 
 ### What you need
 
-1. A **Perplexity API key** — sign up at [perplexity.ai](https://www.perplexity.ai/) and generate an API key from Settings > API.
+1. **Any LLM API key** — the forge agent auto-detects your provider. Pick one:
+   - **OpenAI** (`OPENAI_API_KEY`) — GPT-4o, GPT-4, etc.
+   - **Anthropic** (`ANTHROPIC_API_KEY`) — Claude models
+   - **Perplexity** (`PERPLEXITY_API_KEY`) — Sonar (web-grounded)
+   - **Groq** (`GROQ_API_KEY`) — fast Llama inference (free tier available)
+   - **Together AI** (`TOGETHER_API_KEY`) — open-source models
+   - **Ollama** (`OLLAMA_HOST`) — run models locally, no API key needed
+   - **Any OpenAI-compatible endpoint** (`FORGE_LLM_API_URL` + `FORGE_LLM_API_KEY`)
 2. **OpenClaw + ape-claw skills** installed (you already have these from Step 1-2).
 
 ### Set environment variables
 
+Pick one provider — one env var is all you need:
+
 ```bash
+# Any one of these:
+export OPENAI_API_KEY=sk-...
+export ANTHROPIC_API_KEY=sk-ant-...
 export PERPLEXITY_API_KEY=pplx-...
+export GROQ_API_KEY=gsk_...
+export OLLAMA_HOST=http://localhost:11434
 ```
 
-That single variable is all that's required. The forge agent will auto-register as a ClawBot, load skills from `~/.openclaw/skills/`, and respond via Perplexity Sonar with full knowledge of your installed skills and live telemetry.
+The forge agent auto-registers as a ClawBot, loads skills from `~/.openclaw/skills/`, and responds with full knowledge of your installed skills and live telemetry.
 
 Optional overrides:
 
 ```bash
 export FORGE_AGENT_NAME="My Agent"       # Display name in chat (default: "The Clawllector")
 export FORGE_AGENT_ID=my-agent           # ClawBot ID (default: "the-clawllector")
-export FORGE_AGENT_MODEL=sonar-pro       # Perplexity model (default: "sonar-pro")
-export FORGE_AGENT_TOKEN=claw_...        # Pre-provisioned token for verified identity
+export FORGE_LLM_MODEL=gpt-4o-mini      # Override model (default: auto per provider)
 ```
 
 ### Start the server
@@ -101,7 +114,7 @@ export FORGE_AGENT_TOKEN=claw_...        # Pre-provisioned token for verified id
 npm run start:ui
 ```
 
-Open [http://localhost:8787/forge](http://localhost:8787/forge). The chat panel will show a green indicator confirming it's connected to your agent. If `PERPLEXITY_API_KEY` is not set, the indicator shows a setup hint and chat falls back to the basic message relay (`/api/chat`).
+Open [http://localhost:8787/forge](http://localhost:8787/forge). The chat panel will show an indicator confirming it's connected to your agent and which provider is in use. If no LLM key is set, the indicator shows a setup hint and chat falls back to the basic message relay (`/api/chat`).
 
 ### How it works
 
@@ -110,7 +123,7 @@ The forge agent is defined in `src/server/routes/forge-agent.mjs`. On each reque
 1. Loads your installed OpenClaw skills from `~/.openclaw/skills/` (re-scans every 5 minutes).
 2. Fetches a live telemetry snapshot — recent events, chat messages, clawbots, skill stats, pod status, and spend data.
 3. Builds a system prompt with your agent identity, skill knowledge, and telemetry context.
-4. Streams the response from the Perplexity Sonar API back to the browser via SSE.
+4. Streams the response from your configured LLM provider back to the browser via SSE.
 5. Logs the conversation to the chat log and emits a telemetry event.
 
 ### Verify it's working

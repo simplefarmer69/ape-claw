@@ -58,15 +58,36 @@ This document lists all environment variables used by ApeClaw, organized by comp
 
 ## Forge Agent Variables
 
-| Variable | Description | Required | Default |
-|----------|-------------|----------|---------|
-| `PERPLEXITY_API_KEY` | Perplexity Sonar API key — powers the forge agent LLM brain | Yes* | None |
-| `FORGE_AGENT_ID` | ClawBot agent ID for the forge agent | No | `"the-clawllector"` |
-| `FORGE_AGENT_TOKEN` | Pre-provisioned ClawBot token for verified identity | No | Auto-registers on startup |
-| `FORGE_AGENT_MODEL` | Perplexity model to use | No | `"sonar-pro"` |
-| `FORGE_AGENT_NAME` | Display name shown in chat | No | `"The Clawllector"` |
+The forge agent auto-detects your LLM provider. Set **any one** of the API key variables below — the first one found is used.
 
-\* Required to enable the forge agent chat on `POST /api/forge/chat`. Without this key the endpoint returns 503 and the forge chat falls back to the basic `/api/chat` relay.
+**LLM Provider (set one):**
+
+| Variable | Provider | Default Model |
+|----------|----------|---------------|
+| `PERPLEXITY_API_KEY` | Perplexity Sonar (web-grounded) | `sonar-pro` |
+| `OPENAI_API_KEY` | OpenAI | `gpt-4o` |
+| `ANTHROPIC_API_KEY` | Anthropic Claude | `claude-sonnet-4-20250514` |
+| `GROQ_API_KEY` | Groq | `llama-3.3-70b-versatile` |
+| `TOGETHER_API_KEY` | Together AI | `meta-llama/Llama-3.3-70B-Instruct-Turbo` |
+| `OLLAMA_HOST` | Ollama (local, no key needed) | `llama3.2` |
+
+**Explicit override (any OpenAI-compatible endpoint):**
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `FORGE_LLM_API_URL` | Full chat completions URL | Auto-detected from provider |
+| `FORGE_LLM_API_KEY` | API key for custom endpoint | Auto-detected from provider |
+| `FORGE_LLM_MODEL` | Model name override | Auto-detected from provider |
+
+**Agent identity:**
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `FORGE_AGENT_ID` | ClawBot agent ID | `"the-clawllector"` |
+| `FORGE_AGENT_TOKEN` | Pre-provisioned ClawBot token for verified identity | Auto-registers on startup |
+| `FORGE_AGENT_NAME` | Display name shown in chat | `"The Clawllector"` |
+
+Without any LLM key the endpoint returns 503 and the forge chat falls back to the basic `/api/chat` relay.
 
 ## External Service Variables
 
@@ -129,14 +150,32 @@ export APE_CLAW_CORS_ORIGINS=https://apeclaw.ai
 export APE_CLAW_STORAGE=file  # or "sqlite"
 ```
 
-### Forge Agent (Local)
+### Forge Agent (Local) — pick any provider
 
 ```bash
+# Option A: OpenAI
+export OPENAI_API_KEY=sk-...
+
+# Option B: Anthropic
+export ANTHROPIC_API_KEY=sk-ant-...
+
+# Option C: Perplexity
 export PERPLEXITY_API_KEY=pplx-...
-# Optional overrides:
+
+# Option D: Groq (free tier available)
+export GROQ_API_KEY=gsk_...
+
+# Option E: Local Ollama (no key needed)
+export OLLAMA_HOST=http://localhost:11434
+
+# Option F: Any OpenAI-compatible endpoint
+export FORGE_LLM_API_URL=https://your-endpoint.com/v1/chat/completions
+export FORGE_LLM_API_KEY=your-key
+export FORGE_LLM_MODEL=your-model
+
+# Optional identity overrides:
 export FORGE_AGENT_NAME="My Bot"
 export FORGE_AGENT_ID=my-forge-bot
-export FORGE_AGENT_MODEL=sonar-pro
 ```
 
 ### Pod Operations

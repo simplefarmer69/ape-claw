@@ -20,6 +20,7 @@ let unread = 0;
 let streaming = false;
 let forgeAgentAvailable = null; // null = unknown, true/false after probe
 let localAgentName = "Agent";
+let localProvider = "";
 
 const conversationHistory = [];
 
@@ -37,6 +38,7 @@ async function probeForgeAgent() {
     if (!res.ok) return false;
     const data = await res.json();
     if (data.agentName) localAgentName = data.agentName;
+    if (data.provider) localProvider = data.provider;
     return data.configured === true;
   } catch {
     return false;
@@ -302,7 +304,8 @@ async function init() {
       if (inp) { inp.disabled = false; inp.placeholder = `Ask ${localAgentName} anything...`; }
       if (btn) btn.disabled = false;
       if (indicator) {
-        indicator.textContent = `\u{1F99E} Connected to ${localAgentName} (OpenClaw forge agent)`;
+        const providerTag = localProvider ? ` via ${localProvider}` : "";
+        indicator.textContent = `\u{1F99E} Connected to ${localAgentName}${providerTag}`;
         indicator.style.display = "block";
       }
     } else {
@@ -310,7 +313,11 @@ async function init() {
       if (btn) btn.disabled = true;
       if (indicator) {
         indicator.innerHTML =
-          '\u{1F512} Forge agent not configured. Set <code style="color:var(--neon-cyan,#63d7ff)">PERPLEXITY_API_KEY</code> to connect your OpenClaw bot. ' +
+          '\u{1F512} Forge agent not configured. Set an LLM API key ' +
+          '(<code style="color:var(--neon-cyan,#63d7ff)">OPENAI_API_KEY</code>, ' +
+          '<code style="color:var(--neon-cyan,#63d7ff)">ANTHROPIC_API_KEY</code>, ' +
+          '<code style="color:var(--neon-cyan,#63d7ff)">PERPLEXITY_API_KEY</code>, ' +
+          'or <code style="color:var(--neon-cyan,#63d7ff)">OLLAMA_HOST</code>) to enable. ' +
           '<a href="/docs" style="color:var(--accent,#cfff04)">Setup guide</a>';
         indicator.style.display = "block";
       }
