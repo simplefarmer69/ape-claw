@@ -1,12 +1,18 @@
 {
   "ok": true,
-  "total": 10026,
+  "total": 10027,
   "seed": 8,
-  "imported": 10018,
+  "imported": 10019,
   "user": 0,
   "vetted": 10004,
-  "onchain": 10023,
+  "onchain": 10024,
   "recent": [
+    {
+      "name": "Walkie — Agent P2P Communication",
+      "slug": "clawhub-walkie",
+      "source": "github_repo_skill_md",
+      "importedAt": "2026-02-20T00:00:00.000Z"
+    },
     {
       "name": "Notify Forta 134",
       "slug": "ac-notify-forta-134",
