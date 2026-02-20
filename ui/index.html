@@ -1927,7 +1927,7 @@ function renderTerminal() {
 function updateStats() {
   const activeCount = [...agentMap.values()].filter(a => a.status==='active').length;
   const totalCount = agentMap.size;
-  const clawbotCount = Math.max(totalCount, REGISTERED_CLAWBOTS.length, 111);
+  const clawbotCount = Math.max(totalCount, REGISTERED_CLAWBOTS.length);
   const setIf = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   setIf('totalAgents', activeCount + '/' + totalCount);
   setIf('totalEvents', totalEvents.toLocaleString());

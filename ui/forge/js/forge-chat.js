@@ -130,18 +130,33 @@ async function sendToForgeAgent(text) {
   let buffer = "";
 
   try {
-    const res = await fetch("/api/forge/chat", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        message: text,
-        history: conversationHistory.slice(-20),
-      }),
-    });
+    async function requestOnce() {
+      return fetch("/api/forge/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          message: text,
+          history: conversationHistory.slice(-20),
+        }),
+      });
+    }
+
+    let res = await requestOnce();
+    if (!res.ok && (res.status === 429 || res.status === 502 || res.status === 503 || res.status === 504)) {
+      const waitMs = 500;
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+      res = await requestOnce();
+    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      const errMsg = errData.error || errData.message || res.statusText || `HTTP ${res.status}`;
+      let errMsg = errData.error || errData.message || res.statusText || `HTTP ${res.status}`;
+      if (errData.status && !String(errMsg).includes(String(errData.status))) {
+        errMsg += ` (${errData.status})`;
+      }
+      if (errData.retryAfter) {
+        errMsg += `, retry in ${errData.retryAfter}s`;
+      }
       if (bodyEl) bodyEl.textContent = `Error: ${errMsg}`;
       finishStreaming();
       return;

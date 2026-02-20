@@ -35,12 +35,23 @@ const SEARCH_LIMIT = 30;
 /* ══════════════════════════════════════════════════════════
    Fetch helpers
    ══════════════════════════════════════════════════════════ */
-async function fetchJSON(url, options = {}) {
-  try {
-    const r = await fetch(url, options);
-    if (!r.ok) return null;
-    return await r.json();
-  } catch { return null; }
+async function fetchJSON(url, options = {}, config = {}) {
+  const retries = Number(config.retries ?? 0);
+  const timeoutMs = Number(config.timeoutMs ?? 8000);
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const r = await fetch(url, {
+        ...options,
+        signal: options.signal || AbortSignal.timeout(timeoutMs),
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return await r.json();
+    } catch {
+      if (attempt >= retries) return null;
+      await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
+    }
+  }
+  return null;
 }
 
 function authHeaders() {
@@ -158,9 +169,9 @@ function inferCategory(skill) {
    ══════════════════════════════════════════════════════════ */
 async function loadInstalledSkills() {
   const [seedRes, userRes, starterRes] = await Promise.all([
-    fetchJSON("/api/skills/search?source=seed&limit=500"),
-    fetchJSON("/api/skillcards/user"),
-    fetchJSON("/api/pod/starter-pack"),
+    fetchJSON("/api/skills/search?source=seed&limit=500", {}, { retries: 1 }),
+    fetchJSON("/api/skillcards/user", {}, { retries: 1 }),
+    fetchJSON("/api/pod/starter-pack", {}, { retries: 1, timeoutMs: 12000 }),
   ]);
 
   const seedSkills = seedRes?.results || [];
@@ -173,6 +184,18 @@ async function loadInstalledSkills() {
     if (s.slug && !seen.has(s.slug)) {
       seen.add(s.slug);
       merged.push(s);
+    }
+  }
+
+  // Fallback: if live endpoints briefly fail, populate from stats.recent so the bot still has visible parts.
+  if (merged.length === 0) {
+    const stats = await fetchJSON("/api/skills/stats", {}, { retries: 1 });
+    const recent = Array.isArray(stats?.recent) ? stats.recent : [];
+    for (const s of recent) {
+      if (s?.slug && !seen.has(s.slug)) {
+        seen.add(s.slug);
+        merged.push({ ...s, source: s.source || "fallback-recent" });
+      }
     }
   }
 

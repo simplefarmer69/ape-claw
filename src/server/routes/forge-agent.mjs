@@ -428,6 +428,33 @@ function buildSystemPrompt(snapshot) {
   return parts.join("\n");
 }
 
+function normalizeConversationHistory(history) {
+  const cleaned = [];
+  for (const turn of history) {
+    const role = turn?.role === "assistant" ? "assistant" : "user";
+    const content = String(turn?.content || "").trim();
+    if (!content) continue;
+    cleaned.push({ role, content: content.slice(0, 2000) });
+  }
+
+  // Perplexity/OpenAI-compatible endpoints expect strict user/assistant alternation.
+  // Start from user, skip invalid out-of-order turns.
+  const alternating = [];
+  let expectedRole = "user";
+  for (const turn of cleaned) {
+    if (turn.role !== expectedRole) continue;
+    alternating.push(turn);
+    expectedRole = expectedRole === "user" ? "assistant" : "user";
+  }
+
+  // If history ends with a user turn, drop it because we'll append a fresh user message.
+  if (alternating.length && alternating[alternating.length - 1].role === "user") {
+    alternating.pop();
+  }
+
+  return alternating;
+}
+
 /* ══════════════════════════════════════════════════════════
    Actions — post to chat log + emit telemetry
    ══════════════════════════════════════════════════════════ */
@@ -514,17 +541,32 @@ async function streamOpenAICompatible(messages, res) {
   const headers = { "content-type": "application/json" };
   if (llmConfig.apiKey) headers["authorization"] = `Bearer ${llmConfig.apiKey}`;
 
-  const upstream = await fetch(llmConfig.apiUrl, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ model: llmConfig.model, messages, stream: true }),
-  });
+  async function requestOnce() {
+    return fetch(llmConfig.apiUrl, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ model: llmConfig.model, messages, stream: true }),
+    });
+  }
+  let upstream = await requestOnce();
+  if (!upstream.ok && (upstream.status === 429 || upstream.status >= 500)) {
+    const retryAfter = Number(upstream.headers.get("retry-after") || 0);
+    const waitMs = Number.isFinite(retryAfter) && retryAfter > 0 ? Math.min(retryAfter * 1000, 4000) : 500;
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+    upstream = await requestOnce();
+  }
 
   if (!upstream.ok) {
     const errText = await upstream.text().catch(() => "");
     logger.error({ status: upstream.status, body: errText.slice(0, 500), provider: llmConfig.provider }, "LLM API error");
     res.writeHead(502, { "content-type": "application/json" });
-    return res.end(JSON.stringify({ error: "upstream API error", status: upstream.status }));
+    const retryAfter = Number(upstream.headers.get("retry-after") || 0) || undefined;
+    return res.end(JSON.stringify({
+      error: `upstream API error (${llmConfig.provider} ${upstream.status})`,
+      status: upstream.status,
+      provider: llmConfig.provider,
+      retryAfter,
+    }));
   }
 
   res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", "connection": "keep-alive" });
@@ -581,27 +623,42 @@ async function streamAnthropic(systemPrompt, messages, res) {
     .filter((m) => m.role !== "system")
     .map((m) => ({ role: m.role, content: m.content }));
 
-  const upstream = await fetch(llmConfig.apiUrl, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": llmConfig.apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: llmConfig.model,
-      max_tokens: 2048,
-      system: systemPrompt,
-      messages: anthropicMessages,
-      stream: true,
-    }),
-  });
+  async function requestOnce() {
+    return fetch(llmConfig.apiUrl, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": llmConfig.apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: llmConfig.model,
+        max_tokens: 2048,
+        system: systemPrompt,
+        messages: anthropicMessages,
+        stream: true,
+      }),
+    });
+  }
+  let upstream = await requestOnce();
+  if (!upstream.ok && (upstream.status === 429 || upstream.status >= 500)) {
+    const retryAfter = Number(upstream.headers.get("retry-after") || 0);
+    const waitMs = Number.isFinite(retryAfter) && retryAfter > 0 ? Math.min(retryAfter * 1000, 4000) : 500;
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+    upstream = await requestOnce();
+  }
 
   if (!upstream.ok) {
     const errText = await upstream.text().catch(() => "");
     logger.error({ status: upstream.status, body: errText.slice(0, 500), provider: "anthropic" }, "Anthropic API error");
     res.writeHead(502, { "content-type": "application/json" });
-    return res.end(JSON.stringify({ error: "upstream API error", status: upstream.status }));
+    const retryAfter = Number(upstream.headers.get("retry-after") || 0) || undefined;
+    return res.end(JSON.stringify({
+      error: `upstream API error (anthropic ${upstream.status})`,
+      status: upstream.status,
+      provider: "anthropic",
+      retryAfter,
+    }));
   }
 
   res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", "connection": "keep-alive" });
@@ -725,10 +782,9 @@ export async function handleForgeChat(req, res) {
   const systemPrompt = buildSystemPrompt(snapshot);
 
   const messages = [{ role: "system", content: systemPrompt }];
-  for (const turn of history) {
-    const role = turn.role === "assistant" ? "assistant" : "user";
-    const content = String(turn.content || "").trim();
-    if (content) messages.push({ role, content: content.slice(0, 2000) });
+  const normalizedHistory = normalizeConversationHistory(history);
+  for (const turn of normalizedHistory) {
+    messages.push(turn);
   }
   messages.push({ role: "user", content: userMessage });
 
