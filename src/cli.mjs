@@ -373,6 +373,63 @@ function safeSkillVersion(v) {
   return s;
 }
 
+const TRUSTED_SKILL_API_HOSTS = new Set(["apeclaw.ai", "www.apeclaw.ai", "api.apeclaw.ai"]);
+
+function resolveSkillApiBase(args = {}) {
+  const explicit = String(args.api || "").trim();
+  const fromEnv = String(process.env.APE_CLAW_API_URL || "").trim();
+  const raw = explicit || fromEnv || "https://apeclaw.ai";
+  let u;
+  try {
+    u = new URL(raw);
+  } catch {
+    throw new Error(`Invalid APE_CLAW_API_URL: ${raw}`);
+  }
+  const isLoopback = u.hostname === "localhost" || u.hostname === "127.0.0.1";
+  if (u.protocol !== "https:" && !(isLoopback && Boolean(args["allow-insecure-api"]))) {
+    throw new Error("Remote skill API must use HTTPS. For local dev only, use --allow-insecure-api with localhost.");
+  }
+  if (!TRUSTED_SKILL_API_HOSTS.has(u.hostname) && !Boolean(args["allow-custom-api"])) {
+    throw new Error(`Untrusted skill API host: ${u.hostname}. Use --allow-custom-api to override.`);
+  }
+  return u.origin.replace(/\/+$/, "");
+}
+
+function assertRemoteSkillCardSafe({ requestedSlug, card, skillMeta = null, asJson = false, allowUnvetted = false, allowHighRisk = false }) {
+  if (!card || typeof card !== "object") throw new Error("Remote API returned invalid skill card object");
+  const normalizedRequested = toSlug(requestedSlug);
+  const normalizedCardSlug = toSlug(card.slug || card.name || "");
+  if (!normalizedCardSlug) throw new Error("Remote skill card missing slug/name");
+  if (normalizedCardSlug !== normalizedRequested) {
+    throw new Error(`Remote skill slug mismatch (requested=${normalizedRequested}, received=${normalizedCardSlug})`);
+  }
+  const version = safeSkillVersion(card.version || "1.0.0");
+  if (!version) throw new Error("Remote skill version is invalid");
+  const description = String(card.description || "").trim();
+  if (!description) throw new Error("Remote skill description is required");
+  const documentation = String(card.documentation_md || "");
+  if (Buffer.byteLength(documentation, "utf8") > 300_000) {
+    throw new Error("Remote skill documentation is too large (>300KB)");
+  }
+  if (/[\x00-\x08\x0B\x0C\x0E-\x1F]/.test(documentation)) {
+    throw new Error("Remote skill documentation contains control characters");
+  }
+
+  const metaRiskTierRaw = Number(skillMeta?.riskTier ?? card?.constraints?.riskTier ?? card?.riskTier ?? 2);
+  const metaRiskTier = Number.isFinite(metaRiskTierRaw) ? Math.max(1, Math.min(3, Math.round(metaRiskTierRaw))) : 2;
+  if (metaRiskTier >= 3 && !allowHighRisk) {
+    throw new Error(`Remote skill risk tier ${metaRiskTier} requires explicit --allow-high-risk`);
+  }
+  // If API metadata is present, require vetting by default.
+  if (skillMeta && skillMeta.vettedOk !== true && !allowUnvetted) {
+    throw new Error("Remote skill is not vetted. Use --allow-unvetted to install anyway.");
+  }
+
+  if (!asJson && skillMeta && skillMeta.vettedOk === true) {
+    console.log("\x1b[2m  Security: vetted skill metadata confirmed by API.\x1b[0m");
+  }
+}
+
 function resolveBundledSkillFile(packageRoot, slug) {
   const skillsDataDir = path.join(packageRoot, "data", "skills");
   const target = path.join(skillsDataDir, `${slug}.json`);
@@ -397,16 +454,18 @@ function resolveBundledSkillFile(packageRoot, slug) {
   return "";
 }
 
-async function fetchSkillFromApi(slug) {
-  const apiBase = process.env.APE_CLAW_API_URL || "https://apeclaw.ai";
+async function fetchSkillFromApi(slug, args = {}) {
+  const apiBase = resolveSkillApiBase(args);
   const url = `${apiBase}/api/skills/${encodeURIComponent(slug)}`;
   try {
     const res = await fetch(url, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(15000) });
-    if (!res.ok) return null;
+    if (!res.ok) return { card: null, skillMeta: null, url, apiBase };
     const json = await res.json();
-    return json?.card || json?.skill || json || null;
+    const card = json?.card || json?.skill || json || null;
+    const skillMeta = json?.skill && typeof json.skill === "object" ? json.skill : null;
+    return { card, skillMeta, url, apiBase };
   } catch {
-    return null;
+    return { card: null, skillMeta: null, url, apiBase };
   }
 }
 
@@ -615,11 +674,36 @@ async function main() {
       } catch (bundledErr) {
         // Not in bundled data — fetch from API
         if (!asJson) console.log(`\x1b[2m  Skill not bundled locally, fetching from API…\x1b[0m`);
-        const card = await fetchSkillFromApi(requestedSkillSlug);
+        let remote;
+        try {
+          remote = await fetchSkillFromApi(requestedSkillSlug, args);
+        } catch (apiErr) {
+          if (asJson) return print({ ok: false, error: `Skill "${requestedSkillSlug}" rejected: ${apiErr.message}` }, true);
+          console.error(`\x1b[31m  ✗ ${apiErr.message}\x1b[0m`);
+          process.exitCode = 1;
+          return;
+        }
+        const card = remote?.card || null;
         if (!card || typeof card !== "object" || (!card.name && !card.slug)) {
           if (asJson) return print({ ok: false, error: `Skill "${requestedSkillSlug}" not found (bundled: ${bundledErr.message}, API: not found)` }, true);
           console.error(`\x1b[31m  ✗ Skill "${requestedSkillSlug}" not found in bundled library or API.\x1b[0m`);
           console.error(`\x1b[2m    Browse available skills at https://apeclaw.ai/skills\x1b[0m`);
+          process.exitCode = 1;
+          return;
+        }
+        try {
+          assertRemoteSkillCardSafe({
+            requestedSlug: requestedSkillSlug,
+            card,
+            skillMeta: remote?.skillMeta || null,
+            asJson,
+            allowUnvetted: Boolean(args["allow-unvetted"]),
+            allowHighRisk: Boolean(args["allow-high-risk"]),
+          });
+        } catch (safeErr) {
+          if (asJson) return print({ ok: false, error: safeErr.message }, true);
+          console.error(`\x1b[31m  ✗ ${safeErr.message}\x1b[0m`);
+          console.error(`\x1b[2m    Use --allow-unvetted and/or --allow-high-risk only if you trust this source.\x1b[0m`);
           process.exitCode = 1;
           return;
         }
@@ -2192,7 +2276,7 @@ async function main() {
       "bridge execute (autonomous)": "ape-claw bridge execute --request <requestId> --execute --autonomous --json",
       "bridge status": "ape-claw bridge status --request <requestId> --json",
       "allowlist audit": "ape-claw allowlist audit --json",
-      "skill install": "ape-claw skill install [<slug>] [--scope local] [--starter-pack | --no-starter-pack] --json",
+      "skill install": "ape-claw skill install [<slug>] [--scope local] [--starter-pack | --no-starter-pack] [--allow-unvetted] [--allow-high-risk] [--allow-custom-api] [--allow-insecure-api] --json",
       "v2 skill mint": "ape-claw v2 skill mint --rpc <url> --privateKey 0x... --skillNft 0x... --registry 0x... [--parentId 0] [--royalty-receiver 0x... --royalty-bps 500] --json",
       "v2 skill publish": "ape-claw v2 skill publish --rpc <url> --privateKey 0x... --registry 0x... --skillId <id> --file <skillcard.json> [--uri ipfs://...] [--riskTier 1] --json",
       "v2 intent create": "ape-claw v2 intent create --rpc <url> --privateKey 0x... --intents 0x... --payload '{...}' [--expiresAt <unixSec>] --json",

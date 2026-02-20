@@ -21,6 +21,15 @@ function safeVersion(v) {
   return s;
 }
 
+function yamlSafe(v) {
+  const s = String(v || "");
+  if (!s) return "\"\"";
+  if (/[:{}\[\]#&*!|>'"%@`,\n]/.test(s) || s.startsWith(" ") || s.endsWith(" ")) {
+    return `"${s.replace(/\\/g, "\\\\").replace(/"/g, "\\\"")}"`;
+  }
+  return s;
+}
+
 function resolveHumanizerSlug(allSlugs) {
   const preferred = ["clawhub-humanizer", "clawhub-humanizer-2", "clawhub-afrexai-humanizer"];
   for (const s of preferred) {
@@ -109,7 +118,15 @@ function installOpenClawSkillCard(skillcard, fallbackSlug = "") {
   const name = String(skillcard?.name || slugValue).trim();
   const version = String(skillcard?.version || "1.0.0").trim();
   const description = String(skillcard?.description || "").trim();
-  const content = doc || `---\nname: ${name}\nversion: ${version}\ndescription: ${description}\n---\n\n# ${name}\n\n${description}\n`;
+  if (Buffer.byteLength(doc, "utf8") > 300_000) throw new Error("documentation_md too large");
+  const frontmatter = `---\nname: ${slugValue}\nversion: ${yamlSafe(version)}\ndescription: ${yamlSafe(description.slice(0, 300))}\n---\n`;
+  let content;
+  if (doc) {
+    const stripped = doc.replace(/^---[\s\S]*?---\s*/, "").trim();
+    content = `${frontmatter}\n${stripped}\n`;
+  } else {
+    content = `${frontmatter}\n# ${name}\n\n${description}\n`;
+  }
   fs.writeFileSync(path.join(skillDir, "SKILL.md"), content, "utf8");
   return { slug: slugValue, skillDir };
 }

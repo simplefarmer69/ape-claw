@@ -21,6 +21,7 @@ const SKILLCARDS_USER_INDEX_PATH = path.join(SKILLCARDS_USER_DIR, "index.json");
 const SKILLCARDS_SEED_DIR = path.join(PROJECT_ROOT, "skillcards", "seed");
 const SKILLCARDS_BUNDLED_DIR = path.join(PROJECT_ROOT, "data", "skills");
 const SKILLCARDS_IMPORTED_INDEX_PATH = path.join(PROJECT_ROOT, "skillcards", "imported", "index.json");
+const SKILLCARDS_SNAPSHOT_PATH = path.join(PROJECT_ROOT, "data", "skills-search.json");
 
 const MERGED_INDEX_CACHE_TTL_MS = 60_000;
 let mergedSkillIndexCache = { data: null, expiresAt: 0 };
@@ -145,6 +146,36 @@ function buildMergedSkillIndex() {
       }
     }
   } catch { /* skip */ }
+
+  // If all live sources are empty, load from the pre-built snapshot so the
+  // API never returns 0 skills (covers deployment misconfigs, missing volumes, etc).
+  if (merged.length === 0) {
+    try {
+      if (fs.existsSync(SKILLCARDS_SNAPSHOT_PATH)) {
+        const snap = JSON.parse(fs.readFileSync(SKILLCARDS_SNAPSHOT_PATH, "utf8"));
+        const results = Array.isArray(snap?.results) ? snap.results : [];
+        for (const s of results) {
+          if (s && typeof s === "object" && (s.name || s.slug)) {
+            merged.push({
+              name: String(s.name || s.slug || "").trim(),
+              slug: String(s.slug || "").trim(),
+              description: String(s.description || "").trim(),
+              fileName: String(s.fileName || "").trim() || null,
+              source: String(s.source || "imported").trim(),
+              vettedOk: Boolean(s.vettedOk),
+              importOk: Boolean(s.importOk !== false),
+              riskTier: Number(s.riskTier ?? 2),
+              sourceUrl: String(s.sourceUrl || "").trim() || null,
+              provenance: s.provenance || { publisher: "snapshot", signed: false },
+              onchainTokenId: s.onchainTokenId || null,
+              onchainMintTx: s.onchainMintTx || null,
+              onchainPublishTx: s.onchainPublishTx || null,
+            });
+          }
+        }
+      }
+    } catch { /* snapshot unavailable */ }
+  }
 
   // Deduplicate by slug while preserving source precedence:
   // seed < imported < user (later entries override earlier ones).

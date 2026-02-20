@@ -6,9 +6,6 @@ contracts-scripts
 contracts-cache
 pod
 pod-workspace
-data/skills
-data/starter-pack-bundle.json
-data/starter-pack.json
 state
 research
 *.md

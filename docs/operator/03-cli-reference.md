@@ -512,25 +512,32 @@ ape-claw allowlist audit --json
 
 #### `skill install`
 
-Install the ape-claw skill for Cursor/OpenClaw.
+Install skills for Cursor/OpenClaw. Without a slug, installs the core `ape-claw` skill. With a slug, installs that skill into OpenClaw-discoverable folders.
 
 **Synopsis:**
 ```bash
-ape-claw skill install [--scope <local|global>] [--skills-dir <path>] --json
+ape-claw skill install [<slug>] [--scope <local|global>] [--skills-dir <path>] [--starter-pack | --no-starter-pack] [--allow-unvetted] [--allow-high-risk] [--allow-custom-api] [--allow-insecure-api] --json
 ```
 
 **Required arguments:** None
 
 **Optional arguments:**
+- `<slug>` — Skill slug to install (example: `lincoln-ai`)
 - `--scope <local|global>` — Installation scope (default: `local`)
 - `--skills-dir <path>` — Explicit skills directory path
+- `--starter-pack` / `--no-starter-pack` — Install or skip the curated starter pack when running without a slug
+- `--allow-unvetted` — Permit API-fetched skills that are not marked vetted
+- `--allow-high-risk` — Permit API-fetched skills with risk tier 3
+- `--allow-custom-api` — Permit non-apeclaw.ai API hosts (advanced/dev use only)
+- `--allow-insecure-api` — Permit `http://localhost` API endpoints (local dev only)
 
 **Example:**
 ```bash
 ape-claw skill install --scope local --json
+ape-claw skill install lincoln-ai --json
 ```
 
-**Output:** Returns installed status, scope, sourceSkillPath, skillsRoot, skillPath, openclawAvailable, openclawCheckOk, and next steps.
+**Output:** Returns install results including installed/autoInstalled entries, OpenClaw sync results, and user skill index location.
 
 ---
 
