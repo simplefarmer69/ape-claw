@@ -1,8 +1,8 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://api.apeclaw.ai/api/:path*" },
-    { "source": "/events/:path*", "destination": "https://api.apeclaw.ai/events/:path*" },
-    { "source": "/skillcards/:path*", "destination": "https://api.apeclaw.ai/skillcards/:path*" },
+    { "source": "/api/:path*", "destination": "https://acceptable-cat-production.up.railway.app/api/:path*" },
+    { "source": "/events/:path*", "destination": "https://acceptable-cat-production.up.railway.app/events/:path*" },
+    { "source": "/skillcards/:path*", "destination": "https://acceptable-cat-production.up.railway.app/skillcards/:path*" },
     { "source": "/ui", "destination": "/ui/index.html" },
     { "source": "/app", "destination": "/ui/index.html" },
     { "source": "/skills", "destination": "/ui/skills.html" },
