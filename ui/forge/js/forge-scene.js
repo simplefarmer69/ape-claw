@@ -1679,69 +1679,175 @@ function buildChassis() {
 function buildPlatform() {
   const platform = new THREE.Group();
 
-  // Main pad (dark hexagonal)
-  const padGeo = new THREE.CylinderGeometry(5, 5, 0.12, 6);
-  const padMat = new M({ color: 0x080808, roughness: 0.9, metalness: 0.2 });
+  // ── BASE STRUCTURE (multi-layer industrial hex pad) ──
+  // Lower foundation ring (heavy, dark)
+  const foundGeo = new THREE.CylinderGeometry(5.6, 5.8, 0.18, 6);
+  const foundMat = new P({ color: 0x040408, roughness: 0.7, metalness: 0.6, clearcoat: 0.2 });
+  const foundation = new THREE.Mesh(foundGeo, foundMat);
+  foundation.position.y = -2.9;
+  platform.add(foundation);
+
+  // Main platform (polished dark surface)
+  const padGeo = new THREE.CylinderGeometry(5.2, 5.2, 0.14, 6);
+  const padMat = new P({ color: 0x0a0a10, roughness: 0.25, metalness: 0.7, clearcoat: 0.6, clearcoatRoughness: 0.15 });
   const pad = new THREE.Mesh(padGeo, padMat);
-  pad.position.y = -2.7;
+  pad.position.y = -2.72;
   platform.add(pad);
 
-  // Glowing concentric hex rings
-  for (let i = 1; i <= 5; i++) {
-    const ringGeo = new THREE.RingGeometry(i * 0.9 - 0.02, i * 0.9 + 0.02, 6);
+  // Upper deck (thin chrome trim ring)
+  const deckGeo = new THREE.CylinderGeometry(4.8, 4.9, 0.04, 6);
+  const deckMat = new P({ color: 0x1a1a24, roughness: 0.15, metalness: 0.85, clearcoat: 0.8 });
+  const deck = new THREE.Mesh(deckGeo, deckMat);
+  deck.position.y = -2.64;
+  platform.add(deck);
+
+  // ── CONCENTRIC HEX RINGS (glowing, animated) ──
+  for (let i = 1; i <= 6; i++) {
+    const r = i * 0.82;
+    const ringGeo = new THREE.RingGeometry(r - 0.015, r + 0.015, 6);
+    const isPrimary = i === 3 || i === 5;
     const ringMat = new THREE.MeshBasicMaterial({
-      color: GLOW, transparent: true, opacity: 0.06 + (i === 3 ? 0.06 : 0),
-      side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
+      color: isPrimary ? CYAN : GLOW,
+      transparent: true,
+      opacity: isPrimary ? 0.12 : 0.05,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
     });
     const ring = new THREE.Mesh(ringGeo, ringMat);
     ring.rotation.x = -Math.PI / 2;
-    ring.position.y = -2.63;
+    ring.position.y = -2.64;
     ring.userData.ringIndex = i;
     platform.add(ring);
   }
 
-  // Hex edge glow lines
-  for (let i = 0; i < 6; i++) {
-    const a = (i / 6) * Math.PI * 2;
-    const b = ((i + 1) / 6) * Math.PI * 2;
-    const r = 5;
-    const pts = [
-      new THREE.Vector3(Math.cos(a) * r, -2.64, Math.sin(a) * r),
-      new THREE.Vector3(Math.cos(b) * r, -2.64, Math.sin(b) * r),
-    ];
-    const edgeGeo = new THREE.BufferGeometry().setFromPoints(pts);
-    const edgeMat = new THREE.LineBasicMaterial({
-      color: GLOW, transparent: true, opacity: 0.3,
-      blending: THREE.AdditiveBlending,
-    });
-    platform.add(new THREE.Line(edgeGeo, edgeMat));
+  // ── HEX EDGE GLOW LINES (outer boundary, double-width for primary) ──
+  for (let layer = 0; layer < 2; layer++) {
+    const r = layer === 0 ? 5.2 : 4.0;
+    const opacity = layer === 0 ? 0.35 : 0.12;
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const b = ((i + 1) / 6) * Math.PI * 2;
+      const pts = [
+        new THREE.Vector3(Math.cos(a) * r, -2.65, Math.sin(a) * r),
+        new THREE.Vector3(Math.cos(b) * r, -2.65, Math.sin(b) * r),
+      ];
+      const geo = new THREE.BufferGeometry().setFromPoints(pts);
+      const mat = new THREE.LineBasicMaterial({
+        color: layer === 0 ? GLOW : CYAN,
+        transparent: true, opacity,
+        blending: THREE.AdditiveBlending,
+      });
+      platform.add(new THREE.Line(geo, mat));
+    }
   }
 
-  // Radial spokes
-  for (let i = 0; i < 12; i++) {
-    const a = (i / 12) * Math.PI * 2;
+  // ── RADIAL SPOKES (24 fine lines + 6 thick primary) ──
+  for (let i = 0; i < 24; i++) {
+    const a = (i / 24) * Math.PI * 2;
+    const isPrimary = i % 4 === 0;
+    const len = isPrimary ? 5.0 : 4.2;
     const pts = [
-      new THREE.Vector3(0, -2.64, 0),
-      new THREE.Vector3(Math.cos(a) * 4.5, -2.64, Math.sin(a) * 4.5),
+      new THREE.Vector3(Math.cos(a) * 0.5, -2.65, Math.sin(a) * 0.5),
+      new THREE.Vector3(Math.cos(a) * len, -2.65, Math.sin(a) * len),
     ];
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
     const mat = new THREE.LineBasicMaterial({
-      color: GLOW, transparent: true, opacity: 0.04,
+      color: isPrimary ? CYAN : GLOW,
+      transparent: true, opacity: isPrimary ? 0.08 : 0.03,
       blending: THREE.AdditiveBlending,
     });
     platform.add(new THREE.Line(geo, mat));
   }
 
-  // Holographic scanline cylinder
-  const scanGeo = new THREE.CylinderGeometry(4.8, 4.8, 0.02, 64, 1, true);
+  // ── CORNER PYLONS (6 hex vertices, industrial bollards) ──
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    const px = Math.cos(a) * 5.0, pz = Math.sin(a) * 5.0;
+    // Pylon body
+    const pylonGeo = new THREE.CylinderGeometry(0.12, 0.14, 0.6, 8);
+    const pylon = new THREE.Mesh(pylonGeo, new P({ color: 0x101018, roughness: 0.3, metalness: 0.8, clearcoat: 0.4 }));
+    pylon.position.set(px, -2.5, pz);
+    platform.add(pylon);
+    // Pylon top cap (chrome)
+    const capGeo = new THREE.CylinderGeometry(0.15, 0.12, 0.06, 8);
+    const cap = new THREE.Mesh(capGeo, new P({ color: 0x2a2a34, roughness: 0.12, metalness: 0.9 }));
+    cap.position.set(px, -2.22, pz);
+    platform.add(cap);
+    // Pylon glow ring
+    const glowRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.14, 0.012, 6, 16),
+      new THREE.MeshBasicMaterial({ color: GLOW, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending })
+    );
+    glowRing.position.set(px, -2.35, pz);
+    glowRing.rotation.x = Math.PI / 2;
+    glowRing.userData.pylonGlow = true;
+    platform.add(glowRing);
+    // Pylon status LED
+    const led = new THREE.Mesh(
+      new THREE.SphereGeometry(0.03, 6, 4),
+      new THREE.MeshBasicMaterial({ color: CYAN, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending })
+    );
+    led.position.set(px, -2.2, pz);
+    led.userData.pylonLed = i;
+    platform.add(led);
+  }
+
+  // ── HOLOGRAPHIC GRID (subtle floor markings inside hex) ──
+  const gridMat = new THREE.LineBasicMaterial({
+    color: GLOW, transparent: true, opacity: 0.02, blending: THREE.AdditiveBlending,
+  });
+  for (let gx = -4; gx <= 4; gx++) {
+    const pts = [new THREE.Vector3(gx, -2.64, -4.5), new THREE.Vector3(gx, -2.64, 4.5)];
+    platform.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gridMat));
+  }
+  for (let gz = -4; gz <= 4; gz++) {
+    const pts = [new THREE.Vector3(-4.5, -2.64, gz), new THREE.Vector3(4.5, -2.64, gz)];
+    platform.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gridMat));
+  }
+
+  // ── HOLOGRAPHIC SCANLINE CYLINDER ──
+  const scanGeo = new THREE.CylinderGeometry(4.8, 4.8, 0.02, 48, 1, true);
   const scanMat = new THREE.MeshBasicMaterial({
-    color: GLOW, transparent: true, opacity: 0.03,
+    color: CYAN, transparent: true, opacity: 0.04,
     side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
   });
   const scan = new THREE.Mesh(scanGeo, scanMat);
   scan.position.y = -2.5;
   scan.userData.isScanline = true;
   platform.add(scan);
+
+  // ── CENTRAL GLOW DISC (under the robot — volumetric uplight) ──
+  const uplightGeo = new THREE.CylinderGeometry(1.8, 2.2, 0.01, 32);
+  const uplightMat = new THREE.MeshBasicMaterial({
+    color: GLOW, transparent: true, opacity: 0.06,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  });
+  const uplight = new THREE.Mesh(uplightGeo, uplightMat);
+  uplight.position.y = -2.63;
+  uplight.userData.uplight = true;
+  platform.add(uplight);
+
+  // ── HOLOGRAPHIC FIELD BOUNDARY (vertical light curtain at hex edges) ──
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    const b = ((i + 1) / 6) * Math.PI * 2;
+    const r = 5.15;
+    const curtainGeo = new THREE.PlaneGeometry(
+      Math.sqrt(Math.pow(Math.cos(b) * r - Math.cos(a) * r, 2) + Math.pow(Math.sin(b) * r - Math.sin(a) * r, 2)),
+      3.0
+    );
+    const curtainMat = new THREE.MeshBasicMaterial({
+      color: GLOW, transparent: true, opacity: 0.008,
+      side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false,
+    });
+    const curtain = new THREE.Mesh(curtainGeo, curtainMat);
+    const mx = (Math.cos(a) + Math.cos(b)) / 2 * r;
+    const mz = (Math.sin(a) + Math.sin(b)) / 2 * r;
+    curtain.position.set(mx, -1.2, mz);
+    curtain.lookAt(0, -1.2, 0);
+    curtain.userData.curtain = true;
+    platform.add(curtain);
+  }
 
   return platform;
 }
@@ -1750,21 +1856,22 @@ function buildPlatform() {
    Ambient particles + energy streams
    ══════════════════════════════════════════════════════════ */
 function createAmbientParticles() {
-  const count = 500;
+  const count = 800;
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
-  const sizes = new Float32Array(count);
   const palette = [
     new THREE.Color(GLOW),
     new THREE.Color(CYAN),
     new THREE.Color(0x8fbfff),
     new THREE.Color(0xb026ff),
+    new THREE.Color(0x6699cc),
   ];
   for (let i = 0; i < count; i++) {
-    positions[i * 3]     = (Math.random() - 0.5) * 22;
-    positions[i * 3 + 1] = Math.random() * 18 - 3;
-    positions[i * 3 + 2] = (Math.random() - 0.5) * 22;
-    sizes[i] = 0.015 + Math.random() * 0.06;
+    const isNear = i < count * 0.3;
+    const spread = isNear ? 8 : 28;
+    positions[i * 3]     = (Math.random() - 0.5) * spread;
+    positions[i * 3 + 1] = Math.random() * 20 - 4;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * spread;
     const c = palette[Math.floor(Math.random() * palette.length)];
     colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
   }
@@ -1772,34 +1879,58 @@ function createAmbientParticles() {
   geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
   geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   return new THREE.Points(geo, new THREE.PointsMaterial({
-    size: 0.045, transparent: true, opacity: 0.3, vertexColors: true,
+    size: 0.04, transparent: true, opacity: 0.35, vertexColors: true,
     blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
   }));
 }
 
 function createEnergyStreams() {
   const group = new THREE.Group();
-  const streamColors = [GLOW, CYAN, 0x8fbfff, GLOW, GLOW, CYAN, 0xb026ff, GLOW, CYAN, GLOW, GLOW, 0x8fbfff];
-  for (let i = 0; i < 12; i++) {
+  const streamColors = [GLOW, CYAN, 0x8fbfff, GLOW, GLOW, CYAN, 0xb026ff, GLOW, CYAN, GLOW, GLOW, 0x8fbfff, 0x6699cc, CYAN, GLOW, 0xb026ff];
+  // Rising helical streams (16 total, denser)
+  for (let i = 0; i < 16; i++) {
     const pts = [];
-    const angle = (i / 12) * Math.PI * 2;
-    const r = 2.2 + Math.random() * 2.0;
-    const twist = 0.3 + Math.random() * 0.4;
-    for (let j = 0; j <= 28; j++) {
-      const t = j / 28;
+    const angle = (i / 16) * Math.PI * 2;
+    const r = 1.8 + Math.random() * 2.5;
+    const twist = 0.4 + Math.random() * 0.5;
+    const segments = 36;
+    for (let j = 0; j <= segments; j++) {
+      const t = j / segments;
       pts.push(new THREE.Vector3(
-        Math.cos(angle + t * Math.PI * twist) * r * (1 - t * 0.35),
-        -2.5 + t * 14,
-        Math.sin(angle + t * Math.PI * twist) * r * (1 - t * 0.35),
+        Math.cos(angle + t * Math.PI * twist) * r * (1 - t * 0.4),
+        -2.8 + t * 16,
+        Math.sin(angle + t * Math.PI * twist) * r * (1 - t * 0.4),
       ));
     }
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
     const mat = new THREE.LineBasicMaterial({
-      color: streamColors[i % streamColors.length], transparent: true, opacity: 0.03,
+      color: streamColors[i % streamColors.length], transparent: true, opacity: 0.035,
       blending: THREE.AdditiveBlending,
     });
     const line = new THREE.Line(geo, mat);
     line.userData.streamAngle = angle;
+    group.add(line);
+  }
+  // Descending data cascade (8 vertical streams falling through platform)
+  for (let i = 0; i < 8; i++) {
+    const pts = [];
+    const angle = (i / 8) * Math.PI * 2 + 0.3;
+    const r = 3.2 + Math.random() * 1.5;
+    for (let j = 0; j <= 20; j++) {
+      const t = j / 20;
+      pts.push(new THREE.Vector3(
+        Math.cos(angle) * r + Math.sin(t * 6) * 0.15,
+        12 - t * 16,
+        Math.sin(angle) * r + Math.cos(t * 6) * 0.15,
+      ));
+    }
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const mat = new THREE.LineBasicMaterial({
+      color: 0x2244aa, transparent: true, opacity: 0.02,
+      blending: THREE.AdditiveBlending,
+    });
+    const line = new THREE.Line(geo, mat);
+    line.userData.cascade = true;
     group.add(line);
   }
   return group;
@@ -1807,11 +1938,15 @@ function createEnergyStreams() {
 
 function updateAmbientParticles(pts, time) {
   const pos = pts.geometry.attributes.position.array;
-  for (let i = 0; i < pos.length; i += 3) {
-    pos[i + 1] += 0.004;
-    pos[i] += Math.sin(time * 0.7 + i) * 0.0015;
-    pos[i + 2] += Math.cos(time * 0.5 + i) * 0.001;
-    if (pos[i + 1] > 12) pos[i + 1] = -3;
+  const count = pos.length / 3;
+  const nearCount = Math.floor(count * 0.3);
+  for (let i = 0; i < count; i++) {
+    const idx = i * 3;
+    const speed = i < nearCount ? 0.006 : 0.003;
+    pos[idx + 1] += speed;
+    pos[idx] += Math.sin(time * 0.7 + i * 0.3) * 0.001;
+    pos[idx + 2] += Math.cos(time * 0.5 + i * 0.2) * 0.0008;
+    if (pos[idx + 1] > 14) pos[idx + 1] = -4;
   }
   pts.geometry.attributes.position.needsUpdate = true;
 }
@@ -1824,11 +1959,23 @@ function updatePlatformRings(time) {
   platformGroup.children.forEach(child => {
     if (child.userData.ringIndex) {
       const i = child.userData.ringIndex;
-      child.material.opacity = 0.03 + 0.1 * Math.max(0, Math.sin(time * 1.5 - i * 0.6));
+      child.material.opacity = 0.03 + 0.12 * Math.max(0, Math.sin(time * 1.5 - i * 0.55));
     }
     if (child.userData.isScanline) {
-      child.position.y = -2.5 + Math.sin(time * 0.8) * 6 + 6;
-      child.material.opacity = 0.02 + 0.02 * Math.sin(time * 2);
+      child.position.y = -2.5 + Math.sin(time * 0.6) * 7 + 7;
+      child.material.opacity = 0.025 + 0.025 * Math.sin(time * 2.2);
+    }
+    if (child.userData.pylonGlow) {
+      child.material.opacity = 0.12 + 0.12 * Math.sin(time * 2.0 + child.position.x * 2);
+    }
+    if (child.userData.pylonLed !== undefined) {
+      child.material.opacity = 0.3 + 0.4 * Math.max(0, Math.sin(time * 3 + child.userData.pylonLed * 1.05));
+    }
+    if (child.userData.uplight) {
+      child.material.opacity = 0.04 + 0.03 * Math.sin(time * 1.2);
+    }
+    if (child.userData.curtain) {
+      child.material.opacity = 0.005 + 0.005 * Math.sin(time * 0.8 + child.position.x);
     }
   });
 }
@@ -1859,7 +2006,9 @@ function playCinematicIntro(onComplete) {
   const startTarget = new THREE.Vector3(0, 1, 0);
   const endTarget = new THREE.Vector3(0, 2.5, 0);
   controls.enabled = false;
-  scene.fog = new THREE.FogExp2(0x0a0a0a, 0.06);
+  const AMBIENT_FOG_DENSITY = scene.fog ? scene.fog.density : 0.018;
+  if (scene.fog) scene.fog.density = 0.07;
+  else scene.fog = new THREE.FogExp2(0x020206, 0.07);
   camera.position.copy(startPos);
   controls.target.copy(startTarget);
 
@@ -1868,7 +2017,7 @@ function playCinematicIntro(onComplete) {
 
   function tick() {
     if (introSkipped) {
-      scene.fog = null;
+      if (scene.fog) scene.fog.density = AMBIENT_FOG_DENSITY;
       camera.position.copy(endPos);
       controls.target.copy(endTarget);
       controls.enabled = true;
@@ -1885,11 +2034,11 @@ function playCinematicIntro(onComplete) {
     camera.position.lerpVectors(startPos, endPos, eased);
     controls.target.lerpVectors(startTarget, endTarget, eased);
     const fogT = Math.min(elapsed / 2500, 1);
-    scene.fog.density = 0.06 * (1 - fogT);
+    if (scene.fog) scene.fog.density = 0.07 + (AMBIENT_FOG_DENSITY - 0.07) * fogT;
     if (t < 1) {
       requestAnimationFrame(tick);
     } else {
-      scene.fog = null;
+      if (scene.fog) scene.fog.density = AMBIENT_FOG_DENSITY;
       controls.enabled = true;
       introPlaying = false;
       sessionStorage.setItem("forge_intro_done", "1");
@@ -2322,16 +2471,16 @@ export function initForgeScene() {
   const envScene = new THREE.Scene();
   envScene.background = new THREE.Color(0x020408);
 
-  // Gradient sky dome — very dark for chrome contrast
-  const skyGeo = new THREE.SphereGeometry(10, 32, 16);
+  // Gradient sky dome — deep dark-blue gradient for chrome contrast
+  const skyGeo = new THREE.SphereGeometry(12, 32, 16);
   const skyPos = skyGeo.attributes.position;
   const skyCol = new Float32Array(skyPos.count * 3);
-  const _cTop = new THREE.Color(0x0c1828);
-  const _cMid = new THREE.Color(0x040a14);
-  const _cBot = new THREE.Color(0x010208);
+  const _cTop = new THREE.Color(0x101830);
+  const _cMid = new THREE.Color(0x050c18);
+  const _cBot = new THREE.Color(0x01020a);
   const _cTmp = new THREE.Color();
   for (let i = 0; i < skyPos.count; i++) {
-    const ny = skyPos.getY(i) / 10;
+    const ny = skyPos.getY(i) / 12;
     const t = ny * 0.5 + 0.5;
     _cTmp.copy(t > 0.5 ? _cTop : _cMid).lerp(t > 0.5 ? _cMid : _cBot, t > 0.5 ? (1 - t) * 2 : (0.5 - t) * 2);
     skyCol[i * 3] = _cTmp.r; skyCol[i * 3 + 1] = _cTmp.g; skyCol[i * 3 + 2] = _cTmp.b;
@@ -2339,32 +2488,45 @@ export function initForgeScene() {
   skyGeo.setAttribute("color", new THREE.BufferAttribute(skyCol, 3));
   envScene.add(new THREE.Mesh(skyGeo, new THREE.MeshBasicMaterial({ side: THREE.BackSide, vertexColors: true })));
 
-  // Studio-style reflection panels — high contrast for chrome
-  const panelGeo = new THREE.PlaneGeometry(6, 10);
-  const brightPanel = new THREE.Mesh(panelGeo, new THREE.MeshBasicMaterial({ color: 0xd0d8e8 }));
-  brightPanel.position.set(7, 4, 0); brightPanel.rotation.y = -Math.PI / 2;
+  // Studio-style reflection panels — multiple for richer reflections
+  const panelGeo = new THREE.PlaneGeometry(7, 12);
+  // Key (right — bright white for strong specular highlight)
+  const brightPanel = new THREE.Mesh(panelGeo, new THREE.MeshBasicMaterial({ color: 0xd8e0f0 }));
+  brightPanel.position.set(8, 4, 0); brightPanel.rotation.y = -Math.PI / 2;
   envScene.add(brightPanel);
-  const fillPanel = new THREE.Mesh(panelGeo.clone(), new THREE.MeshBasicMaterial({ color: 0x506878 }));
-  fillPanel.position.set(-7, 2, 2); fillPanel.rotation.y = Math.PI / 2;
+  // Fill (left — cool blue)
+  const fillPanel = new THREE.Mesh(panelGeo.clone(), new THREE.MeshBasicMaterial({ color: 0x4a6080 }));
+  fillPanel.position.set(-8, 3, 2); fillPanel.rotation.y = Math.PI / 2;
   envScene.add(fillPanel);
-  const topPanel = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshBasicMaterial({ color: 0x8090a8 }));
-  topPanel.position.set(0, 9, 0); topPanel.rotation.x = Math.PI / 2;
+  // Top softbox
+  const topPanel = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshBasicMaterial({ color: 0x8898b0 }));
+  topPanel.position.set(0, 10, 0); topPanel.rotation.x = Math.PI / 2;
   envScene.add(topPanel);
-  // Floor bounce (subtle warm)
-  const floorPanel = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshBasicMaterial({ color: 0x181820 }));
-  floorPanel.position.set(0, -5, 0); floorPanel.rotation.x = -Math.PI / 2;
+  // Rear accent (cool purple backlight)
+  const rearPanel = new THREE.Mesh(new THREE.PlaneGeometry(8, 10), new THREE.MeshBasicMaterial({ color: 0x303050 }));
+  rearPanel.position.set(0, 4, -8);
+  envScene.add(rearPanel);
+  // Front subtle warm (gives depth to front surfaces)
+  const frontPanel = new THREE.Mesh(new THREE.PlaneGeometry(6, 8), new THREE.MeshBasicMaterial({ color: 0x181420 }));
+  frontPanel.position.set(0, 2, 8); frontPanel.rotation.y = Math.PI;
+  envScene.add(frontPanel);
+  // Floor bounce
+  const floorPanel = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.MeshBasicMaterial({ color: 0x101420 }));
+  floorPanel.position.set(0, -6, 0); floorPanel.rotation.x = -Math.PI / 2;
   envScene.add(floorPanel);
 
-  // Env lights — strong highlights for chrome reflections
+  // Env lights — richer multi-source for detailed chrome reflections
   const envLights = [
-    [0xffffff, 12, [5, 8, 3]],
-    [0x4488ff, 8, [-4, 3, 5]],
-    [0xffffff, 6, [0, 10, 0]],
-    [CYAN, 4, [-5, 5, -3]],
+    [0xffffff, 14, [5, 9, 3]],
+    [0x4488ff, 9, [-4, 4, 5]],
+    [0xffffff, 7, [0, 11, 0]],
+    [CYAN, 5, [-6, 5, -4]],
     [0x6688bb, 3, [3, -3, 6]],
+    [0x9966cc, 3, [-3, 6, -6]],
+    [0xffffff, 4, [6, 2, -4]],
   ];
-  for (const [c, i, pos] of envLights) {
-    const l = new THREE.PointLight(c, i, 22);
+  for (const [c, intens, pos] of envLights) {
+    const l = new THREE.PointLight(c, intens, 25);
     l.position.set(...pos);
     envScene.add(l);
   }
@@ -2416,14 +2578,39 @@ export function initForgeScene() {
   sideAccent2.position.set(-6, 3, -3);
   scene.add(sideAccent2);
 
-  // Ground — dark reflective floor
-  const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(50, 50),
-    new P({ color: 0x020204, roughness: 0.3, metalness: 0.4, clearcoat: 0.5, clearcoatRoughness: 0.3 })
-  );
+  // Ground — large reflective floor with subtle texture
+  const groundGeo = new THREE.PlaneGeometry(80, 80);
+  const groundCanvas = document.createElement("canvas");
+  groundCanvas.width = 512; groundCanvas.height = 512;
+  const gCtx = groundCanvas.getContext("2d");
+  gCtx.fillStyle = "#020204";
+  gCtx.fillRect(0, 0, 512, 512);
+  // Subtle grid lines on the floor
+  gCtx.strokeStyle = "rgba(40,50,80,0.08)";
+  gCtx.lineWidth = 1;
+  for (let i = 0; i <= 512; i += 32) {
+    gCtx.beginPath(); gCtx.moveTo(i, 0); gCtx.lineTo(i, 512); gCtx.stroke();
+    gCtx.beginPath(); gCtx.moveTo(0, i); gCtx.lineTo(512, i); gCtx.stroke();
+  }
+  const groundTex = new THREE.CanvasTexture(groundCanvas);
+  groundTex.wrapS = groundTex.wrapT = THREE.RepeatWrapping;
+  groundTex.repeat.set(8, 8);
+  const groundMat = new P({
+    map: groundTex,
+    color: 0x030306,
+    roughness: 0.22,
+    metalness: 0.55,
+    clearcoat: 0.65,
+    clearcoatRoughness: 0.12,
+    envMapIntensity: 1.2,
+  });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
   ground.rotation.x = -Math.PI / 2;
-  ground.position.y = -2.8;
+  ground.position.y = -2.82;
   scene.add(ground);
+
+  // Fog gradient — subtle depth fade for the far floor edges
+  scene.fog = new THREE.FogExp2(0x020206, 0.018);
 
   platformGroup = buildPlatform();
   scene.add(platformGroup);
