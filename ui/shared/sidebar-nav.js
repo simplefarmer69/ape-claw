@@ -53,11 +53,12 @@
     var active = !l.external && isActive(l.href, cur);
     var attrs = active ? ' aria-current="page"' : "";
     if (l.external) attrs += ' target="_blank" rel="noopener"';
+    var badge = l.external ? "EXT" : (l.icon === "forge" ? "LOCAL" : "");
     navHtml +=
       '<a class="sb-link" href="' + String(l.href) + '" data-tip="' + String(l.label) + '"' + attrs + ">" +
       iconSvg(l.icon) +
       '<span class="sb-text">' + String(l.label) + "</span>" +
-      (l.external ? '<span class="sb-sub">EXT</span>' : '<span class="sb-sub"></span>') +
+      '<span class="sb-sub">' + badge + '</span>' +
       "</a>";
   }
 

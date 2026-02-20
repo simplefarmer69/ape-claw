@@ -431,6 +431,67 @@ a{color:var(--neon-cyan);text-decoration:none}
 @keyframes forgeToastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes forgeToastOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-12px)}}
 
+/* ── Offline Gate ───────────────────────────────────────── */
+.forge-offline-gate{
+  position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+  background:var(--bg);padding:24px;
+}
+.forge-offline-card{
+  max-width:560px;width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:6px;padding:40px 36px;text-align:center;position:relative;
+  box-shadow:0 0 80px rgba(207,255,4,.06),var(--panel-shadow);
+}
+.forge-offline-icon{font-size:3.5rem;margin-bottom:12px;filter:drop-shadow(0 0 18px rgba(207,255,4,.35))}
+.forge-offline-title{
+  font-family:var(--font-display);font-weight:900;font-size:1.6rem;letter-spacing:.06em;
+  color:var(--accent);text-transform:uppercase;margin-bottom:6px;
+}
+.forge-offline-sub{color:var(--dim);font-size:.85rem;margin-bottom:0}
+.forge-offline-divider{
+  height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);
+  margin:20px 0;
+}
+.forge-offline-desc{color:var(--text);font-size:.82rem;line-height:1.65;text-align:left;margin-bottom:4px}
+.forge-offline-steps{text-align:left;margin:18px 0}
+.forge-offline-step{
+  display:flex;gap:14px;align-items:flex-start;padding:12px 0;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.forge-offline-step:last-child{border-bottom:none}
+.forge-offline-step-num{
+  flex-shrink:0;width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;background:rgba(207,255,4,.12);border:1px solid var(--border);
+  color:var(--accent);font-weight:800;font-size:.7rem;font-family:var(--font-mono);
+}
+.forge-offline-step strong{display:block;color:var(--text);font-size:.8rem;margin-bottom:3px}
+.forge-offline-step code{
+  display:block;font-family:var(--font-mono);font-size:.72rem;color:var(--neon-cyan);
+  background:rgba(0,0,0,.5);border:1px solid rgba(99,215,255,.15);border-radius:3px;
+  padding:6px 10px;margin-top:4px;word-break:break-all;
+}
+.forge-offline-hint{display:block;font-size:.68rem;color:var(--dim);margin-top:3px}
+.forge-offline-hint code{display:inline;padding:1px 5px;margin:0;font-size:.68rem}
+.forge-offline-note{font-size:.72rem;color:var(--dim);line-height:1.7;text-align:center}
+.forge-offline-note code{
+  font-family:var(--font-mono);font-size:.68rem;color:var(--neon-green);
+  background:rgba(0,255,0,.06);padding:2px 6px;border-radius:2px;
+}
+.forge-offline-dim{color:rgba(255,255,255,.3)}
+.forge-offline-links{display:flex;gap:10px;justify-content:center;margin-top:20px}
+.forge-offline-btn{
+  display:inline-flex;align-items:center;padding:9px 22px;border-radius:3px;
+  font-family:var(--font-display);font-weight:700;font-size:.78rem;letter-spacing:.04em;
+  text-transform:uppercase;text-decoration:none;transition:all .2s;
+  background:var(--accent);color:#0c0c0c;border:1px solid var(--accent);
+}
+.forge-offline-btn:hover{background:#e2ff40;box-shadow:0 0 16px rgba(207,255,4,.3)}
+.forge-offline-btn-secondary{
+  background:transparent;color:var(--text);border-color:var(--border);
+}
+.forge-offline-btn-secondary:hover{
+  background:rgba(207,255,4,.08);color:var(--accent);border-color:var(--accent);
+}
+
 /* ── Responsive ─────────────────────────────────────────── */
 @media(max-width:1199px){
   .forge-bottom{grid-template-columns:1fr;max-height:none}

@@ -169,6 +169,67 @@
     </footer>
   </div>
 
+  <!-- Forge requires a local server to discover installed skills -->
+  <div class="forge-offline-gate" id="forgeOfflineGate" style="display:none">
+    <div class="forge-offline-card">
+      <div class="forge-offline-icon">&#x1F916;</div>
+      <h2 class="forge-offline-title">ClawBot Forge</h2>
+      <p class="forge-offline-sub">Your 3D agent — shaped by the skills you install</p>
+      <div class="forge-offline-divider"></div>
+      <p class="forge-offline-desc">
+        The Forge renders <strong>your</strong> installed skills as attachments on a 3D robot.
+        It discovers skills from your local Cursor &amp; OpenClaw directories, so it must be
+        hosted on your machine.
+      </p>
+      <div class="forge-offline-steps">
+        <div class="forge-offline-step">
+          <span class="forge-offline-step-num">1</span>
+          <div>
+            <strong>Install ApeClaw + skills</strong>
+            <code>npx ape-claw skill install --starter-pack</code>
+          </div>
+        </div>
+        <div class="forge-offline-step">
+          <span class="forge-offline-step-num">2</span>
+          <div>
+            <strong>Clone the repo &amp; start the server</strong>
+            <code>git clone https://github.com/simplefarmer69/ape-claw.git && cd ape-claw && npm install && npm run start:ui</code>
+          </div>
+        </div>
+        <div class="forge-offline-step">
+          <span class="forge-offline-step-num">3</span>
+          <div>
+            <strong>Open the Forge</strong>
+            <code>http://localhost:8799/forge</code>
+            <span class="forge-offline-hint">Your installed skills appear as 3D attachments on the robot automatically</span>
+          </div>
+        </div>
+      </div>
+      <div class="forge-offline-divider"></div>
+      <p class="forge-offline-note">
+        The Forge reads skills installed via <code>npx ape-claw skill install</code>.<br>
+        Skills are synced to <code>~/.cursor/skills/</code> and <code>~/.openclaw/workspace/skills/</code> automatically.
+      </p>
+      <div class="forge-offline-links">
+        <a class="forge-offline-btn" href="/skills">Browse Skills</a>
+        <a class="forge-offline-btn forge-offline-btn-secondary" href="https://github.com/simplefarmer69/ape-claw" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (async function detectLocal() {
+    try {
+      const r = await fetch("/api/health", { signal: AbortSignal.timeout(4000) });
+      if (r.ok) return; // local server running — load the forge normally
+    } catch {}
+    // Not local — show the offline gate and hide the forge app
+    document.getElementById("forgeOfflineGate").style.display = "";
+    const app = document.querySelector(".forge-app");
+    if (app) app.style.display = "none";
+  })();
+  </script>
+
   <script type="importmap">
   {
     "imports": {
