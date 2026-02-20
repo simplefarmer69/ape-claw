@@ -21,45 +21,51 @@ import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.j
 const M = THREE.MeshStandardMaterial;
 const P = THREE.MeshPhysicalMaterial;
 
-const GLOW = 0xcfff04;
-const CYAN = 0x63d7ff;
+const GLOW = 0x4488ff;
+const CYAN = 0x5599ff;
 const HOT  = 0xff3344;
+const RED  = 0xcc2233;
+const BLUE = 0x1a3a88;
 
 export const MAT = {
-  armor:     new P({ color: 0x556070, roughness: 0.35, metalness: 0.6, emissive: 0x1a2030, emissiveIntensity: 0.5, clearcoat: 0.3, clearcoatRoughness: 0.4 }),
-  armorLt:   new P({ color: 0x6a7585, roughness: 0.4, metalness: 0.55, emissive: 0x1e2535, emissiveIntensity: 0.5, clearcoat: 0.25, clearcoatRoughness: 0.45 }),
-  chrome:    new P({ color: 0x8090a0, roughness: 0.12, metalness: 0.9, emissive: 0x2a3545, emissiveIntensity: 0.6, clearcoat: 1.0, clearcoatRoughness: 0.05 }),
-  joint:     new P({ color: 0x404550, roughness: 0.4, metalness: 0.5, emissive: GLOW, emissiveIntensity: 0.25, clearcoat: 0.5, clearcoatRoughness: 0.25, sheen: 0.5, sheenColor: new THREE.Color(GLOW), sheenRoughness: 0.4 }),
+  // Primary armor — deep Optimus-blue with mirror clearcoat
+  armor:     new P({ color: 0x1a2e6a, roughness: 0.15, metalness: 0.85, emissive: 0x080e28, emissiveIntensity: 0.3, clearcoat: 1.0, clearcoatRoughness: 0.05 }),
+  armorLt:   new P({ color: 0x283d7a, roughness: 0.18, metalness: 0.8, emissive: 0x0a1230, emissiveIntensity: 0.3, clearcoat: 0.9, clearcoatRoughness: 0.08 }),
+  // Heroic red accent plates (chest, shoulders)
+  armorRed:  new P({ color: 0xaa1825, roughness: 0.12, metalness: 0.85, emissive: 0x330808, emissiveIntensity: 0.4, clearcoat: 1.0, clearcoatRoughness: 0.04 }),
+  // Chrome — high-shine polished silver
+  chrome:    new P({ color: 0xc0ccdd, roughness: 0.04, metalness: 0.98, emissive: 0x3a4555, emissiveIntensity: 0.5, clearcoat: 1.0, clearcoatRoughness: 0.02 }),
+  joint:     new P({ color: 0x2a2e38, roughness: 0.25, metalness: 0.7, emissive: GLOW, emissiveIntensity: 0.2, clearcoat: 0.8, clearcoatRoughness: 0.15, sheen: 0.3, sheenColor: new THREE.Color(GLOW), sheenRoughness: 0.5 }),
   visor:     new P({ color: 0xaaddff, emissive: CYAN, emissiveIntensity: 2.2, roughness: 0.05, metalness: 0.0, transmission: 0.85, thickness: 0.4, clearcoat: 1.0, clearcoatRoughness: 0.0, transparent: true, opacity: 0.85, iridescence: 0.6, iridescenceIOR: 1.3, iridescenceThicknessRange: [100, 400] }),
-  core:      new P({ color: 0xaaddff, emissive: GLOW, emissiveIntensity: 3.0, roughness: 0.05, metalness: 0.0, transmission: 0.7, thickness: 0.6, clearcoat: 1.0, clearcoatRoughness: 0.0 }),
+  core:      new P({ color: 0xaaddff, emissive: GLOW, emissiveIntensity: 3.5, roughness: 0.05, metalness: 0.0, transmission: 0.7, thickness: 0.6, clearcoat: 1.0, clearcoatRoughness: 0.0 }),
   coreInner: new P({ color: 0xffffff, emissive: GLOW, emissiveIntensity: 5.0, transparent: true, opacity: 0.95, clearcoat: 1.0, clearcoatRoughness: 0.0 }),
   vent:      new P({ color: GLOW, emissive: GLOW, emissiveIntensity: 2.5, transparent: true, opacity: 0.8, clearcoat: 0.5, clearcoatRoughness: 0.2 }),
   ventHot:   new P({ color: HOT, emissive: HOT, emissiveIntensity: 3.0, transparent: true, opacity: 0.7, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
-  panelLine: new P({ color: GLOW, emissive: GLOW, emissiveIntensity: 2.0, transparent: true, opacity: 0.7 }),
+  panelLine: new P({ color: GLOW, emissive: GLOW, emissiveIntensity: 1.8, transparent: true, opacity: 0.7 }),
   spineGlow: new P({ color: GLOW, emissive: GLOW, emissiveIntensity: 2.5, clearcoat: 0.4, clearcoatRoughness: 0.3 }),
-  hardpoint: new P({ color: 0x505560, roughness: 0.3, metalness: 0.6, emissive: CYAN, emissiveIntensity: 0.5, clearcoat: 0.4, clearcoatRoughness: 0.3 }),
-  security:      new P({ color: 0xFFB347, emissive: 0xFFB347, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.7, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
-  analytics:     new P({ color: 0x63d7ff, emissive: 0x63d7ff, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.6, clearcoat: 0.4, clearcoatRoughness: 0.2 }),
-  automation:    new P({ color: 0x00ff00, emissive: 0x00ff00, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.6, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
-  devtools:      new P({ color: 0x4169E1, emissive: 0x4169E1, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.6, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
-  nft:           new P({ color: 0xb026ff, emissive: 0xb026ff, emissiveIntensity: 1.5, roughness: 0.2, metalness: 0.7, clearcoat: 0.5, clearcoatRoughness: 0.15, iridescence: 0.4, iridescenceIOR: 1.5 }),
-  social:        new P({ color: 0xFF7F50, emissive: 0xFF7F50, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.5, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
-  storage:       new P({ color: 0x6A5ACD, emissive: 0x6A5ACD, emissiveIntensity: 1.0, roughness: 0.35, metalness: 0.5, clearcoat: 0.2, clearcoatRoughness: 0.4 }),
-  productivity:  new P({ color: 0xE6F3FF, emissive: 0xE6F3FF, emissiveIntensity: 0.8, roughness: 0.25, metalness: 0.4, clearcoat: 0.4, clearcoatRoughness: 0.2 }),
-  bridge:        new P({ color: 0xFF8C00, emissive: 0xFF8C00, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.6, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
-  trading:       new P({ color: 0xFFD700, emissive: 0xFFD700, emissiveIntensity: 1.0, roughness: 0.2, metalness: 0.8, clearcoat: 0.6, clearcoatRoughness: 0.1 }),
-  governance:    new P({ color: 0x4B0082, emissive: 0x4B0082, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.6, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
-  wallet:        new P({ color: 0x50C878, emissive: 0x50C878, emissiveIntensity: 1.0, roughness: 0.3, metalness: 0.5, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
-  defi:          new P({ color: 0x32CD32, emissive: 0x32CD32, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.6, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
-  development:   new P({ color: 0x4169E1, emissive: 0x4169E1, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.6, clearcoat: 0.3, clearcoatRoughness: 0.3 }),
-  writing:       new P({ color: 0xFFF8DC, emissive: 0xFFF8DC, emissiveIntensity: 0.7, roughness: 0.3, metalness: 0.4, clearcoat: 0.2, clearcoatRoughness: 0.4 }),
-  communication: new P({ color: 0x00BFFF, emissive: 0x00BFFF, emissiveIntensity: 1.2, roughness: 0.25, metalness: 0.6, clearcoat: 0.4, clearcoatRoughness: 0.2 }),
-  undersuit:  new M({ color: 0x1a1e28, roughness: 0.75, metalness: 0.2, emissive: 0x060810, emissiveIntensity: 0.1 }),
-  pistonMat:  new P({ color: 0xb08040, roughness: 0.2, metalness: 0.9, emissive: 0x302010, emissiveIntensity: 0.15, clearcoat: 0.6, clearcoatRoughness: 0.15 }),
-  cableMat:   new M({ color: 0x181822, roughness: 0.9, metalness: 0.1 }),
-  rivetMat:   new P({ color: 0xd0d8e0, roughness: 0.08, metalness: 0.95, emissive: 0x506080, emissiveIntensity: 0.25, clearcoat: 1.0, clearcoatRoughness: 0.0 }),
-  frameMat:   new M({ color: 0x283040, roughness: 0.6, metalness: 0.45, emissive: 0x0a1020, emissiveIntensity: 0.15 }),
-  darkChrome: new P({ color: 0x3a4555, roughness: 0.18, metalness: 0.8, emissive: 0x151e2a, emissiveIntensity: 0.3, clearcoat: 0.8, clearcoatRoughness: 0.1 }),
+  hardpoint: new P({ color: 0x404858, roughness: 0.15, metalness: 0.8, emissive: CYAN, emissiveIntensity: 0.4, clearcoat: 0.8, clearcoatRoughness: 0.1 }),
+  security:      new P({ color: 0xFFB347, emissive: 0xFFB347, emissiveIntensity: 1.2, roughness: 0.15, metalness: 0.8, clearcoat: 0.6, clearcoatRoughness: 0.1 }),
+  analytics:     new P({ color: 0x63d7ff, emissive: 0x63d7ff, emissiveIntensity: 1.2, roughness: 0.15, metalness: 0.7, clearcoat: 0.6, clearcoatRoughness: 0.1 }),
+  automation:    new P({ color: 0x00ff00, emissive: 0x00ff00, emissiveIntensity: 1.2, roughness: 0.15, metalness: 0.7, clearcoat: 0.5, clearcoatRoughness: 0.15 }),
+  devtools:      new P({ color: 0x4169E1, emissive: 0x4169E1, emissiveIntensity: 1.2, roughness: 0.15, metalness: 0.7, clearcoat: 0.5, clearcoatRoughness: 0.15 }),
+  nft:           new P({ color: 0xb026ff, emissive: 0xb026ff, emissiveIntensity: 1.5, roughness: 0.12, metalness: 0.8, clearcoat: 0.7, clearcoatRoughness: 0.08, iridescence: 0.4, iridescenceIOR: 1.5 }),
+  social:        new P({ color: 0xFF7F50, emissive: 0xFF7F50, emissiveIntensity: 1.2, roughness: 0.15, metalness: 0.6, clearcoat: 0.5, clearcoatRoughness: 0.15 }),
+  storage:       new P({ color: 0x6A5ACD, emissive: 0x6A5ACD, emissiveIntensity: 1.0, roughness: 0.2, metalness: 0.6, clearcoat: 0.4, clearcoatRoughness: 0.2 }),
+  productivity:  new P({ color: 0xE6F3FF, emissive: 0xE6F3FF, emissiveIntensity: 0.8, roughness: 0.15, metalness: 0.5, clearcoat: 0.5, clearcoatRoughness: 0.15 }),
+  bridge:        new P({ color: 0xFF8C00, emissive: 0xFF8C00, emissiveIntensity: 1.2, roughness: 0.15, metalness: 0.7, clearcoat: 0.5, clearcoatRoughness: 0.15 }),
+  trading:       new P({ color: 0xFFD700, emissive: 0xFFD700, emissiveIntensity: 1.0, roughness: 0.1, metalness: 0.9, clearcoat: 0.8, clearcoatRoughness: 0.05 }),
+  governance:    new P({ color: 0x4B0082, emissive: 0x4B0082, emissiveIntensity: 1.2, roughness: 0.15, metalness: 0.7, clearcoat: 0.5, clearcoatRoughness: 0.15 }),
+  wallet:        new P({ color: 0x50C878, emissive: 0x50C878, emissiveIntensity: 1.0, roughness: 0.15, metalness: 0.6, clearcoat: 0.5, clearcoatRoughness: 0.15 }),
+  defi:          new P({ color: 0x32CD32, emissive: 0x32CD32, emissiveIntensity: 1.2, roughness: 0.15, metalness: 0.7, clearcoat: 0.5, clearcoatRoughness: 0.15 }),
+  development:   new P({ color: 0x4169E1, emissive: 0x4169E1, emissiveIntensity: 1.2, roughness: 0.15, metalness: 0.7, clearcoat: 0.5, clearcoatRoughness: 0.15 }),
+  writing:       new P({ color: 0xFFF8DC, emissive: 0xFFF8DC, emissiveIntensity: 0.7, roughness: 0.2, metalness: 0.5, clearcoat: 0.4, clearcoatRoughness: 0.2 }),
+  communication: new P({ color: 0x00BFFF, emissive: 0x00BFFF, emissiveIntensity: 1.2, roughness: 0.15, metalness: 0.7, clearcoat: 0.6, clearcoatRoughness: 0.1 }),
+  undersuit:  new P({ color: 0x0a0e18, roughness: 0.6, metalness: 0.3, emissive: 0x020408, emissiveIntensity: 0.05, clearcoat: 0.2 }),
+  pistonMat:  new P({ color: 0xc8c8d0, roughness: 0.06, metalness: 0.95, emissive: 0x404050, emissiveIntensity: 0.2, clearcoat: 1.0, clearcoatRoughness: 0.02 }),
+  cableMat:   new M({ color: 0x101018, roughness: 0.85, metalness: 0.15 }),
+  rivetMat:   new P({ color: 0xe0e8f0, roughness: 0.04, metalness: 0.98, emissive: 0x607088, emissiveIntensity: 0.3, clearcoat: 1.0, clearcoatRoughness: 0.0 }),
+  frameMat:   new P({ color: 0x1a2030, roughness: 0.35, metalness: 0.6, emissive: 0x050810, emissiveIntensity: 0.1, clearcoat: 0.4, clearcoatRoughness: 0.2 }),
+  darkChrome: new P({ color: 0x2a3040, roughness: 0.08, metalness: 0.92, emissive: 0x101520, emissiveIntensity: 0.25, clearcoat: 1.0, clearcoatRoughness: 0.04 }),
 };
 
 /* ══════════════════════════════════════════════════════════
@@ -165,7 +171,7 @@ const _chromeAniso = _detailCanvas(256, (ctx, s) => {
 });
 _chromeAniso.repeat.set(4, 4);
 
-for (const k of ["armor", "armorLt"]) {
+for (const k of ["armor", "armorLt", "armorRed"]) {
   MAT[k].bumpMap = _armorBump; MAT[k].bumpScale = 0.018;
   MAT[k].normalMap = _armorNormal; MAT[k].normalScale = new THREE.Vector2(0.15, 0.15);
   MAT[k].roughnessMap = _roughVar;
@@ -332,94 +338,106 @@ function buildChassis() {
   // ── Animatable pivot groups (head + arms) ──
   const _hp = new THREE.Group(); _hp.position.set(0, 5.85, 0);
   const hd = new THREE.Group(); hd.position.set(0, -5.85, 0); _hp.add(hd);
-  const _lp = new THREE.Group(); _lp.position.set(-1.65, 5.25, 0);
-  const la = new THREE.Group(); la.position.set(1.65, -5.25, 0); _lp.add(la);
-  const _rp = new THREE.Group(); _rp.position.set(1.65, 5.25, 0);
-  const ra = new THREE.Group(); ra.position.set(-1.65, -5.25, 0); _rp.add(ra);
+  const _lp = new THREE.Group(); _lp.position.set(-1.75, 5.25, 0);
+  const la = new THREE.Group(); la.position.set(1.75, -5.25, 0); _lp.add(la);
+  const _rp = new THREE.Group(); _rp.position.set(1.75, 5.25, 0);
+  const ra = new THREE.Group(); ra.position.set(-1.75, -5.25, 0); _rp.add(ra);
 
-  // ── HEAD (built into hd, pivots at neck) ──
-  box(hd, 0.85, 0.72, 0.72, MAT.undersuit, 0, 6.4, 0);
-  box(hd, 0.54, 0.88, 0.92, MAT.armor, -0.29, 6.42, 0);
-  box(hd, 0.54, 0.88, 0.92, MAT.armor, 0.29, 6.42, 0);
-  box(hd, 0.03, 0.9, 0.06, MAT.panelLine, 0, 6.42, 0.44);
-  box(hd, 0.35, 0.14, 0.8, MAT.chrome, 0, 6.9, -0.04);
-  box(hd, 0.22, 0.06, 0.6, MAT.darkChrome, 0, 6.98, -0.04);
-  box(hd, 1.12, 0.18, 0.35, MAT.armorLt, 0, 6.72, 0.28, -0.15, 0, 0);
-  box(hd, 0.8, 0.06, 0.25, MAT.darkChrome, 0, 6.66, 0.32, -0.12, 0, 0);
-  box(hd, 0.7, 0.22, 0.45, MAT.chrome, 0, 5.98, 0.15);
-  box(hd, 0.5, 0.08, 0.35, MAT.darkChrome, 0, 5.9, 0.2);
-  ventSlits(hd, 0.35, 3, 0.055, MAT.vent, 0, 5.88, 0.38);
+  // ── HEAD (Optimus-style helmet with tall crest and faceplate) ──
+  box(hd, 0.9, 0.78, 0.78, MAT.undersuit, 0, 6.4, 0);
+  // Helmet halves — deep blue
+  box(hd, 0.56, 0.95, 0.96, MAT.armor, -0.3, 6.44, 0);
+  box(hd, 0.56, 0.95, 0.96, MAT.armor, 0.3, 6.44, 0);
+  box(hd, 0.03, 0.95, 0.06, MAT.panelLine, 0, 6.44, 0.46);
+  // Tall central crest (Prime signature)
+  box(hd, 0.18, 0.45, 0.7, MAT.chrome, 0, 7.12, -0.04);
+  box(hd, 0.1, 0.25, 0.5, MAT.armorRed, 0, 7.28, -0.04);
+  box(hd, 0.06, 0.12, 0.35, MAT.chrome, 0, 7.38, -0.04);
+  // Brow plate — heavy chrome
+  box(hd, 1.2, 0.22, 0.38, MAT.chrome, 0, 6.76, 0.28, -0.12, 0, 0);
+  box(hd, 0.9, 0.08, 0.28, MAT.darkChrome, 0, 6.68, 0.32, -0.1, 0, 0);
+  // Faceplate / chin guard — chrome like Prime's mouth guard
+  box(hd, 0.75, 0.3, 0.5, MAT.chrome, 0, 5.98, 0.15);
+  box(hd, 0.55, 0.12, 0.4, MAT.darkChrome, 0, 5.88, 0.2);
+  ventSlits(hd, 0.4, 4, 0.045, MAT.vent, 0, 5.86, 0.4);
+  // Cheek guards — angular Prime-style
   for (let side = -1; side <= 1; side += 2) {
-    box(hd, 0.18, 0.45, 0.7, MAT.armorLt, side * 0.54, 6.3, 0.05, 0, 0, side * 0.06);
-    box(hd, 0.06, 0.25, 0.55, MAT.darkChrome, side * 0.58, 6.22, 0.02, 0, 0, side * 0.06);
-    rivet(hd, side * 0.46, 6.7, 0.36); rivet(hd, side * 0.46, 6.15, 0.36);
+    box(hd, 0.2, 0.5, 0.75, MAT.armor, side * 0.56, 6.32, 0.05, 0, 0, side * 0.08);
+    box(hd, 0.08, 0.3, 0.6, MAT.darkChrome, side * 0.6, 6.24, 0.02, 0, 0, side * 0.08);
+    rivet(hd, side * 0.48, 6.72, 0.38); rivet(hd, side * 0.48, 6.16, 0.38);
   }
+  // Ear vents
   for (let side = -1; side <= 1; side += 2) {
-    box(hd, 0.08, 0.35, 0.18, MAT.frameMat, side * 0.63, 6.35, -0.12);
+    box(hd, 0.1, 0.4, 0.2, MAT.frameMat, side * 0.66, 6.38, -0.12);
     for (let i = 0; i < 3; i++)
-      box(hd, 0.04, 0.055, 0.14, MAT.vent, side * 0.65, 6.32 + i * 0.1, -0.12);
+      box(hd, 0.05, 0.06, 0.16, MAT.vent, side * 0.68, 6.34 + i * 0.1, -0.12);
   }
-  box(hd, 0.42, 0.2, 0.05, MAT.visor, -0.32, 6.42, 0.47);
-  visorMesh = box(hd, 0.38, 0.22, 0.06, MAT.visor, 0, 6.42, 0.48);
-  box(hd, 0.42, 0.2, 0.05, MAT.visor, 0.32, 6.42, 0.47);
-  box(hd, 0.03, 0.25, 0.08, MAT.chrome, -0.13, 6.42, 0.46);
-  box(hd, 0.03, 0.25, 0.08, MAT.chrome, 0.13, 6.42, 0.46);
-  box(hd, 1.0, 0.12, 0.02, MAT.coreInner, 0, 6.42, 0.42);
-  box(hd, 0.6, 0.04, 0.05, MAT.panelLine, 0, 6.74, 0.38);
+  // Visor — wide single band
+  visorMesh = box(hd, 1.1, 0.2, 0.06, MAT.visor, 0, 6.44, 0.49);
+  box(hd, 0.03, 0.26, 0.08, MAT.chrome, -0.38, 6.44, 0.47);
+  box(hd, 0.03, 0.26, 0.08, MAT.chrome, 0.38, 6.44, 0.47);
+  box(hd, 1.14, 0.14, 0.02, MAT.coreInner, 0, 6.44, 0.44);
+  box(hd, 0.7, 0.04, 0.05, MAT.panelLine, 0, 6.78, 0.4);
+  // Antenna fins — taller, more heroic
   for (let side = -1; side <= 1; side += 2) {
-    box(hd, 0.06, 0.08, 0.14, MAT.frameMat, side * 0.5, 6.78, -0.1);
-    box(hd, 0.05, 0.55, 0.2, MAT.chrome, side * 0.55, 6.88, -0.1, 0, 0, side * 0.2);
-    box(hd, 0.02, 0.35, 0.04, MAT.panelLine, side * 0.56, 6.95, -0.05, 0, 0, side * 0.2);
-    rivet(hd, side * 0.51, 6.78, -0.02);
+    box(hd, 0.07, 0.1, 0.16, MAT.frameMat, side * 0.52, 6.82, -0.1);
+    box(hd, 0.06, 0.7, 0.22, MAT.chrome, side * 0.58, 7.0, -0.1, 0, 0, side * 0.18);
+    box(hd, 0.03, 0.5, 0.05, MAT.panelLine, side * 0.59, 7.08, -0.05, 0, 0, side * 0.18);
+    rivet(hd, side * 0.53, 6.82, -0.02);
   }
-  box(hd, 0.8, 0.5, 0.1, MAT.darkChrome, 0, 6.4, -0.42);
+  // Back data ports
+  box(hd, 0.85, 0.55, 0.12, MAT.darkChrome, 0, 6.42, -0.44);
   for (let i = 0; i < 4; i++) {
-    cyl(hd, 0.055, 0.055, 0.08, MAT.frameMat, -0.2 + i * 0.13, 6.4, -0.46, 8);
-    sphere(hd, 0.022, MAT.vent, -0.2 + i * 0.13, 6.4, -0.5);
+    cyl(hd, 0.06, 0.06, 0.09, MAT.frameMat, -0.22 + i * 0.15, 6.42, -0.48, 8);
+    sphere(hd, 0.025, MAT.vent, -0.22 + i * 0.15, 6.42, -0.52);
   }
 
-  // ── NECK ──
-  cyl(g, 0.22, 0.32, 0.5, MAT.joint, 0, 5.85, 0);
+  // ── NECK (chrome collar) ──
+  cyl(g, 0.24, 0.35, 0.5, MAT.joint, 0, 5.85, 0);
   for (let i = 0; i < 4; i++) {
     const a = (i / 4) * Math.PI * 2 + 0.4;
-    cableRun(g, 0.025, 0.45, Math.cos(a) * 0.28, 5.85, Math.sin(a) * 0.28);
+    cableRun(g, 0.028, 0.5, Math.cos(a) * 0.3, 5.85, Math.sin(a) * 0.3);
   }
-  const neckRing = torus(g, 0.32, 0.04, MAT.vent, 0, 5.85, 0);
+  const neckRing = torus(g, 0.35, 0.05, MAT.vent, 0, 5.85, 0);
   glowRings.push(neckRing);
-  const neckRing2 = torus(g, 0.28, 0.025, MAT.panelLine, 0, 5.72, 0);
+  const neckRing2 = torus(g, 0.3, 0.03, MAT.panelLine, 0, 5.72, 0);
   glowRings.push(neckRing2);
-  box(g, 1.6, 0.15, 0.8, MAT.darkChrome, 0, 5.6, 0);
+  box(g, 1.7, 0.18, 0.85, MAT.darkChrome, 0, 5.6, 0);
 
-  // ── TORSO ──
-  // Endoskeleton (visible ribs between armor gaps)
-  box(g, 0.35, 5.0, 0.35, MAT.frameMat, 0, 3.6, -0.15);
+  // ── TORSO (Optimus Prime inspired — broad chest, truck-windshield plates) ──
+  box(g, 0.4, 5.0, 0.4, MAT.frameMat, 0, 3.6, -0.15);
   for (let i = 0; i < 5; i++)
-    box(g, 1.4, 0.05, 0.22, MAT.frameMat, 0, 3.0 + i * 0.5, 0);
-  // Chest plates (L/R split with visible seam)
-  box(g, 1.08, 2.6, 1.3, MAT.armor, -0.55, 4.0, 0);
-  box(g, 1.08, 2.6, 1.3, MAT.armor, 0.55, 4.0, 0);
-  box(g, 0.04, 2.4, 0.06, MAT.panelLine, 0, 4.0, 0.65);
-  // Collar / gorget
-  box(g, 1.7, 0.2, 0.9, MAT.darkChrome, 0, 5.35, 0);
-  box(g, 1.4, 0.06, 0.5, MAT.panelLine, 0, 5.45, 0.35);
-  // Upper chest chevron accent
-  box(g, 2.0, 0.6, 0.12, MAT.chrome, 0, 5.0, 0.66);
-  box(g, 1.6, 0.35, 0.06, MAT.darkChrome, 0, 5.15, 0.7);
-  // Lower chest plate
-  box(g, 1.8, 0.4, 0.12, MAT.armorLt, 0, 4.4, 0.7);
-  // Side flanks (angled outward)
+    box(g, 1.6, 0.06, 0.24, MAT.frameMat, 0, 3.0 + i * 0.5, 0);
+  // Main chest plates — RED (Optimus signature) L/R split
+  box(g, 1.15, 2.8, 1.35, MAT.armorRed, -0.58, 4.0, 0);
+  box(g, 1.15, 2.8, 1.35, MAT.armorRed, 0.58, 4.0, 0);
+  box(g, 0.04, 2.6, 0.06, MAT.panelLine, 0, 4.0, 0.68);
+  // Windshield-style chest windows (translucent blue panels)
   for (let side = -1; side <= 1; side += 2) {
-    box(g, 0.28, 2.0, 1.1, MAT.armorLt, side * 1.15, 4.1, 0, 0, 0, side * -0.08);
-    box(g, 0.08, 1.6, 0.85, MAT.darkChrome, side * 1.22, 4.1, 0, 0, 0, side * -0.08);
-    rivet(g, side * 1.05, 5.0, 0.55); rivet(g, side * 1.05, 3.2, 0.55);
+    box(g, 0.55, 0.7, 0.06, MAT.visor, side * 0.42, 4.6, 0.7);
+    box(g, 0.04, 0.76, 0.08, MAT.chrome, side * 0.14, 4.6, 0.7);
   }
-  // Back plate (layered)
-  box(g, 1.8, 2.2, 0.18, MAT.chrome, 0, 4.1, -0.7);
-  box(g, 1.3, 1.6, 0.08, MAT.darkChrome, 0, 4.2, -0.76);
-  // Ab plates (3 per side)
+  // Collar / gorget — heavy chrome
+  box(g, 1.85, 0.25, 1.0, MAT.chrome, 0, 5.38, 0);
+  box(g, 1.5, 0.08, 0.55, MAT.panelLine, 0, 5.48, 0.38);
+  // Upper chest chevron — chrome accent
+  box(g, 2.2, 0.65, 0.14, MAT.chrome, 0, 5.02, 0.68);
+  box(g, 1.7, 0.38, 0.07, MAT.darkChrome, 0, 5.18, 0.72);
+  // Lower chest
+  box(g, 1.9, 0.42, 0.14, MAT.armor, 0, 4.4, 0.72);
+  // Side flanks — blue armor
+  for (let side = -1; side <= 1; side += 2) {
+    box(g, 0.32, 2.2, 1.15, MAT.armor, side * 1.2, 4.1, 0, 0, 0, side * -0.08);
+    box(g, 0.1, 1.8, 0.9, MAT.darkChrome, side * 1.28, 4.1, 0, 0, 0, side * -0.08);
+    rivet(g, side * 1.1, 5.0, 0.58); rivet(g, side * 1.1, 3.2, 0.58);
+  }
+  // Back plate
+  box(g, 1.9, 2.4, 0.2, MAT.chrome, 0, 4.1, -0.72);
+  box(g, 1.4, 1.8, 0.1, MAT.darkChrome, 0, 4.2, -0.78);
+  // Ab plates — chrome segments
   for (let side = -1; side <= 1; side += 2) {
     for (let i = 0; i < 3; i++) {
-      box(g, 0.42, 0.28, 0.12, MAT.armorLt, side * 0.35, 3.0 + i * 0.33, 0.68);
+      box(g, 0.44, 0.3, 0.13, MAT.chrome, side * 0.36, 3.0 + i * 0.35, 0.7);
     }
   }
   // Panel line accents
@@ -436,43 +454,43 @@ function buildChassis() {
     t.minFilter = THREE.LinearFilter; t.generateMipmaps = false;
     return new P({ map: t, transparent: true, depthWrite: false, roughness: 0.5, metalness: 0.3 });
   }
-  // Left chest: unit number "AC-01"
+  // Left chest: unit designation
   const unitMat = decalTex(256, 64, (ctx, w, h) => {
     ctx.clearRect(0, 0, w, h);
-    ctx.font = "bold 38px monospace"; ctx.fillStyle = "#ffffff";
-    ctx.globalAlpha = 0.55; ctx.fillText("AC-01", 12, 42);
-    ctx.font = "12px monospace"; ctx.fillStyle = "#aaccff";
-    ctx.globalAlpha = 0.4; ctx.fillText("APECLAW DIVISION", 12, 58);
+    ctx.font = "bold 36px monospace"; ctx.fillStyle = "#e0e8ff";
+    ctx.globalAlpha = 0.65; ctx.fillText("AC-01", 12, 40);
+    ctx.font = "11px monospace"; ctx.fillStyle = "#6688cc";
+    ctx.globalAlpha = 0.5; ctx.fillText("APECLAW PRIME", 12, 56);
   });
-  const unitDecal = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.18), unitMat);
-  unitDecal.position.set(-0.55, 4.65, 0.72); unitDecal.renderOrder = 3;
+  const unitDecal = new THREE.Mesh(new THREE.PlaneGeometry(0.65, 0.17), unitMat);
+  unitDecal.position.set(-0.58, 4.68, 0.74); unitDecal.renderOrder = 3;
   g.add(unitDecal);
-  // Right chest: hazard chevrons
+  // Right chest: faction badge (blue/chrome stripe)
   const hazMat = decalTex(256, 128, (ctx, w, h) => {
     ctx.clearRect(0, 0, w, h);
-    ctx.globalAlpha = 0.45;
+    ctx.globalAlpha = 0.5;
     for (let i = 0; i < 8; i++) {
-      ctx.fillStyle = i % 2 === 0 ? "#ffaa00" : "#222222";
+      ctx.fillStyle = i % 2 === 0 ? "#3355aa" : "#c0ccdd";
       ctx.beginPath();
       ctx.moveTo(i * 32, 0); ctx.lineTo(i * 32 + 32, 0);
       ctx.lineTo(i * 32 + 16, h); ctx.lineTo(i * 32 - 16, h);
       ctx.closePath(); ctx.fill();
     }
   });
-  const hazDecal = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.28), hazMat);
-  hazDecal.position.set(0.55, 4.2, 0.72); hazDecal.renderOrder = 3;
+  const hazDecal = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.25), hazMat);
+  hazDecal.position.set(0.58, 4.22, 0.74); hazDecal.renderOrder = 3;
   g.add(hazDecal);
-  // Small caution strip on waist
+  // Waist caution strip
   const cautionMat = decalTex(192, 32, (ctx, w, h) => {
     ctx.clearRect(0, 0, w, h);
-    ctx.globalAlpha = 0.35;
+    ctx.globalAlpha = 0.3;
     for (let x = 0; x < w; x += 16) {
-      ctx.fillStyle = (x / 16) % 2 === 0 ? "#ffcc00" : "#111111";
+      ctx.fillStyle = (x / 16) % 2 === 0 ? "#cc2233" : "#1a2030";
       ctx.fillRect(x, 0, 16, h);
     }
   });
-  const cautionDecal = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.06), cautionMat);
-  cautionDecal.position.set(0, 2.72, 0.53); cautionDecal.renderOrder = 3;
+  const cautionDecal = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.06), cautionMat);
+  cautionDecal.position.set(0, 2.74, 0.56); cautionDecal.renderOrder = 3;
   g.add(cautionDecal);
 
   // ── CORE REACTOR (multi-ring housing) ──
@@ -495,114 +513,127 @@ function buildChassis() {
   coreGlow.layers.enable(1);
   sphere(g, 0.08, MAT.coreInner, 0, 4.5, 0.7);
 
-  // ── WAIST / PELVIS ──
-  box(g, 1.6, 0.7, 1.0, MAT.armorLt, 0, 2.35, 0);
-  box(g, 1.2, 0.5, 0.8, MAT.undersuit, 0, 2.35, 0);
-  box(g, 1.8, 0.2, 0.15, MAT.chrome, 0, 2.7, 0.52);
-  // Hip guard skirts
+  // ── WAIST / PELVIS (chrome belt, wider stance) ──
+  box(g, 1.7, 0.75, 1.05, MAT.armor, 0, 2.35, 0);
+  box(g, 1.3, 0.55, 0.85, MAT.undersuit, 0, 2.35, 0);
+  // Chrome belt buckle
+  box(g, 1.9, 0.22, 0.16, MAT.chrome, 0, 2.72, 0.54);
+  box(g, 0.6, 0.16, 0.1, MAT.armorRed, 0, 2.72, 0.58);
+  // Hip guard skirts — blue
   for (let side = -1; side <= 1; side += 2) {
-    box(g, 0.45, 0.5, 0.7, MAT.armor, side * 0.7, 2.15, 0, 0, 0, side * -0.12);
-    box(g, 0.35, 0.12, 0.55, MAT.darkChrome, side * 0.72, 2.3, 0, 0, 0, side * -0.12);
-    rivet(g, side * 0.6, 2.5, 0.38);
+    box(g, 0.5, 0.55, 0.75, MAT.armor, side * 0.72, 2.15, 0, 0, 0, side * -0.12);
+    box(g, 0.38, 0.14, 0.6, MAT.darkChrome, side * 0.74, 2.32, 0, 0, 0, side * -0.12);
+    rivet(g, side * 0.62, 2.52, 0.4);
   }
-  const waistRing = torus(g, 0.9, 0.04, MAT.vent, 0, 2.7, 0);
+  const waistRing = torus(g, 0.95, 0.05, MAT.vent, 0, 2.72, 0);
   glowRings.push(waistRing);
-  box(g, 0.8, 0.04, 0.06, MAT.panelLine, 0, 2.0, 0.52);
-  // Cable conduit across waist
-  cableRun(g, 0.02, 1.2, 0, 2.55, -0.48, 0, 0, Math.PI / 2);
+  box(g, 0.85, 0.05, 0.07, MAT.panelLine, 0, 2.0, 0.54);
+  cableRun(g, 0.022, 1.3, 0, 2.58, -0.5, 0, 0, Math.PI / 2);
 
-  // ── SHOULDERS ──
+  // ── SHOULDERS (massive Optimus-style pauldrons) ──
   function buildShoulder(tgt, side) {
-    const sx = side * 1.65;
-    sphere(tgt, 0.4, MAT.joint, sx, 5.25, 0);
-    const shoulderRing = torus(tgt, 0.45, 0.04, MAT.vent, sx, 5.25, 0);
+    const sx = side * 1.75;
+    sphere(tgt, 0.45, MAT.joint, sx, 5.25, 0);
+    const shoulderRing = torus(tgt, 0.5, 0.05, MAT.vent, sx, 5.25, 0);
     glowRings.push(shoulderRing);
-    box(tgt, 0.65, 0.35, 0.65, MAT.frameMat, sx + side * 0.2, 5.35, 0, 0, 0, side * -0.12);
-    box(tgt, 0.95, 0.5, 0.85, MAT.armor, sx + side * 0.3, 5.4, 0, 0, 0, side * -0.15);
-    box(tgt, 0.8, 0.15, 0.7, MAT.chrome, sx + side * 0.35, 5.65, 0, 0, 0, side * -0.15);
-    box(tgt, 0.6, 0.04, 0.6, MAT.darkChrome, sx + side * 0.3, 5.55, 0, 0, 0, side * -0.15);
-    ventSlits(tgt, 0.4, 2, 0.08, MAT.vent, sx + side * 0.35, 5.26, 0);
-    pistonGeo(tgt, 0.04, 0.55, MAT.pistonMat, sx * 0.65, 5.3, -0.35, 0, 0, side * 0.6);
-    rivet(tgt, sx + side * 0.15, 5.6, 0.38); rivet(tgt, sx + side * 0.55, 5.6, -0.3);
+    // Inner mount
+    box(tgt, 0.7, 0.4, 0.7, MAT.frameMat, sx + side * 0.2, 5.38, 0, 0, 0, side * -0.1);
+    // Massive pauldron — red accent
+    box(tgt, 1.15, 0.6, 1.0, MAT.armorRed, sx + side * 0.35, 5.45, 0, 0, 0, side * -0.12);
+    // Chrome trim on pauldron
+    box(tgt, 1.0, 0.18, 0.85, MAT.chrome, sx + side * 0.4, 5.72, 0, 0, 0, side * -0.12);
+    box(tgt, 0.7, 0.06, 0.7, MAT.darkChrome, sx + side * 0.35, 5.62, 0, 0, 0, side * -0.12);
+    // Top cap
+    box(tgt, 0.85, 0.1, 0.75, MAT.chrome, sx + side * 0.38, 5.78, 0, 0, 0, side * -0.12);
+    ventSlits(tgt, 0.45, 2, 0.09, MAT.vent, sx + side * 0.4, 5.28, 0);
+    pistonGeo(tgt, 0.045, 0.6, MAT.pistonMat, sx * 0.65, 5.32, -0.38, 0, 0, side * 0.55);
+    rivet(tgt, sx + side * 0.15, 5.65, 0.42); rivet(tgt, sx + side * 0.6, 5.65, -0.35);
   }
   buildShoulder(la, -1);
   buildShoulder(ra, 1);
 
-  // ── ARMS (built into la/ra, pivot at shoulder joints) ──
+  // ── ARMS (heavier forearms, chrome gauntlets) ──
   function buildArm(tgt, side) {
-    const sx = side * 2.1;
-    box(tgt, 0.35, 1.3, 0.35, MAT.undersuit, sx, 4.2, 0);
-    box(tgt, 0.55, 1.4, 0.5, MAT.armorLt, sx, 4.2, 0);
-    box(tgt, 0.42, 0.45, 0.35, MAT.darkChrome, sx, 4.65, 0.18);
-    box(tgt, 0.4, 0.06, 0.35, MAT.panelLine, sx, 4.5, 0.26);
-    pistonGeo(tgt, 0.03, 0.6, MAT.pistonMat, sx + side * 0.22, 4.2, -0.2);
-    cableRun(tgt, 0.018, 1.0, sx - side * 0.2, 4.2, 0.18);
-    sphere(tgt, 0.28, MAT.joint, sx, 3.4, 0);
-    const elbowRing = torus(tgt, 0.32, 0.03, MAT.vent, sx, 3.4, 0);
+    const sx = side * 2.2;
+    // Upper arm
+    box(tgt, 0.4, 1.35, 0.4, MAT.undersuit, sx, 4.2, 0);
+    box(tgt, 0.6, 1.45, 0.55, MAT.armor, sx, 4.2, 0);
+    box(tgt, 0.48, 0.5, 0.4, MAT.darkChrome, sx, 4.68, 0.2);
+    box(tgt, 0.44, 0.07, 0.38, MAT.panelLine, sx, 4.52, 0.28);
+    pistonGeo(tgt, 0.035, 0.65, MAT.pistonMat, sx + side * 0.24, 4.2, -0.22);
+    cableRun(tgt, 0.02, 1.1, sx - side * 0.22, 4.2, 0.2);
+    // Elbow
+    sphere(tgt, 0.32, MAT.joint, sx, 3.4, 0);
+    const elbowRing = torus(tgt, 0.36, 0.04, MAT.vent, sx, 3.4, 0);
     glowRings.push(elbowRing);
-    pistonGeo(tgt, 0.025, 0.4, MAT.pistonMat, sx + side * 0.18, 3.4, -0.18, 0.3, 0, 0);
-    box(tgt, 0.3, 1.2, 0.3, MAT.undersuit, sx, 2.4, 0);
-    box(tgt, 0.5, 1.3, 0.45, MAT.armor, sx, 2.4, 0);
-    box(tgt, 0.55, 0.3, 0.5, MAT.chrome, sx, 2.8, 0);
-    box(tgt, 0.12, 0.9, 0.12, MAT.darkChrome, sx + side * 0.28, 2.4, 0);
-    box(tgt, 0.06, 0.8, 0.06, MAT.panelLine, sx + side * 0.26, 2.4, 0.22);
-    torus(tgt, 0.22, 0.03, MAT.vent, sx, 1.85, 0);
-    box(tgt, 0.35, 0.08, 0.35, MAT.darkChrome, sx, 1.82, 0);
-    box(tgt, 0.3, 0.35, 0.3, MAT.joint, sx, 1.55, 0);
+    pistonGeo(tgt, 0.03, 0.45, MAT.pistonMat, sx + side * 0.2, 3.4, -0.2, 0.3, 0, 0);
+    // Forearm — MASSIVE chrome gauntlet
+    box(tgt, 0.38, 1.3, 0.38, MAT.undersuit, sx, 2.4, 0);
+    box(tgt, 0.65, 1.4, 0.6, MAT.chrome, sx, 2.4, 0);
+    box(tgt, 0.7, 0.35, 0.65, MAT.armorRed, sx, 2.85, 0);
+    box(tgt, 0.15, 1.0, 0.15, MAT.darkChrome, sx + side * 0.32, 2.4, 0);
+    box(tgt, 0.08, 0.9, 0.08, MAT.panelLine, sx + side * 0.3, 2.4, 0.28);
+    // Wrist band
+    torus(tgt, 0.28, 0.04, MAT.vent, sx, 1.8, 0);
+    box(tgt, 0.42, 0.1, 0.42, MAT.darkChrome, sx, 1.78, 0);
+    // Hand — bigger fist
+    box(tgt, 0.35, 0.4, 0.35, MAT.joint, sx, 1.5, 0);
     for (let f = -1; f <= 1; f++) {
-      box(tgt, 0.06, 0.22, 0.08, MAT.frameMat, sx + f * 0.1, 1.32, 0.08);
+      box(tgt, 0.08, 0.26, 0.1, MAT.frameMat, sx + f * 0.12, 1.26, 0.1);
     }
-    box(tgt, 0.06, 0.16, 0.08, MAT.frameMat, sx + side * 0.16, 1.42, -0.08);
-    rivet(tgt, sx - side * 0.2, 2.8, 0.25); rivet(tgt, sx + side * 0.2, 2.0, 0.22);
+    box(tgt, 0.08, 0.2, 0.1, MAT.frameMat, sx + side * 0.18, 1.36, -0.1);
+    rivet(tgt, sx - side * 0.22, 2.85, 0.3); rivet(tgt, sx + side * 0.22, 2.0, 0.28);
   }
   buildArm(la, -1);
   buildArm(ra, 1);
 
-  // ── LEGS ──
+  // ── LEGS (heroic proportions, massive knee guards) ──
   function buildLeg(side) {
-    const sx = side * 0.55;
-    // Hip joint + ring
-    sphere(g, 0.32, MAT.joint, sx, 1.95, 0);
-    const hipRing = torus(g, 0.36, 0.03, MAT.vent, sx, 1.95, 0);
+    const sx = side * 0.6;
+    // Hip joint
+    sphere(g, 0.35, MAT.joint, sx, 1.95, 0);
+    const hipRing = torus(g, 0.4, 0.04, MAT.vent, sx, 1.95, 0);
     glowRings.push(hipRing);
-    // Hip guard (angled skirt armor)
-    box(g, 0.55, 0.35, 0.55, MAT.armor, sx + side * 0.12, 1.82, 0.12, 0, 0, side * -0.1);
-    box(g, 0.4, 0.1, 0.4, MAT.darkChrome, sx + side * 0.12, 1.9, 0.15, 0, 0, side * -0.1);
-    // Thigh (inner undersuit + outer plates front/back)
-    box(g, 0.4, 1.5, 0.4, MAT.undersuit, sx, 0.8, 0);
-    box(g, 0.65, 1.6, 0.65, MAT.armorLt, sx, 0.8, 0);
-    box(g, 0.5, 0.12, 0.45, MAT.chrome, sx, 1.3, 0.33);
-    box(g, 0.45, 0.12, 0.4, MAT.darkChrome, sx, 0.5, 0.33);
-    box(g, 0.06, 1.0, 0.06, MAT.panelLine, sx + side * 0.3, 0.8, 0.33);
-    // Thigh cable conduit
-    cableRun(g, 0.018, 1.2, sx - side * 0.28, 0.8, -0.2);
-    rivet(g, sx + side * 0.25, 1.5, 0.3); rivet(g, sx + side * 0.25, 0.1, 0.3);
-    // Knee joint + ring + pistons (inner/outer)
-    sphere(g, 0.26, MAT.joint, sx, -0.1, 0.1);
-    const kneeRing = torus(g, 0.3, 0.03, MAT.vent, sx, -0.1, 0.1);
+    // Hip skirt — blue armor
+    box(g, 0.6, 0.4, 0.6, MAT.armor, sx + side * 0.12, 1.82, 0.12, 0, 0, side * -0.1);
+    box(g, 0.45, 0.12, 0.45, MAT.darkChrome, sx + side * 0.12, 1.92, 0.15, 0, 0, side * -0.1);
+    // Thigh — blue plates
+    box(g, 0.45, 1.55, 0.45, MAT.undersuit, sx, 0.8, 0);
+    box(g, 0.7, 1.65, 0.7, MAT.armor, sx, 0.8, 0);
+    box(g, 0.55, 0.14, 0.5, MAT.chrome, sx, 1.35, 0.35);
+    box(g, 0.5, 0.14, 0.45, MAT.darkChrome, sx, 0.5, 0.35);
+    box(g, 0.07, 1.1, 0.07, MAT.panelLine, sx + side * 0.33, 0.8, 0.35);
+    cableRun(g, 0.02, 1.3, sx - side * 0.3, 0.8, -0.22);
+    rivet(g, sx + side * 0.28, 1.5, 0.33); rivet(g, sx + side * 0.28, 0.1, 0.33);
+    // Knee joint
+    sphere(g, 0.3, MAT.joint, sx, -0.1, 0.1);
+    const kneeRing = torus(g, 0.34, 0.04, MAT.vent, sx, -0.1, 0.1);
     glowRings.push(kneeRing);
-    pistonGeo(g, 0.025, 0.35, MAT.pistonMat, sx + side * 0.22, -0.1, -0.15, 0.25, 0, 0);
-    pistonGeo(g, 0.025, 0.3, MAT.pistonMat, sx - side * 0.22, -0.1, 0.2, -0.2, 0, 0);
-    // Shin (layered guard + inner + calf vents)
-    box(g, 0.35, 1.4, 0.35, MAT.undersuit, sx, -1.2, 0.08);
-    box(g, 0.55, 1.5, 0.55, MAT.armor, sx, -1.2, 0.08);
-    box(g, 0.6, 0.6, 0.15, MAT.chrome, sx, -0.6, 0.35);
-    box(g, 0.5, 0.35, 0.08, MAT.darkChrome, sx, -0.85, 0.36);
-    box(g, 0.06, 0.9, 0.06, MAT.panelLine, sx, -1.2, 0.36);
-    // Calf vent slits
-    ventSlits(g, 0.2, 3, 0.08, MAT.vent, sx - side * 0.28, -1.4, 0);
-    cableRun(g, 0.015, 1.1, sx + side * 0.22, -1.2, -0.18);
-    // Ankle (joint + twin pistons)
-    cyl(g, 0.15, 0.2, 0.3, MAT.joint, sx, -2.1, 0.08);
-    pistonGeo(g, 0.02, 0.25, MAT.pistonMat, sx + side * 0.12, -2.0, 0.22);
-    pistonGeo(g, 0.02, 0.25, MAT.pistonMat, sx - side * 0.12, -2.0, -0.08);
-    // Foot (toe segment + heel + mid plate + thruster)
-    box(g, 0.65, 0.22, 0.6, MAT.armorLt, sx, -2.35, 0.38);
-    box(g, 0.55, 0.18, 0.35, MAT.armorLt, sx, -2.35, -0.05);
-    box(g, 0.6, 0.08, 0.55, MAT.chrome, sx, -2.22, 0.4);
-    box(g, 0.45, 0.04, 0.35, MAT.darkChrome, sx, -2.18, 0.4);
-    box(g, 0.3, 0.08, 0.3, MAT.ventHot, sx, -2.48, 0.15);
-    rivet(g, sx + side * 0.25, -2.2, 0.6); rivet(g, sx - side * 0.25, -2.2, 0.6);
+    pistonGeo(g, 0.03, 0.38, MAT.pistonMat, sx + side * 0.24, -0.1, -0.18, 0.25, 0, 0);
+    pistonGeo(g, 0.03, 0.32, MAT.pistonMat, sx - side * 0.24, -0.1, 0.22, -0.2, 0, 0);
+    // MASSIVE knee guard — chrome + red accent
+    box(g, 0.72, 0.55, 0.22, MAT.chrome, sx, -0.1, 0.38);
+    box(g, 0.58, 0.35, 0.1, MAT.armorRed, sx, -0.08, 0.48);
+    box(g, 0.48, 0.08, 0.06, MAT.darkChrome, sx, -0.28, 0.44);
+    // Shin — blue armor
+    box(g, 0.4, 1.45, 0.4, MAT.undersuit, sx, -1.2, 0.08);
+    box(g, 0.6, 1.55, 0.6, MAT.armor, sx, -1.2, 0.08);
+    box(g, 0.65, 0.65, 0.16, MAT.chrome, sx, -0.6, 0.38);
+    box(g, 0.55, 0.38, 0.1, MAT.darkChrome, sx, -0.85, 0.4);
+    box(g, 0.07, 1.0, 0.07, MAT.panelLine, sx, -1.2, 0.4);
+    ventSlits(g, 0.22, 3, 0.09, MAT.vent, sx - side * 0.3, -1.4, 0);
+    cableRun(g, 0.018, 1.2, sx + side * 0.24, -1.2, -0.2);
+    // Ankle
+    cyl(g, 0.18, 0.22, 0.32, MAT.joint, sx, -2.1, 0.08);
+    pistonGeo(g, 0.025, 0.28, MAT.pistonMat, sx + side * 0.14, -2.0, 0.24);
+    pistonGeo(g, 0.025, 0.28, MAT.pistonMat, sx - side * 0.14, -2.0, -0.1);
+    // Foot — chrome plated
+    box(g, 0.7, 0.24, 0.65, MAT.chrome, sx, -2.35, 0.4);
+    box(g, 0.6, 0.2, 0.38, MAT.armor, sx, -2.35, -0.05);
+    box(g, 0.65, 0.1, 0.6, MAT.darkChrome, sx, -2.22, 0.42);
+    box(g, 0.5, 0.05, 0.4, MAT.chrome, sx, -2.18, 0.42);
+    box(g, 0.32, 0.1, 0.32, MAT.ventHot, sx, -2.48, 0.15);
+    rivet(g, sx + side * 0.28, -2.2, 0.62); rivet(g, sx - side * 0.28, -2.2, 0.62);
   }
   buildLeg(-1);
   buildLeg(1);
@@ -657,13 +688,13 @@ function buildChassis() {
   // ── SHOULDER HARDPOINTS (built into arm pivots) ──
   for (let side = -1; side <= 1; side += 2) {
     const tgt = side === -1 ? la : ra;
-    const sx = side * 2.0;
-    box(tgt, 0.12, 0.2, 0.12, MAT.frameMat, sx + side * 0.4, 5.5, -0.2);
-    cyl(tgt, 0.12, 0.12, 0.7, MAT.hardpoint, sx + side * 0.4, 5.6, -0.2);
-    box(tgt, 0.22, 0.22, 0.65, MAT.hardpoint, sx + side * 0.4, 5.95, -0.2);
-    box(tgt, 0.16, 0.08, 0.55, MAT.darkChrome, sx + side * 0.4, 6.05, -0.2);
-    box(tgt, 0.08, 0.06, 0.5, MAT.vent, sx + side * 0.4, 5.85, -0.2);
-    rivet(tgt, sx + side * 0.4, 5.95, 0.1);
+    const sx = side * 2.1;
+    box(tgt, 0.14, 0.22, 0.14, MAT.frameMat, sx + side * 0.45, 5.52, -0.22);
+    cyl(tgt, 0.14, 0.14, 0.75, MAT.hardpoint, sx + side * 0.45, 5.65, -0.22);
+    box(tgt, 0.24, 0.24, 0.7, MAT.hardpoint, sx + side * 0.45, 6.0, -0.22);
+    box(tgt, 0.18, 0.1, 0.6, MAT.darkChrome, sx + side * 0.45, 6.1, -0.22);
+    box(tgt, 0.1, 0.08, 0.55, MAT.vent, sx + side * 0.45, 5.9, -0.22);
+    rivet(tgt, sx + side * 0.45, 6.0, 0.12);
   }
 
   // ── CHEST ENERGY VENTS (4 per side with housing) ──
@@ -680,9 +711,9 @@ function buildChassis() {
 
   // Add subtle edge highlights so the full mecha silhouette is always readable.
   const edgeMat = new THREE.LineBasicMaterial({
-    color: 0x8fb6ff,
+    color: 0x3355aa,
     transparent: true,
-    opacity: 0.22,
+    opacity: 0.15,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
@@ -1315,7 +1346,7 @@ export function initForgeScene() {
   const h = vp.clientHeight;
 
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x080810);
+  scene.background = new THREE.Color(0x030308);
 
   camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
   camera.position.set(6, 3, 10);
@@ -1331,7 +1362,7 @@ export function initForgeScene() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.setSize(w, h);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 0.95;
 
   css2dRenderer = new CSS2DRenderer({ element: document.getElementById("forgeLabelLayer") });
   css2dRenderer.setSize(w, h);
@@ -1349,15 +1380,15 @@ export function initForgeScene() {
   // ── Rich procedural environment map for PBR reflections ──
   const pmremGenerator = new THREE.PMREMGenerator(renderer);
   const envScene = new THREE.Scene();
-  envScene.background = new THREE.Color(0x0a1420);
+  envScene.background = new THREE.Color(0x020408);
 
-  // Gradient sky dome via vertex colors
+  // Gradient sky dome — very dark for chrome contrast
   const skyGeo = new THREE.SphereGeometry(10, 32, 16);
   const skyPos = skyGeo.attributes.position;
   const skyCol = new Float32Array(skyPos.count * 3);
-  const _cTop = new THREE.Color(0x1a3050);
-  const _cMid = new THREE.Color(0x0a1828);
-  const _cBot = new THREE.Color(0x050510);
+  const _cTop = new THREE.Color(0x0c1828);
+  const _cMid = new THREE.Color(0x040a14);
+  const _cBot = new THREE.Color(0x010208);
   const _cTmp = new THREE.Color();
   for (let i = 0; i < skyPos.count; i++) {
     const ny = skyPos.getY(i) / 10;
@@ -1368,25 +1399,29 @@ export function initForgeScene() {
   skyGeo.setAttribute("color", new THREE.BufferAttribute(skyCol, 3));
   envScene.add(new THREE.Mesh(skyGeo, new THREE.MeshBasicMaterial({ side: THREE.BackSide, vertexColors: true })));
 
-  // Studio-style reflection panels for crisp metallic highlights
-  const panelGeo = new THREE.PlaneGeometry(5, 8);
-  const brightPanel = new THREE.Mesh(panelGeo, new THREE.MeshBasicMaterial({ color: 0x8090b0 }));
+  // Studio-style reflection panels — high contrast for chrome
+  const panelGeo = new THREE.PlaneGeometry(6, 10);
+  const brightPanel = new THREE.Mesh(panelGeo, new THREE.MeshBasicMaterial({ color: 0xd0d8e8 }));
   brightPanel.position.set(7, 4, 0); brightPanel.rotation.y = -Math.PI / 2;
   envScene.add(brightPanel);
-  const fillPanel = new THREE.Mesh(panelGeo.clone(), new THREE.MeshBasicMaterial({ color: 0x405060 }));
+  const fillPanel = new THREE.Mesh(panelGeo.clone(), new THREE.MeshBasicMaterial({ color: 0x506878 }));
   fillPanel.position.set(-7, 2, 2); fillPanel.rotation.y = Math.PI / 2;
   envScene.add(fillPanel);
-  const topPanel = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), new THREE.MeshBasicMaterial({ color: 0x607080 }));
+  const topPanel = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshBasicMaterial({ color: 0x8090a8 }));
   topPanel.position.set(0, 9, 0); topPanel.rotation.x = Math.PI / 2;
   envScene.add(topPanel);
+  // Floor bounce (subtle warm)
+  const floorPanel = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), new THREE.MeshBasicMaterial({ color: 0x181820 }));
+  floorPanel.position.set(0, -5, 0); floorPanel.rotation.x = -Math.PI / 2;
+  envScene.add(floorPanel);
 
-  // Multiple point lights for varied reflection hotspots
+  // Env lights — strong highlights for chrome reflections
   const envLights = [
-    [0xffffff, 8, [5, 8, 3]], // Main highlight
-    [0x5080ff, 6, [-4, 3, 5]], // Blue fill
-    [0xffaa00, 4, [0, -2, -8]], // Warm rim
-    [CYAN, 3, [-5, 5, -3]],
-    [0xffaa66, 2, [3, -3, 6]],
+    [0xffffff, 12, [5, 8, 3]],
+    [0x4488ff, 8, [-4, 3, 5]],
+    [0xffffff, 6, [0, 10, 0]],
+    [CYAN, 4, [-5, 5, -3]],
+    [0x6688bb, 3, [3, -3, 6]],
   ];
   for (const [c, i, pos] of envLights) {
     const l = new THREE.PointLight(c, i, 22);
@@ -1398,59 +1433,53 @@ export function initForgeScene() {
   scene.environment = envMap;
   pmremGenerator.dispose();
 
-  // ── Dramatic Scene Lighting ──
-  // Low ambient to allow shadows to be dark
-  scene.add(new THREE.AmbientLight(0x111122, 0.4));
-  const hemi = new THREE.HemisphereLight(0xddeeff, 0x0f1e2d, 0.5);
+  // ── Cinematic Lighting (dark studio with chrome highlights) ──
+  scene.add(new THREE.AmbientLight(0x060610, 0.15));
+  const hemi = new THREE.HemisphereLight(0x8899bb, 0x020208, 0.3);
   scene.add(hemi);
 
-  // Key light (warm sunlight)
-  const keyLight = new THREE.DirectionalLight(0xfff0dd, 2.5);
-  keyLight.position.set(5, 8, 5);
+  // Key light — hard white for chrome specular
+  const keyLight = new THREE.DirectionalLight(0xffffff, 3.0);
+  keyLight.position.set(4, 10, 6);
   scene.add(keyLight);
 
-  // Fill light (cool blue)
-  const fillLight = new THREE.DirectionalLight(0x4060ff, 1.2);
-  fillLight.position.set(-5, 3, 5);
+  // Fill light — cool blue, very dim
+  const fillLight = new THREE.DirectionalLight(0x2244aa, 0.8);
+  fillLight.position.set(-6, 3, 4);
   scene.add(fillLight);
 
-  // Rim light (strong backlight for silhouette)
-  const rimLight = new THREE.SpotLight(0x44aaff, 5.0, 20, 0.6, 0.5, 1);
-  rimLight.position.set(0, 6, -8);
-  rimLight.target.position.set(0, 2, 0);
+  // Rim light — strong cold backlight for silhouette pop
+  const rimLight = new THREE.SpotLight(0x4488ff, 8.0, 25, 0.5, 0.4, 1);
+  rimLight.position.set(0, 7, -10);
+  rimLight.target.position.set(0, 3, 0);
   scene.add(rimLight);
   scene.add(rimLight.target);
 
-  const rimLight = new THREE.PointLight(GLOW, 0.8, 20);
-  rimLight.position.set(0, 8, -8);
-  scene.add(rimLight);
+  // Accent kicker from below-right for chrome underside reflections
+  const kickLight = new THREE.PointLight(0x4466aa, 1.5, 15);
+  kickLight.position.set(4, -1, 3);
+  scene.add(kickLight);
 
-  const underGlow = new THREE.PointLight(GLOW, 0.5, 12);
+  // Subtle glow from below for dramatic underlight
+  const underGlow = new THREE.PointLight(GLOW, 0.3, 10);
   underGlow.position.set(0, -2, 0);
   scene.add(underGlow);
 
-  const frontFill = new THREE.PointLight(0xccccff, 0.6, 18);
-  frontFill.position.set(0, 4, 8);
-  scene.add(frontFill);
-
-  const bodySpot = new THREE.SpotLight(0xaec6ff, 1.1, 26, Math.PI * 0.36, 0.45, 1.1);
-  bodySpot.position.set(0, 9.5, 5.5);
-  bodySpot.target.position.set(0, 2.6, 0);
+  // Body spot — focused on torso
+  const bodySpot = new THREE.SpotLight(0xdde8ff, 1.5, 28, Math.PI * 0.35, 0.4, 1.0);
+  bodySpot.position.set(0, 10, 5);
+  bodySpot.target.position.set(0, 3, 0);
   scene.add(bodySpot);
   scene.add(bodySpot.target);
-
-  const sideAccent = new THREE.PointLight(0xb026ff, 0.4, 15);
-  sideAccent.position.set(6, 3, -3);
-  scene.add(sideAccent);
 
   const sideAccent2 = new THREE.PointLight(CYAN, 0.3, 15);
   sideAccent2.position.set(-6, 3, -3);
   scene.add(sideAccent2);
 
-  // Ground — subtle reflective floor for grounding
+  // Ground — dark reflective floor
   const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(40, 40),
-    new P({ color: 0x060608, roughness: 0.55, metalness: 0.15, clearcoat: 0.15, clearcoatRoughness: 0.7 })
+    new THREE.PlaneGeometry(50, 50),
+    new P({ color: 0x020204, roughness: 0.3, metalness: 0.4, clearcoat: 0.5, clearcoatRoughness: 0.3 })
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -2.8;
@@ -1488,7 +1517,7 @@ export function initForgeScene() {
     composer.addPass(ssaoPass);
   } catch { /* SSAO unavailable — continue without it */ }
 
-  bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.55, 0.38, 0.92);
+  bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.7, 0.35, 0.85);
   composer.addPass(bloomPass);
 
   outlinePass = new OutlinePass(new THREE.Vector2(w, h), scene, camera);
