@@ -1,6 +1,9 @@
 /**
  * forge-chat.js — Agent chat panel for ClawBot Forge.
- * Posts to /api/chat, streams responses via SSE at /api/chat/stream.
+ *
+ * Dual-mode:
+ * - Website (apeclaw.ai): talks to The Clawllector via POST /api/forge/chat (Perplexity-backed OpenClaw agent)
+ * - Local (localhost): talks to the existing chat endpoint POST /api/chat
  */
 
 /* ══════════════════════════════════════════════════════════
@@ -14,6 +17,16 @@ const badge = () => document.getElementById("forgeChatBadge");
 
 let unread = 0;
 let streaming = false;
+
+const conversationHistory = [];
+
+/* ══════════════════════════════════════════════════════════
+   Environment detection
+   ══════════════════════════════════════════════════════════ */
+function isWebsiteMode() {
+  const host = window.location.hostname;
+  return host.includes("apeclaw.ai") || host.includes("vercel.app");
+}
 
 /* ══════════════════════════════════════════════════════════
    Message rendering
@@ -35,7 +48,11 @@ function appendMsg(role, text) {
 
   const name = document.createElement("span");
   name.className = "chat-msg-name";
-  name.textContent = role === "user" ? "You" : "Agent";
+  if (role === "user") {
+    name.textContent = "You";
+  } else {
+    name.textContent = isWebsiteMode() ? "The Clawllector" : "Agent";
+  }
   header.appendChild(name);
 
   const time = document.createElement("span");
@@ -62,7 +79,7 @@ function appendMsg(role, text) {
 }
 
 /* ══════════════════════════════════════════════════════════
-   Send message via POST /api/chat
+   Send message — routes to the right endpoint
    ══════════════════════════════════════════════════════════ */
 async function sendMessage() {
   const inp = input();
@@ -70,6 +87,7 @@ async function sendMessage() {
   if (!text || streaming) return;
 
   appendMsg("user", text);
+  conversationHistory.push({ role: "user", content: text });
   inp.value = "";
   updateCounter();
 
@@ -77,15 +95,106 @@ async function sendMessage() {
   const btn = sendBtn();
   if (btn) btn.disabled = true;
 
+  if (isWebsiteMode()) {
+    await sendToForgeAgent(text);
+  } else {
+    await sendToLocalChat(text);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   Website mode: POST /api/forge/chat (SSE stream)
+   ══════════════════════════════════════════════════════════ */
+async function sendToForgeAgent(text) {
+  const btn = sendBtn();
+  const bodyEl = appendMsg("agent", "");
+  let buffer = "";
+
+  try {
+    const res = await fetch("/api/forge/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        message: text,
+        history: conversationHistory.slice(-20),
+      }),
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      if (bodyEl) bodyEl.textContent = `Error: ${errData.error || res.statusText}`;
+      finishStreaming();
+      return;
+    }
+
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("text/event-stream")) {
+      const data = await res.json().catch(() => ({}));
+      if (bodyEl) bodyEl.textContent = data.reply || data.message || "No response";
+      if (data.reply || data.message) {
+        conversationHistory.push({ role: "assistant", content: data.reply || data.message });
+      }
+      finishStreaming();
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let sseBuffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      sseBuffer += decoder.decode(value, { stream: true });
+      const lines = sseBuffer.split("\n");
+      sseBuffer = lines.pop() || "";
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const data = line.slice(6).trim();
+        if (data === "[DONE]") continue;
+        try {
+          const chunk = JSON.parse(data);
+          const t = chunk.text || chunk.content || "";
+          if (t) {
+            buffer += t;
+            if (bodyEl) bodyEl.textContent = buffer;
+            const box = msgBox();
+            if (box) box.scrollTop = box.scrollHeight;
+          }
+        } catch { /* ignore parse errors */ }
+      }
+    }
+
+    if (buffer) {
+      conversationHistory.push({ role: "assistant", content: buffer });
+    } else if (bodyEl && !bodyEl.textContent) {
+      bodyEl.textContent = "No response received";
+    }
+  } catch (err) {
+    if (bodyEl) bodyEl.textContent = buffer || `Connection error: ${err.message}`;
+  }
+
+  finishStreaming();
+}
+
+/* ══════════════════════════════════════════════════════════
+   Local mode: POST /api/chat (existing behavior)
+   ══════════════════════════════════════════════════════════ */
+async function sendToLocalChat(text) {
+  const btn = sendBtn();
+
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ message: text, room: "forge" }),
+      body: JSON.stringify({ text, room: "forge" }),
     });
 
     if (!res.ok) {
       appendMsg("agent", `Error: ${res.status} ${res.statusText}`);
+      finishStreaming();
       return;
     }
 
@@ -96,19 +205,24 @@ async function sendMessage() {
       streamResponse(data.streamId);
       return;
     } else {
-      appendMsg("agent", data.message || "No response");
+      appendMsg("agent", data.message?.text || "Message sent");
     }
   } catch (err) {
     appendMsg("agent", `Connection error: ${err.message}`);
-  } finally {
-    streaming = false;
-    if (btn) btn.disabled = false;
-    inp?.focus();
   }
+
+  finishStreaming();
+}
+
+function finishStreaming() {
+  streaming = false;
+  const btn = sendBtn();
+  if (btn) btn.disabled = false;
+  input()?.focus();
 }
 
 /* ══════════════════════════════════════════════════════════
-   SSE streaming for long responses
+   SSE streaming for local mode long responses
    ══════════════════════════════════════════════════════════ */
 function streamResponse(streamId) {
   const bodyEl = appendMsg("agent", "");
@@ -118,10 +232,7 @@ function streamResponse(streamId) {
   evtSrc.onmessage = (e) => {
     if (e.data === "[DONE]") {
       evtSrc.close();
-      streaming = false;
-      const btn = sendBtn();
-      if (btn) btn.disabled = false;
-      input()?.focus();
+      finishStreaming();
       return;
     }
     try {
@@ -136,9 +247,7 @@ function streamResponse(streamId) {
   evtSrc.onerror = () => {
     evtSrc.close();
     if (!buffer && bodyEl) bodyEl.textContent = "Stream interrupted";
-    streaming = false;
-    const btn = sendBtn();
-    if (btn) btn.disabled = false;
+    finishStreaming();
   };
 }
 
@@ -157,6 +266,18 @@ function updateCounter() {
 function init() {
   const inp = input();
   const btn = sendBtn();
+
+  if (isWebsiteMode()) {
+    if (inp) inp.disabled = false;
+    if (btn) btn.disabled = false;
+    if (inp) inp.placeholder = "Ask The Clawllector anything...";
+    const indicator = document.getElementById("forgeChatAgentIndicator");
+    if (indicator) indicator.style.display = "block";
+  } else {
+    // Preserve previous local behavior: forge-data enables chat once local auth/state is ready.
+    if (inp) inp.disabled = true;
+    if (btn) btn.disabled = true;
+  }
 
   if (inp) {
     inp.addEventListener("input", updateCounter);

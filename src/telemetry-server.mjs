@@ -903,7 +903,22 @@ const server = http.createServer((req, res) => {
       const end = start + limit;
       const paginatedResults = results.slice(start, end);
 
-      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+      const slim = reqUrl.searchParams.get("slim") === "1";
+      const payload = slim
+        ? paginatedResults.map((s) => ({
+            name: s.name, slug: s.slug, description: s.description,
+            riskTier: s.riskTier, source: s.source, vettedOk: s.vettedOk,
+            fileName: s.fileName || null,
+            onchainTokenId: s.onchainTokenId || null,
+            onchainMintTx: s.onchainMintTx || null,
+            onchainPublishTx: s.onchainPublishTx || null,
+          }))
+        : paginatedResults;
+
+      res.writeHead(200, {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "public, max-age=120, s-maxage=300, stale-while-revalidate=600",
+      });
       return res.end(
         JSON.stringify({
           ok: true,
@@ -911,7 +926,7 @@ const server = http.createServer((req, res) => {
           page,
           limit,
           pages,
-          results: paginatedResults,
+          results: payload,
         }),
       );
     } catch (err) {
@@ -1005,7 +1020,10 @@ const server = http.createServer((req, res) => {
         riskTier: s.riskTier, description: String(s.description || "").slice(0, 150),
         onchainTokenId: s.onchainTokenId ?? null,
       }));
-      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+      res.writeHead(200, {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "public, max-age=120, s-maxage=300, stale-while-revalidate=600",
+      });
       return res.end(JSON.stringify({ ok: true, total: all.length, seed, bundled, imported, user, vetted, onchain, recent }));
     } catch (err) {
       res.writeHead(500, { "content-type": "application/json; charset=utf-8" });

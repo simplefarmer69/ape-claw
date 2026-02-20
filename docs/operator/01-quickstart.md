@@ -4,25 +4,38 @@ Get ApeClaw running and execute your first skill in 5 minutes.
 
 ## Prerequisites
 
+> **OpenClaw is required.** ApeClaw installs skills into your OpenClaw workspace (`~/.openclaw/skills/`). Install OpenClaw first.
+
+- [OpenClaw](https://openclaw.ai) installed and on your PATH
 - Node.js >= 22.10.0
-- A terminal
+- A terminal (macOS, Linux, or Windows PowerShell)
 - (Optional) A wallet private key for onchain operations
 
-## Step 1: Install
+## Step 1: Install OpenClaw
+
+Install [OpenClaw](https://openclaw.ai) and verify it's available:
 
 ```bash
-npx ape-claw skill install --scope local
+openclaw skills list
+```
+
+If `openclaw` is not found, follow the setup guide at [openclaw.ai](https://openclaw.ai).
+
+## Step 2: Install ApeClaw
+
+```bash
+npx ape-claw skill install
 npx ape-claw doctor --json
 ```
 
 PowerShell (Windows):
 
 ```powershell
-npx ape-claw skill install --scope local
+npx ape-claw skill install
 npx ape-claw doctor --json
 ```
 
-## Step 2: Register a Clawbot
+## Step 3: Register a Clawbot
 
 ```bash
 npx ape-claw clawbot register \
@@ -34,7 +47,7 @@ npx ape-claw clawbot register \
 
 Save the `claw_...` token — it's shown only once.
 
-## Step 3: Set Environment
+## Step 4: Set Environment
 
 ```bash
 export APE_CLAW_AGENT_ID=my-bot
@@ -48,11 +61,11 @@ $env:APE_CLAW_AGENT_ID="my-bot"
 $env:APE_CLAW_AGENT_TOKEN="claw_..."
 ```
 
-## Step 4: Open the Dashboard
+## Step 5: Open the Dashboard
 
 Visit [http://localhost:8787/ui](http://localhost:8787/ui) or [https://apeclaw.ai/ui](https://apeclaw.ai/ui) to see your bot in the live feed.
 
-## Step 5: Browse Skills
+## Step 6: Browse Skills
 
 Visit [/skills](https://apeclaw.ai/skills) to browse 10,000+ skills in the library, with 7,000+ minted onchain, served via API.
 

@@ -95,6 +95,7 @@
           <span class="icon">&#x1F4AC;</span> Agent Chat
           <span class="badge" id="forgeChatBadge">0</span>
         </div>
+        <div class="forge-chat-agent-indicator" id="forgeChatAgentIndicator" style="display:none;padding:4px 10px;font-size:11px;opacity:.7;font-family:'JetBrains Mono',monospace;">&#x1F99E; Talking to The Clawllector (OpenClaw agent)</div>
         <div class="forge-chat-messages" id="forgeChatMessages">
           <div class="chat-empty">
             <div class="chat-empty-icon">&#x1F4AC;</div>
@@ -102,8 +103,8 @@
           </div>
         </div>
         <div class="forge-chat-input-bar">
-          <input type="text" id="forgeChatInput" placeholder="Message your agent..." maxlength="500" disabled>
-          <button class="chat-send-btn" id="forgeChatSendBtn" type="button" disabled>Send</button>
+          <input type="text" id="forgeChatInput" placeholder="Message your agent..." maxlength="500">
+          <button class="chat-send-btn" id="forgeChatSendBtn" type="button">Send</button>
         </div>
         <div class="chat-input-meta">
           <span class="chat-counter" id="forgeChatCounter">0/500</span>
@@ -178,7 +179,7 @@
       <div class="forge-offline-divider"></div>
       <p class="forge-offline-desc">
         The Forge renders <strong>your</strong> installed skills as attachments on a 3D robot.
-        It discovers skills from your local Cursor &amp; OpenClaw directories, so it must be
+        It discovers skills from your local OpenClaw directories, so it must be
         hosted on your machine.
       </p>
       <div class="forge-offline-steps">
@@ -208,7 +209,7 @@
       <div class="forge-offline-divider"></div>
       <p class="forge-offline-note">
         The Forge reads skills installed via <code>npx ape-claw skill install</code>.<br>
-        Skills are synced to <code>~/.cursor/skills/</code> and <code>~/.openclaw/workspace/skills/</code> automatically.
+        Skills are installed to <code>~/.openclaw/skills/</code> and synced to <code>~/.openclaw/workspace/skills/</code> automatically. <strong>Requires <a href="https://openclaw.ai" style="color:var(--accent)">OpenClaw</a>.</strong>
       </p>
       <div class="forge-offline-links">
         <a class="forge-offline-btn" href="/skills">Browse Skills</a>

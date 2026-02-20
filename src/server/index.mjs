@@ -30,6 +30,7 @@ import {
   handleChatStream, handleChatGet, handleChatRooms,
   handleChatPost, handleChatReact,
 } from "./routes/chat.mjs";
+import { handleForgeChat, initForgeAgent } from "./routes/forge-agent.mjs";
 import { handleV2ReceiptGet, handleV2Config } from "./routes/v2.mjs";
 import { handlePodStatus, handlePodStop, handlePodFiles, handleStarterPack } from "./routes/pod.mjs";
 import {
@@ -58,7 +59,8 @@ if (!process.env.OPENSEA_API_KEY) {
 
 initStorage();
 initSseBroadcast();
-logger.info("Storage initialized, SSE broadcast active");
+initForgeAgent();
+logger.info("Storage initialized, SSE broadcast active, forge agent ready");
 
 function safeHandler(fn) {
   return (req, res, ...args) => {
@@ -122,6 +124,7 @@ const server = http.createServer((req, res) => {
   if (pathname === "/api/invites/create" && req.method === "POST") return safeHandler(handleInviteCreate)(req, res);
   if (pathname === "/api/clawbots/register" && req.method === "POST") return safeHandler(handleClawbotsRegister)(req, res);
   if (pathname === "/api/events" && req.method === "POST") return safeHandler(handlePostEvent)(req, res);
+  if (pathname === "/api/forge/chat" && req.method === "POST") return safeHandler(handleForgeChat)(req, res);
   if (pathname === "/api/chat/stream") return safeHandler(handleChatStream)(req, res, reqUrl);
   if (pathname === "/api/chat" && req.method === "GET") return safeHandler(handleChatGet)(req, res, reqUrl);
   if (pathname === "/api/chat/rooms" && req.method === "GET") return safeHandler(handleChatRooms)(req, res, reqUrl);

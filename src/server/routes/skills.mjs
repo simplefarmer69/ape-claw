@@ -170,8 +170,23 @@ export function handleSkillsSearch(req, res, reqUrl) {
     const total = results.length;
     const pages = Math.ceil(total / limit);
     const start = (page - 1) * limit;
-    res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
-    return res.end(JSON.stringify({ ok: true, total, page, limit, pages, results: results.slice(start, start + limit) }));
+    const paginatedResults = results.slice(start, start + limit);
+    const slim = reqUrl.searchParams.get("slim") === "1";
+    const payload = slim
+      ? paginatedResults.map((s) => ({
+          name: s.name, slug: s.slug, description: s.description,
+          riskTier: s.riskTier, source: s.source, vettedOk: s.vettedOk,
+          fileName: s.fileName || null,
+          onchainTokenId: s.onchainTokenId || null,
+          onchainMintTx: s.onchainMintTx || null,
+          onchainPublishTx: s.onchainPublishTx || null,
+        }))
+      : paginatedResults;
+    res.writeHead(200, {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "public, max-age=120, s-maxage=300, stale-while-revalidate=600",
+    });
+    return res.end(JSON.stringify({ ok: true, total, page, limit, pages, results: payload }));
   } catch (err) {
     res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
     return res.end(JSON.stringify({ ok: false, error: err.message || "search failed" }));

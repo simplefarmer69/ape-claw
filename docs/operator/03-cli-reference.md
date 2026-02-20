@@ -2,17 +2,21 @@
 
 Complete reference for all `ape-claw` CLI commands.
 
+## Prerequisites
+
+> **OpenClaw is required.** Install [OpenClaw](https://openclaw.ai) before using `ape-claw`. Skills are installed to `~/.openclaw/skills/`.
+
 ## Installation
 
 ```bash
-npx ape-claw skill install --scope local
+npx ape-claw skill install
 npx ape-claw doctor --json
 ```
 
 PowerShell (Windows):
 
 ```powershell
-npx ape-claw skill install --scope local
+npx ape-claw skill install
 npx ape-claw doctor --json
 ```
 
@@ -523,7 +527,7 @@ ape-claw skill install [<slug>] [--scope <local|global>] [--skills-dir <path>] [
 
 **Optional arguments:**
 - `<slug>` — Skill slug to install (example: `lincoln-ai`)
-- `--scope <local|global>` — Installation scope (default: `local`)
+- `--scope <local|global>` — Installation scope (default: `global` → `~/.openclaw/skills/`; `local` installs into the current project)
 - `--skills-dir <path>` — Explicit skills directory path
 - `--starter-pack` / `--no-starter-pack` — Install or skip the curated starter pack when running without a slug
 - `--allow-unvetted` — Permit API-fetched skills that are not marked vetted
@@ -533,8 +537,9 @@ ape-claw skill install [<slug>] [--scope <local|global>] [--skills-dir <path>] [
 
 **Example:**
 ```bash
-ape-claw skill install --scope local --json
+ape-claw skill install --json
 ape-claw skill install lincoln-ai --json
+ape-claw skill install --scope local --json   # current project only
 ```
 
 **Output:** Returns install results including installed/autoInstalled entries, OpenClaw sync results, and user skill index location.

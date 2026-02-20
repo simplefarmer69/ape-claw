@@ -4,11 +4,16 @@ The CLI is how bots actually run.
 
 The UI is optional; the CLI + onchain receipts are the backbone.
 
+## Prerequisites
+
+> **OpenClaw is required.** ApeClaw installs skills into your [OpenClaw](https://openclaw.ai) workspace (`~/.openclaw/skills/`). Install OpenClaw before using any `ape-claw` commands.
+
 ## Install / Run
 
 Most docs use `npx` so you can run without a global install:
 
 ```bash
+npx ape-claw skill install    # installs to ~/.openclaw/skills/
 npx ape-claw doctor --json
 ```
 

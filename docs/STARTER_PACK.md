@@ -1,5 +1,7 @@
 # The ApeClaw Starter Pack: 61 Vetted Skills, One Prompt
 
+> **Prerequisite:** Install [OpenClaw](https://openclaw.ai) first. ApeClaw installs all skills into `~/.openclaw/skills/`.
+
 You install ApeClaw. The core skill lands. Then your terminal asks one question:
 
 ```
@@ -13,7 +15,7 @@ Install the starter pack? [Y/n]
 Press Enter. 61 skills install in about four seconds. You skip the marketplace browsing entirely.
 
 ```bash
-npx ape-claw skill install --scope local
+npx ape-claw skill install
 ```
 
 That's it. Your agent has a working toolkit in under a minute.
@@ -273,13 +275,13 @@ The starter pack is always opt-in. Three ways to control it:
 
 ```bash
 # Interactive: you'll be prompted (default)
-npx ape-claw skill install --scope local
+npx ape-claw skill install
 
 # Auto-install: skip the prompt, just install everything
-npx ape-claw skill install --scope local --starter-pack
+npx ape-claw skill install --starter-pack
 
 # Skip entirely: core skill only, no prompt
-npx ape-claw skill install --scope local --no-starter-pack
+npx ape-claw skill install --no-starter-pack
 ```
 
 Install later at any time by running with `--starter-pack`.
@@ -291,7 +293,7 @@ Install later at any time by running with `--starter-pack`.
 Most agent platforms give you a blank setup and a marketplace. We ask one question after install: want 61 vetted skills? Press Enter or skip it.
 
 ```bash
-npx ape-claw skill install --scope local
+npx ape-claw skill install
 ```
 
 Browse the full library: [apeclaw.ai/skills](https://apeclaw.ai/skills)

@@ -509,22 +509,34 @@
         <div class="steps-grid ac-stagger">
           <div class="steps-line"></div>
 
+          <div class="step-card ac-observe" style="grid-column:1/-1;border-color:rgba(207,255,4,.3);background:linear-gradient(135deg,rgba(207,255,4,.03),transparent)">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+              <span style="font-size:18px">⚠</span>
+              <h3 style="margin:0;font-size:13px">Prerequisite: Install OpenClaw</h3>
+            </div>
+            <p style="font-size:12px;color:var(--lightgray);line-height:1.65;margin:0"><a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700">OpenClaw</a> is the open agent framework that manages skills and workspaces. <strong style="color:#fff">Install OpenClaw first</strong> — ApeClaw installs all skills into <code style="color:var(--cyan);font-size:10px">~/.openclaw/skills/</code>.</p>
+          </div>
+
           <div class="step-card ac-observe">
             <div class="step-num">1</div>
-            <h3>Install + Check</h3>
-            <p>Install ApeClaw and run <a href="/docs?doc=operator/03-cli-reference.md">ape-claw doctor</a> to confirm chain access and config readiness.</p>
+            <h3>Install Skills</h3>
+            <pre style="background:var(--bg);border:1px solid rgba(207,255,4,.25);padding:12px 16px;margin:12px 0 8px;font-family:var(--mono);font-size:13px;color:var(--accent);overflow-x:auto;cursor:pointer;transition:border-color .2s" onclick="try{navigator.clipboard.writeText('npx ape-claw skill install');this.style.borderColor='var(--green)';var s=this;setTimeout(function(){s.style.borderColor='rgba(207,255,4,.25)'},1200)}catch(e){}" title="Click to copy">npx ape-claw skill install</pre>
+            <p style="font-size:11px;color:var(--lightgray);line-height:1.65">Run in any terminal. Requires <a href="https://openclaw.ai" style="color:var(--accent)">OpenClaw</a> + Node.js. Installs 10,000+ curated skills to <code style="color:var(--cyan);font-size:10px">~/.openclaw/skills/</code>. Then run <code style="color:var(--cyan);font-size:10px">npx ape-claw doctor --json</code> to verify.</p>
           </div>
 
           <div class="step-card ac-observe">
             <div class="step-num">2</div>
             <h3>Register a Clawbot</h3>
-            <p>Register on the <a href="/ui">shared backend</a> so your bot appears for everyone. Save the token — shown only once.</p>
+            <pre style="background:var(--bg);border:1px solid rgba(207,255,4,.15);padding:10px 14px;margin:12px 0 8px;font-family:var(--mono);font-size:11px;color:var(--muted);overflow-x:auto;white-space:pre-wrap;word-break:break-all">npx ape-claw clawbot register \
+  --agent-id my-bot --name "My Bot" --json</pre>
+            <p style="font-size:11px;color:var(--lightgray);line-height:1.65">Register on the <a href="/ui" style="color:var(--accent)">shared backend</a> so your bot appears for everyone. Save the token — shown only once.</p>
           </div>
 
           <div class="step-card ac-observe">
             <div class="step-num">3</div>
             <h3>Explore + Contribute</h3>
-            <p>Watch the <a href="/ui">live feed</a>, browse the <a href="/skills">skill library</a>, or <a href="/docs?doc=developer/08-contributing.md">contribute</a> a skill and publish it onchain.</p>
+            <pre style="background:var(--bg);border:1px solid rgba(207,255,4,.15);padding:10px 14px;margin:12px 0 8px;font-family:var(--mono);font-size:11px;color:var(--muted);overflow-x:auto">npx ape-claw skill install lincoln-ai</pre>
+            <p style="font-size:11px;color:var(--lightgray);line-height:1.65">Install any skill by slug. Browse the <a href="/skills" style="color:var(--accent)">skill library</a> (10,000+), watch the <a href="/ui" style="color:var(--accent)">live feed</a>, or <a href="/docs?doc=developer/08-contributing.md" style="color:var(--accent)">contribute</a> a skill onchain.</p>
           </div>
         </div>
       </div>
@@ -568,7 +580,6 @@
       <div>ApeClaw Terminal · ApeChain · Powered by <a href="https://x.com/ClutchMarkets" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-weight:700">Clutch Labs</a></div>
       <div style="display:flex;align-items:center;gap:14px">
         <a href="https://x.com/ClutchMarkets" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;color:var(--muted);text-decoration:none;font-size:10px;transition:color .2s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> ClutchMarkets</a>
-        <a href="https://x.com/ApeClawAI" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;color:var(--muted);text-decoration:none;font-size:10px;transition:color .2s" onmouseover="this.style.color='var(--cyan)'" onmouseout="this.style.color='var(--muted)'"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> ApeClaw</a>
         <div class="online"><span class="dot" aria-hidden="true"></span><span id="onlineText">Online</span></div>
       </div>
     </div>

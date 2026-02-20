@@ -13,6 +13,10 @@ COPY config ./config
 COPY allowlists ./allowlists
 COPY skillcards ./skillcards
 COPY data ./data
+COPY scripts ./scripts
+
+# Preinstall OpenClaw in the image (more stable than runtime global install).
+RUN npm i -g openclaw
 
 COPY <<'ENTRYPOINT' /app/entrypoint.sh
 #!/bin/sh
@@ -49,10 +53,15 @@ fi
 [ -f "$STATE/chat.jsonl" ] || touch "$STATE/chat.jsonl"
 
 echo "[init] root=/app state=$STATE"
-exec node /app/src/telemetry-server.mjs
+if [ -f /app/scripts/bootstrap-openclaw.sh ]; then
+  echo "[init] running openclaw bootstrap..."
+  /bin/sh /app/scripts/bootstrap-openclaw.sh || echo "[warn] bootstrap-openclaw failed; continuing startup"
+fi
+
+exec node /app/src/server/index.mjs
 ENTRYPOINT
 
-RUN chmod +x /app/entrypoint.sh && chown -R apeclaw:apeclaw /app
+RUN chmod +x /app/entrypoint.sh /app/scripts/bootstrap-openclaw.sh && chown -R apeclaw:apeclaw /app
 
 ENV APE_CLAW_UI_PORT=8787
 ENV APE_CLAW_ROOT=/app

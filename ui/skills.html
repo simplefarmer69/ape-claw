@@ -776,7 +776,7 @@
             <a class="pill" href="#" data-copy='npx ape-claw skill install'>Copy command</a>
             <a class="pill" href="/docs?doc=CLI_GUIDE.md" data-keep-query="1">Install docs</a>
           </div>
-          <div class="note" style="margin-top:8px">Add <code>--starter-pack</code> for 61 curated skills. Skills sync to <a href="https://cursor.com" target="_blank" rel="noopener">Cursor</a> &amp; OpenClaw automatically. Works on macOS, Linux, and Windows (PowerShell).</div>
+          <div class="note" style="margin-top:8px"><strong style="color:var(--lime)">Requires <a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--lime)">OpenClaw</a></strong> — install OpenClaw first. Add <code>--starter-pack</code> for 61 curated skills. Skills are installed to <code>~/.openclaw/skills/</code>. Works on macOS, Linux, and Windows (PowerShell).</div>
         </div>
         <div class="card ac-observe">
           <div class="cardhead">
@@ -1662,7 +1662,7 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
           var installCmd = 'npx ape-claw skill install ' + rawSlug;
           var html = '';
           html += '<div style="margin-bottom:16px"><strong style="color:#cfff04;font-size:14px">' + escapeHtml(it.name || it.slug) + '</strong></div>';
-          html += '<div class="note" style="margin-bottom:14px;color:var(--muted);font-size:12px">Run the command below in your terminal to install this skill to Cursor &amp; OpenClaw.</div>';
+          html += '<div class="note" style="margin-bottom:14px;color:var(--muted);font-size:12px">Run the command below in your terminal to install this skill to your <a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--lime)">OpenClaw</a> workspace. <strong style="color:var(--lime)">Requires OpenClaw.</strong></div>';
           html += '<div style="margin-bottom:6px;color:var(--lime);font-size:11px;font-weight:700;letter-spacing:.5px">INSTALL</div>';
           html += '<div style="position:relative;background:rgba(0,0,0,.5);border:1px solid rgba(207,255,4,.15);border-radius:6px;padding:14px 16px;margin-bottom:14px">';
           html += '<code style="font-size:11px;color:var(--cyan);word-break:break-all;line-height:1.6;display:block">' + escapeHtml(installCmd) + '</code>';
@@ -2045,16 +2045,17 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
           });
       }
 
-      fetch(apiBase + '/api/skills/search?limit=15000', { headers: { 'accept': 'application/json' } })
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (j) {
-          var results = (j && j.ok && Array.isArray(j.results)) ? j.results : [];
-          if (!results.length) return loadFromStaticFallback();
-          hydrateFromResults(results);
-        })
-        .catch(function () {
-          return loadFromStaticFallback();
-        });
+      loadFromStaticFallback().then(function () {
+        setTimeout(function () {
+          fetch(apiBase + '/api/skills/search?limit=15000&slim=1', { headers: { 'accept': 'application/json' } })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (j) {
+              var results = (j && j.ok && Array.isArray(j.results)) ? j.results : [];
+              if (results.length > importedAll.length) hydrateFromResults(results);
+            })
+            .catch(function () {});
+        }, 2000);
+      });
 
       if (importedSearch) {
         importedSearch.addEventListener('input', applyImportedFilters);

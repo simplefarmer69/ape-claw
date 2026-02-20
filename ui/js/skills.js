@@ -427,7 +427,7 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
           var installCmd = 'npx ape-claw skill install ' + rawSlug;
           var html = '';
           html += '<div style="margin-bottom:16px"><strong style="color:#cfff04;font-size:14px">' + escapeHtml(it.name || it.slug) + '</strong></div>';
-          html += '<div class="note" style="margin-bottom:12px;color:var(--muted);font-size:12px">Copy the command below and run it in your terminal to install this skill to Cursor &amp; OpenClaw.</div>';
+          html += '<div class="note" style="margin-bottom:12px;color:var(--muted);font-size:12px">Copy the command below and run it in your terminal to install this skill to your <a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--lime)">OpenClaw</a> workspace. <strong style="color:var(--lime)">Requires OpenClaw.</strong></div>';
           html += '<div style="position:relative;background:rgba(0,0,0,.5);border:1px solid rgba(207,255,4,.15);border-radius:6px;padding:14px 16px;margin-bottom:12px">';
           html += '<code style="font-size:11px;color:var(--cyan);word-break:break-all;line-height:1.6;display:block">' + escapeHtml(installCmd) + '</code>';
           html += '</div>';

@@ -175,20 +175,32 @@ export APECLAW_SKILLCARD_URI_BASE="https://example.com/skillcards/seed"
 
 ## Quick Start
 
+### Prerequisites
+
+> **OpenClaw is required.** ApeClaw skills are installed into your [OpenClaw](https://openclaw.ai) workspace (`~/.openclaw/skills/`). Install OpenClaw before proceeding — see [openclaw.ai](https://openclaw.ai) for setup instructions.
+
+- [OpenClaw](https://openclaw.ai) installed and on your PATH
+- Node.js >= 22.10.0
+- A terminal (macOS, Linux, or Windows PowerShell)
+
 ### One-command install (no repo clone)
 
 ```bash
-npx ape-claw skill install --scope local
+npx ape-claw skill install
 ```
 
-Installs the ApeClaw skill into `.cursor/skills/ape-claw/` and bootstraps config files.
-Requires Node.js `>=22.10.0`. Works on macOS, Linux, and Windows.
+Installs the ApeClaw skill into `~/.openclaw/skills/ape-claw/` and bootstraps config files.
+Requires OpenClaw and Node.js `>=22.10.0`. Works on macOS, Linux, and Windows.
 
 ### Fast path for new users (copy/paste)
 
 ```bash
+# 0) Install OpenClaw first — see https://openclaw.ai
+# Verify it's available:
+openclaw skills list
+
 # 1) Install ApeClaw
-npx ape-claw skill install --scope local
+npx ape-claw skill install
 
 # 2) Verify (always works, even if global PATH is not set yet)
 npx ape-claw doctor --json
@@ -222,32 +234,41 @@ $env:APE_CLAW_CHAT_URL="https://apeclaw.ai"
 
 If you install globally (`npm i -g ape-claw`), you can drop the `npx` prefix and run `ape-claw` directly.
 
-### 1. Install OpenClaw (Cursor)
+### 1. Install OpenClaw
 
-Download [Cursor](https://cursor.com) — an AI-native code editor with OpenClaw built-in. Open any project folder to get started.
+Install [OpenClaw](https://openclaw.ai) — the open agent framework that manages skills, workspaces, and agent workflows. ApeClaw installs skills into your OpenClaw workspace at `~/.openclaw/skills/`.
+
+Verify OpenClaw is available:
+
+```bash
+openclaw skills list
+```
 
 ### 2. Install the ape-claw skill
 
 ```bash
-npx ape-claw skill install --scope local
+npx ape-claw skill install
 ```
 
-This installs the core skill into `.cursor/skills/ape-claw/` and bootstraps `config/policy.json`, `allowlists/`, and `config/clawbots.json`.
+This installs the core skill into `~/.openclaw/skills/ape-claw/` and bootstraps `config/policy.json`, `allowlists/`, and `config/clawbots.json`.
 
 After the core install, you'll be prompted to install the **Starter Pack** (61 security-vetted skills covering productivity, dev tools, security, analytics, SEO, and automation). You can also control this with flags:
 
 ```bash
 # Interactive: prompts you to choose
-npx ape-claw skill install --scope local
+npx ape-claw skill install
 
 # Auto-install starter pack (no prompt)
-npx ape-claw skill install --scope local --starter-pack
+npx ape-claw skill install --starter-pack
 
 # Skip starter pack entirely
-npx ape-claw skill install --scope local --no-starter-pack
+npx ape-claw skill install --no-starter-pack
 
 # JSON mode (programmatic): skips prompt, add --starter-pack to include it
-npx ape-claw skill install --scope local --starter-pack --json
+npx ape-claw skill install --starter-pack --json
+
+# Install into current project only (instead of global ~/.openclaw/)
+npx ape-claw skill install --scope local
 ```
 
 ### 3. Global CLI install (optional)

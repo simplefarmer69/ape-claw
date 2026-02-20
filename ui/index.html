@@ -848,12 +848,16 @@ footer::before{
         </div>
         <span class="hint-row" style="width:100%">Quick Start is for collecting NFTs and bridging. Pod + v2 is for the Library of Alexandria and Otherside automation.</span>
       </div>
+      <div style="padding:10px 14px;margin-bottom:12px;background:rgba(207,255,4,.04);border:1px solid rgba(207,255,4,.2);border-radius:var(--radius)">
+        <strong style="font-size:.72rem;color:var(--accent)">⚠ Prerequisite: <a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline">OpenClaw</a></strong>
+        <span style="font-size:.64rem;color:var(--dim);display:block;margin-top:4px">ApeClaw installs all skills into your OpenClaw workspace (<code>~/.openclaw/skills/</code>). <strong style="color:var(--text)">Install OpenClaw first</strong> from <a href="https://openclaw.ai" target="_blank" rel="noopener" style="color:var(--accent2)">openclaw.ai</a>.</span>
+      </div>
       <div class="setup-grid">
         <div class="setup-step" data-setup-mode="quick">
           <div class="setup-step-num">1</div>
           <h3>Install ApeClaw</h3>
           <pre>npx ape-claw skill install</pre>
-          <p class="note">Run in any terminal. Installs the core skill and prompts to add 61 curated skills (starter pack). Skills are synced to both Cursor and OpenClaw automatically.</p>
+          <p class="note">Run in any terminal. Requires <a href="https://openclaw.ai" target="_blank" rel="noopener">OpenClaw</a> + Node.js. Installs the core skill and prompts to add 61 curated skills (starter pack). Skills are installed to <code>~/.openclaw/skills/</code>.</p>
           <p class="note" style="margin-top:4px">Add <code>--starter-pack</code> to skip the prompt. Add <code>--scope local</code> to install into the current project only.</p>
         </div>
         <div class="setup-step" data-setup-mode="quick">
