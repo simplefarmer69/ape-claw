@@ -96,6 +96,7 @@ if (!fs.existsSync(SKILLCARDS_USER_INDEX_PATH)) {
 const SKILLCARDS_SEED_DIR = path.join(ROOT, "skillcards", "seed");
 const SKILLCARDS_BUNDLED_DIR = path.join(ROOT, "data", "skills");
 const SKILLCARDS_IMPORTED_INDEX_PATH = path.join(ROOT, "skillcards", "imported", "index.json");
+const SKILLCARDS_SNAPSHOT_PATH = path.join(ROOT, "data", "skills-search.json");
 
 // Cache for merged skill index (60 seconds TTL)
 let mergedSkillIndexCache = { data: null, expiresAt: 0 };
@@ -230,6 +231,37 @@ function buildMergedSkillIndex() {
     }
   } catch {
     // Skip if user index doesn't exist or can't be read
+  }
+
+  // If all live sources are empty, load from the pre-built snapshot so the
+  // API never returns 0 skills (covers path misconfigs, missing symlinks, etc).
+  if (merged.length === 0) {
+    try {
+      if (fs.existsSync(SKILLCARDS_SNAPSHOT_PATH)) {
+        const snap = JSON.parse(fs.readFileSync(SKILLCARDS_SNAPSHOT_PATH, "utf8"));
+        const results = Array.isArray(snap?.results) ? snap.results : [];
+        for (const s of results) {
+          if (s && typeof s === "object" && (s.name || s.slug)) {
+            merged.push({
+              name: String(s.name || s.slug || "").trim(),
+              slug: String(s.slug || "").trim(),
+              description: String(s.description || "").trim(),
+              fileName: String(s.fileName || "").trim() || null,
+              source: String(s.source || "imported").trim(),
+              vettedOk: Boolean(s.vettedOk),
+              importOk: Boolean(s.importOk !== false),
+              riskTier: Number(s.riskTier ?? 2),
+              sourceUrl: String(s.sourceUrl || "").trim() || null,
+              provenance: s.provenance || { publisher: "snapshot", signed: false },
+              onchainTokenId: s.onchainTokenId || null,
+              onchainMintTx: s.onchainMintTx || null,
+              onchainPublishTx: s.onchainPublishTx || null,
+            });
+          }
+        }
+        console.log(`[skills] Loaded ${merged.length} skills from snapshot fallback`);
+      }
+    } catch { /* snapshot unavailable */ }
   }
 
   // Deduplicate by slug while preserving source precedence:
@@ -890,6 +922,42 @@ const server = http.createServer((req, res) => {
   if (pathname === "/api/skills/get" && req.method === "GET") {
     try {
       const slug = String(reqUrl.searchParams.get("slug") || "").trim();
+      if (!slug) {
+        res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
+        return res.end(JSON.stringify({ ok: false, error: "missing slug" }));
+      }
+      const all = getMergedSkillIndex();
+      const match = all.find((s) => s.slug === slug);
+      if (!match) {
+        res.writeHead(404, { "content-type": "application/json; charset=utf-8" });
+        return res.end(JSON.stringify({ ok: false, error: "skill not found" }));
+      }
+      let fullCard = null;
+      const bucketDirs = {
+        seed: SKILLCARDS_SEED_DIR,
+        bundled: SKILLCARDS_BUNDLED_DIR,
+        imported: path.join(ROOT, "skillcards", "imported"),
+        user: SKILLCARDS_USER_DIR,
+      };
+      const baseDir = bucketDirs[match.source];
+      if (baseDir && match.fileName) {
+        try {
+          const fp = path.join(baseDir, match.fileName);
+          if (fs.existsSync(fp)) fullCard = JSON.parse(fs.readFileSync(fp, "utf8"));
+        } catch { /* index metadata is still returned below */ }
+      }
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+      return res.end(JSON.stringify({ ok: true, skill: match, card: fullCard }));
+    } catch (err) {
+      res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
+      return res.end(JSON.stringify({ ok: false, error: err.message || "get failed" }));
+    }
+  }
+  // Path-based skill lookup: /api/skills/<slug> (used by CLI and frontend)
+  if (pathname.startsWith("/api/skills/") && req.method === "GET" &&
+      pathname !== "/api/skills/search" && pathname !== "/api/skills/get" && pathname !== "/api/skills/stats") {
+    try {
+      const slug = decodeURIComponent(pathname.slice("/api/skills/".length)).trim();
       if (!slug) {
         res.writeHead(400, { "content-type": "application/json; charset=utf-8" });
         return res.end(JSON.stringify({ ok: false, error: "missing slug" }));
