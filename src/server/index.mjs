@@ -84,6 +84,10 @@ const server = http.createServer((req, res) => {
   const reqUrl = new URL(req.url, `http://localhost:${PORT}`);
   const pathname = reqUrl.pathname;
 
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+
   if (handleCorsPreflightOrSetHeaders(req, res)) return;
 
   if (pathname.startsWith("/api/")) {
@@ -93,7 +97,10 @@ const server = http.createServer((req, res) => {
     if (checkRateLimit(req, res, rl)) return;
   }
 
-  // ── SSE streams ──
+  // ── SSE streams (rate-limited) ──
+  if (pathname === "/events" || pathname === "/events/backlog") {
+    if (checkRateLimit(req, res, RL_READ)) return;
+  }
   if (pathname === "/events") return safeHandler(handleEventsSse)(req, res);
   if (pathname === "/events/backlog") return safeHandler(handleEventsBacklog)(req, res, reqUrl);
 

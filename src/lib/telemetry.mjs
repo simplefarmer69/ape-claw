@@ -4,6 +4,26 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+const REDACTED_KEYS = new Set([
+  "agent-token", "agentToken", "private-key", "privateKey",
+  "opensea-api-key", "openseaApiKey", "registration-key",
+  "registrationKey", "password", "secret", "apiKey", "api-key",
+  "wallet-key", "walletKey", "mnemonic",
+]);
+
+function redactSecrets(obj) {
+  if (!obj || typeof obj !== "object") return obj;
+  const out = Array.isArray(obj) ? [...obj] : { ...obj };
+  for (const k of Object.keys(out)) {
+    if (REDACTED_KEYS.has(k) && typeof out[k] === "string" && out[k].length > 0) {
+      out[k] = "[REDACTED]";
+    } else if (typeof out[k] === "object" && out[k] !== null) {
+      out[k] = redactSecrets(out[k]);
+    }
+  }
+  return out;
+}
+
 const TELEMETRY_BASE = String(process.env.APE_CLAW_TELEMETRY_URL || "").trim().replace(/\/+$/, "");
 const TELEMETRY_REMOTE_ONLY = /^(1|true|yes|on)$/i.test(String(process.env.APE_CLAW_TELEMETRY_REMOTE_ONLY || "").trim());
 
@@ -73,8 +93,8 @@ export function emitEvent({
     command,
     dryRun,
     chainId,
-    payload,
-    result,
+    payload: redactSecrets(payload),
+    result: redactSecrets(result),
     ok,
     error,
   };

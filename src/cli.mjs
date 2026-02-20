@@ -145,7 +145,10 @@ function installApeClawSkill(args) {
   const scope = String(args.scope || "local").toLowerCase();
   const explicitSkillsDir = args["skills-dir"] ? String(args["skills-dir"]) : "";
   let skillsRoot;
-  if (explicitSkillsDir) skillsRoot = path.resolve(explicitSkillsDir);
+  if (explicitSkillsDir) {
+    skillsRoot = path.resolve(explicitSkillsDir);
+    if (skillsRoot.includes("\0")) throw new Error("Invalid skills-dir path");
+  }
   else if (scope === "global") skillsRoot = path.join(os.homedir(), ".openclaw", "skills");
   else skillsRoot = path.join(process.cwd(), ".cursor", "skills");
 

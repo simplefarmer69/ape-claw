@@ -208,28 +208,63 @@ Seed skills (`source: "seed"`) are **trusted by default**:
 
 ## Security Posture
 
+### Telemetry Secret Redaction
+
+CLI telemetry automatically strips sensitive fields before writing events to disk or sending them to the remote endpoint. The following argument keys are redacted:
+
+`agent-token`, `private-key`, `opensea-api-key`, `registration-key`, `password`, `secret`, `api-key`, `wallet-key`, `mnemonic`
+
+If you add custom CLI flags that carry secrets, add them to `REDACTED_KEYS` in `src/lib/telemetry.mjs`.
+
+### Server Security Headers
+
+All responses include:
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: SAMEORIGIN`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+
+### Health Endpoint
+
+`/api/health` returns minimal metadata: service name, port, aggregate byte counts, and timestamps. It does not expose internal file paths, root directory, RPC URLs, or configuration details.
+
+### Static File Serving
+
+Static files are served with canonical path validation. The resolved path must stay under the project root. Null bytes, `..` sequences, and `~` are rejected. `decodeURIComponent` failures return false without crashing.
+
+### SSE Client Limits
+
+Server-sent event streams (`/events`, `/api/chat/stream`) are capped at 200 concurrent clients per stream type. Connections beyond the limit are rejected to prevent resource exhaustion.
+
+### Rate Limiting
+
+Rate limits apply to:
+- All `/api/` endpoints (read, write, and auth tiers)
+- SSE streams at `/events` and `/events/backlog`
+
+The rate limiter uses the first IP from `X-Forwarded-For` when behind a proxy, or `req.socket.remoteAddress` otherwise. If you deploy without a reverse proxy, consider disabling `X-Forwarded-For` trust to prevent spoofing.
+
 ### Never Store Keys in Files
 
-**Rule**: Never store private keys, API keys, or secrets in:
+Never store private keys, API keys, or secrets in:
 - SkillCard JSON files
 - Workspace files (AGENTS.md, etc.)
 - Version control
 - Public repositories
 
-**Use instead**:
+Use instead:
 - Environment variables (`APE_CLAW_PRIVATE_KEY`)
-- Local auth profile (`ape-claw auth set`)
+- Local auth profile (`ape-claw auth set`, stored with mode 0600)
 - Secure key management systems
 
 ### Audit Skills Before Install
 
-**Rule**: Always audit skills before installation, especially:
+Always audit skills before installation, especially:
 - User-submitted skills
 - Skills from untrusted sources
 - Skills with high risk tiers
 - Skills with unclear provenance
 
-**Process**:
+Process:
 1. Review SkillCard JSON
 2. Check risk tier
 3. Test in dry-run mode
@@ -249,6 +284,7 @@ Seed skills (`source: "seed"`) are **trusted by default**:
 - Daily spend caps
 - Confirmation phrases
 - Simulation requirements
+- Path traversal protection on `--skills-dir`, `--file`, and `--dir` flags
 
 ### Default Safety Settings
 
@@ -269,23 +305,54 @@ From `config/policy.json`:
 ### Autonomous Mode
 
 When `autonomousMode: true`:
-- `dailySpendCap` is **mandatory**
+- `dailySpendCap` is mandatory
 - Confirmation phrases are auto-generated
 - Still requires `--execute` flag
 - Still requires simulation (if enabled)
 
+## Known Issues and Planned Fixes
+
+These items were identified during the February 2026 security audit and are tracked for remediation:
+
+| Severity | Issue | Status |
+|----------|-------|--------|
+| CRITICAL | Telemetry emitted raw args including secrets | Fixed |
+| HIGH | Health endpoint exposed internal paths and RPC URLs | Fixed |
+| HIGH | Path traversal via `--skills-dir`, `--file`, `--dir` | Fixed |
+| MEDIUM | Static file serving lacked canonical path check | Fixed |
+| MEDIUM | No security headers on responses | Fixed |
+| MEDIUM | SSE clients unbounded (resource exhaustion) | Fixed |
+| MEDIUM | Rate limiting missing for `/events` endpoints | Fixed |
+| MEDIUM | Server routes `/api/chat/*`, `/events` lack auth | Open |
+| MEDIUM | `X-Forwarded-For` spoofing can bypass rate limits | Open |
+| MEDIUM | Error responses may leak internal details | Open |
+| LOW | CORS allows `*.vercel.app` (broad pattern) | Open |
+| LOW | No JSON schema validation for request bodies | Open |
+| HIGH | Contract modules lack reentrancy guards | Open |
+| HIGH | `PodVault.releaseToken` uses `transfer` not `safeTransfer` | Open |
+| MEDIUM | SSRF via `--api` flag (internal network access) | Open |
+
+### npm Dependencies
+
+`npm audit` reports 14 vulnerabilities:
+- `elliptic` (low): Risky crypto implementation in ethers.js dependency chain. No fix available upstream. Used only in Hardhat (dev dependency), not in production.
+- `minimatch` (high): ReDoS via wildcards. In `c8` (dev dependency). Fixable with `npm audit fix --force`.
+- `undici` (moderate): Unbounded decompression in `@actions/http-client`. Dev dependency.
+
+None of these affect the production CLI or server. They are all in devDependencies (Hardhat, c8, actions).
+
 ## Best Practices
 
-1. **Start with dry-run**: Always test in dry-run first
-2. **Use allowlists**: Only allow necessary modules/targets/selectors
-3. **Set value caps**: Limit maximum transaction value
-4. **Vet skills**: Review skills before installation
-5. **Never store secrets**: Use environment variables
-6. **Monitor telemetry**: Watch for policy violations
-7. **Use simulation**: Enable simulation for critical operations
-8. **Set spend caps**: Limit daily spending
-9. **Require confirmations**: Use confirmation phrases for high-value operations
-10. **Audit regularly**: Review policy settings and allowlists periodically
+1. Start with dry-run: always test in dry-run first
+2. Use allowlists: only allow necessary modules/targets/selectors
+3. Set value caps: limit maximum transaction value
+4. Vet skills: review skills before installation
+5. Never store secrets: use environment variables
+6. Monitor telemetry: watch for policy violations
+7. Use simulation: enable simulation for critical operations
+8. Set spend caps: limit daily spending
+9. Require confirmations: use confirmation phrases for high-value operations
+10. Audit regularly: review policy settings and allowlists periodically
 
 ## Troubleshooting
 

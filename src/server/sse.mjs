@@ -11,6 +11,7 @@ import { storageEvents } from "./storage/index.mjs";
 
 const telemetryClients = new Set();
 const chatClients = new Set();
+const MAX_SSE_CLIENTS = 200;
 
 let _eventCounter = Date.now();
 
@@ -26,11 +27,13 @@ function sendSse(res, data, id) {
 }
 
 export function addTelemetryClient(res) {
+  if (telemetryClients.size >= MAX_SSE_CLIENTS) return null;
   telemetryClients.add(res);
   return () => telemetryClients.delete(res);
 }
 
 export function addChatClient(res, room) {
+  if (chatClients.size >= MAX_SSE_CLIENTS) return null;
   const client = { res, room };
   chatClients.add(client);
   return () => chatClients.delete(client);

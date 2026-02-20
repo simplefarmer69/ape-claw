@@ -149,9 +149,12 @@ export function handleIndex(req, res) {
 }
 
 export function handleStaticFile(req, res, pathname) {
-  const safePath = decodeURIComponent(pathname);
-  if (safePath.includes("..") || safePath.includes("~")) return false;
-  const filePath = path.join(PROJECT_ROOT, safePath);
+  let safePath;
+  try { safePath = decodeURIComponent(pathname); } catch { return false; }
+  if (safePath.includes("..") || safePath.includes("~") || safePath.includes("\0")) return false;
+  const filePath = path.resolve(PROJECT_ROOT, safePath.replace(/^\/+/, ""));
+  const root = path.resolve(PROJECT_ROOT);
+  if (!filePath.startsWith(root + path.sep) && filePath !== root) return false;
   if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) return false;
   const ext = path.extname(filePath).toLowerCase();
   const mime = MIME_TYPES[ext] || "application/octet-stream";

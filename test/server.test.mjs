@@ -70,8 +70,9 @@ describe("ApeClaw Server Integration Tests", () => {
     assert.equal(res.status, 200);
     assert.ok(res.json.ok);
     assert.equal(res.json.service, "ape-claw-telemetry");
-    assert.ok(res.json.paths);
     assert.ok(res.json.ts);
+    assert.ok(!res.json.root, "health must not expose internal root path");
+    assert.ok(!res.json.paths, "health must not expose internal file paths");
   });
 
   it("POST /api/events without auth returns 401", async () => {

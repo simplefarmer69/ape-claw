@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 import { keccak256, toHex } from "viem";
 
 export function stableJsonStringify(obj) {
@@ -19,7 +20,13 @@ export function computeSkillVersionHash(versionString) {
 }
 
 export function readSkillcardJson(filePath) {
-  const raw = fs.readFileSync(filePath, "utf8");
+  const resolved = path.resolve(filePath);
+  if (resolved.includes("\0")) throw new Error("invalid file path");
+  const cwd = path.resolve(process.cwd());
+  if (!resolved.startsWith(cwd + path.sep) && resolved !== cwd) {
+    throw new Error(`file must be under the current working directory (got ${resolved})`);
+  }
+  const raw = fs.readFileSync(resolved, "utf8");
   const obj = JSON.parse(raw);
   if (!obj || typeof obj !== "object") throw new Error("invalid skillcard json");
   return obj;
