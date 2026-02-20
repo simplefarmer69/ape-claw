@@ -10,16 +10,16 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/ui/favicon-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/ui/shared/sidebar-nav.css">
   <script defer src="/ui/shared/sidebar-nav.js"></script>
   <link rel="stylesheet" href="/ui/shared/motion.css">
   <script defer src="/ui/shared/motion.js"></script>
   <style>
     :root{
-      --bg:#111111;
-      --panel:#1c1c1c;
-      --panel-2:#232323;
+      --bg:#0c0c0c;
+      --panel:#1a1a1a;
+      --panel-2:#212121;
       --panel-hover:#2a2a2a;
       --panel-border:rgba(207,255,4,.75);
       --panel-border-soft:rgba(207,255,4,.35);
@@ -31,7 +31,8 @@
       --green:#00ff00;
       --cyan:#63d7ff;
       --danger:#ff3333;
-      --mono: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      --font-display:'Outfit','Inter','Segoe UI',sans-serif;
       --terminal-gray:#474546;
       --terminal-lightgray:#9e9e9e;
       --accent:#cfff04;
@@ -44,7 +45,7 @@
     body{
       min-height:100vh;
       margin:0;
-      font-family:"Inter","Segoe UI","Roboto",Arial,sans-serif;
+      font-family:'Outfit','Inter','Segoe UI',sans-serif;
       background:var(--bg);
       color:var(--text);
       overflow-x:hidden;

@@ -32,15 +32,10 @@ npm run contracts:compile
 
 ### Test Structure
 
-Contract tests live in `contracts-test/` directory. The main test file is `v2-registry.test.js`, which covers:
+Contract tests live in `contracts-test/` directory:
 
-- SkillNFT minting and ownership
-- SkillRegistry version publishing
-- PodVault royalty routing
-- IntentRegistry create/cancel flows
-- ReceiptRegistry immutable receipt recording
-- AgentAccount + PolicyEngine integration
-- Module execution with policy gating
+- **`v2-registry.test.js`**: SkillNFT minting/ownership, SkillRegistry version publishing, PodVault royalty routing, IntentRegistry create/cancel flows, ReceiptRegistry immutable receipt recording, AgentAccount + PolicyEngine integration, module execution with policy gating
+- **`policy-engine.test.js`**: PolicyEngine preCheck passes/reverts, value cap enforcement, owner-only access control
 
 ### Writing Tests
 
@@ -173,7 +168,7 @@ npm run contracts:seed
 Or explicitly target localhost:
 
 ```bash
-npx hardhat run contracts-scripts/deploy-and-seed-v2.js --network localhost
+npx hardhat run contracts-scripts/deploy-and-seed-v2-alpha.js --network localhost
 ```
 
 The seed script:
@@ -238,6 +233,7 @@ This runs `hardhat compile && node --test`, which:
 
 - `test/policy.test.mjs`: Policy enforcement unit tests
 - `test/cli.test.mjs`: CLI command integration tests
+- `test/server.test.mjs`: Server integration tests (health, events, skills, clawbots, CORS, rate limiting, body limits, backlog, quotes auth)
 
 ### Writing CLI Tests
 
@@ -310,9 +306,19 @@ test("buy policy blocks disallowed currency", () => {
 
 ## API Testing
 
+### Coverage
+
+Run tests with `c8` code coverage:
+
+```bash
+npm run test:coverage
+```
+
+This generates a coverage report for CLI, policy, and server tests.
+
 ### Telemetry Server Endpoints
 
-The telemetry server (`src/telemetry-server.mjs`) exposes several endpoints:
+The telemetry server (`src/server/index.mjs`) exposes several endpoints:
 
 - `GET /`: Dashboard UI
 - `GET /events`: Server-Sent Events stream

@@ -10,16 +10,16 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/ui/favicon-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/ui/shared/sidebar-nav.css">
   <link rel="stylesheet" href="/ui/shared/motion.css">
   <script defer src="/ui/shared/sidebar-nav.js"></script>
   <script defer src="/ui/shared/motion.js"></script>
   <style>
     :root{
-      --bg:#111111;
-      --panel:#1c1c1c;
-      --panel-2:#232323;
+      --bg:#0c0c0c;
+      --panel:#1a1a1a;
+      --panel-2:#212121;
       --panel-hover:#2a2a2a;
       --border:rgba(207,255,4,.75);
       --border-soft:rgba(207,255,4,.35);
@@ -32,7 +32,8 @@
       --cyan:#63d7ff;
       --danger:#ff3333;
       --terminal-line:rgba(255,255,255,.12);
-      --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      --font-display:'Outfit','Inter','Segoe UI',sans-serif;
       --gray:#474546;
       --lightgray:#9e9e9e;
     }
@@ -40,10 +41,10 @@
     html{scroll-behavior:smooth}
     body{
       min-height:100vh;
-      font-family:"Inter","Segoe UI","Roboto",Arial,sans-serif;
+      font-family:'Outfit','Inter','Segoe UI',sans-serif;
       background:var(--bg);color:var(--text);
       position:relative;overflow-x:hidden;
-      -webkit-font-smoothing:antialiased;letter-spacing:.03em;
+      -webkit-font-smoothing:antialiased;letter-spacing:.02em;
     }
     a{color:inherit;text-decoration:none}
     a:hover{text-decoration:underline}
@@ -77,7 +78,7 @@
     .sec-label .dash{height:1px;width:0;background:rgba(207,255,4,.3);transition:width .7s cubic-bezier(.16,1,.3,1)}
     .ac-visible .sec-label .dash,.sec-label .dash.show{width:32px}
     .sec-label span{font-size:10px;font-weight:800;color:var(--accent);letter-spacing:.2em;text-transform:uppercase}
-    .sec-heading{font-size:28px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:-.01em;text-align:center;margin:4px 0 0}
+    .sec-heading{font-size:28px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:-.02em;text-align:center;margin:4px 0 0;font-family:var(--font-display)}
     @media(min-width:640px){.sec-heading{font-size:36px}}
     .sec-sub{color:var(--lightgray);font-size:14px;text-align:center;max-width:520px;margin:12px auto 0;line-height:1.65}
 
@@ -93,12 +94,20 @@
     @keyframes drift3{0%,100%{transform:translate(0,0)}50%{transform:translate(15px,-25px)}}
 
     .hero-title{
-      font-size:clamp(32px,7vw,60px);font-weight:900;color:#fff;text-transform:uppercase;
-      letter-spacing:-.01em;line-height:1.05;max-width:900px;margin:0 auto;
+      font-size:clamp(32px,7vw,64px);font-weight:900;color:#fff;text-transform:uppercase;
+      letter-spacing:-.02em;line-height:1.02;max-width:900px;margin:0 auto;
+      font-family:var(--font-display);
     }
-    .hero-title .glow{color:var(--accent);text-shadow:0 0 24px rgba(207,255,4,.2)}
+    .hero-title .glow{
+      color:var(--accent);
+      text-shadow:0 0 24px rgba(207,255,4,.2),0 0 80px rgba(207,255,4,.06);
+      background:linear-gradient(135deg,#cfff04 0%,#a8e600 40%,#cfff04 80%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
     .hero-sub{margin:20px auto 0;max-width:620px;min-height:3em;color:var(--lightgray);font-size:16px;line-height:1.7}
-    .hero-sub .typed{color:rgba(255,255,255,.8)}
+    .hero-sub .typed{color:rgba(255,255,255,.85)}
     .type-cursor{border-right:3px solid var(--accent);padding-right:2px;animation:typeCursor .8s step-end infinite}
     @keyframes typeCursor{0%,49%{border-color:var(--accent)}50%,100%{border-color:transparent}}
 
@@ -106,33 +115,50 @@
     @media(min-width:480px){.hero-cta{flex-direction:row;justify-content:center}}
     .btn{
       display:inline-flex;align-items:center;justify-content:center;gap:8px;
-      padding:12px 28px;border:1px solid var(--gray);background:var(--panel-2);color:#f4f7fc;
+      padding:13px 28px;border:1px solid var(--gray);background:var(--panel-2);color:#f4f7fc;
       font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;
-      transition:all .2s ease;white-space:nowrap;text-decoration:none;width:100%;
+      transition:all .25s ease;white-space:nowrap;text-decoration:none;width:100%;
+      position:relative;overflow:hidden;
     }
     @media(min-width:480px){.btn{width:auto}}
-    .btn:hover{border-color:var(--cyan);background:#132335;text-decoration:none}
+    .btn:hover{border-color:var(--cyan);background:rgba(99,215,255,.06);text-decoration:none;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+    .btn:active{transform:scale(0.97)}
     .btn.primary{
-      border-color:#8a5b12;background:linear-gradient(180deg,#ffb64a 0%,#ff9f1a 100%);
-      color:#1b1204;box-shadow:inset 0 0 0 1px rgba(255,231,191,.28);
+      border-color:rgba(207,255,4,.4);
+      background:linear-gradient(135deg,#cfff04 0%,#a8d900 100%);
+      color:#0c0c0c;
+      box-shadow:0 4px 24px rgba(207,255,4,.15),inset 0 1px 0 rgba(255,255,255,.15);
     }
-    .btn.primary:hover{background:linear-gradient(180deg,#ffc168 0%,#ffa92f 100%)}
-    .btn svg{width:16px;height:16px;opacity:.6}
+    .btn.primary:hover{
+      background:linear-gradient(135deg,#d8ff2e 0%,#b8e800 100%);
+      box-shadow:0 6px 32px rgba(207,255,4,.25),inset 0 1px 0 rgba(255,255,255,.2);
+      transform:translateY(-1px);
+    }
+    .btn.primary:active{transform:translateY(0) scale(0.98)}
+    .btn svg{width:16px;height:16px;opacity:.6;transition:transform .2s}
+    .btn:hover svg{transform:translateX(2px)}
 
     .scroll-hint{margin-top:56px;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--gray)}
     .scroll-hint span{font-size:10px;letter-spacing:.2em;text-transform:uppercase}
     .scroll-hint svg{width:20px;height:20px}
 
     /* ── Stats Banner ── */
-    .stats-banner{background:rgba(28,28,28,.5);padding:40px 24px}
+    .stats-banner{background:rgba(28,28,28,.4);padding:40px 24px;position:relative}
+    .stats-banner::before{
+      content:'';position:absolute;inset:0;
+      background:linear-gradient(90deg,transparent,rgba(207,255,4,.02),transparent);
+      pointer-events:none;
+    }
     @media(min-width:640px){.stats-banner{padding:56px 24px}}
     .stats-grid{max-width:860px;margin:0 auto;display:grid;grid-template-columns:repeat(2,1fr);gap:32px}
     @media(min-width:640px){.stats-grid{grid-template-columns:repeat(4,1fr);gap:40px}}
-    .stat{text-align:center}
-    .stat .num{font-weight:900;font-size:36px;color:#fff;font-family:var(--mono)}
+    .stat{text-align:center;transition:transform .3s;cursor:default}
+    .stat:hover{transform:translateY(-2px)}
+    .stat .num{font-weight:900;font-size:36px;color:#fff;font-family:var(--mono);transition:text-shadow .3s}
     @media(min-width:640px){.stat .num{font-size:48px}}
     .stat .num.glow{text-shadow:0 0 16px rgba(207,255,4,.12)}
-    .stat .label{font-size:10px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.2em;margin-top:8px}
+    .stat:hover .num.glow{text-shadow:0 0 24px rgba(207,255,4,.25),0 0 60px rgba(207,255,4,.06)}
+    .stat .label{font-size:10px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.2em;margin-top:8px;font-family:var(--mono)}
     .stat .sub{font-size:10px;color:var(--lightgray);margin-top:2px}
 
     /* ── Products Grid ── */
@@ -145,28 +171,36 @@
 
     .p-card{
       display:block;position:relative;
-      background:var(--panel-2);border:1px solid var(--gray);
-      padding:24px;transition:all .3s ease;text-decoration:none;color:inherit;
+      background:var(--panel-2);border:1px solid rgba(71,69,70,.5);
+      padding:24px;transition:all .35s cubic-bezier(.22,.68,0,1);text-decoration:none;color:inherit;
+      overflow:hidden;
     }
-    .p-card:hover{border-color:var(--accent-soft);box-shadow:0 6px 24px rgba(0,0,0,.3);text-decoration:none}
-    .p-card .top-line{position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(207,255,4,0),transparent);transition:background .5s}
-    .p-card:hover .top-line{background:linear-gradient(90deg,transparent,rgba(207,255,4,.4),transparent)}
+    .p-card::before{
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(ellipse at var(--mx,50%) var(--my,50%),rgba(207,255,4,.04),transparent 60%);
+      opacity:0;transition:opacity .4s;pointer-events:none;
+    }
+    .p-card:hover::before{opacity:1}
+    .p-card:hover{border-color:var(--accent-soft);box-shadow:0 12px 40px rgba(0,0,0,.4),0 0 30px rgba(207,255,4,.04);text-decoration:none;transform:translateY(-4px)}
+    .p-card:active{transform:translateY(-2px) scale(0.99)}
+    .p-card .top-line{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(207,255,4,0),transparent);transition:background .5s}
+    .p-card:hover .top-line{background:linear-gradient(90deg,transparent,rgba(207,255,4,.5),transparent)}
     .p-card .p-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
-    .p-card .p-icon{color:rgba(207,255,4,.6);transition:all .3s}
-    .p-card:hover .p-icon{color:var(--accent);filter:drop-shadow(0 0 8px rgba(207,255,4,.3))}
+    .p-card .p-icon{color:rgba(207,255,4,.5);transition:all .35s}
+    .p-card:hover .p-icon{color:var(--accent);filter:drop-shadow(0 0 12px rgba(207,255,4,.35));transform:scale(1.1)}
     .p-card .p-icon svg{width:36px;height:36px}
-    .badge{font-size:9px;padding:4px 8px;border:1px solid var(--gray);color:var(--lightgray);background:rgba(9,13,18,.6);white-space:nowrap;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
-    .badge.live{border-color:rgba(0,255,0,.25);color:rgba(0,255,0,.8)}
-    .badge.alpha{border-color:rgba(207,255,4,.25);color:var(--accent-soft)}
-    .p-card h3{font-size:15px;font-weight:800;color:#fff;text-transform:uppercase;margin:0 0 4px;transition:color .3s}
+    .badge{font-size:9px;padding:4px 8px;border:1px solid var(--gray);color:var(--lightgray);background:rgba(9,13,18,.6);white-space:nowrap;text-transform:uppercase;letter-spacing:.06em;font-weight:700;font-family:var(--mono)}
+    .badge.live{border-color:rgba(0,255,0,.3);color:rgba(0,255,0,.85);background:rgba(0,255,0,.05)}
+    .badge.alpha{border-color:rgba(207,255,4,.25);color:var(--accent-soft);background:rgba(207,255,4,.04)}
+    .p-card h3{font-size:15px;font-weight:800;color:#fff;text-transform:uppercase;margin:0 0 4px;transition:color .3s;font-family:var(--font-display)}
     .p-card:hover h3{color:var(--accent)}
-    .p-card .highlight{font-size:10px;font-weight:800;color:rgba(207,255,4,.5);text-transform:uppercase;letter-spacing:.15em;margin-bottom:12px}
-    .p-card .desc{font-size:12px;color:var(--lightgray);line-height:1.7;margin-bottom:20px}
-    .p-card .p-foot{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid rgba(71,69,70,.4)}
+    .p-card .highlight{font-size:10px;font-weight:700;color:rgba(207,255,4,.45);text-transform:uppercase;letter-spacing:.15em;margin-bottom:12px;font-family:var(--mono)}
+    .p-card .desc{font-size:12px;color:var(--lightgray);line-height:1.75;margin-bottom:20px}
+    .p-card .p-foot{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid rgba(71,69,70,.3)}
     .p-card .p-path{font-size:10px;color:var(--gray);font-family:var(--mono);transition:color .3s}
     .p-card:hover .p-path{color:var(--lightgray)}
-    .p-card .arrow{font-size:14px;color:var(--gray);transition:all .3s}
-    .p-card:hover .arrow{color:var(--accent);transform:translateX(6px)}
+    .p-card .arrow{font-size:14px;color:var(--gray);transition:all .35s cubic-bezier(.22,.68,0,1)}
+    .p-card:hover .arrow{color:var(--accent);transform:translateX(8px)}
 
     /* ── Ecosystem (Built With) ── */
     .ecosystem{position:relative;padding:48px 16px;background:rgba(28,28,28,.2)}
@@ -175,13 +209,19 @@
     .eco-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:40px}
     @media(min-width:640px){.eco-grid{grid-template-columns:repeat(3,1fr);gap:16px}}
     .eco-card{
-      background:var(--bg);border:1px solid var(--gray);padding:20px 24px;text-align:center;
-      transition:all .3s;
+      background:var(--bg);border:1px solid rgba(71,69,70,.4);padding:20px 24px;text-align:center;
+      transition:all .35s cubic-bezier(.22,.68,0,1);position:relative;overflow:hidden;
     }
-    .eco-card:hover{border-color:var(--accent-soft)}
-    .eco-card .name{font-size:14px;font-weight:800;color:#fff;text-transform:uppercase;transition:color .3s}
+    .eco-card::after{
+      content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+      background:linear-gradient(90deg,transparent,var(--accent),transparent);
+      transform:scaleX(0);transition:transform .4s cubic-bezier(.22,.68,0,1);
+    }
+    .eco-card:hover::after{transform:scaleX(1)}
+    .eco-card:hover{border-color:var(--accent-soft);transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+    .eco-card .name{font-size:14px;font-weight:800;color:#fff;text-transform:uppercase;transition:color .3s;font-family:var(--font-display)}
     .eco-card:hover .name{color:var(--accent)}
-    .eco-card .role{font-size:10px;color:var(--lightgray);margin-top:6px}
+    .eco-card .role{font-size:10px;color:var(--lightgray);margin-top:6px;font-family:var(--mono);letter-spacing:.04em}
 
     /* ── Collection ── */
     .collection{padding:56px 16px}
@@ -207,16 +247,18 @@
     @media(min-width:640px){.steps-grid{grid-template-columns:repeat(3,1fr);gap:24px}}
     .steps-line{display:none;position:absolute;top:44px;left:16%;right:16%;height:0;border-top:1px dashed rgba(207,255,4,.2);transition:all 1s}
     @media(min-width:640px){.steps-line{display:block}}
-    .step-card{position:relative;background:var(--panel-2);border:1px solid var(--gray);padding:24px;transition:all .3s}
-    .step-card:hover{border-color:var(--accent-soft)}
+    .step-card{position:relative;background:var(--panel-2);border:1px solid rgba(71,69,70,.4);padding:24px;transition:all .35s cubic-bezier(.22,.68,0,1)}
+    .step-card:hover{border-color:var(--accent-soft);transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.3)}
     .step-num{
       width:44px;height:44px;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;
-      margin-bottom:20px;font-size:18px;font-weight:900;color:var(--accent);
+      margin-bottom:20px;font-size:18px;font-weight:900;color:var(--accent);font-family:var(--mono);
+      transition:all .3s;
     }
-    .step-card h3{font-size:14px;font-weight:800;color:#fff;text-transform:uppercase;margin-bottom:8px}
-    .step-card p{font-size:12px;color:var(--lightgray);line-height:1.7}
-    .step-card a{color:var(--accent);font-weight:700}
-    .step-card a:hover{text-decoration:underline}
+    .step-card:hover .step-num{background:var(--accent);color:var(--bg);box-shadow:0 0 16px rgba(207,255,4,.2)}
+    .step-card h3{font-size:14px;font-weight:800;color:#fff;text-transform:uppercase;margin-bottom:8px;font-family:var(--font-display)}
+    .step-card p{font-size:12px;color:var(--lightgray);line-height:1.75}
+    .step-card a{color:var(--accent);font-weight:700;transition:color .2s}
+    .step-card a:hover{text-decoration:underline;color:#fff}
 
     /* ── Community ── */
     .community{position:relative;padding:64px 16px 80px;text-align:center}
@@ -236,9 +278,11 @@
     .sep.show,.ac-visible .sep{transform:scaleX(1)}
 
     /* ── Footer ── */
-    .foot{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.04em}
-    .online{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--gray);background:rgba(9,13,18,.7);color:var(--muted);font-size:11px}
-    .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px rgba(207,255,4,.35)}
+    .foot{padding:20px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.04em;border-top:1px solid rgba(207,255,4,.08)}
+    .online{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(71,69,70,.4);background:rgba(9,13,18,.7);color:var(--muted);font-size:11px;transition:border-color .2s}
+    .online:hover{border-color:rgba(207,255,4,.3)}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px rgba(207,255,4,.35);animation:dotPulse 2s ease-in-out infinite}
+    @keyframes dotPulse{0%,100%{box-shadow:0 0 10px rgba(207,255,4,.35)}50%{box-shadow:0 0 20px rgba(207,255,4,.6)}}
 
     @media(max-width:639px){
       .hero-title{font-size:28px}
@@ -325,8 +369,8 @@
     <section class="products ac-observe" id="products">
       <div class="inner">
         <div class="sec-label"><div class="dash"></div><span>Products</span><div class="dash"></div></div>
-        <h2 class="sec-heading">Everything You Need</h2>
-        <p class="sec-sub">A complete agent ecosystem — from live telemetry to onchain skills, receipts, bounties, and persistent pods — all on one chain.</p>
+        <h2 class="sec-heading">What's in the box</h2>
+        <p class="sec-sub">Live telemetry, onchain skills, receipts, bounties, and persistent pods. All on ApeChain.</p>
 
         <div class="grid ac-stagger">
           <a href="/ui" class="p-card ac-observe" data-keep-query="1">
@@ -337,7 +381,7 @@
             </div>
             <h3>Live Dashboard + Telemetry</h3>
             <div class="highlight">Real-Time Activity Feed</div>
-            <div class="desc">A shared SSE stream of what bots actually do: registrations, chain reads, bridge executions, NFT buys, and chat — all in real time.</div>
+            <div class="desc">A shared SSE stream of what bots actually do: registrations, chain reads, bridge executions, NFT buys, and chat. Updated live.</div>
             <div class="p-foot"><span class="p-path">/ui</span><span class="arrow">→</span></div>
           </a>
 
@@ -349,7 +393,7 @@
             </div>
             <h3>Library of Alexandria</h3>
             <div class="highlight">Onchain Skill Versioning</div>
-            <div class="desc">SkillCards are content-hashed and published onchain. No silent updates; provenance is explicit. Browse 500+ skills or contribute your own.</div>
+            <div class="desc">SkillCards are content-hashed and published onchain. No silent updates. Browse 10,000+ skills or contribute your own.</div>
             <div class="p-foot"><span class="p-path">/skills</span><span class="arrow">→</span></div>
           </a>
 
@@ -361,7 +405,7 @@
             </div>
             <h3>Onchain Receipts</h3>
             <div class="highlight">Append-Only Audit Trail</div>
-            <div class="desc">Receipts anchor "what happened" onchain (traceIdHash + contentHash). Audit truth survives disappearing infra, API keys, and UI changes.</div>
+            <div class="desc">Receipts anchor what happened onchain (traceIdHash + contentHash). The record survives even if the infra, API keys, or UI disappear.</div>
             <div class="p-foot"><span class="p-path">/skills#receipts</span><span class="arrow">→</span></div>
           </a>
 
@@ -397,7 +441,7 @@
             </div>
             <h3>THE POD</h3>
             <div class="highlight">Persistent Agent Harness</div>
-            <div class="desc">A persistent workspace for long-running agents. Dry-run by default, strict opt-in for high-risk exec. Designed for survival + auditability.</div>
+            <div class="desc">A persistent workspace for long-running agents. Dry-run by default, strict opt-in for anything high-risk. Built around auditability.</div>
             <div class="p-foot"><span class="p-path">/pod</span><span class="arrow">→</span></div>
           </a>
         </div>
@@ -411,7 +455,7 @@
     <section class="ecosystem ac-observe" id="ecosystem">
       <div class="inner">
         <div class="sec-label"><div class="dash"></div><span>Built With</span><div class="dash"></div></div>
-        <h2 class="sec-heading">Battle-Tested Infrastructure</h2>
+        <h2 class="sec-heading">Built on</h2>
 
         <div class="eco-grid ac-stagger">
           <div class="eco-card ac-observe"><div class="name">ApeChain</div><div class="role">Primary L2</div></div>
@@ -436,7 +480,7 @@
         <div style="position:relative;text-align:center;margin-bottom:32px">
           <div class="sec-label"><div class="dash"></div><span>Collection</span><div class="dash"></div></div>
           <h2 class="sec-heading">Clawllector 3D Asset</h2>
-          <p class="sec-sub">Free mint on ApeChain for Clawllectors and verified users. Your entry token for THE POD — the community's collective agent swarm.</p>
+          <p class="sec-sub">Free mint on ApeChain for Clawllectors and verified users. Your entry token for THE POD, the community's shared agent swarm.</p>
         </div>
 
         <div class="coll-stats ac-stagger">
@@ -494,7 +538,7 @@
       <div class="inner">
         <div class="sec-label"><div class="dash"></div><span>Community</span><div class="dash"></div></div>
         <h2 class="sec-heading">Join the Clawllectors</h2>
-        <p class="sec-sub">The terminal is live and growing. Follow us for updates, new features, and ecosystem announcements.</p>
+        <p class="sec-sub">The terminal is live. Follow for updates and new skills.</p>
 
         <div class="comm-btns">
           <a class="btn" href="https://x.com/ClutchMarkets" target="_blank" rel="noopener">
@@ -557,11 +601,53 @@
       (function () {
         var el = document.getElementById('heroType');
         if (!el) return;
-        var text = 'onchain skills, receipts, persistent pods, and a global live activity feed.';
-        var i = 0;
-        function tick() { i++; el.textContent = text.slice(0, i); if (i < text.length) setTimeout(tick, 25); }
-        setTimeout(tick, 400);
+        var phrases = [
+          'onchain skills, receipts, persistent pods, and a global live activity feed.',
+          'quote, simulate, and execute NFT buys with policy gates.',
+          'bridge assets to ApeChain with strict confirm phrases.',
+          'a persistent workspace for long-running autonomous agents.',
+        ];
+        var phraseIdx = 0;
+        var charIdx = 0;
+        var deleting = false;
+        var pauseMs = 2200;
+
+        function tick() {
+          var text = phrases[phraseIdx];
+          if (!deleting) {
+            charIdx++;
+            el.textContent = text.slice(0, charIdx);
+            if (charIdx >= text.length) {
+              setTimeout(function () { deleting = true; tick(); }, pauseMs);
+              return;
+            }
+            setTimeout(tick, 28);
+          } else {
+            charIdx--;
+            el.textContent = text.slice(0, charIdx);
+            if (charIdx <= 0) {
+              deleting = false;
+              phraseIdx = (phraseIdx + 1) % phrases.length;
+              setTimeout(tick, 300);
+              return;
+            }
+            setTimeout(tick, 14);
+          }
+        }
+        setTimeout(tick, 500);
       })();
+
+      /* Card glow tracking */
+      document.addEventListener('mousemove', function (e) {
+        var cards = document.querySelectorAll('.p-card');
+        for (var c = 0; c < cards.length; c++) {
+          var rect = cards[c].getBoundingClientRect();
+          var x = ((e.clientX - rect.left) / rect.width * 100).toFixed(0);
+          var y = ((e.clientY - rect.top) / rect.height * 100).toFixed(0);
+          cards[c].style.setProperty('--mx', x + '%');
+          cards[c].style.setProperty('--my', y + '%');
+        }
+      });
 
       function $(id) { return document.getElementById(id); }
       function fmtInt(n) { try { return new Intl.NumberFormat().format(Number(n || 0)); } catch (e) { return String(n || 0); } }

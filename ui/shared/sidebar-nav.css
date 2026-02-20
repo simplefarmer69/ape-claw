@@ -3,7 +3,7 @@
   --sb-z-backdrop:49;
   --sb-side-w:240px;
   --sb-side-collapsed:56px;
-  --sb-side-bg: rgba(9,13,18,0.92);
+  --sb-side-bg: rgba(9,13,18,0.94);
   --sb-side-border: var(--panel-border, rgba(99,215,255,.25));
   --sb-side-fg: #d4e6fa;
   --sb-side-muted: var(--muted, rgba(212,230,250,.65));
@@ -136,17 +136,35 @@
   text-decoration:none;
   border:1px solid rgba(99,215,255,.14);
   background: rgba(11,22,34,0.35);
-  transition: border-color .18s ease, background .18s ease, transform .18s ease;
+  transition: border-color .2s ease, background .2s ease, transform .2s ease, box-shadow .2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.sb-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(207,255,4,0.04), transparent);
+  opacity: 0;
+  transition: opacity 0.25s;
+  pointer-events: none;
+}
+.sb-link:hover::after {
+  opacity: 1;
 }
 .sb-link:hover{
-  transform: translateX(1px);
+  transform: translateX(2px);
   border-color: rgba(99,215,255,.32);
   background: rgba(11,22,34,0.60);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+.sb-link:active {
+  transform: translateX(2px) scale(0.98);
 }
 .sb-link[aria-current="page"]{
   border-color: rgba(207,255,4,.32);
   box-shadow: 0 0 0 2px rgba(207,255,4,.07);
-  position: relative;
+  background: rgba(207,255,4,0.04);
 }
 .sb-link[aria-current="page"]::before {
   content: '';

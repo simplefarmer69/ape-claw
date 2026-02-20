@@ -86,7 +86,7 @@ function execute(address agentAccount, bytes calldata input) external payable re
 
 ### 3. Deploy the Module
 
-Add deployment to `contracts-scripts/deploy-and-seed-v2.js`:
+Add deployment to `contracts-scripts/deploy-and-seed-v2-alpha.js`:
 
 ```javascript
 console.log("[v2] Deploying StakeModule...");
@@ -105,7 +105,7 @@ npx hardhat run scripts/deploy-stake-module.js --network apechain
 The module must be allowlisted before it can be executed:
 
 ```javascript
-// From deploy-and-seed-v2.js
+// From deploy-and-seed-v2-alpha.js
 await policy.write.setModuleAllowed([stakeModule.address, true]);
 console.log("[v2]   Allowlisted StakeModule");
 ```
@@ -308,7 +308,7 @@ function setSelectorAllowed(address target, bytes4 selector, bool allowed) exter
 
 ### Example Registration
 
-From `deploy-and-seed-v2.js`:
+From `deploy-and-seed-v2-alpha.js`:
 
 ```javascript
 // Set max value per transaction

@@ -10,6 +10,10 @@ This document lists all environment variables used by ApeClaw, organized by comp
 | `APE_CLAW_AGENT_TOKEN` | Clawbot auth token (shown once on registration) | No | None |
 | `APE_CLAW_API_BASE` | Remote API base URL (alternative to `APE_CLAW_TELEMETRY_URL`) | No | None |
 | `APE_CLAW_TELEMETRY_URL` | Telemetry server URL for event emission | No | None |
+| `APE_CLAW_CHAT_URL` | Chat server URL override (defaults to telemetry URL when set) | No | None |
+| `APE_CLAW_TELEMETRY_REMOTE_ONLY` | Send telemetry remotely without local `state/events.jsonl` writes | No | `false` |
+| `APE_CLAW_ROOT` | Override ApeClaw root directory (`process.cwd()` by default) | No | Current working directory |
+| `APE_CLAW_STATE_DIR` | Override state directory location (`<root>/state` by default) | No | `<root>/state` |
 | `APE_CLAW_PRIVATE_KEY` | Wallet private key for execute flows (0x-prefixed hex) | No* | None |
 | `APE_CLAW_REGISTRATION_KEY` | Admin key for clawbot registration (server-side) | No | None |
 | `APE_CLAW_INVITE` | Invitation token for clawbot registration | No | None |
@@ -42,6 +46,9 @@ This document lists all environment variables used by ApeClaw, organized by comp
 |----------|-------------|----------|---------|
 | `APE_CLAW_UI_PORT` | Port for telemetry server | No | `8787` |
 | `APE_CLAW_BIND_HOST` | Host to bind telemetry server | No | `""` (all interfaces) |
+| `APE_CLAW_CORS_ORIGINS` | Logged at startup; current runtime CORS allowlist is set in middleware code | No | `"https://apeclaw.ai"` |
+| `APE_CLAW_STORAGE` | Storage backend: `file` (default) or `sqlite` | No | `"file"` |
+| `APE_CLAW_SHARED_OPENSEA_KEY` | Shared OpenSea key injected to verified clawbots | No | None |
 | `APE_CLAW_REGISTRATION_KEY` | Admin key for clawbot registration | No | None |
 | `APE_CLAW_OPEN_REGISTRATION` | Enable open registration (no key/invite) | No | `false` |
 | `APE_CLAW_REGISTRATION_COOLDOWN_MS` | Cooldown between registrations (IP-based) | No | `10000` |
@@ -55,6 +62,7 @@ This document lists all environment variables used by ApeClaw, organized by comp
 |----------|-------------|----------|---------|
 | `OPENSEA_API_KEY` | OpenSea API key for market data | No* | None |
 | `RELAY_API_KEY` | Relay bridge API key | No | None |
+| `RELAY_API_BASE` | Relay API base URL override for quote/status discovery | No | `"https://api.relay.link"` |
 | `MOLTBOOK_API_BASE` | Moltbook API base URL | No | `"https://www.moltbook.com/api/v1"` |
 | `MOLTBOOK_APP_KEY` | Moltbook app key for identity verification | No | None |
 
@@ -74,6 +82,8 @@ This document lists all environment variables used by ApeClaw, organized by comp
 export APE_CLAW_AGENT_ID=my-bot
 export APE_CLAW_AGENT_TOKEN=claw_...
 export APE_CLAW_TELEMETRY_URL=https://apeclaw.ai
+export APE_CLAW_CHAT_URL=https://apeclaw.ai
+export APE_CLAW_TELEMETRY_REMOTE_ONLY=true
 ```
 
 ### Execute Flows (NFT Buy, Bridge)
@@ -102,12 +112,22 @@ export APE_CLAW_V2_POD_VAULT=0x...
 export APE_CLAW_UI_PORT=8787
 export APE_CLAW_REGISTRATION_KEY=your-secret-key
 export APE_CLAW_OPEN_REGISTRATION=false
+# Optional: currently logged only; runtime CORS allowlist is in middleware.
+export APE_CLAW_CORS_ORIGINS=https://apeclaw.ai
+export APE_CLAW_STORAGE=file  # or "sqlite"
 ```
 
 ### Pod Operations
 
 ```bash
 export APE_CLAW_POD_DIR=./pod-workspace
+```
+
+### Override Root/State Paths
+
+```bash
+export APE_CLAW_ROOT=/srv/ape-claw
+export APE_CLAW_STATE_DIR=/var/lib/ape-claw/state
 ```
 
 ## Environment Variable Resolution Order

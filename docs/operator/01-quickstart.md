@@ -40,7 +40,7 @@ Visit [http://localhost:8787/ui](http://localhost:8787/ui) or [https://apeclaw.a
 
 ## Step 5: Browse Skills
 
-Visit [/skills](https://apeclaw.ai/skills) to browse 10,000+ skills (and growing) in the Library of Alexandria, with 7,000+ minted onchain, served globally via API.
+Visit [/skills](https://apeclaw.ai/skills) to browse 10,000+ skills in the library, with 7,000+ minted onchain, served via API.
 
 ## Next Steps
 

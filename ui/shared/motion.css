@@ -1,6 +1,5 @@
 /* ══════════════════════════════════════════════════
    ApeClaw motion primitives
-   Ported from stonkbrokers.cash landing animations
    ══════════════════════════════════════════════════ */
 
 /* Section reveal — slides up and fades in */
@@ -46,9 +45,37 @@
   50%      { box-shadow: 0 0 24px rgba(207,255,4,0.20), 0 0 48px rgba(207,255,4,0.06); }
 }
 
+/* Magnetic tilt for cards */
+@keyframes acTiltReset {
+  to { transform: perspective(600px) rotateX(0) rotateY(0) scale(1); }
+}
+
+/* Particle float */
+@keyframes acFloat {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0.7; }
+  25%      { transform: translateY(-8px) translateX(3px); opacity: 1; }
+  75%      { transform: translateY(4px) translateX(-2px); opacity: 0.5; }
+}
+
+/* Gradient border spin */
+@keyframes acBorderSpin {
+  to { --ac-border-angle: 360deg; }
+}
+
+/* Typing cursor blink */
+@keyframes acCursorBlink {
+  0%, 49% { border-color: currentColor; }
+  50%, 100% { border-color: transparent; }
+}
+
+/* Ripple expand */
+@keyframes acRipple {
+  from { transform: scale(0); opacity: 0.4; }
+  to   { transform: scale(4); opacity: 0; }
+}
+
 /* ── States ─────────────────────────────── */
 
-/* .ac-observe: hidden by default, revealed when IntersectionObserver fires */
 .ac-observe {
   opacity: 0;
   transform: translateY(40px);
@@ -60,12 +87,41 @@
   transform: translateY(0);
 }
 
+/* Slide in from left variant */
+.ac-observe.ac-from-left {
+  transform: translateX(-40px);
+}
+.ac-observe.ac-from-left.ac-visible {
+  transform: translateX(0);
+}
+
+/* Slide in from right variant */
+.ac-observe.ac-from-right {
+  transform: translateX(40px);
+}
+.ac-observe.ac-from-right.ac-visible {
+  transform: translateX(0);
+}
+
+/* Scale-up variant */
+.ac-observe.ac-scale {
+  transform: scale(0.9);
+}
+.ac-observe.ac-scale.ac-visible {
+  transform: scale(1);
+}
+
 /* Stagger children inside a revealed container */
 .ac-stagger > .ac-observe {
   transition-delay: calc(var(--ac-i, 0) * 80ms);
 }
 
-/* Counter pop class (applied by JS after count-up starts) */
+/* Faster stagger for grids */
+.ac-stagger-fast > .ac-observe {
+  transition-delay: calc(var(--ac-i, 0) * 45ms);
+}
+
+/* Counter pop class */
 .ac-counter-pop {
   animation: acCounterPop 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -102,7 +158,7 @@
   animation: acShimmer 2s ease-in-out infinite;
 }
 
-/* Stat shimmer bar (under the number while loading) */
+/* Stat shimmer bar */
 .ac-stat-shimmer {
   height: 3px;
   margin-top: 6px;
@@ -132,6 +188,89 @@
   animation: acGlowPulse 3s ease-in-out infinite;
 }
 
+/* ── Magnetic tilt on hover ────────────── */
+.ac-tilt {
+  transition: transform 0.4s cubic-bezier(0.22, 0.68, 0, 1.2);
+  will-change: transform;
+}
+.ac-tilt:hover {
+  transform: perspective(600px) rotateX(var(--ac-ry, 0deg)) rotateY(var(--ac-rx, 0deg));
+}
+
+/* ── Interactive ripple on click ─────── */
+.ac-ripple {
+  position: relative;
+  overflow: hidden;
+}
+.ac-ripple .ac-ripple-circle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(207,255,4,0.15);
+  pointer-events: none;
+  animation: acRipple 0.6s ease-out forwards;
+}
+
+/* ── Skeleton loading placeholder ──── */
+.ac-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255,255,255,0.03);
+  border-radius: 4px;
+}
+.ac-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255,255,255,0.04) 40%,
+    rgba(255,255,255,0.06) 50%,
+    rgba(255,255,255,0.04) 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: acShimmer 1.5s ease-in-out infinite;
+}
+
+/* ── Focus ring ────────────────────────── */
+.ac-focus-ring:focus-visible {
+  outline: 2px solid rgba(207,255,4,0.6);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px rgba(207,255,4,0.08);
+}
+
+/* ── Tooltip ───────────────────────────── */
+[data-ac-tip] {
+  position: relative;
+}
+[data-ac-tip]::after {
+  content: attr(data-ac-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: 5px 10px;
+  background: rgba(9,13,18,0.95);
+  border: 1px solid rgba(207,255,4,0.2);
+  border-radius: 4px;
+  color: #e6e6e6;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+[data-ac-tip]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 /* ── Reduced motion ────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .ac-observe { transition-duration: 0.01ms !important; }
@@ -141,4 +280,7 @@
   .ac-bounce { animation: none !important; }
   .ac-glow-pulse { animation: none !important; }
   .ac-divider { transition-duration: 0.01ms !important; }
+  .ac-skeleton::after { animation: none !important; }
+  .ac-tilt { transition: none !important; }
+  .ac-tilt:hover { transform: none !important; }
 }

@@ -12,32 +12,32 @@
 
 # ape-claw
 
-**Safety-first CLI + [OpenClaw](https://openclaw.ai) skill for ApeChain NFT operations.**
+**CLI + [OpenClaw](https://openclaw.ai) skill for ApeChain NFT operations.**
 
-Discover collections, get live listings, quote/simulate/buy NFTs, and bridge funds — all from the command line with policy guardrails, allowlist enforcement, structured telemetry, and a real-time dashboard.
+Discover collections, get live listings, quote, simulate, buy NFTs, and bridge funds from the command line. Policy guardrails and structured telemetry are on by default.
 
-> **Powered by [OpenClaw](https://openclaw.ai)**. Install OpenClaw, add the ape-claw skill, and run ApeChain NFT workflows with policy guardrails and structured telemetry.
+> Built on [OpenClaw](https://openclaw.ai). Install OpenClaw, add the ape-claw skill, and your agent can run ApeChain NFT workflows.
 
 ---
 
 ## Features
 
-- **Autonomous NFT collecting** — discover, quote, simulate, and buy ApeChain NFTs
-- **Cross-chain bridging** — bridge funds to ApeChain via Relay protocol
-- **8 safety gates** — simulation required, confirm phrases, daily spend caps, collection allowlists, replay protection, private key checks, currency allowlists, dry-run default
-- **Skills Library (Library of Alexandria)** — 10,000+ skills (and growing) browsable at [apeclaw.ai/skills](https://apeclaw.ai/skills), 7,000+ minted onchain as SkillNFTs, served globally via API
-- **Onchain skill provenance** — mint SkillNFTs (ERC-721), publish immutable versions to SkillRegistry, anchor receipts to ReceiptRegistry
-- **ClawllectorPass** — signature-gated free mint ERC-721 pass for verified Clawllectors on ApeChain (freezeable metadata, one-per-address)
-- **PodVault revenue sharing** — SkillNFT royalties route to a shared PaymentSplitter vault (deployed on ApeChain at `0xff20500637e5aa1a78e263475ca1d49b35c9ed0c`)
-- **ACP bounty integration** — browse providers, post bounties, fulfill work, route earnings to PodVault
-- **Clawbot verification** — register agents, share API keys, track actions by ID
-- **Structured JSON output** — every command returns machine-parseable JSON
-- **Real-time dashboard** — live telemetry via Server-Sent Events
-- **OpenClaw integration** — works as a native OpenClaw skill
+- **NFT collecting**: discover, quote, simulate, and buy ApeChain NFTs
+- **Cross-chain bridging**: bridge funds to ApeChain via Relay protocol
+- **8 safety gates**: simulation required, confirm phrases, daily spend caps, collection allowlists, replay protection, private key checks, currency allowlists, dry-run default
+- **Skills Library**: 10,000+ skills browsable at [apeclaw.ai/skills](https://apeclaw.ai/skills), minted onchain as SkillNFTs, served via API
+- **Onchain skill provenance**: mint SkillNFTs (ERC-721), publish immutable versions to SkillRegistry, anchor receipts to ReceiptRegistry
+- **ClawllectorPass**: signature-gated free mint ERC-721 pass for verified Clawllectors on ApeChain (freezeable metadata, one per address)
+- **PodVault revenue sharing**: SkillNFT royalties route to a shared PaymentSplitter vault (deployed on ApeChain at `0xff20500637e5aa1a78e263475ca1d49b35c9ed0c`)
+- **ACP bounty integration**: browse providers, post bounties, fulfill work, route earnings to PodVault
+- **Clawbot verification**: register agents, share API keys, track actions by ID
+- **Structured JSON output**: every command returns machine-parseable JSON
+- **Real-time dashboard**: live telemetry via Server-Sent Events
+- **OpenClaw integration**: works as a native OpenClaw skill
 
 ## ApeClaw v2 (Onchain Skills + THE POD)
 
-v2 is additive: it does not remove or break any v1 core flows. It adds an onchain skill registry, a global skills library (10,000+ skills and growing), and a Pod harness so an agent has:
+v2 is additive: it does not remove or break any v1 core flows. It adds an onchain skill registry, a skills library (10,000+ skills), and a Pod harness so an agent has:
 
 - a persistent workspace (state + journal),
 - immutable skill versioning (no silent updates),
@@ -133,7 +133,7 @@ Skill library importer (clone/scrape → SkillCards):
 
 Skills Library (global, API-first):
 
-- 10,000+ skills imported (and growing), enriched with descriptions, and served globally via `/api/skills/search`
+- 10,000+ skills imported, enriched with descriptions, and served via `/api/skills/search`
 - Index tracked in git (`skillcards/imported/index.json`); individual JSON files gitignored
 - UI at [apeclaw.ai/skills](https://apeclaw.ai/skills) — browse, search, filter, view details, copy CLI commands
 - `/api/skills/<slug>` returns full skill metadata + card JSON when available
@@ -230,15 +230,25 @@ openclaw onboard
 ### 2. Install the ape-claw skill
 
 ```bash
-npx --yes github:simplefarmer69/ape-claw skill install --scope local --json
+npx --yes github:simplefarmer69/ape-claw skill install --scope local
 ```
 
-This installs the skill into `.cursor/skills/ape-claw/` and bootstraps `config/policy.json`, `allowlists/`, and `config/clawbots.json`.
+This installs the core skill into `.cursor/skills/ape-claw/` and bootstraps `config/policy.json`, `allowlists/`, and `config/clawbots.json`.
 
-Use the GitHub runner for `npx` commands:
+After the core install, you'll be prompted to install the **Starter Pack** (61 security-vetted skills covering productivity, dev tools, security, analytics, SEO, and automation). You can also control this with flags:
 
 ```bash
-npx --yes github:simplefarmer69/ape-claw skill install --scope local --json
+# Interactive: prompts you to choose
+npx --yes github:simplefarmer69/ape-claw skill install --scope local
+
+# Auto-install starter pack (no prompt)
+npx --yes github:simplefarmer69/ape-claw skill install --scope local --starter-pack
+
+# Skip starter pack entirely
+npx --yes github:simplefarmer69/ape-claw skill install --scope local --no-starter-pack
+
+# JSON mode (programmatic): skips prompt, add --starter-pack to include it
+npx --yes github:simplefarmer69/ape-claw skill install --scope local --starter-pack --json
 ```
 
 ### 3. Global CLI install (optional)
@@ -299,7 +309,7 @@ npm i -g github:simplefarmer69/ape-claw
 
 Verified clawbots get a shared OpenSea API key and have all actions tracked by `agentId`.
 
-This is the foundation for onchain identity: each OpenClaw bot gets a persistent, auditable operator identity tied to executed NFT and bridge actions.
+Each bot gets a persistent operator identity tied to its NFT and bridge actions.
 
 ### Register
 
@@ -371,6 +381,9 @@ ape-claw clawbot list --json
 | `APE_CLAW_TELEMETRY_URL` | Optional | Remote telemetry ingest base (sends events to `POST /api/events`) |
 | `APE_CLAW_TELEMETRY_REMOTE_ONLY` | Optional | If truthy, do not write events to local `state/` (remote only) |
 | `APE_CLAW_CHAT_URL` | Optional | Remote chat base (defaults to same as telemetry when set) |
+| `APE_CLAW_CORS_ORIGINS` | Optional | CORS allowed origins (logged at startup; builtin list includes `https://apeclaw.ai` + localhost variants) |
+| `APE_CLAW_STORAGE` | Optional | Storage backend: `file` (default) or `sqlite` |
+| `APE_CLAW_SHARED_OPENSEA_KEY` | Server only | Shared OpenSea key injected to verified clawbots |
 | `APE_CLAW_ROOT` | Optional | Override ApeClaw root directory (defaults to `process.cwd()`) |
 | `APE_CLAW_STATE_DIR` | Optional | Override state directory (defaults to `<root>/state`) |
 | `RPC_URL_<chainId>` | Optional | RPC override (e.g. `RPC_URL_33139` for ApeChain) |
@@ -522,7 +535,8 @@ Optional backend override:
 If you are running a local telemetry server for development, start it with:
 
 ```bash
-node ./src/telemetry-server.mjs
+npm run telemetry
+# or: node ./src/server/index.mjs
 ```
 
 Then open `http://localhost:8787/` for the real-time dashboard showing:
@@ -715,7 +729,10 @@ Use one shared telemetry backend for all clawbots/frontends:
 export APE_CLAW_UI_PORT=8787
 export APE_CLAW_ROOT=/srv/ape-claw
 export APE_CLAW_STATE_DIR=/var/lib/ape-claw/state
-node ./src/telemetry-server.mjs
+# Optional: logged at startup; current CORS allowlist is built into middleware.
+export APE_CLAW_CORS_ORIGINS=https://apeclaw.ai
+export APE_CLAW_STORAGE=file  # or "sqlite" for SQLite backend
+node ./src/server/index.mjs
 ```
 
 - Put `APE_CLAW_STATE_DIR` on persistent storage (volume/disk) so chat/events survive restarts.
@@ -778,7 +795,9 @@ The CLI auto-retries "Order not found" errors up to 3 times by fetching fresh li
 git clone https://github.com/simplefarmer69/ape-claw.git
 cd ape-claw
 npm install
-npm test          # 26 tests
+npm test                    # 32+ tests (CLI, policy, server integration)
+npm run test:coverage       # with c8 coverage report
+npm run dev                 # start server with --watch for hot reload
 node ./src/cli.mjs doctor --json
 ```
 

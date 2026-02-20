@@ -121,7 +121,7 @@ policyEngine.setMaxValuePerTx(maxValue);
 
 ### Default Configuration
 
-From `deploy-and-seed-v2.js`:
+From `deploy-and-seed-v2-alpha.js`:
 ```javascript
 await policy.write.setMaxValuePerTx([parseEther("1")]);
 // maxValuePerTx = 1 ETH (or 1 APE)

@@ -1,0 +1,74 @@
+{
+  "name": "Humanizer — Remove AI Writing Patterns",
+  "slug": "humanizer",
+  "description": "Remove signs of AI-generated writing from text. Detects and fixes 24 patterns including inflated symbolism, promotional language, em dash overuse, AI vocabulary, rule of three, and sycophantic tone. Based on Wikipedia's AI writing guide.",
+  "version": "2.1.1",
+  "inputs_schema": {
+    "type": "object",
+    "properties": {
+      "text": { "type": "string", "description": "The text to humanize." },
+      "tone": {
+        "type": "string",
+        "enum": ["formal", "casual", "technical", "conversational"],
+        "description": "Target writing tone."
+      }
+    }
+  },
+  "outputs_schema": {
+    "type": "object",
+    "properties": {
+      "humanized_text": { "type": "string", "description": "The rewritten text with AI patterns removed." },
+      "patterns_found": { "type": "array", "description": "List of AI patterns detected and fixed." }
+    }
+  },
+  "bindings": [
+    {
+      "type": "external",
+      "url": "https://github.com/blader/humanizer"
+    },
+    {
+      "type": "external",
+      "url": "https://raw.githubusercontent.com/blader/humanizer/main/SKILL.md"
+    },
+    {
+      "type": "openclaw_skill_md",
+      "source": "github",
+      "path": "SKILL.md",
+      "repo": {
+        "owner": "blader",
+        "repo": "humanizer",
+        "ref": "main",
+        "path": "SKILL.md"
+      }
+    }
+  ],
+  "constraints": {
+    "riskTier": 1,
+    "safety": [
+      "Read-only analysis and rewriting — no side effects",
+      "Preserves meaning while removing AI patterns",
+      "Does not add opinions the author didn't intend"
+    ]
+  },
+  "required_permissions": ["file_read", "file_write"],
+  "examples": [
+    {
+      "title": "Humanize promotional text",
+      "input": { "text": "This groundbreaking initiative serves as a testament to our commitment to fostering innovation in the evolving landscape." },
+      "output": { "humanized_text": "We started this project because the old system wasn't working. Here's what we changed and why." }
+    },
+    {
+      "title": "Fix AI vocabulary",
+      "input": { "text": "Furthermore, this multifaceted approach leverages cutting-edge technology to deliver comprehensive solutions." },
+      "output": { "humanized_text": "The approach uses three specific techniques: [concrete details]." }
+    }
+  ],
+  "eval_packs": [],
+  "provenance": {
+    "publisher": "apeclaw",
+    "signed": false,
+    "source": "github",
+    "sourceUrl": "https://github.com/blader/humanizer",
+    "license": "MIT"
+  }
+}

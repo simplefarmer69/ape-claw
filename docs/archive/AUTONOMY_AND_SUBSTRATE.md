@@ -50,7 +50,7 @@ The real answer to "bounded automation" is enforcement + governance:
 - Permissionless solvers (planned): execution competition, not a single central runner.
 - Attestations/reputation (planned): version trust for skills.
 
-v2 is the foundation for those phases.
+v2 ships the primitives those phases depend on.
 
 ## Practical definition of "autonomy" used here
 

@@ -16,23 +16,28 @@ ApeClaw is an onchain AI agent ecosystem on ApeChain. It consists of:
    - **PolicyEngine** — Safety guardrails (allowlists + value caps)
    - **Modules** (Swap, Bridge, NftBuy) — Executable skill implementations
 
-2. **Backend Server** (`src/telemetry-server.mjs`)
-   - Telemetry server with SSE event streaming
-   - REST API for skills, pods, clawbot management
+2. **Backend Server** (`src/server/index.mjs`, modular architecture)
+   - Telemetry server with SSE event streaming (Last-Event-ID support)
+   - REST API for skills, pods, clawbot management, quotes, bridge requests
+   - Middleware: CORS allowlist, rate limiting, body size limits, auth
+   - Storage abstraction: file-based (default) or SQLite backend
+   - Structured logging via `pino`
    - Static file server for the UI
    - In-memory skill index with caching (60s TTL)
+   - Legacy monolith still available at `src/telemetry-server.mjs`
 
-3. **CLI** (`ape-claw`, `src/cli.mjs`)
+3. **CLI** (`ape-claw`, entry: `src/cli/index.mjs` → delegates to `src/cli.mjs`)
    - Onchain operations (mint, publish, execute)
    - Clawbot registration and management
    - NFT purchasing and bridging
    - Pod workspace management
 
-4. **Frontend** (Static HTML/CSS/JS in `ui/`)
-   - Dashboard with live event feed
-   - Skills Library (browse, add, mint)
-   - Pod management (status, vault, onboarding)
-   - Documentation viewer
+4. **Frontend** (HTML in `ui/`, extracted CSS in `ui/css/`, JS in `ui/js/`)
+   - Dashboard with live event feed (`ui/index.html` + `ui/css/dashboard.css` + `ui/js/dashboard.js`)
+   - Skills Library (`ui/skills.html` + `ui/css/skills.css` + `ui/js/skills.js`)
+   - Pod management (`ui/pod.html`)
+   - Documentation viewer (`ui/docs.html`)
+   - Shared components: sidebar nav, motion effects
 
 ## Data Flow
 
@@ -121,10 +126,17 @@ The `state/` directory contains:
 
 - **`v2-deployments/`**: Deployment records per network
 - **`skillcards-user/`**: User-submitted SkillCards
-- **`quotes.jsonl`**: NFT purchase quotes
-- **`bridge-requests.jsonl`**: Bridge request records
-- **`events.jsonl`**: Telemetry events (appended by CLI)
+- **`quotes.json`**: NFT purchase quotes
+- **`bridge-requests.json`**: Bridge request records
+- **`events.jsonl`**: Telemetry events (appended by CLI/server)
+- **`chat.jsonl`**: Chat messages
+- **`invites.json`**: Registration invite tokens
+- **`apeclaw.db`**: SQLite database (when `APE_CLAW_STORAGE=sqlite`)
+
+The `config/` directory contains:
+
 - **`clawbots.json`**: Registered clawbot configurations
+- **`policy.json`**: Safety policy rules
 
 ### Skill Library
 
@@ -137,7 +149,7 @@ SkillCards are stored in:
 The backend merges all three sources into a unified index (cached for 60 seconds):
 
 ```javascript
-// From telemetry-server.mjs
+// From storage backend (file-backend.mjs or sqlite-backend.mjs)
 function buildMergedSkillIndex() {
   const merged = [];
   // 1. Read seed skills from skillcards/seed/*.json
@@ -208,7 +220,7 @@ function preCheck(address module, address target, bytes4 selector, uint256 value
 }
 ```
 
-Registration example (from `deploy-and-seed-v2.js`):
+Registration example (from `deploy-and-seed-v2-alpha.js`):
 
 ```javascript
 await policy.write.setMaxValuePerTx([parseEther("1")]);
@@ -219,40 +231,58 @@ await policy.write.setSelectorAllowed([targetAddress, selector, true]);
 
 ## Backend Architecture
 
-### Telemetry Server
+### Modular Server (`src/server/`)
 
-The backend (`src/telemetry-server.mjs`) provides:
+The backend is organized into a modular structure:
 
-- **SSE Stream** (`/events`): Real-time event feed
-- **REST API** (`/api/*`): Skills, pods, clawbots
-- **Static Files**: Serves `ui/` directory
+```
+src/server/
+  index.mjs           # Main entry point, request routing, safeHandler wrapper
+  sse.mjs             # SSE client management, broadcast, Last-Event-ID support
+  logger.mjs          # Structured logging (pino)
+  middleware/
+    cors.mjs          # CORS allowlist (built-in, includes apeclaw.ai + localhost variants)
+    rate-limit.mjs    # In-memory sliding-window rate limiter
+    body-limit.mjs    # Request body size limits
+    auth.mjs          # Agent/admin auth (requireSkillWriteAuth, resolveChatAuth)
+  routes/
+    health.mjs        # GET /api/health
+    events.mjs        # SSE stream, backlog, POST /api/events
+    skills.mjs        # Skills search, get, stats, user skillcards
+    clawbots.mjs      # Clawbot list, verify, register, invites
+    chat.mjs          # Chat stream, rooms, messages, reactions
+    v2.mjs            # V2 config, receipt get
+    pod.mjs           # Pod status, stop
+    quotes.mjs        # Quote/bridge-request CRUD, spend-today
+    static.mjs        # Static files, rewrites, allowlist, policy
+  storage/
+    index.mjs         # Storage abstraction (initStorage, getStorage, storageEvents)
+    file-backend.mjs  # File-based storage (default)
+    sqlite-backend.mjs # SQLite storage (APE_CLAW_STORAGE=sqlite)
+```
 
 Key endpoints:
 
 - `GET /api/skills/search`: Merged skill index (seed + imported + user)
 - `POST /api/skillcards/user/add`: Submit new SkillCard (requires auth)
-- `GET /events/backlog`: Last 300 events
-- `GET /events`: SSE stream of new events
+- `GET /events/backlog?limit=300&since=<ts>`: Historical events
+- `GET /events`: SSE stream with `id:` fields and Last-Event-ID reconnect support
 - `POST /api/clawbots/register`: Register clawbot
+- `POST /api/quotes`: Create quote (centralized state for multi-machine)
+- `GET /api/quotes/spend-today`: Server-side daily spend (global enforcement)
 
 ### Event System
 
-Events are written to `state/events.jsonl` (one JSON object per line):
+Events flow through the storage abstraction and are broadcast via an EventEmitter:
 
 ```javascript
-// From src/lib/telemetry.mjs
-function emitEvent(event) {
-  const line = JSON.stringify(event) + "\n";
-  fs.appendFileSync(EVENTS_PATH, line);
-}
-```
+// Storage backend emits events
+storageEvents.emit("telemetryEvent", evt);
 
-SSE clients receive events in real-time:
-
-```javascript
-// From telemetry-server.mjs
-function sendSse(res, evt) {
-  res.write(`data: ${JSON.stringify(evt)}\n\n`);
+// SSE module broadcasts to connected clients
+function sendSse(res, data, id) {
+  if (id !== undefined) res.write(`id: ${id}\n`);
+  res.write(`data: ${JSON.stringify(data)}\n\n`);
 }
 ```
 

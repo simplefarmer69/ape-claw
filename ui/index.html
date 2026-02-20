@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/ui/favicon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/ui/shared/sidebar-nav.css">
 <script defer src="/ui/shared/sidebar-nav.js"></script>
 <link rel="stylesheet" href="/ui/shared/motion.css">
@@ -18,15 +18,15 @@
 /* ── Reset & base ─────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#111111;--surface:#1c1c1c;--surface2:#232323;--surface3:#2a2a2a;
+  --bg:#0c0c0c;--surface:#1a1a1a;--surface2:#212121;--surface3:#2a2a2a;
   --border:rgba(207,255,4,.35);--border-strong:rgba(207,255,4,.75);
   --text:#e6e6e6;--dim:#a6a6a6;--accent:#cfff04;
   --accent2:#cfff04;--accent-glow:rgba(207,255,4,.22);
   --neon-cyan:#63d7ff;--neon-green:#00ff00;--neon-pink:#ff3333;
   --neon-purple:#b026ff;--gold:#cfff04;
-  --font-display:'Inter','Segoe UI',sans-serif;
-  --font-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-  --font-sans:'Inter','Segoe UI',sans-serif;
+  --font-display:'Outfit','Inter','Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+  --font-sans:'Outfit','Inter','Segoe UI',sans-serif;
   --radius:2px;
   --panel-shadow:0 10px 28px rgba(0,0,0,.34);
 }
@@ -993,6 +993,39 @@ python3 pod/run_agent.py \
     <div class="collections-bar" id="collectionsBar"></div>
     <button class="carousel-btn" id="collectionsNext" title="Next collections">▶</button>
     <span class="collections-status" id="collectionsStatus">0 loaded</span>
+  </div>
+</div>
+
+<!-- ═══════ UNDER CONSTRUCTION BANNER ═══════ -->
+<div id="constructionBanner" style="
+  margin:16px 24px 0;
+  padding:32px 28px;
+  background:linear-gradient(135deg,rgba(255,77,0,.08) 0%,rgba(207,255,4,.06) 100%);
+  border:1.5px solid rgba(255,77,0,.35);
+  border-radius:12px;
+  text-align:center;
+  position:relative;
+  z-index:2;
+  overflow:hidden;
+">
+  <div style="font-size:2.2rem;margin-bottom:8px;filter:drop-shadow(0 0 8px rgba(255,77,0,.4))">🏗️</div>
+  <h2 style="
+    margin:0 0 8px;
+    font-size:1.1rem;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    background:linear-gradient(90deg,#ff4d00,#cfff04);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+  ">Live Dashboard — Under Construction</h2>
+  <p style="margin:0 0 14px;font-size:.78rem;color:var(--dim);max-width:540px;margin-inline:auto;line-height:1.55">
+    The real-time telemetry panels (clawbot activity, live events, NFT gallery, bridge ops, and chat) are being connected to the production backend. Everything below is preview data.
+  </p>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;font-size:.68rem">
+    <span style="padding:4px 10px;border-radius:4px;background:rgba(255,77,0,.12);color:#ff6b35;border:1px solid rgba(255,77,0,.25)">SSE Telemetry — coming soon</span>
+    <span style="padding:4px 10px;border-radius:4px;background:rgba(0,240,255,.08);color:var(--accent2);border:1px solid rgba(0,240,255,.2)">Chat — coming soon</span>
+    <span style="padding:4px 10px;border-radius:4px;background:rgba(207,255,4,.08);color:var(--accent);border:1px solid rgba(207,255,4,.2)">Skills Library — live</span>
   </div>
 </div>
 

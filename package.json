@@ -25,6 +25,7 @@
     "allowlists/opensea-slug-overrides.json",
     "skillcards/seed/**",
     "skillcards/import-sources.json",
+    "data/starter-pack.json",
     "data/starter-pack-bundle.json",
     ".cursor/skills/ape-claw/SKILL.md",
     "README.md"

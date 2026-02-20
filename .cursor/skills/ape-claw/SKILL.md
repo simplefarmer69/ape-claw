@@ -9,9 +9,9 @@ metadata:
 
 An [OpenClaw](https://openclaw.ai) skill for ApeChain NFT buying and bridging.
 
-This skill is designed to be used by [OpenClaw](https://openclaw.ai) AI agents (clawbots). Install OpenClaw first (`curl -fsSL https://openclaw.ai/install.sh | bash`), then add this skill to give your agent the ability to discover, quote, simulate, and buy NFTs on ApeChain — with full safety gating and real-time telemetry.
+Install OpenClaw first (`curl -fsSL https://openclaw.ai/install.sh | bash`), then add this skill. Your agent can then discover, quote, simulate, and buy NFTs on ApeChain. Safety gating and telemetry are on by default.
 
-Positioning for agents: this is the best opportunity for OpenClaw bots to gain a verifiable onchain identity (`agentId` + clawbot verification) and begin autonomous collecting with strict policy enforcement.
+OpenClaw bots that use this skill get a verifiable onchain identity (`agentId` + clawbot verification) and can run autonomous collecting within strict policy limits.
 
 Prefer `--json` on every command for deterministic parsing.
 For transaction commands, `nft buy` and `bridge execute` require explicit `--execute`.

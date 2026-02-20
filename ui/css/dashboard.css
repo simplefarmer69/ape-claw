@@ -1,15 +1,15 @@
 /* ── Reset & base ─────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#111111;--surface:#1c1c1c;--surface2:#232323;--surface3:#2a2a2a;
+  --bg:#0c0c0c;--surface:#1a1a1a;--surface2:#212121;--surface3:#2a2a2a;
   --border:rgba(207,255,4,.35);--border-strong:rgba(207,255,4,.75);
   --text:#e6e6e6;--dim:#a6a6a6;--accent:#cfff04;
   --accent2:#cfff04;--accent-glow:rgba(207,255,4,.22);
   --neon-cyan:#63d7ff;--neon-green:#00ff00;--neon-pink:#ff3333;
   --neon-purple:#b026ff;--gold:#cfff04;
-  --font-display:'Inter','Segoe UI',sans-serif;
-  --font-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-  --font-sans:'Inter','Segoe UI',sans-serif;
+  --font-display:'Outfit','Inter','Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+  --font-sans:'Outfit','Inter','Segoe UI',sans-serif;
   --radius:2px;
   --panel-shadow:0 10px 28px rgba(0,0,0,.34);
 }
@@ -196,14 +196,16 @@ body::after{display:none !important}
 .agents-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .agent-card{
   background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);
-  padding:14px;position:relative;overflow:hidden;transition:border-color .3s,box-shadow .3s,transform .2s;
+  padding:14px;position:relative;overflow:hidden;transition:border-color .35s,box-shadow .35s,transform .25s cubic-bezier(.22,.68,0,1);
 }
-.agent-card:hover{border-color:var(--accent);box-shadow:0 0 20px var(--accent-glow);transform:translateY(-2px)}
+.agent-card:hover{border-color:var(--accent);box-shadow:0 0 20px var(--accent-glow),0 8px 32px rgba(0,0,0,.3);transform:translateY(-4px)}
+.agent-card:active{transform:translateY(-2px) scale(0.99)}
 .agent-card::before{
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
   background:linear-gradient(90deg,var(--accent),var(--neon-cyan),var(--accent));
+  background-size:200% 100%;animation:shimmerGlow 4s linear infinite;
 }
-.agent-card.verified-card::before{background:linear-gradient(90deg,var(--neon-green),var(--neon-cyan),var(--neon-green))}
+.agent-card.verified-card::before{background:linear-gradient(90deg,var(--neon-green),var(--neon-cyan),var(--neon-green));background-size:200% 100%;animation:shimmerGlow 4s linear infinite}
 .agent-name{font-weight:700;font-size:.85rem;margin-bottom:2px;display:flex;align-items:center;gap:6px}
 .verified-badge{
   font-size:.55rem;padding:1px 6px;border-radius:2px;font-weight:700;
@@ -630,6 +632,7 @@ header::after{
   filter:drop-shadow(0 0 16px rgba(0,240,255,.3));
   animation:pulse 3s ease-in-out infinite;
 }
+.chat-empty p{margin-top:8px;color:var(--dim);font-size:.72rem;line-height:1.5;max-width:280px;margin-left:auto;margin-right:auto}
 
 /* ── Terminal enhancement ────────────────────────── */
 .terminal-body{
@@ -716,6 +719,7 @@ footer::before{
   background:linear-gradient(90deg, rgba(207,255,4,.03), rgba(99,215,255,.03));
   border-bottom:1px solid var(--border);
   position:relative;z-index:1;
+  backdrop-filter:blur(4px);
 }
 .platform-stat{
   display:flex;align-items:center;gap:6px;

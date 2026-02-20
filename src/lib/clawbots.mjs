@@ -5,13 +5,12 @@ import { CLAWBOTS_PATH } from "./paths.mjs";
 /**
  * Clawbot verification system.
  *
- * Verified bots get access to the shared OpenSea API key embedded in the
- * project config so that bot operators do NOT need their own key.
- * Every action a verified bot takes is tagged with its agentId for tracking.
+ * Verified bots get access to the shared OpenSea API key so that bot
+ * operators do NOT need their own key. The shared key is read from the
+ * APE_CLAW_SHARED_OPENSEA_KEY env var (never stored in config files).
  *
  * Config format (config/clawbots.json):
  * {
- *   "sharedOpenseaApiKey": "...",       // embedded key for verified bots
  *   "agents": {
  *     "the-clawllector": {
  *       "name": "The Clawllector",
@@ -22,6 +21,10 @@ import { CLAWBOTS_PATH } from "./paths.mjs";
  *   }
  * }
  */
+
+function resolveSharedOpenseaKey() {
+  return String(process.env.APE_CLAW_SHARED_OPENSEA_KEY || "").trim();
+}
 
 function hashToken(token) {
   return createHash("sha256").update(String(token)).digest("hex");
@@ -39,7 +42,8 @@ export function generateAgentToken() {
  * Register a new clawbot agent. Returns the agent token (shown once).
  */
 export function registerClawbot({ agentId, displayName }) {
-  const config = loadClawbotsConfig() || { sharedOpenseaApiKey: "", agents: {} };
+  const config = loadClawbotsConfig() || { agents: {} };
+  if (!config.agents) config.agents = {};
   if (config.agents[agentId]) {
     throw new Error(`Agent "${agentId}" already registered. Use a different --agent-id.`);
   }
@@ -71,7 +75,7 @@ export function verifyClawbot({ agentId, agentToken }) {
   return {
     verified: true,
     agent: { id: agentId, name: agent.name },
-    sharedOpenseaApiKey: config.sharedOpenseaApiKey || "",
+    sharedOpenseaApiKey: resolveSharedOpenseaKey(),
   };
 }
 

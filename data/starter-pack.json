@@ -1,108 +1,12 @@
 {
   "version": 1,
-  "count": 105,
-  "description": "The 100 best ApeClaw skills across DeFi, NFTs, security, analytics, automation, and more. Auto-installed with ape-claw skill install.",
+  "count": 61,
+  "description": "The 61 best ApeClaw skills across productivity, dev tools, security, analytics, automation, and more. Install with ape-claw skill install --starter-pack.",
   "skills": [
-    {
-      "slug": "clawhub-sushiswap-api",
-      "name": "SushiSwap REST API Integration",
-      "description": "The SushiSwap API provides HTTP access to the SushiSwap Aggregator for",
-      "category": "DeFi",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-sushiswap-sdk",
-      "name": "SushiSwap SDK Integration",
-      "description": "The SushiSwap SDK is a TypeScript wrapper around the SushiSwap API.",
-      "category": "DeFi",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-trade",
-      "name": "Trading Tokens",
-      "description": "Use the npx awal@latest trade command to swap tokens on Base network via the CDP Swap API. You must be authenticated to trade.",
-      "category": "DeFi",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-clawnads",
-      "name": "Clawnads",
-      "description": "Agent platform, dashboard, and network at app.clawnads.org. Agents get Privy wallets on Monad (chain 143), trade tokens via Uniswap V3, message e...",
-      "category": "DeFi",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-bnbchain-mcp",
-      "name": "BNB Chain MCP Skill",
-      "description": "This skill allows you to interact with the BNB Chain MCP server to retrieve data about BNB Chain.",
-      "category": "DeFi",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-yield-agent",
-      "name": "YieldAgent by Yield.xyz",
-      "description": "Access the complete on-chain yield landscape through Yield.xyz's unified API. Discover 2600+ yields across staking, lending, vaults, restaking, and...",
-      "category": "DeFi",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-usd1",
-      "name": "USD1 WLF Transfer Skill",
-      "description": "USD1 WLF Transfer Skill",
-      "category": "DeFi",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-usd1transaction",
-      "name": "USD1 WLF Transfer Skill",
-      "description": "USD1 WLF Transfer Skill",
-      "category": "DeFi",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-hl-privateer-fund",
-      "name": "HL Privateer -- Agent Skill",
-      "description": "HL Privateer is an open, agentic discretionary trading desk on Hyperliquid. A fund of autonomous agents making discretionary long/short calls -- po...",
-      "category": "DeFi",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-tonfun",
-      "name": "TON.fun -- Fair Token Launch Platform",
-      "description": "TON.fun (https://ton.fun) is a token launchpad on the TON blockchain. Every token launches via a bonding curve -- no presales, no insider allocatio...",
-      "category": "DeFi",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-crypton-esim",
-      "name": "Crypton eSIM",
-      "description": "Purchase anonymous eSIMs directly from chat. Pay with Bitcoin, Monero, or card - no account required.",
-      "category": "DeFi",
-      "vettedOk": true,
-      "onchain": true
-    },
     {
       "slug": "clawhub-renderkit",
       "name": "RenderKit Skill",
       "description": "Render structured data as beautiful hosted web pages, and create hosted forms for data collection.",
-      "category": "NFT",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-frame-builder",
-      "name": "Frame Builder Skill",
-      "description": "Build in public and fund your agent with vibe raising. Launch your builder coin (your agent identity) and ship product coins under it. Every new pr...",
       "category": "NFT",
       "vettedOk": true,
       "onchain": true
@@ -117,7 +21,7 @@
     },
     {
       "slug": "clawhub-security",
-      "name": "GoPlus AgentGuard — AI Agent Security Framework",
+      "name": "GoPlus AgentGuard \u2014 AI Agent Security Framework",
       "description": "You are a security auditor powered by the GoPlus AgentGuard framework. Route the user's request based on the first argument.",
       "category": "Security",
       "vettedOk": true,
@@ -172,25 +76,9 @@
       "onchain": true
     },
     {
-      "slug": "clawhub-self-xyz",
-      "name": "Self Protocol Integration",
-      "description": "Self lets users prove identity attributes (age, nationality, humanity) from passports/ID cards using zero-knowledge proofs — no personal data expos...",
-      "category": "Security",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
       "slug": "clawhub-soulflow",
-      "name": "SoulFlow — Workflow Framework for OpenClaw",
+      "name": "SoulFlow \u2014 Workflow Framework for OpenClaw",
       "description": "A framework for building custom AI workflows. Each workflow is a series of steps that execute in isolated agent sessions with full tool access. Def...",
-      "category": "Security",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-0protocol",
-      "name": "0.protocol",
-      "description": "Identity substrate for autonomous agents. Sign plugins, rotate credentials without losing identity, and leave verifiable statements about plugin be...",
       "category": "Security",
       "vettedOk": true,
       "onchain": true
@@ -212,14 +100,6 @@
       "onchain": true
     },
     {
-      "slug": "clawhub-feishu-bridge",
-      "name": "Feishu Bridge",
-      "description": "Bridge Feishu bot messages to Clawdbot Gateway over local WebSocket.",
-      "category": "Bridge",
-      "vettedOk": false,
-      "onchain": true
-    },
-    {
       "slug": "clawhub-codecast",
       "name": "Codecast",
       "description": "Live-stream coding agent sessions to Discord. Zero AI tokens burned.",
@@ -228,49 +108,9 @@
       "onchain": true
     },
     {
-      "slug": "clawhub-tonfun-feed",
-      "name": "TON.fun Feed Relay",
-      "description": "Subscribe to the @TonFunX Twitter feed and automatically cross-post tagged content to other agent platforms. No Twitter API key needed -- uses free...",
-      "category": "Bridge",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-adobe-automator",
-      "name": "Adobe Master Automator (v1.1.2)",
-      "description": "A generalized skill for automating multiple Adobe applications using a cross-platform ExtendScript bridge.",
-      "category": "Bridge",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-photoshop-automator",
-      "name": "Photoshop Automator Skill (v1.2.4)",
-      "description": "This skill provides a high-performance bridge for automating Adobe Photoshop (vCS6 - 2026+) on Windows and macOS using the ExtendScript (JSX) engin...",
-      "category": "Bridge",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
       "slug": "clawhub-crypto-levels",
       "name": "Crypto Levels Analyzer",
       "description": "Ask about any cryptocurrency pair:",
-      "category": "Analytics",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-bondterminal-x402",
-      "name": "BondTerminal x402",
-      "description": "Use this skill to fetch BondTerminal data with x402 pay-per-call auth (no Bearer API key).",
-      "category": "Analytics",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-claw-diary",
-      "name": "Claw Diary — Personal Agent Visual Diary",
-      "description": "An always-on agent activity recorder that auto-tracks every action, generates daily narrative summaries, and supports visual timeline replay. Like ...",
       "category": "Analytics",
       "vettedOk": true,
       "onchain": true
@@ -294,7 +134,7 @@
     {
       "slug": "clawhub-dataforseo-cli",
       "name": "Keyword Research with dataforseo-cli",
-      "description": "LLM-friendly keyword research CLI. Wraps the DataForSEO API and outputs TSV by default — compact, structured, and optimized for agent context windows.",
+      "description": "LLM-friendly keyword research CLI. Wraps the DataForSEO API and outputs TSV by default \u2014 compact, structured, and optimized for agent context windows.",
       "category": "Analytics",
       "vettedOk": true,
       "onchain": true
@@ -324,33 +164,9 @@
       "onchain": true
     },
     {
-      "slug": "clawhub-kimai-time-tracking",
-      "name": "Kimai Time Tracking Skill",
-      "description": "Complete API integration for Kimai time-tracking software. Enables full control over timesheets, projects, customers, activities, teams, invoices, ...",
-      "category": "Automation",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
       "slug": "clawhub-coda",
       "name": "Coda API Skill",
       "description": "Interact with the Coda REST API v1 to manage docs, tables, rows, pages, and automations.",
-      "category": "Automation",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-doppel-architect",
-      "name": "Architect skill",
-      "description": "You are a builder. Your reputation compounds or decays every 24 hours based on what you place — and what you don't. Every day you build, your 8004 ...",
-      "category": "Automation",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-pay-for-service",
-      "name": "Making Paid x402 Requests",
-      "description": "Use the npx awal@latest x402 pay command to call paid API endpoints with automatic USDC payment on Base.",
       "category": "Automation",
       "vettedOk": true,
       "onchain": true
@@ -374,15 +190,7 @@
     {
       "slug": "clawhub-afrexai-devops-engine",
       "name": "DevOps & Platform Engineering Engine",
-      "description": "Complete system for building, deploying, operating, and observing production software. Covers the entire DevOps lifecycle — not just CI/CD, not jus...",
-      "category": "Automation",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-game-light-tracker",
-      "name": "Game Light Tracker",
-      "description": "Automatically sync your Hue lights with live sports scores. When the lead changes, your lights change color to match the leading team.",
+      "description": "Complete system for building, deploying, operating, and observing production software. Covers the entire DevOps lifecycle \u2014 not just CI/CD, not jus...",
       "category": "Automation",
       "vettedOk": true,
       "onchain": true
@@ -412,14 +220,6 @@
       "onchain": true
     },
     {
-      "slug": "clawhub-doppel-social-outreach",
-      "name": "Social outreach skill",
-      "description": "Sharing is building. Promotion is not a side activity — it is the second half of the builder loop. Every cube you place is invisible until someone ...",
-      "category": "Social",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
       "slug": "clawhub-clawrouter",
       "name": "ClawRouter",
       "description": "Smart LLM router that saves 78% on inference costs by routing each request to the cheapest model that can handle it. 30+ models across 5 providers,...",
@@ -436,25 +236,9 @@
       "onchain": true
     },
     {
-      "slug": "clawhub-monetize-service",
-      "name": "Build an x402 Payment Server",
-      "description": "Create an Express server that charges USDC for API access using the x402 payment protocol. Callers pay per-request in USDC on Base — no accounts, A...",
-      "category": "DevTools",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-search-for-service",
-      "name": "Searching the x402 Bazaar",
-      "description": "Use the npx awal@latest x402 commands to discover and inspect paid API endpoints available on the x402 bazaar marketplace. No authentication or bal...",
-      "category": "DevTools",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
       "slug": "clawhub-afrexai-api-architect",
-      "name": "API Architect — Full Lifecycle API Development",
-      "description": "Design, build, test, document, secure, and monitor production-grade APIs. Not just curl commands — a complete engineering methodology.",
+      "name": "API Architect \u2014 Full Lifecycle API Development",
+      "description": "Design, build, test, document, secure, and monitor production-grade APIs. Not just curl commands \u2014 a complete engineering methodology.",
       "category": "DevTools",
       "vettedOk": true,
       "onchain": true
@@ -462,7 +246,7 @@
     {
       "slug": "clawhub-afrexai-code-reviewer",
       "name": "Code Review Engine",
-      "description": "Enterprise-grade automated code review. Works on GitHub PRs, local diffs, pasted code, or entire files. No dependencies — pure agent intelligence.",
+      "description": "Enterprise-grade automated code review. Works on GitHub PRs, local diffs, pasted code, or entire files. No dependencies \u2014 pure agent intelligence.",
       "category": "DevTools",
       "vettedOk": true,
       "onchain": true
@@ -472,54 +256,6 @@
       "name": "Newman - Postman CLI Runner",
       "description": "Newman is the command-line Collection Runner for Postman. Run and test Postman collections directly from the command line with powerful reporting, ...",
       "category": "DevTools",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-authenticate-wallet",
-      "name": "Authenticating with the Payments Wallet",
-      "description": "When the wallet is not signed in (detected via npx awal status or when wallet operations fail with authentication errors), use the npx awal CLI to ...",
-      "category": "Wallet",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-fund",
-      "name": "Funding the Wallet",
-      "description": "Use the wallet companion app to fund the wallet with USDC via Coinbase Onramp. This supports multiple payment methods including Apple Pay, debit ca...",
-      "category": "Wallet",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-send-usdc",
-      "name": "Sending USDC",
-      "description": "Use the npx awal@latest send command to transfer USDC from the wallet to any Ethereum address or ENS name on Base.",
-      "category": "Wallet",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-doppel-erc-8004",
-      "name": "ERC-8004 skill",
-      "description": "This skill walks you through setting up your own wallet, funding it, and registering onchain with ERC-8004 on Base mainnet. Once registered, you re...",
-      "category": "Wallet",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-botcoin",
-      "name": "Botcoin Mining Skill",
-      "description": "You are a Botcoin player. Botcoin is a puzzle game and science experiment for AI agents. Coins are earned by solving investigative research puzzles...",
-      "category": "Trading",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-lemonsqueezy-admin",
-      "name": "Lemon Squeezy Admin 🍋",
-      "description": "Manage your Lemon Squeezy store from the command line.",
-      "category": "Trading",
       "vettedOk": true,
       "onchain": true
     },
@@ -566,7 +302,7 @@
     {
       "slug": "clawhub-memory-management",
       "name": "Memory Management",
-      "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
+      "description": "SEO & GEO Skills Library \u00b7 20 skills for SEO + GEO \u00b7 Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "category": "Storage",
       "vettedOk": true,
       "onchain": true
@@ -580,46 +316,6 @@
       "onchain": true
     },
     {
-      "slug": "clawhub-simmer",
-      "name": "Simmer",
-      "description": "The best prediction market interface for AI agents. Trade predictions, compete for profit, build reputation.",
-      "category": "AI",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-aister-vector-memory",
-      "name": "Vector Memory Skill",
-      "description": "Vector Memory Skill",
-      "category": "AI",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-honcho-setup",
-      "name": "Honcho Setup",
-      "description": "Install the Honcho plugin and migrate legacy workspace memory files to Honcho.",
-      "category": "NFT",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-hookaido",
-      "name": "Hookaido",
-      "description": "Implement and troubleshoot Hookaido with a config-first workflow: edit Hookaidofile, validate, run, exercise ingress/pull flows, then diagnose queu...",
-      "category": "Analytics",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-ksef-accountant-pl",
-      "name": "Agent Ksiegowy KSeF",
-      "description": "Specjalistyczna wiedza do obslugi Krajowego Systemu e-Faktur (KSeF) w srodowisku KSeF 2.0 ze struktura FA(3). Wspiera zadania ksiegowe zwiazane z f...",
-      "category": "Wallet",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
       "slug": "clawhub-claw-sync",
       "name": "Claw Sync",
       "description": "Secure, versioned sync for OpenClaw memory and workspace to GitHub.",
@@ -628,49 +324,9 @@
       "onchain": true
     },
     {
-      "slug": "clawhub-ksef-accountant-en",
-      "name": "KSeF Accounting Agent",
-      "description": "Specialized knowledge for operating the National e-Invoice System (KSeF) in the KSeF 2.0 environment with the FA(3) structure. Supports accounting ...",
-      "category": "Security",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-personal-shopper",
-      "name": "Personal Shopper — Diamond Search",
-      "description": "Diamond Search is a multi-agent product research methodology. It starts narrow (user's request), expands wide (7 agents searching from different an...",
-      "category": "NFT",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-concierge-sdk",
-      "name": "Concierge SDK",
-      "description": "Concierge is the standard Python framework for building MCP servers and agentic applications. Use it whenever you need to create an MCP server, exp...",
-      "category": "Analytics",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-moltflow-whatsapp",
-      "name": "WhatsApp Automation — Analyze Groups for Buying Signals",
-      "description": "Thousands of hidden leads are sitting in your WhatsApp groups right now. Every group participant who isn't in your contacts is a potential client. ...",
-      "category": "NFT",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-whatsapp-automation-a2a",
-      "name": "WhatsApp Automation — Analyze Groups for Buying Signals",
-      "description": "Thousands of hidden leads are sitting in your WhatsApp groups right now. Every group participant who isn't in your contacts is a potential client. ...",
-      "category": "NFT",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
       "slug": "clawhub-geo-content-optimizer",
       "name": "GEO Content Optimizer",
-      "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
+      "description": "SEO & GEO Skills Library \u00b7 20 skills for SEO + GEO \u00b7 Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "category": "Analytics",
       "vettedOk": true,
       "onchain": true
@@ -678,7 +334,7 @@
     {
       "slug": "clawhub-client-flow",
       "name": "Client Flow",
-      "description": "New client? One message, full setup. From folder structure to welcome email to kickoff meeting — automated in 30 seconds instead of 30 minutes.",
+      "description": "New client? One message, full setup. From folder structure to welcome email to kickoff meeting \u2014 automated in 30 seconds instead of 30 minutes.",
       "category": "Wallet",
       "vettedOk": true,
       "onchain": true
@@ -686,23 +342,15 @@
     {
       "slug": "clawhub-content-refresher",
       "name": "Content Refresher",
-      "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
+      "description": "SEO & GEO Skills Library \u00b7 20 skills for SEO + GEO \u00b7 Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "category": "NFT",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
-      "slug": "clawhub-lybic-sandbox",
-      "name": "Lybic Sandbox Control Skill",
-      "description": "You are an expert at controlling Lybic cloud sandboxes using the Lybic Python SDK.",
-      "category": "Analytics",
       "vettedOk": true,
       "onchain": true
     },
     {
       "slug": "clawhub-content-gap-analysis",
       "name": "Content Gap Analysis",
-      "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
+      "description": "SEO & GEO Skills Library \u00b7 20 skills for SEO + GEO \u00b7 Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "category": "Analytics",
       "vettedOk": true,
       "onchain": true
@@ -710,7 +358,7 @@
     {
       "slug": "clawhub-internal-linking-optimizer",
       "name": "Internal Linking Optimizer",
-      "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
+      "description": "SEO & GEO Skills Library \u00b7 20 skills for SEO + GEO \u00b7 Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "category": "Security",
       "vettedOk": true,
       "onchain": true
@@ -718,7 +366,7 @@
     {
       "slug": "clawhub-entity-optimizer",
       "name": "Entity Optimizer",
-      "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
+      "description": "SEO & GEO Skills Library \u00b7 20 skills for SEO + GEO \u00b7 Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "category": "Security",
       "vettedOk": true,
       "onchain": true
@@ -726,7 +374,7 @@
     {
       "slug": "clawhub-biz-reporter",
       "name": "Biz Reporter",
-      "description": "Business intelligence that writes itself. Pull data from multiple sources, spot trends, and generate beautiful reports — on demand or on schedule.",
+      "description": "Business intelligence that writes itself. Pull data from multiple sources, spot trends, and generate beautiful reports \u2014 on demand or on schedule.",
       "category": "Analytics",
       "vettedOk": true,
       "onchain": true
@@ -734,7 +382,7 @@
     {
       "slug": "clawhub-alert-manager",
       "name": "Alert Manager",
-      "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
+      "description": "SEO & GEO Skills Library \u00b7 20 skills for SEO + GEO \u00b7 Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "category": "Analytics",
       "vettedOk": true,
       "onchain": true
@@ -742,7 +390,7 @@
     {
       "slug": "clawhub-content-engine",
       "name": "Content Engine",
-      "description": "From blank page to published, optimized, and promoted — in one workflow. This skill turns a topic or keyword into a researched, drafted, optimized,...",
+      "description": "From blank page to published, optimized, and promoted \u2014 in one workflow. This skill turns a topic or keyword into a researched, drafted, optimized,...",
       "category": "NFT",
       "vettedOk": true,
       "onchain": true
@@ -750,7 +398,7 @@
     {
       "slug": "clawhub-keyword-research",
       "name": "Keyword Research",
-      "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
+      "description": "SEO & GEO Skills Library \u00b7 20 skills for SEO + GEO \u00b7 Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "category": "NFT",
       "vettedOk": true,
       "onchain": true
@@ -758,7 +406,7 @@
     {
       "slug": "clawhub-backlink-analyzer",
       "name": "Backlink Analyzer",
-      "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
+      "description": "SEO & GEO Skills Library \u00b7 20 skills for SEO + GEO \u00b7 Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "category": "DeFi",
       "vettedOk": true,
       "onchain": true
@@ -766,7 +414,7 @@
     {
       "slug": "clawhub-technical-seo-checker",
       "name": "Technical SEO Checker",
-      "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
+      "description": "SEO & GEO Skills Library \u00b7 20 skills for SEO + GEO \u00b7 Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "category": "Security",
       "vettedOk": true,
       "onchain": true
@@ -774,7 +422,7 @@
     {
       "slug": "clawhub-competitor-analysis",
       "name": "Competitor Analysis",
-      "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
+      "description": "SEO & GEO Skills Library \u00b7 20 skills for SEO + GEO \u00b7 Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "category": "Analytics",
       "vettedOk": true,
       "onchain": true
@@ -790,22 +438,14 @@
     {
       "slug": "clawhub-on-page-seo-auditor",
       "name": "On-Page SEO Auditor",
-      "description": "SEO & GEO Skills Library · 20 skills for SEO + GEO · Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
+      "description": "SEO & GEO Skills Library \u00b7 20 skills for SEO + GEO \u00b7 Install all: npx skills add aaron-he-zhu/seo-geo-claude-skills",
       "category": "Security",
       "vettedOk": true,
       "onchain": true
     },
     {
-      "slug": "clawhub-clawlett",
-      "name": "Clawlett",
-      "description": "Clawlett",
-      "category": "General",
-      "vettedOk": true,
-      "onchain": true
-    },
-    {
       "slug": "clawhub-gog",
-      "name": "Gog — Google Workspace CLI",
+      "name": "Gog \u2014 Google Workspace CLI",
       "description": "Google Workspace CLI for Gmail, Calendar, Drive, Contacts, Sheets, and Docs.",
       "category": "Productivity",
       "vettedOk": true,
@@ -821,7 +461,7 @@
     },
     {
       "slug": "clawhub-find-skills",
-      "name": "Find Skills — Skill Discovery",
+      "name": "Find Skills \u2014 Skill Discovery",
       "description": "Helps users discover and install agent skills.",
       "category": "Productivity",
       "vettedOk": true,
@@ -829,7 +469,7 @@
     },
     {
       "slug": "clawhub-github",
-      "name": "GitHub — gh CLI Integration",
+      "name": "GitHub \u2014 gh CLI Integration",
       "description": "Interact with GitHub using the gh CLI for issues, PRs, CI runs, and API queries.",
       "category": "Development",
       "vettedOk": true,
@@ -837,11 +477,19 @@
     },
     {
       "slug": "clawhub-humanizer",
-      "name": "Humanizer — Remove AI Writing Patterns",
+      "name": "Humanizer \u2014 Remove AI Writing Patterns",
       "description": "Remove signs of AI-generated writing from text.",
       "category": "Writing",
       "vettedOk": true,
       "onchain": false
+    },
+    {
+      "slug": "clawhub-walkie",
+      "name": "Walkie \u2014 Agent P2P Communication",
+      "description": "P2P encrypted agent-to-agent messaging over Hyperswarm DHT. No server, no setup.",
+      "category": "Communication",
+      "vettedOk": true,
+      "onchain": true
     }
   ]
 }

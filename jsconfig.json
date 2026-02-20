@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "checkJs": true,
+    "noEmit": true,
+    "strict": false,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "#lib/*": ["./src/lib/*"],
+      "#server/*": ["./src/server/*"]
+    }
+  },
+  "include": ["src/**/*.mjs", "test/**/*.mjs", "scripts/**/*.mjs"],
+  "exclude": ["node_modules", "research", "contracts-cache"]
+}

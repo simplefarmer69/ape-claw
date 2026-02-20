@@ -64,7 +64,11 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
       } catch (e) {}
       var apiBase = api ? api.replace(/\/+$/, '') : '';
       var apiNote = document.getElementById('apiNote');
-      if (apiNote) apiNote.textContent = 'Backend: ' + apiBase;
+      if (apiNote) apiNote.textContent = apiBase ? 'Backend: ' + apiBase : 'Backend: ' + window.location.origin;
+
+      function withTimeout(promise, ms) {
+        return Promise.race([promise, new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timeout')); }, ms); })]);
+      }
 
       // Toast + modal (stonk-style: explicit, non-blocking UI feedback).
       var toastEl = document.getElementById('toast');
@@ -182,6 +186,20 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
           file: '/api/skills/otherside-navigator',
           riskTier: 3,
           desc: 'Mac mini Pod loop (dry-run scaffold; strict opt-in).'
+        },
+        {
+          name: 'Walkie — Agent P2P Communication',
+          slug: 'walkie-p2p',
+          file: '/api/skills/walkie-p2p',
+          riskTier: 2,
+          desc: 'Encrypted P2P agent-to-agent messaging over Hyperswarm DHT.'
+        },
+        {
+          name: 'Humanizer — Remove AI Writing Patterns',
+          slug: 'humanizer',
+          file: '/api/skills/humanizer',
+          riskTier: 1,
+          desc: 'Detect and fix 24 AI writing patterns. Based on Wikipedia\'s AI guide.'
         }
       ];
 
@@ -204,9 +222,11 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
         }, 2500);
       }
 
-      // Load global stats from API
       (function loadGlobalStats() {
-        fetch(apiBase + '/api/skills/stats', { headers: { 'accept': 'application/json' } })
+        withTimeout(
+          fetch(apiBase + '/api/skills/stats', { headers: { 'accept': 'application/json' } }),
+          6000
+        )
           .then(function (r) { return r.ok ? r.json() : null; })
           .then(function (d) {
             if (!d || !d.ok) return;
@@ -367,7 +387,7 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
           if (mintTx) html += '<div class="note">mint tx: <a href="https://apescan.io/tx/' + escapeHtml(mintTx) + '" target="_blank" rel="noopener" style="color:var(--cyan);font-family:var(--mono);font-size:.75rem;word-break:break-all">' + escapeHtml(mintTx) + ' &#8599;</a></div>';
           if (pubTx) html += '<div class="note">publish tx: <a href="https://apescan.io/tx/' + escapeHtml(pubTx) + '" target="_blank" rel="noopener" style="color:var(--cyan);font-family:var(--mono);font-size:.75rem;word-break:break-all">' + escapeHtml(pubTx) + ' &#8599;</a></div>';
           if (slug) {
-            var installCmd = 'curl -fsSL "' + apiBase + '/api/skills/' + slug + '" | jq .card > ./' + slug + '.json';
+            var installCmd = 'curl -fsSL "' + apiBase + '/api/skills/' + slug + '" -o ./' + slug + '.json';
             html += '<div class="note" style="margin-top:14px;padding:10px;background:rgba(207,255,4,.06);border:1px solid rgba(207,255,4,.2);border-radius:3px">';
             html += '<strong style="color:#cfff04">Install this skill</strong><br>';
             html += '<code style="font-size:.75rem;word-break:break-all">' + escapeHtml(installCmd) + '</code>';
@@ -404,7 +424,7 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
           var rawSlug = String(it.slug || '');
           var slug = escapeHtml(rawSlug);
           var fileName = it.fileName || rawSlug + '.json';
-          var installCmd = 'curl -fsSL "' + (apiBase || 'https://apeclaw.ai') + '/api/skills/' + rawSlug + '" | jq .card > ./' + fileName;
+          var installCmd = 'curl -fsSL "' + (apiBase || 'https://apeclaw.ai') + '/api/skills/' + rawSlug + '" -o ./' + fileName;
           var html = '';
           html += '<div style="margin-bottom:16px"><strong style="color:#cfff04;font-size:14px">' + escapeHtml(it.name || it.slug) + '</strong></div>';
           html += '<div class="note" style="margin-bottom:12px;color:var(--muted);font-size:12px">Copy the command below and run it in your terminal to install this skill.</div>';
@@ -643,6 +663,14 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
       if (pgPrev) pgPrev.addEventListener('click', function () { goToPage(currentPage - 1); });
       if (pgNext) pgNext.addEventListener('click', function () { goToPage(currentPage + 1); });
 
+      function parseSkillTime(it) {
+        if (!it) return 0;
+        var raw = it.addedAt || it.importedAt || it.createdAt || it.updatedAt || '';
+        if (!raw) return 0;
+        var ts = Date.parse(String(raw));
+        return Number.isFinite(ts) ? ts : 0;
+      }
+
       function applyImportedFilters() {
         var q = importedSearch ? String(importedSearch.value || '') : '';
         var bucket = riskFilter ? String(riskFilter.value || 'all') : 'all';
@@ -661,6 +689,14 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
             if (!(pub && pub.skillId)) return false;
           }
           return true;
+        });
+        filtered.sort(function (a, b) {
+          var tA = parseSkillTime(a);
+          var tB = parseSkillTime(b);
+          if (tA !== tB) return tB - tA;
+          var iA = Number(a && a._indexOrder || 0);
+          var iB = Number(b && b._indexOrder || 0);
+          return iB - iA;
         });
         lastFiltered = filtered;
         currentPage = 1;
@@ -719,7 +755,7 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
             return;
           }
           var results = j.results || [];
-          importedAll = results.map(function (s) {
+          importedAll = results.map(function (s, idx) {
             return {
               name: s.name || s.slug || 'Skill',
               slug: s.slug || '',
@@ -732,6 +768,10 @@ window.addEventListener('unhandledrejection', (e) => { console.error('[ApeClaw] 
               version: s.version || '1',
               importOk: true,
               vettedOk: Boolean(s.vettedOk !== false && s.vetted !== false),
+              addedAt: s.addedAt || s.importedAt || s.createdAt || '',
+              importedAt: s.importedAt || s.addedAt || '',
+              createdAt: s.createdAt || '',
+              _indexOrder: idx,
               onchainTokenId: s.onchainTokenId || null,
               onchainMintTx: s.onchainMintTx || null,
               onchainPublishTx: s.onchainPublishTx || null

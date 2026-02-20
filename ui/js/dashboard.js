@@ -1703,15 +1703,15 @@ async function fetchSkillsStats() {
   } catch (err) {
     console.warn('[skills-stats]', err.message);
     const setIf = (id, val) => { const el = document.getElementById(id); if (el && (el.textContent === '—' || el.textContent === '0')) el.textContent = val; };
-    setIf('psSkillsTotal', '10,028');
-    setIf('psSkillsOnchain', '10,023');
-    setIf('psSkillsVetted', '10,014');
-    setIf('skillCountBadge', '10,028');
+    setIf('psSkillsTotal', '10,032');
+    setIf('psSkillsOnchain', '10,024');
+    setIf('psSkillsVetted', '10,004');
+    setIf('skillCountBadge', '10,032');
     setIf('ssSeed', '8');
-    setIf('ssImported', '10,020');
+    setIf('ssImported', '10,024');
     setIf('ssUser', '0');
-    setIf('ssOnchain', '10,023');
-    setIf('ssVetted', '10,014');
+    setIf('ssOnchain', '10,024');
+    setIf('ssVetted', '10,004');
     const grid = document.getElementById('skillsPanelGrid');
     if (grid && grid.innerHTML.includes('Loading')) {
       grid.innerHTML = '<div style="color:var(--dim);font-size:.7rem;padding:20px;text-align:center;grid-column:1/-1">Could not load skills. <button onclick="fetchSkillsStats()" style="background:none;border:1px solid var(--border);color:var(--accent);padding:3px 8px;border-radius:4px;cursor:pointer;font-size:.65rem">Retry</button></div>';

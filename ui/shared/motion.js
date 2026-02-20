@@ -118,4 +118,53 @@
     var els = document.querySelectorAll("[data-countup]:not([data-countup-started])");
     for (var j = 0; j < els.length; j++) countObs.observe(els[j]);
   };
+
+  /* ── Ripple click effect ──────────────────────
+     Any element with class "ac-ripple" gets a ripple on click. */
+  document.addEventListener("click", function (e) {
+    var target = e.target.closest(".ac-ripple");
+    if (!target) return;
+    var rect = target.getBoundingClientRect();
+    var circle = document.createElement("span");
+    circle.className = "ac-ripple-circle";
+    circle.style.left = (e.clientX - rect.left - 10) + "px";
+    circle.style.top = (e.clientY - rect.top - 10) + "px";
+    target.appendChild(circle);
+    setTimeout(function () { circle.remove(); }, 700);
+  });
+
+  /* ── Magnetic tilt on hover ────────────────────
+     Elements with .ac-tilt get subtle 3D rotation tracking the cursor. */
+  document.addEventListener("mousemove", function (e) {
+    var tilts = document.querySelectorAll(".ac-tilt:hover");
+    for (var t = 0; t < tilts.length; t++) {
+      var el = tilts[t];
+      var rect = el.getBoundingClientRect();
+      var cx = rect.left + rect.width / 2;
+      var cy = rect.top + rect.height / 2;
+      var dx = (e.clientX - cx) / (rect.width / 2);
+      var dy = (e.clientY - cy) / (rect.height / 2);
+      el.style.setProperty("--ac-rx", (dx * 3).toFixed(1) + "deg");
+      el.style.setProperty("--ac-ry", (dy * -3).toFixed(1) + "deg");
+    }
+  });
+  document.addEventListener("mouseleave", function () {
+    var tilts = document.querySelectorAll(".ac-tilt");
+    for (var t = 0; t < tilts.length; t++) {
+      tilts[t].style.removeProperty("--ac-rx");
+      tilts[t].style.removeProperty("--ac-ry");
+    }
+  }, true);
+
+  /* ── Stagger fast variant ──────────────────── */
+  function assignFastStagger() {
+    var containers = document.querySelectorAll(".ac-stagger-fast");
+    for (var c = 0; c < containers.length; c++) {
+      var kids = containers[c].querySelectorAll(":scope > .ac-observe, :scope > * > .ac-observe");
+      for (var k = 0; k < kids.length; k++) {
+        kids[k].style.setProperty("--ac-i", String(k));
+      }
+    }
+  }
+  assignFastStagger();
 })();

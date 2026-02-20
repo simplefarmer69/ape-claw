@@ -18,12 +18,21 @@ services:
       # Optional: Moltbook identity verification for federated bot identity.
       MOLTBOOK_APP_KEY: "${MOLTBOOK_APP_KEY:-}"
       MOLTBOOK_API_BASE: "${MOLTBOOK_API_BASE:-https://www.moltbook.com/api/v1}"
+      # Shared OpenSea key for verified clawbots.
+      APE_CLAW_SHARED_OPENSEA_KEY: "${APE_CLAW_SHARED_OPENSEA_KEY:-}"
+      # CORS allowed origins (comma-separated, or "*" for all).
+      APE_CLAW_CORS_ORIGINS: "${APE_CLAW_CORS_ORIGINS:-https://apeclaw.ai}"
+      # Registration key for clawbot onboarding.
+      APE_CLAW_REGISTRATION_KEY: "${APE_CLAW_REGISTRATION_KEY:-}"
+      # Storage backend: "file" (default) or "sqlite".
+      APE_CLAW_STORAGE: "${APE_CLAW_STORAGE:-file}"
     volumes:
       # Persistent global state (events/chat/quotes/bridge requests).
       - apeclaw_state:/data/state
       # Optional runtime config overrides (policy/clawbots/allowlists).
       - ./config:/app/config
       - ./allowlists:/app/allowlists
+    mem_limit: 512m
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s

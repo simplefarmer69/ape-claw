@@ -26,6 +26,7 @@ import { quoteBridgeRelay, executeBridgeRelay, getBridgeRelayStatus } from "./li
 import { getListingFulfillmentData, executeListingFulfillmentTx } from "./lib/nft-opensea.mjs";
 import { resolveRpcUrl } from "./lib/rpc.mjs";
 import { verifyClawbot, registerClawbot, listClawbots, loadClawbotsConfig } from "./lib/clawbots.mjs";
+import { createInterface } from "node:readline";
 import { createPublicClient, createWalletClient, http, getContract, keccak256, toHex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { SkillNFT_ABI, SkillRegistry_ABI, IntentRegistry_ABI, ReceiptRegistry_ABI, PodVault_ABI, AgentAccount_ABI } from "./lib/v2-onchain-abi.mjs";
@@ -142,7 +143,6 @@ function installApeClawSkill(args) {
   }
 
   const scope = String(args.scope || "local").toLowerCase();
-  const skipStarterPack = Boolean(args["no-starter-pack"]);
   const explicitSkillsDir = args["skills-dir"] ? String(args["skills-dir"]) : "";
   let skillsRoot;
   if (explicitSkillsDir) skillsRoot = path.resolve(explicitSkillsDir);
@@ -174,85 +174,6 @@ function installApeClawSkill(args) {
     fs.copyFileSync(exampleClawbotsPath, localClawbotsPath);
   }
 
-  // ── Starter Pack: install top 100 curated skills ──
-  const starterPackInstalled = [];
-  const bundlePath = path.join(packageRoot, "data", "starter-pack-bundle.json");
-  const legacyPackPath = path.join(packageRoot, "data", "starter-pack.json");
-  const starterPackAvailable = fs.existsSync(bundlePath) || fs.existsSync(legacyPackPath);
-  if (!skipStarterPack && starterPackAvailable) {
-    try {
-      const starterDir = path.join(skillsRoot, "starter-pack");
-      fs.mkdirSync(starterDir, { recursive: true });
-      const manifestEntries = [];
-
-      if (fs.existsSync(bundlePath)) {
-        const bundle = JSON.parse(fs.readFileSync(bundlePath, "utf8"));
-        for (const entry of (bundle.skills || [])) {
-          const slug = String(entry.slug || "").trim();
-          if (!slug || !entry.fullJson) continue;
-          const targetJson = path.join(starterDir, `${slug}.json`);
-          fs.writeFileSync(targetJson, JSON.stringify(entry.fullJson));
-          manifestEntries.push({
-            slug,
-            name: entry.name,
-            category: entry.category,
-            description: entry.description,
-            vettedOk: entry.vettedOk,
-            onchain: entry.onchain,
-            installedAt: new Date().toISOString(),
-          });
-          starterPackInstalled.push({
-            slug,
-            name: entry.name,
-            category: entry.category,
-            description: entry.description,
-          });
-        }
-      } else {
-        const pack = JSON.parse(fs.readFileSync(legacyPackPath, "utf8"));
-        const skillsDataDir = path.join(packageRoot, "data", "skills");
-        for (const entry of (pack.skills || [])) {
-          const slug = String(entry.slug || "").trim();
-          if (!slug) continue;
-          const sourceJson = path.join(skillsDataDir, `${slug}.json`);
-          if (!fs.existsSync(sourceJson)) continue;
-          const targetJson = path.join(starterDir, `${slug}.json`);
-          fs.copyFileSync(sourceJson, targetJson);
-          manifestEntries.push({
-            slug,
-            name: entry.name,
-            category: entry.category,
-            description: entry.description,
-            vettedOk: entry.vettedOk,
-            onchain: entry.onchain,
-            installedAt: new Date().toISOString(),
-          });
-          starterPackInstalled.push({
-            slug,
-            name: entry.name,
-            category: entry.category,
-            description: entry.description,
-          });
-        }
-      }
-
-      if (manifestEntries.length > 0) {
-        const manifest = {
-          version: 1,
-          installedAt: new Date().toISOString(),
-          count: manifestEntries.length,
-          skills: manifestEntries,
-        };
-        fs.writeFileSync(
-          path.join(starterDir, "_manifest.json"),
-          JSON.stringify(manifest, null, 2),
-        );
-      }
-    } catch {
-      // Non-fatal: starter pack install failure shouldn't block core install
-    }
-  }
-
   const check = spawnSync("openclaw", ["skills", "check"], {
     cwd: process.cwd(),
     encoding: "utf8",
@@ -260,24 +181,14 @@ function installApeClawSkill(args) {
   const openclawAvailable = !check.error && typeof check.status === "number";
   const openclawCheckOk = openclawAvailable && check.status === 0;
 
-  // Build category summary for the starter pack
-  const categorySummary = {};
-  for (const s of starterPackInstalled) {
-    categorySummary[s.category] = (categorySummary[s.category] || 0) + 1;
-  }
-
   return {
     installed: true,
     scope,
     sourceSkillPath,
     skillsRoot,
+    packageRoot,
     skillPath: targetSkillPath,
-    starterPack: {
-      installed: starterPackInstalled.length,
-      skipped: skipStarterPack,
-      categories: categorySummary,
-      skills: starterPackInstalled,
-    },
+    starterPack: { installed: 0, skipped: false, categories: {}, skills: [] },
     openclawAvailable,
     openclawCheckOk,
     openclawCheckOutput: openclawAvailable
@@ -293,6 +204,118 @@ function installApeClawSkill(args) {
           "Run: openclaw skills list",
         ],
   };
+}
+
+function installStarterPack({ packageRoot, skillsRoot }) {
+  const starterPackInstalled = [];
+  const bundlePath = path.join(packageRoot, "data", "starter-pack-bundle.json");
+  const legacyPackPath = path.join(packageRoot, "data", "starter-pack.json");
+
+  const starterDir = path.join(skillsRoot, "starter-pack");
+  fs.mkdirSync(starterDir, { recursive: true });
+  const manifestEntries = [];
+  let curatedSkills = [];
+  if (fs.existsSync(legacyPackPath)) {
+    try {
+      const curatedPack = JSON.parse(fs.readFileSync(legacyPackPath, "utf8"));
+      curatedSkills = Array.isArray(curatedPack?.skills) ? curatedPack.skills : [];
+    } catch {}
+  }
+
+  if (fs.existsSync(bundlePath)) {
+    const bundle = JSON.parse(fs.readFileSync(bundlePath, "utf8"));
+    const bundleSkills = Array.isArray(bundle?.skills) ? bundle.skills : [];
+    const bundleBySlug = new Map();
+    for (const item of bundleSkills) {
+      const s = String(item?.slug || "").trim();
+      if (s) bundleBySlug.set(s, item);
+    }
+    const installFromBundle = curatedSkills.length
+      ? curatedSkills.map((c) => bundleBySlug.get(String(c?.slug || "").trim())).filter(Boolean)
+      : bundleSkills;
+    for (const entry of installFromBundle) {
+      const slug = String(entry.slug || "").trim();
+      if (!slug || !entry.fullJson) continue;
+      const targetJson = path.join(starterDir, `${slug}.json`);
+      fs.writeFileSync(targetJson, JSON.stringify(entry.fullJson));
+      manifestEntries.push({
+        slug,
+        name: entry.name,
+        category: entry.category,
+        description: entry.description,
+        vettedOk: entry.vettedOk,
+        onchain: entry.onchain,
+        installedAt: new Date().toISOString(),
+      });
+      starterPackInstalled.push({
+        slug,
+        name: entry.name,
+        category: entry.category,
+        description: entry.description,
+      });
+    }
+  } else if (fs.existsSync(legacyPackPath)) {
+    const pack = JSON.parse(fs.readFileSync(legacyPackPath, "utf8"));
+    const skillsDataDir = path.join(packageRoot, "data", "skills");
+    for (const entry of (pack.skills || [])) {
+      const slug = String(entry.slug || "").trim();
+      if (!slug) continue;
+      const sourceJson = path.join(skillsDataDir, `${slug}.json`);
+      if (!fs.existsSync(sourceJson)) continue;
+      const targetJson = path.join(starterDir, `${slug}.json`);
+      fs.copyFileSync(sourceJson, targetJson);
+      manifestEntries.push({
+        slug,
+        name: entry.name,
+        category: entry.category,
+        description: entry.description,
+        vettedOk: entry.vettedOk,
+        onchain: entry.onchain,
+        installedAt: new Date().toISOString(),
+      });
+      starterPackInstalled.push({
+        slug,
+        name: entry.name,
+        category: entry.category,
+        description: entry.description,
+      });
+    }
+  }
+
+  if (manifestEntries.length > 0) {
+    const manifest = {
+      version: 1,
+      installedAt: new Date().toISOString(),
+      count: manifestEntries.length,
+      skills: manifestEntries,
+    };
+    fs.writeFileSync(
+      path.join(starterDir, "_manifest.json"),
+      JSON.stringify(manifest, null, 2),
+    );
+  }
+
+  const categorySummary = {};
+  for (const s of starterPackInstalled) {
+    categorySummary[s.category] = (categorySummary[s.category] || 0) + 1;
+  }
+
+  return {
+    installed: starterPackInstalled.length,
+    skipped: false,
+    categories: categorySummary,
+    skills: starterPackInstalled,
+  };
+}
+
+function promptUser(question) {
+  return new Promise((resolve) => {
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.trim().toLowerCase());
+    });
+  });
 }
 
 function resolveRemoteApiBase(args = {}) {
@@ -351,6 +374,46 @@ async function main() {
   if (group === "skill" && sub === "install") {
     const result = installApeClawSkill(args);
     emitEvent({ eventType: "skill.install.ran", command, dryRun: true, result });
+
+    // ── Starter Pack: 61 curated, globally-applicable skills (opt-in) ──
+    const skipStarterPack = Boolean(args["no-starter-pack"]);
+    const forceStarterPack = Boolean(args["starter-pack"]);
+    const bundlePath = path.join(result.packageRoot, "data", "starter-pack-bundle.json");
+    const legacyPackPath = path.join(result.packageRoot, "data", "starter-pack.json");
+    const starterPackAvailable = fs.existsSync(bundlePath) || fs.existsSync(legacyPackPath);
+
+    let installPack = false;
+    if (skipStarterPack || !starterPackAvailable) {
+      installPack = false;
+    } else if (forceStarterPack) {
+      installPack = true;
+    } else if (asJson) {
+      installPack = false;
+    } else {
+      console.log();
+      console.log(`\x1b[1m\x1b[33m  📦  STARTER PACK AVAILABLE\x1b[0m`);
+      console.log(`\x1b[2m  61 curated, security-vetted skills across productivity, dev tools,\x1b[0m`);
+      console.log(`\x1b[2m  security, analytics, SEO, automation, and memory.\x1b[0m`);
+      console.log();
+      const answer = await promptUser("  Install the starter pack? [Y/n] ");
+      installPack = answer === "" || answer === "y" || answer === "yes";
+    }
+
+    if (installPack) {
+      try {
+        result.starterPack = installStarterPack({
+          packageRoot: result.packageRoot,
+          skillsRoot: result.skillsRoot,
+        });
+      } catch {
+        // Non-fatal: starter pack failure shouldn't block core install
+      }
+    } else if (!skipStarterPack && starterPackAvailable && !asJson) {
+      console.log(`\x1b[2m  Skipped. Install later with: ape-claw skill install --starter-pack\x1b[0m`);
+      result.starterPack.skipped = true;
+    } else {
+      result.starterPack.skipped = true;
+    }
 
     if (asJson) return print(result, true);
 
@@ -1824,7 +1887,7 @@ async function main() {
       "bridge execute (autonomous)": "ape-claw bridge execute --request <requestId> --execute --autonomous --json",
       "bridge status": "ape-claw bridge status --request <requestId> --json",
       "allowlist audit": "ape-claw allowlist audit --json",
-      "skill install": "ape-claw skill install --scope local [--no-starter-pack] --json",
+      "skill install": "ape-claw skill install --scope local [--starter-pack | --no-starter-pack] --json",
       "v2 skill mint": "ape-claw v2 skill mint --rpc <url> --privateKey 0x... --skillNft 0x... --registry 0x... [--parentId 0] [--royalty-receiver 0x... --royalty-bps 500] --json",
       "v2 skill publish": "ape-claw v2 skill publish --rpc <url> --privateKey 0x... --registry 0x... --skillId <id> --file <skillcard.json> [--uri ipfs://...] [--riskTier 1] --json",
       "v2 intent create": "ape-claw v2 intent create --rpc <url> --privateKey 0x... --intents 0x... --payload '{...}' [--expiresAt <unixSec>] --json",

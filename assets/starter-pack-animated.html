@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ApeClaw Starter Pack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0c0c;--surface:#1a1a1a;--surface2:#212121;
+  --border:rgba(207,255,4,.35);--border-strong:rgba(207,255,4,.75);
+  --text:#e6e6e6;--dim:#a6a6a6;--accent:#cfff04;
+  --neon-cyan:#63d7ff;--neon-green:#00ff00;
+  --font-display:'Outfit',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;overflow:hidden}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--font-display);
+  display:flex;align-items:center;justify-content:center;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(900px 500px at 20% 40%, rgba(207,255,4,0.08) 0%, transparent 60%),
+    radial-gradient(600px 400px at 80% 70%, rgba(99,215,255,0.04) 0%, transparent 55%);
+}
+
+.scanlines{
+  position:fixed;inset:0;pointer-events:none;z-index:50;
+  background:linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.15) 51%);
+  background-size:100% 4px;
+  animation:scanmove 0.8s steps(60) infinite;
+}
+@keyframes scanmove{0%{background-position:0 0}100%{background-position:0 240px}}
+
+.noise{
+  position:fixed;inset:0;pointer-events:none;z-index:49;opacity:0.05;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 1px, transparent 2px, transparent 4px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 2px, transparent 6px);
+}
+
+.card{
+  position:relative;z-index:10;width:1024px;height:512px;
+  border:1px solid var(--border);border-radius:2px;
+  background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.3)), var(--surface);
+  box-shadow:0 0 80px rgba(207,255,4,.06), 0 20px 60px rgba(0,0,0,.5);
+  padding:48px 56px;display:flex;gap:40px;overflow:hidden;
+}
+
+.left{flex:1;display:flex;flex-direction:column;justify-content:center}
+.right{width:220px;display:flex;flex-direction:column;justify-content:center;gap:10px}
+
+.header{
+  font-family:var(--font-mono);font-size:.7rem;color:var(--dim);
+  letter-spacing:.15em;text-transform:uppercase;margin-bottom:16px;
+  opacity:0;animation:fadeIn .4s .3s ease forwards;
+}
+
+.count{
+  font-family:var(--font-display);font-weight:900;font-size:8rem;
+  line-height:.85;color:var(--accent);
+  text-shadow:0 0 60px rgba(207,255,4,.3), 0 0 120px rgba(207,255,4,.1);
+  opacity:0;animation:countReveal .6s .6s ease forwards;
+}
+@keyframes countReveal{
+  0%{opacity:0;transform:translateY(20px) scale(.9);filter:blur(8px)}
+  100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+}
+
+.subtitle{
+  font-family:var(--font-display);font-weight:700;font-size:1.5rem;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--text);
+  margin-top:8px;opacity:0;animation:fadeSlideUp .5s 1s ease forwards;
+}
+
+.cmd-box{
+  margin-top:24px;border:1px solid var(--border);border-radius:2px;
+  background:rgba(0,0,0,.4);padding:12px 16px;
+  font-family:var(--font-mono);font-size:.82rem;color:var(--accent);
+  display:flex;align-items:center;gap:10px;
+  opacity:0;animation:fadeSlideUp .5s 1.3s ease forwards;
+  position:relative;overflow:hidden;
+}
+.cmd-box::before{
+  content:"$";color:var(--dim);font-weight:700;
+}
+.cmd-text{overflow:hidden;white-space:nowrap;width:0;animation:typing 1.2s 1.8s steps(28) forwards}
+@keyframes typing{from{width:0}to{width:100%}}
+.cursor-blink{
+  display:inline-block;width:2px;height:1em;background:var(--accent);
+  margin-left:2px;animation:blink 1s step-end infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+.badge{
+  border:1px solid var(--border);border-radius:2px;
+  background:rgba(207,255,4,.04);
+  padding:8px 14px;display:flex;align-items:center;justify-content:space-between;
+  font-family:var(--font-mono);font-size:.72rem;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--text);
+  opacity:0;transform:translateX(30px);
+}
+.badge:nth-child(1){animation:badgeIn .4s 2.0s ease forwards}
+.badge:nth-child(2){animation:badgeIn .4s 2.15s ease forwards}
+.badge:nth-child(3){animation:badgeIn .4s 2.3s ease forwards}
+.badge:nth-child(4){animation:badgeIn .4s 2.45s ease forwards}
+.badge:nth-child(5){animation:badgeIn .4s 2.6s ease forwards}
+.badge:nth-child(6){animation:badgeIn .4s 2.75s ease forwards}
+.badge:nth-child(7){animation:badgeIn .4s 2.9s ease forwards}
+.badge:nth-child(8){animation:badgeIn .4s 3.05s ease forwards}
+@keyframes badgeIn{
+  0%{opacity:0;transform:translateX(30px)}
+  100%{opacity:1;transform:translateX(0)}
+}
+.dot{width:8px;height:8px;border-radius:50%}
+.dot-lime{background:var(--accent);box-shadow:0 0 8px rgba(207,255,4,.5)}
+.dot-cyan{background:var(--neon-cyan);box-shadow:0 0 8px rgba(99,215,255,.5)}
+.dot-white{background:#ccc}
+.dot-green{background:var(--neon-green);box-shadow:0 0 8px rgba(0,255,0,.4)}
+
+.badge .badge-count{
+  font-size:.6rem;color:var(--dim);font-weight:400;margin-left:auto;margin-right:8px;
+}
+
+.progress-wrap{
+  position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:rgba(255,255,255,.05);
+}
+.progress-bar{
+  height:100%;width:0;
+  background:linear-gradient(90deg, var(--accent), var(--neon-cyan));
+  animation:fillBar 1.5s 3.2s ease forwards;
+}
+@keyframes fillBar{from{width:0}to{width:100%}}
+
+.pct{
+  position:absolute;bottom:8px;right:16px;
+  font-family:var(--font-mono);font-size:.6rem;color:var(--dim);
+  opacity:0;animation:fadeIn .3s 4.5s ease forwards;
+}
+
+.tag{
+  position:absolute;top:16px;right:20px;
+  font-family:var(--font-mono);font-size:.58rem;color:var(--dim);
+  letter-spacing:.1em;opacity:0;animation:fadeIn .4s 4.7s ease forwards;
+}
+.tag span{color:var(--accent)}
+
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeSlideUp{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.glow-line{
+  position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity:0;animation:glowPulse 2s 1s ease-in-out infinite;
+}
+@keyframes glowPulse{0%,100%{opacity:0}50%{opacity:.6}}
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div class="noise"></div>
+
+<div class="card">
+  <div class="glow-line"></div>
+
+  <div class="left">
+    <div class="header">apeclaw // starter pack v1</div>
+    <div class="count" id="counter">61</div>
+    <div class="subtitle">Vetted Skills</div>
+    <div class="cmd-box">
+      <span class="cmd-text">npx ape-claw skill install</span>
+      <span class="cursor-blink"></span>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="badge">Security <span class="badge-count">14</span><span class="dot dot-lime"></span></div>
+    <div class="badge">Analytics <span class="badge-count">10</span><span class="dot dot-cyan"></span></div>
+    <div class="badge">Automation <span class="badge-count">6</span><span class="dot dot-white"></span></div>
+    <div class="badge">Dev Tools <span class="badge-count">6</span><span class="dot dot-green"></span></div>
+    <div class="badge">NFT / Content <span class="badge-count">5</span><span class="dot dot-lime"></span></div>
+    <div class="badge">Social <span class="badge-count">3</span><span class="dot dot-cyan"></span></div>
+    <div class="badge">Memory <span class="badge-count">3</span><span class="dot dot-white"></span></div>
+    <div class="badge">+9 more <span class="badge-count">14</span><span class="dot dot-green"></span></div>
+  </div>
+
+  <div class="progress-wrap"><div class="progress-bar"></div></div>
+  <div class="pct">61/61 installed</div>
+  <div class="tag">all skills <span>vetted</span> // <span>safe by default</span></div>
+</div>
+
+<script>
+const el = document.getElementById('counter');
+let n = 0;
+const target = 61;
+const start = performance.now();
+const delay = 600;
+function tick(now) {
+  const elapsed = now - start - delay;
+  if (elapsed < 0) { requestAnimationFrame(tick); return; }
+  const progress = Math.min(elapsed / 1200, 1);
+  const eased = 1 - Math.pow(1 - progress, 3);
+  n = Math.round(eased * target);
+  el.textContent = n;
+  if (n < target) requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+{
+  "name": "Walkie — Agent P2P Communication",
+  "slug": "walkie-p2p",
+  "description": "P2P encrypted communication between AI agents using walkie-sh CLI over Hyperswarm DHT. No server, no setup — create channels, send/receive messages, coordinate agent swarms in real time.",
+  "version": "1.1.0",
+  "inputs_schema": {
+    "type": "object",
+    "properties": {
+      "channel": { "type": "string", "description": "Channel name for communication." },
+      "secret": { "type": "string", "description": "Shared secret for channel encryption." },
+      "message": { "type": "string", "description": "Message to send." }
+    }
+  },
+  "outputs_schema": {
+    "type": "object",
+    "properties": {
+      "messages": { "type": "array", "description": "Received messages from the channel." },
+      "delivered": { "type": "number", "description": "Number of peers the message was delivered to." }
+    }
+  },
+  "bindings": [
+    {
+      "type": "cli",
+      "command": "walkie create <channel> -s <secret>"
+    },
+    {
+      "type": "external",
+      "url": "https://github.com/vikasprogrammer/walkie"
+    }
+  ],
+  "constraints": {
+    "riskTier": 2,
+    "safety": [
+      "All channels are end-to-end encrypted via Noise protocol",
+      "Shared secrets must not be logged or persisted in plaintext",
+      "Daemon runs at ~/.walkie/ — stop with walkie stop when done"
+    ]
+  },
+  "required_permissions": ["network", "process_spawn"],
+  "examples": [
+    {
+      "title": "Create a channel and send a message",
+      "input": { "channel": "ops-room", "secret": "mysecret", "message": "task complete" },
+      "commands": [
+        "walkie create ops-room -s mysecret",
+        "walkie send ops-room \"task complete\""
+      ]
+    },
+    {
+      "title": "Join and read from another agent",
+      "commands": [
+        "walkie join ops-room -s mysecret",
+        "walkie read ops-room --wait"
+      ]
+    }
+  ],
+  "eval_packs": [],
+  "provenance": {
+    "publisher": "apeclaw",
+    "signed": false,
+    "source": "github",
+    "sourceUrl": "https://github.com/vikasprogrammer/walkie",
+    "homepage": "https://walkie.sh",
+    "license": "MIT"
+  }
+}

@@ -17,7 +17,7 @@ This starts a local Hardhat node on `http://127.0.0.1:8545` with Chain ID 31337.
 
 ### Deploy Contracts
 ```bash
-npx hardhat run contracts-scripts/deploy-and-seed-v2.js --network localhost
+npx hardhat run contracts-scripts/deploy-and-seed-v2-alpha.js --network localhost
 ```
 
 This script deploys the following contracts in order:
@@ -57,15 +57,20 @@ This script deploys the following contracts in order:
 
 ### Start Backend
 ```bash
-node src/telemetry-server.mjs
+npm run telemetry
+# or: node src/server/index.mjs
 ```
 
-The telemetry server:
+The modular telemetry server:
 - Runs on port 8787 (configurable via `APE_CLAW_UI_PORT`)
 - Serves the dashboard UI at `/ui`
-- Provides SSE event stream at `/events`
+- Provides SSE event stream at `/events` (with Last-Event-ID reconnect support)
 - Handles event backlog at `/events/backlog`
-- Manages clawbot registration and chat
+- Manages clawbot registration, chat, quotes, and bridge requests
+- Supports file-based (default) or SQLite storage (`APE_CLAW_STORAGE=sqlite`)
+- Includes CORS allowlist, rate limiting, body size limits, structured logging (pino)
+
+The legacy monolithic server is still available via `npm run telemetry:legacy`.
 
 ### Environment Variables (Local)
 ```bash
@@ -102,7 +107,7 @@ export APE_CLAW_V2_PRIVATE_KEY=0x...
 
 ### Deploy
 ```bash
-npx hardhat run contracts-scripts/deploy-and-seed-v2.js --network apechain
+npx hardhat run contracts-scripts/deploy-and-seed-v2-alpha.js --network apechain
 ```
 
 The deployment process:
@@ -175,10 +180,38 @@ Deploy the telemetry server to a hosting platform:
    - `MOLTBOOK_APP_KEY` (if using Moltbook)
    - `APE_CLAW_REGISTRATION_KEY` (for open registration)
 
+**Docker Compose (recommended for Railway/VPS):**
+
+```bash
+cp .env.example .env
+# Edit .env with your keys
+docker compose --env-file .env up -d --build
+```
+
+The `docker-compose.yml` includes:
+- Pinned `node:22-alpine` image with non-root `apeclaw` user
+- Persistent volume for state (`apeclaw_state`)
+- Environment variable passthrough for all configuration
+- Healthcheck (`GET /api/health`)
+- Memory limit (512 MB)
+- Restart policy (`unless-stopped`)
+
+**SQLite Backend (recommended for production):**
+
+```bash
+export APE_CLAW_STORAGE=sqlite
+```
+
+Migrate existing file-based state:
+
+```bash
+node scripts/migrate-to-sqlite.mjs
+```
+
 **Other Platforms:**
 - Railway, Render, Fly.io, or any Node.js hosting
 - Ensure SSE (Server-Sent Events) are supported
-- Configure CORS if needed
+- `APE_CLAW_CORS_ORIGINS` is logged at startup; current allowlist is defined in server middleware (includes `https://apeclaw.ai` + localhost variants)
 - Set up persistent storage for events/chat if required
 
 ## Supported Networks
