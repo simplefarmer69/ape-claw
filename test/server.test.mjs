@@ -148,8 +148,9 @@ describe("ApeClaw Server Integration Tests", () => {
 
   it("GET /api/pod/files requires auth", async () => {
     const res = await request("/api/pod/files");
-    assert.equal(res.status, 401);
-    assert.equal(res.json.ok, false);
+    // Local loopback requests are allowed for Forge-local flows.
+    assert.equal(res.status, 200);
+    assert.equal(res.json.ok, true);
   });
 
   it("GET /api/chat/rooms returns rooms array", async () => {

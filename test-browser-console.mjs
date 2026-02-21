@@ -6,6 +6,8 @@
 
 import { spawn } from 'child_process';
 import { writeFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
 const BASE_URL = process.env.APE_CLAW_UI_PORT
   ? `http://localhost:${process.env.APE_CLAW_UI_PORT}`
@@ -16,6 +18,33 @@ const pages = [
   { name: 'Dashboard', url: `${BASE_URL}/ui`, expectedTitle: 'ApeClaw' },
   { name: 'Skills', url: `${BASE_URL}/skills`, expectedTitle: 'Skills' }
 ];
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)));
+
+function checkHealth() {
+  return new Promise((resolve) => {
+    const curl = spawn('curl', ['-s', '-o', '/dev/null', '-w', '%{http_code}', `${BASE_URL}/api/health`]);
+    let status = '';
+    curl.stdout.on('data', (data) => { status += data.toString(); });
+    curl.on('close', () => resolve(parseInt(status, 10) === 200));
+    curl.on('error', () => resolve(false));
+  });
+}
+
+async function ensureServerReady() {
+  if (await checkHealth()) return { started: false, child: null };
+  const child = spawn(process.execPath, [path.join(ROOT, 'src', 'server', 'index.mjs')], {
+    cwd: ROOT,
+    stdio: 'ignore',
+  });
+  for (let i = 0; i < 40; i++) {
+    // ~10s max wait
+    await new Promise((r) => setTimeout(r, 250));
+    if (await checkHealth()) return { started: true, child };
+  }
+  try { child.kill('SIGTERM'); } catch {}
+  return { started: false, child: null, failed: true };
+}
 
 console.log('═══════════════════════════════════════════════════════');
 console.log('ApeClaw Browser Console Test');
@@ -176,6 +205,12 @@ function checkResource(url) {
 
 // Run tests
 (async () => {
+  const server = await ensureServerReady();
+  if (server.failed) {
+    console.log('❌ Could not start local UI server for browser test');
+    process.exit(1);
+  }
+
   const allResults = [];
 
   for (const page of pages) {
@@ -209,6 +244,10 @@ function checkResource(url) {
     JSON.stringify(allResults, null, 2)
   );
   console.log('\n📄 Detailed results saved to: browser-test-results.json\n');
+
+  if (server.started && server.child) {
+    try { server.child.kill('SIGTERM'); } catch {}
+  }
 
   process.exit(allPassed ? 0 : 1);
 })();
