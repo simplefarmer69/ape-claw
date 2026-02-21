@@ -9,8 +9,8 @@ Complete reference for all `ape-claw` CLI commands.
 ## Installation
 
 ```bash
-npx ape-claw skill install
-npx ape-claw doctor --json
+npx --yes ape-claw@latest skill install
+npx --yes ape-claw@latest doctor --json
 ```
 
 During core install (no slug), ApeClaw prompts for:
@@ -20,14 +20,14 @@ During core install (no slug), ApeClaw prompts for:
 Open local Forge anytime with:
 
 ```bash
-npx ape-claw dashboard
+npx --yes ape-claw@latest dashboard
 ```
 
 PowerShell (Windows):
 
 ```powershell
-npx ape-claw skill install
-npx ape-claw doctor --json
+npx --yes ape-claw@latest skill install
+npx --yes ape-claw@latest doctor --json
 ```
 
 ## Global Flags

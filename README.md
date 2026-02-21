@@ -188,7 +188,7 @@ export APECLAW_SKILLCARD_URI_BASE="https://example.com/skillcards/seed"
 ### One-command install (no repo clone)
 
 ```bash
-npx ape-claw skill install
+npx --yes ape-claw@latest skill install
 ```
 
 Installs the ApeClaw skill into `~/.openclaw/skills/ape-claw/` and bootstraps config files.
@@ -202,11 +202,11 @@ During install, ApeClaw also prompts to enable the local Forge dashboard upgrade
 # Verify it's available:
 openclaw skills list
 
-# 1) Install ApeClaw
-npx ape-claw skill install
+# 1) Install ApeClaw (force latest npm release)
+npx --yes ape-claw@latest skill install
 
 # 1b) Open local Forge dashboard (starts local server if needed)
-npx ape-claw dashboard
+npx --yes ape-claw@latest dashboard
 
 # 2) Verify (always works, even if global PATH is not set yet)
 npx ape-claw doctor --json
@@ -262,23 +262,24 @@ After the core install, you'll be prompted to install the **Starter Pack** (61 s
 
 ```bash
 # Interactive: prompts you to choose
-npx ape-claw skill install
+npx --yes ape-claw@latest skill install
 
 # Auto-install starter pack (no prompt)
-npx ape-claw skill install --starter-pack
+npx --yes ape-claw@latest skill install --starter-pack
 
 # Skip starter pack entirely
-npx ape-claw skill install --no-starter-pack
+npx --yes ape-claw@latest skill install --no-starter-pack
 
 # JSON mode (programmatic): skips prompt, add --starter-pack to include it
-npx ape-claw skill install --starter-pack --json
+npx --yes ape-claw@latest skill install --starter-pack --json
 
 # Install into current project only (instead of global ~/.openclaw/)
-npx ape-claw skill install --scope local
+npx --yes ape-claw@latest skill install --scope local
 ```
 
 The same install flow also prompts for the local Forge dashboard upgrade.  
-Use `npx ape-claw dashboard` anytime as the stable local Forge entrypoint.
+Use `npx --yes ape-claw@latest dashboard` anytime as the stable local Forge entrypoint.
+If you see `Unknown command: dashboard`, you are running an older cached package — re-run with `npx --yes ape-claw@latest ...`.
 
 ### 3. Global CLI install (optional)
 

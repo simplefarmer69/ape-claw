@@ -24,8 +24,8 @@ If `openclaw` is not found, follow the setup guide at [openclaw.ai](https://open
 ## Step 2: Install ApeClaw
 
 ```bash
-npx ape-claw skill install
-npx ape-claw doctor --json
+npx --yes ape-claw@latest skill install
+npx --yes ape-claw@latest doctor --json
 ```
 
 During `skill install`, ApeClaw prompts for:
@@ -37,8 +37,8 @@ During `skill install`, ApeClaw prompts for:
 PowerShell (Windows):
 
 ```powershell
-npx ape-claw skill install
-npx ape-claw doctor --json
+npx --yes ape-claw@latest skill install
+npx --yes ape-claw@latest doctor --json
 ```
 
 ## Step 3: Register a Clawbot
@@ -72,7 +72,7 @@ $env:APE_CLAW_AGENT_TOKEN="claw_..."
 Use:
 
 ```bash
-npx ape-claw dashboard
+npx --yes ape-claw@latest dashboard
 ```
 
 This opens your local Forge dashboard (`http://localhost:8787/forge`) and starts the local server if needed.
