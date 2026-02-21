@@ -521,7 +521,7 @@
             <div class="step-num">1</div>
             <h3>Install Skills</h3>
             <pre style="background:var(--bg);border:1px solid rgba(207,255,4,.25);padding:12px 16px;margin:12px 0 8px;font-family:var(--mono);font-size:13px;color:var(--accent);overflow-x:auto;cursor:pointer;transition:border-color .2s" onclick="try{navigator.clipboard.writeText('npx ape-claw skill install');this.style.borderColor='var(--green)';var s=this;setTimeout(function(){s.style.borderColor='rgba(207,255,4,.25)'},1200)}catch(e){}" title="Click to copy">npx ape-claw skill install</pre>
-            <p style="font-size:11px;color:var(--lightgray);line-height:1.65">Run in any terminal. Requires <a href="https://openclaw.ai" style="color:var(--accent)">OpenClaw</a> + Node.js. Installs 10,000+ curated skills to <code style="color:var(--cyan);font-size:10px">~/.openclaw/skills/</code>. Then run <code style="color:var(--cyan);font-size:10px">npx ape-claw doctor --json</code> to verify.</p>
+            <p style="font-size:11px;color:var(--lightgray);line-height:1.65">Run in any terminal. Requires <a href="https://openclaw.ai" style="color:var(--accent)">OpenClaw</a> + Node.js. Installs the core skill and prompts to add the starter pack. Browse the full <a href="/skills" style="color:var(--accent)">10,000+ skill library</a> at any time. Then run <code style="color:var(--cyan);font-size:10px">npx ape-claw doctor --json</code> to verify.</p>
           </div>
 
           <div class="step-card ac-observe">
@@ -664,50 +664,64 @@
       function fmtInt(n) { try { return new Intl.NumberFormat().format(Number(n || 0)); } catch (e) { return String(n || 0); } }
       function formatBytes(b) { var n = Number(b || 0); if (!isFinite(n) || n <= 0) return '0'; var u = ['B','KB','MB','GB','TB']; var i = 0; while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; } return (i === 0 ? String(Math.round(n)) : n.toFixed(1)) + ' ' + u[i]; }
       function withTimeout(p, ms) { return Promise.race([p, new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timeout')); }, ms); })]); }
-      function fetchJson(path) { return withTimeout(fetch(apiBase + path, { headers: { 'accept': 'application/json' } }), 6000).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, json: j }; }); }); }
+      function fetchJsonOnce(path) { return withTimeout(fetch(apiBase + path, { headers: { 'accept': 'application/json' } }), 12000).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, json: j }; }); }); }
+      function fetchJson(path, retries) {
+        retries = retries || 0;
+        return fetchJsonOnce(path).catch(function (err) {
+          if (retries < 2) return new Promise(function (resolve) { setTimeout(function () { resolve(fetchJson(path, retries + 1)); }, 1500 * (retries + 1)); });
+          throw err;
+        });
+      }
 
       function setCountUp(el, value) {
         if (!el) return;
         var n = Number(value || 0);
         el.setAttribute('data-countup', String(n));
-        el.textContent = '0';
-        if (window.acTriggerCountUp) {
-          window.acTriggerCountUp(el);
+        if (n > 0) {
+          el.textContent = '0';
+          if (window.acTriggerCountUp) { window.acTriggerCountUp(el); }
+          setTimeout(function () {
+            if (!el.getAttribute('data-countup-started') || el.textContent === '0') {
+              el.textContent = fmtInt(n);
+              el.setAttribute('data-countup-started', '1');
+            }
+          }, 2500);
+        } else {
+          el.textContent = '0';
         }
-        setTimeout(function () {
-          if (!el.getAttribute('data-countup-started') || el.textContent === '0') {
-            el.textContent = fmtInt(n);
-            el.setAttribute('data-countup-started', '1');
-          }
-        }, 2500);
       }
 
       var onlineText = $('onlineText');
       function setOnline(ok) { if (onlineText) onlineText.textContent = ok ? 'Online' : 'Offline'; }
 
       function loadStats() {
-        Promise.allSettled([fetchJson('/api/health'), fetchJson('/api/clawbots')]).then(function (res) {
-          var health = (res[0] && res[0].status === 'fulfilled') ? res[0].value : null;
-          var bots = (res[1] && res[1].status === 'fulfilled') ? res[1].value : null;
-          setOnline(Boolean(health && health.ok));
-          var botCount = (bots && bots.json && typeof bots.json.count !== 'undefined') ? bots.json.count : 0;
-          setCountUp($('statClawbots'), botCount);
+        fetchJson('/api/health').then(function (res) {
+          setOnline(Boolean(res && res.ok));
         }).catch(function () { setOnline(false); });
+
+        fetchJson('/api/clawbots').then(function (res) {
+          var botCount = (res && res.json && typeof res.json.count !== 'undefined') ? res.json.count : 0;
+          setCountUp($('statClawbots'), botCount);
+        }).catch(function (err) {
+          console.warn('[apeclaw] clawbots fetch failed:', err);
+          setCountUp($('statClawbots'), 0);
+        });
 
         setCountUp($('statContracts'), 13);
 
         var elS = $('statSkills');
         var elP = $('statPublishedSub');
-        if (elS) elS.textContent = '0';
-        if (elP) elP.textContent = 'published: —';
-        fetchJson('/api/skills/stats')
-          .then(function (res) {
-            if (!res || !res.ok || !res.json || !res.json.ok) return;
-            var d = res.json;
-            setCountUp(elS, d.total || 0);
-            if (elP) elP.textContent = 'onchain: ' + fmtInt(d.onchain || 0) + ' · vetted: ' + fmtInt(d.vetted || 0);
-          })
-          .catch(function () {});
+        if (elS) elS.textContent = '…';
+        if (elP) elP.textContent = '';
+        fetchJson('/api/skills/stats').then(function (res) {
+          if (!res || !res.ok || !res.json || !res.json.ok) return;
+          var d = res.json;
+          setCountUp(elS, d.total || 0);
+          if (elP) elP.textContent = 'onchain: ' + fmtInt(d.onchain || 0) + ' · vetted: ' + fmtInt(d.vetted || 0);
+        }).catch(function (err) {
+          console.warn('[apeclaw] skills/stats fetch failed:', err);
+          if (elS) elS.textContent = '—';
+        });
       }
 
       if (document.readyState === 'loading') {

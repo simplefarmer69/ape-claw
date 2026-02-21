@@ -161,23 +161,29 @@ npx hardhat verify --network apechain <CONTRACT_ADDRESS> <CONSTRUCTOR_ARGS>
 
 Deploy the telemetry server to a hosting platform:
 
-**Vercel Deployment:**
-1. Configure `vercel.json` for rewrites:
+**Vercel Deployment (static frontend + proxy to Railway backend):**
+
+The recommended production setup is:
+- **Vercel**: serves the static frontend files (`index.html`, `ui/`, `docs/`)
+- **Railway**: runs the Node.js telemetry server (persistent disk, SSE, API)
+- **`vercel.json`**: rewrites all `/api/*` and `/events/*` to the Railway backend
+
+1. The repo's `vercel.json` already contains the correct rewrite rules — no changes needed:
 ```json
 {
   "rewrites": [
+    { "source": "/api/:path*", "destination": "https://<your-railway-domain>/api/:path*" },
+    { "source": "/events/:path*", "destination": "https://<your-railway-domain>/events/:path*" },
     { "source": "/ui", "destination": "/ui/index.html" },
-    { "source": "/events", "destination": "/api/events" }
+    { "source": "/skills", "destination": "/ui/skills.html" },
+    { "source": "/forge", "destination": "/ui/forge/index.html" }
   ]
 }
 ```
 
-2. Set environment variables in Vercel dashboard:
+2. Set environment variables in Vercel dashboard (if running server on Vercel):
    - `APE_CLAW_UI_PORT` (if needed)
    - `APE_CLAW_V2_RPC_URL` (for receipt reading)
-   - `APE_CLAW_V2_RECEIPT_REGISTRY` (contract address)
-   - `MOLTBOOK_API_BASE` (for chat)
-   - `MOLTBOOK_APP_KEY` (if using Moltbook)
    - `APE_CLAW_REGISTRATION_KEY` (for open registration)
 
 **Docker Compose (recommended for Railway/VPS):**

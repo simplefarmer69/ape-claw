@@ -67,7 +67,7 @@ Visit [http://localhost:8787/ui](http://localhost:8787/ui) or [https://apeclaw.a
 
 ## Step 6: Browse Skills
 
-Visit [/skills](https://apeclaw.ai/skills) to browse 10,000+ skills in the library, with 7,000+ minted onchain, served via API.
+Visit [/skills](https://apeclaw.ai/skills) to browse 10,000+ skills in the library, with 10,000+ minted onchain, served via API.
 
 ## Step 7: Connect Your Forge Agent (Optional)
 

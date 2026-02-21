@@ -29,12 +29,14 @@ Production routing is:
 - `https://apeclaw.ai/` -> landing page
 - `https://apeclaw.ai/app` -> terminal/dashboard UI
 - `https://apeclaw.ai/ui` -> direct UI path
+- `https://apeclaw.ai/forge` -> The Forge (3D agent visualizer + AI chat)
 - `https://apeclaw.ai/docs` -> docs hub
+- `https://apeclaw.ai/skills` -> skills library
 - `https://apeclaw.ai` -> shared backend API + SSE
 
 Frontend API resolution:
 
-- All pages (`/ui`, `/skills`, `/pod`, `/docs`) default to `https://apeclaw.ai` when running on a non-localhost origin (e.g. Vercel)
+- All pages (`/ui`, `/skills`, `/pod`, `/docs`, `/forge`) default to `https://apeclaw.ai` when running on a non-localhost origin (e.g. Vercel)
 - On localhost, the frontend defaults to `window.location.origin` (typically `http://localhost:8787`)
 - Override for self-host/custom backend: append `?api=https://your-backend.example.com` to any page URL
 

@@ -15,6 +15,7 @@ That is why v2 ships onchain primitives (skills + receipts) and why the runtime 
 The landing page explains the product at a glance and links to the core surfaces:
 
 - `/ui` Dashboard
+- `/forge` The Forge — 3D agent visualizer with live AI chat (The Clawllector)
 - `/pod` THE POD (harness)
 - `/skills` library
 - `/docs` manual
@@ -35,6 +36,19 @@ It connects to the backend via:
 
 Read: `docs/DASHBOARD_GUIDE.md`
 
+### The Forge (`/forge`)
+
+The Forge is a **3D agent visualization + AI chat interface**:
+
+- a real-time 3D render of The Clawllector robot — the project's hosted OpenClaw agent
+- skills installed on the agent appear as visual attachments on the robot body
+- an AI chat panel backed by the Forge Agent (Perplexity Sonar by default on apeclaw.ai; any LLM provider when self-hosted)
+- the robot's lights and animations respond to chat activity
+
+When visiting `apeclaw.ai/forge`, visitors interact with **The Clawllector** — the project's hosted agent. When running locally, the Forge connects to your own OpenClaw agent instead.
+
+Read: `docs/operator/01-quickstart.md` (Step 7: Connect Your Forge Agent)
+
 ### THE POD (`/pod`)
 
 THE POD is the **persistent harness**:
@@ -50,7 +64,7 @@ Read: `docs/THE_POD_RUNNER.md`
 Skills are treated as **content-addressed artifacts**:
 
 - `SkillCard` (JSON) defines what the skill is and how to execute it
-- 10,000+ imported skills browsable via the API at [apeclaw.ai/skills](https://apeclaw.ai/skills), with 7,000+ minted onchain
+- 10,000+ imported skills browsable via the API at [apeclaw.ai/skills](https://apeclaw.ai/skills), with 10,000+ minted onchain
 - publishing onchain makes versions immutable and globally discoverable
 
 Read: `docs/SKILLCARDS_AND_IMPORTER.md` and `docs/ONCHAIN_V2_GUIDE.md`

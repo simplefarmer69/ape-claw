@@ -210,7 +210,7 @@ async function loadAllData() {
     fetchJSON("/api/pod/status"),
     fetchJSON("/api/pod/files", { headers: authHeaders() }),
     fetchJSON("/api/clawbots"),
-    fetchJSON("/api/forge/status"),
+    fetchJSON("/api/forge/status", {}, { retries: 2, timeoutMs: 12000 }),
   ]);
 
   podStatus = statusRes;
@@ -370,6 +370,7 @@ function buildIdentityPlate() {
 
   const statusDiv = document.createElement("div");
   statusDiv.className = "forge-identity-status";
+  statusDiv.id = "forgeIdentityStatus";
   const dot = document.createElement("span");
   const running = (podStatus && podStatus.running) || forgeAgentOnline;
   dot.className = `forge-identity-dot ${running ? "running" : podStatus ? "stopped" : "uninitialized"}`;
@@ -385,6 +386,16 @@ function buildIdentityPlate() {
   const label = new CSS2DObject(el);
   label.position.set(0, 8.5, 0);
   return label;
+}
+
+function refreshIdentityStatus() {
+  const statusDiv = document.getElementById("forgeIdentityStatus");
+  if (!statusDiv) return;
+  const running = (podStatus && podStatus.running) || forgeAgentOnline;
+  const dot = statusDiv.querySelector(".forge-identity-dot");
+  const txt = statusDiv.querySelector("span:last-child");
+  if (dot) dot.className = `forge-identity-dot ${running ? "running" : podStatus ? "stopped" : "uninitialized"}`;
+  if (txt) txt.textContent = running ? "ONLINE" : "OFFLINE";
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -789,6 +800,17 @@ async function init() {
     if (robotGroup) {
       identityLabel = buildIdentityPlate();
       robotGroup.add(identityLabel);
+    }
+
+    if (!forgeAgentOnline) {
+      setTimeout(async () => {
+        const retry = await fetchJSON("/api/forge/status", {}, { retries: 2, timeoutMs: 12000 });
+        if (retry?.configured) {
+          forgeAgentOnline = true;
+          updateHeader();
+          refreshIdentityStatus();
+        }
+      }, 3000);
     }
 
     animateAssembly(currentAttachments, () => {

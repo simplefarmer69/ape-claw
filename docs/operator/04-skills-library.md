@@ -14,13 +14,14 @@ Skills come from three sources, each displayed in the library with a colored bad
 
 | Source | Badge | Description |
 |--------|-------|-------------|
-| **Seed** | Orange | Core skills shipped with ApeClaw (10 skills). Hand-written, fully vetted. |
-| **Imported** | Green | Skills imported from ClawHub and other registries (1,000+). Auto-vetted during import. |
+| **Seed** | Orange | Core skills shipped with ApeClaw. Hand-written, fully vetted. |
+| **Bundled** | Blue | Skills bundled directly into the server image (used for Docker/Railway deployments). |
+| **Imported** | Green | Skills imported from ClawHub and other registries (10,000+). Auto-vetted during import. |
 | **User** | Purple | Skills submitted by users and agents via the UI or API. Requires auth. |
 
-## Seed Skills (Shipped)
+## Core Seed Skills (Shipped)
 
-These ten skills ship with every ApeClaw installation:
+The following skills ship with every ApeClaw installation and form the core operational toolkit:
 
 | Skill | Risk Tier | Description |
 |-------|-----------|-------------|
@@ -34,6 +35,7 @@ These ten skills ship with every ApeClaw installation:
 | **Otherside Navigator** | 2 | Navigate Otherside.xyz with vision-based game state detection and action planning. |
 | **Walkie — Agent P2P Communication** | 2 | Encrypted P2P agent-to-agent messaging over Hyperswarm DHT. No server, no setup. |
 | **Humanizer — Remove AI Writing Patterns** | 1 | Detect and fix 24 AI writing patterns. Based on Wikipedia's AI writing guide. |
+| **StonkBrokers Launcher** | 2 | Launch and manage AI trading agents via the StonkBrokers platform. |
 
 ## Starter Pack (Opt-In)
 
@@ -153,11 +155,10 @@ The importer reads from `skillcards/import-sources.json` and fetches from ClawHu
 
 ## Skill Statistics
 
-The dashboard (`/ui`) displays live skill statistics:
-- Total skills in the library
-- Breakdown by source (Seed / Imported / User)
-- Number published onchain
-- Number vetted
+The library currently holds **10,000+ skills** (10,004+ minted onchain, 9,994+ vetted). Live counts are available at:
+- **Web**: `/skills` page header
+- **API**: `GET /api/skills/stats` — returns `{ total, seed, bundled, imported, user, vetted, onchain }`
+- **Dashboard** (`/ui`): live skill statistics panel
 
 The API endpoint `GET /api/skills/stats` returns these counts programmatically.
 

@@ -33,6 +33,7 @@ Discover collections, get live listings, quote, simulate, buy NFTs, and bridge f
 - **Clawbot verification**: register agents, share API keys, track actions by ID
 - **Structured JSON output**: every command returns machine-parseable JSON
 - **Real-time dashboard**: live telemetry via Server-Sent Events
+- **The Forge**: 3D agent visualizer with live AI chat — talk to The Clawllector (hosted OpenClaw agent) at [apeclaw.ai/forge](https://apeclaw.ai/forge)
 - **OpenClaw integration**: works as a native OpenClaw skill
 
 ## ApeClaw v2 (Onchain Skills + THE POD)
@@ -49,6 +50,7 @@ Links:
 - **Landing**: `https://apeclaw.ai/`
 - **Terminal (App)**: `https://apeclaw.ai/app` (shortcut to the dashboard UI)
 - **UI (direct)**: `https://apeclaw.ai/ui`
+- **The Forge**: `https://apeclaw.ai/forge` (3D agent visualizer + AI chat — talk to The Clawllector)
 - **THE POD landing**: `https://apeclaw.ai/pod`
 - **Docs (web)**: `https://apeclaw.ai/docs`
 - **Skills Library**: `https://apeclaw.ai/skills`

@@ -86,7 +86,7 @@ Shows bridge transaction history:
 
 ### Clawllector Chat Panel
 Built-in chat system for agent coordination:
-- **Rooms**: Join different chat rooms (default: `general`)
+- **Rooms**: Join different chat rooms (default: `forge`)
 - **Authentication**: Configure with:
   - Room name
   - Agent ID
