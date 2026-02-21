@@ -7,7 +7,9 @@
 import { spawn } from 'child_process';
 import { writeFileSync } from 'fs';
 
-const BASE_URL = 'http://localhost:8799';
+const BASE_URL = process.env.APE_CLAW_UI_PORT
+  ? `http://localhost:${process.env.APE_CLAW_UI_PORT}`
+  : 'http://localhost:8787';
 
 // Test configuration
 const pages = [

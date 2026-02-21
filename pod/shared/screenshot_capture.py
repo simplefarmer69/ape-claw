@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import threading
 import time
@@ -51,14 +52,24 @@ def start_capture_thread(
   os.makedirs(d, exist_ok=True)
   interval = max(0.5, float(interval_seconds or 2.0))
   keep = max(20, int(max_files or 120))
+  capture_bin = shutil.which("screencapture") or "/usr/sbin/screencapture"
+  warned_missing_bin = False
 
   def _loop() -> None:
+    nonlocal warned_missing_bin
     while not stop_evt.is_set():
+      if not (capture_bin and os.path.exists(capture_bin)):
+        # Best-effort mode: if binary is unavailable, keep thread alive without crashing.
+        if not warned_missing_bin:
+          print('{"ok": false, "warning": "screencapture binary not found; capture thread idle"}', flush=True)
+          warned_missing_bin = True
+        stop_evt.wait(timeout=interval)
+        continue
       ts = time.time()
       name = time.strftime("frame-%Y%m%d-%H%M%S", time.gmtime(ts)) + f"-{int((ts % 1) * 1000):03d}.png"
       out = os.path.join(d, name)
       # -x = no sound, -t png = png output. Full-screen by default.
-      subprocess.run(["screencapture", "-x", "-t", "png", out], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+      subprocess.run([capture_bin, "-x", "-t", "png", out], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
       _cleanup_old(d, keep)
       stop_evt.wait(timeout=interval)
 

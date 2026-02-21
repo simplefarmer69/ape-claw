@@ -162,15 +162,45 @@ class MacOSCGEventExecutor(ActionExecutor):
         self._hold_key("w", 0.75)
         note = "executed_approach"
       elif action_type == "explore":
-        # Wander: small turn then move.
-        self._mouse_move_relative(random.randint(-90, 90), 0)
-        time.sleep(0.05)
-        self._hold_key("w", 0.6)
+        # Wander using short mixed movement bursts so we don't deadlock on straight paths.
+        # Pattern intentionally includes strafes and occasional hop-forward for obstacle edges.
+        move_pattern = random.choice(["forward", "strafe_left", "strafe_right", "forward_jump"])
+        if move_pattern == "forward":
+          self._mouse_move_relative(random.randint(-70, 70), 0)
+          time.sleep(0.05)
+          self._hold_key("w", 0.45)
+        elif move_pattern == "strafe_left":
+          self._mouse_move_relative(random.randint(-45, 15), 0)
+          time.sleep(0.04)
+          self._hold_key("a", 0.3)
+          self._hold_key("w", 0.3)
+        elif move_pattern == "strafe_right":
+          self._mouse_move_relative(random.randint(-15, 45), 0)
+          time.sleep(0.04)
+          self._hold_key("d", 0.3)
+          self._hold_key("w", 0.3)
+        else:  # forward_jump
+          self._mouse_move_relative(random.randint(-40, 40), 0)
+          time.sleep(0.04)
+          self._tap_key("space", hold_s=0.03)
+          self._hold_key("w", 0.35)
         note = "executed_explore"
       elif action_type == "recover":
-        # Recovery is intentionally non-invasive unless explicitly expanded.
-        self._tap_key("esc")
-        note = "executed_recover_minimal"
+        # Active recovery sequence for stuck states:
+        # 1) strafe left + forward
+        # 2) strafe right + forward
+        # 3) back up + turn
+        # 4) jump + forward
+        self._hold_key("a", 0.25)
+        self._hold_key("w", 0.25)
+        self._hold_key("d", 0.25)
+        self._hold_key("w", 0.25)
+        self._hold_key("s", 0.25)
+        self._mouse_move_relative(random.randint(-120, 120), 0)
+        time.sleep(0.05)
+        self._tap_key("space", hold_s=0.03)
+        self._hold_key("w", 0.3)
+        note = "executed_recover_active"
       else:
         note = "unsupported_action_type_noop"
 

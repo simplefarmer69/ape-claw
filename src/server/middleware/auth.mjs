@@ -16,6 +16,11 @@ export function getRegistrationKey() { return REGISTRATION_KEY; }
 export function getMoltbookAppKey() { return MOLTBOOK_APP_KEY; }
 export function getMoltbookApiBase() { return MOLTBOOK_API_BASE; }
 
+function isLocalRequest(req) {
+  const ip = String(req?.socket?.remoteAddress || "");
+  return ip === "127.0.0.1" || ip === "::1" || ip === "::ffff:127.0.0.1";
+}
+
 export function requireSkillWriteAuth(req) {
   const adminKey = String(req.headers["x-registration-key"] || "").trim();
   if (adminKey && REGISTRATION_KEY && adminKey === REGISTRATION_KEY) {
@@ -28,6 +33,11 @@ export function requireSkillWriteAuth(req) {
       const v = verifyClawbot({ agentId, agentToken });
       if (v?.verified) return { ok: true, mode: "agent", agentId };
     } catch {}
+  }
+  // Local Forge installs are allowed without clawbot credentials.
+  // Credentials remain optional for users who want global telemetry/dashboard posting.
+  if (isLocalRequest(req)) {
+    return { ok: true, mode: "local", agentId: "local-forge" };
   }
   return { ok: false, mode: "none", agentId: null };
 }

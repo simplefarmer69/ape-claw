@@ -32,6 +32,12 @@ let currentAttachments = [];
 let searchPage = 1;
 let searchTotal = 0;
 const SEARCH_LIMIT = 30;
+let dragDropInstallBound = false;
+
+function isHostedForge() {
+  const host = String(window.location.hostname || "");
+  return host.includes("apeclaw.ai") || host.includes("vercel.app") || host.includes("railway.app");
+}
 
 /* ══════════════════════════════════════════════════════════
    Fetch helpers
@@ -165,23 +171,27 @@ function inferCategory(skill) {
 }
 
 /* ══════════════════════════════════════════════════════════
-   Load installed skills (seed + user only — NOT the catalog)
+   Load installed skills (OpenClaw files + user index)
    The full 10K+ catalog is for the browser drawer, not the robot.
    ══════════════════════════════════════════════════════════ */
 async function loadInstalledSkills() {
-  const [seedRes, userRes, starterRes] = await Promise.all([
+  const [seedRes, userRes, starterRes, openclawRes] = await Promise.all([
     fetchJSON("/api/skills/search?source=seed&limit=500", {}, { retries: 1 }),
     fetchJSON("/api/skillcards/user", {}, { retries: 1 }),
     fetchJSON("/api/pod/starter-pack", {}, { retries: 1, timeoutMs: 12000 }),
+    isHostedForge()
+      ? Promise.resolve(null)
+      : fetchJSON("/api/skills/openclaw-installed?limit=2000", {}, { retries: 1, timeoutMs: 10000 }),
   ]);
 
   const seedSkills = seedRes?.results || [];
   const userSkills = (userRes?.skills || []).map(s => ({ ...s, source: "user" }));
   const starterSkills = (starterRes?.skills || []).map(s => ({ ...s, source: "starter-pack" }));
+  const openclawSkills = (openclawRes?.skills || []).map(s => ({ ...s, source: "openclaw-installed" }));
 
   const seen = new Set();
   const merged = [];
-  for (const s of [...seedSkills, ...starterSkills, ...userSkills]) {
+  for (const s of [...openclawSkills, ...userSkills, ...starterSkills, ...seedSkills]) {
     if (s.slug && !seen.has(s.slug)) {
       seen.add(s.slug);
       merged.push(s);
@@ -404,10 +414,6 @@ function refreshIdentityStatus() {
 async function installSkill(skill) {
   saveAuth();
   const headers = authHeaders();
-  if (!headers["x-agent-id"]) {
-    toast("Enter Agent ID and Token to install skills", "error");
-    return;
-  }
 
   toast(`Installing ${skill.name || skill.slug}...`, "info", 2000);
 
@@ -451,10 +457,6 @@ async function installSkill(skill) {
 async function uninstallSkill(fileName, displayName) {
   saveAuth();
   const headers = authHeaders();
-  if (!headers["x-agent-id"]) {
-    toast("Enter Agent ID and Token to uninstall skills", "error");
-    return;
-  }
 
   if (!confirm(`Uninstall "${displayName}"? This will remove the skill from your agent.`)) return;
 
@@ -581,6 +583,285 @@ function initSkillBrowser() {
   document.getElementById("forgeFilterOnchain")?.addEventListener("change", () => { searchPage = 1; searchSkills(); });
   document.getElementById("forgeFilterRisk")?.addEventListener("change", () => { searchPage = 1; searchSkills(); });
   document.getElementById("forgeFilterSource")?.addEventListener("change", () => { searchPage = 1; searchSkills(); });
+  initSkillDragDropInstall();
+}
+
+function initSkillDragDropInstall() {
+  if (dragDropInstallBound) return;
+  const viewport = document.getElementById("forgeViewport");
+  if (!viewport) return;
+  dragDropInstallBound = true;
+
+  function clearDropState() {
+    viewport.classList.remove("forge-drop-active");
+  }
+
+  viewport.addEventListener("dragenter", (e) => {
+    const slug = e.dataTransfer?.getData("text/forge-skill-slug");
+    if (!slug) return;
+    e.preventDefault();
+    viewport.classList.add("forge-drop-active");
+  });
+
+  viewport.addEventListener("dragover", (e) => {
+    const hasSkillSlug = Array.from(e.dataTransfer?.types || []).includes("text/forge-skill-slug");
+    if (!hasSkillSlug) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    viewport.classList.add("forge-drop-active");
+  });
+
+  viewport.addEventListener("dragleave", (e) => {
+    if (!viewport.contains(e.relatedTarget)) clearDropState();
+  });
+
+  viewport.addEventListener("drop", async (e) => {
+    const slug = e.dataTransfer?.getData("text/forge-skill-slug");
+    clearDropState();
+    if (!slug) return;
+    e.preventDefault();
+    const skill = allLibrarySkills.find((s) => s.slug === slug);
+    if (!skill) {
+      toast("Could not resolve dropped skill", "error");
+      return;
+    }
+    if (isInstalled(skill.slug)) {
+      toast(`${skill.name || skill.slug} is already installed`, "info");
+      return;
+    }
+    await installSkill(skill);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   OpenClaw env editor (top-right HUD button)
+   ══════════════════════════════════════════════════════════ */
+const OPENCLAW_ENV_FIELDS = [
+  { key: "OPENAI_API_KEY", sensitive: true },
+  { key: "ANTHROPIC_API_KEY", sensitive: true },
+  { key: "PERPLEXITY_API_KEY", sensitive: true },
+  { key: "GROQ_API_KEY", sensitive: true },
+  { key: "TOGETHER_API_KEY", sensitive: true },
+  { key: "OLLAMA_HOST", sensitive: false },
+  { key: "OLLAMA_BASE_URL", sensitive: false },
+];
+
+function initOpenClawEnvEditor() {
+  const openBtn = document.getElementById("forgeEnvBtn");
+  const closeBtn = document.getElementById("forgeEnvClose");
+  const saveBtn = document.getElementById("forgeEnvSave");
+  const reloadBtn = document.getElementById("forgeEnvReload");
+  const backdrop = document.getElementById("forgeEnvBackdrop");
+  const modal = document.getElementById("forgeEnvModal");
+  const note = document.getElementById("forgeEnvNote");
+  const providerStatus = document.getElementById("forgeEnvProviderStatus");
+  const form = document.getElementById("forgeEnvForm");
+  if (!openBtn || !modal || !form) return;
+  if (isHostedForge()) {
+    openBtn.style.display = "none";
+    return;
+  }
+
+  let envValues = {};
+  let customEnvValues = {};
+  const removedCustomKeys = new Set();
+
+  function setOpen(isOpen) {
+    modal.setAttribute("data-open", isOpen ? "1" : "0");
+    backdrop?.setAttribute("data-open", isOpen ? "1" : "0");
+  }
+
+  function renderProviderChip(status) {
+    if (!providerStatus) return;
+    if (!status) {
+      providerStatus.dataset.state = "err";
+      providerStatus.textContent = "Provider unknown (could not reach gateway status)";
+      return;
+    }
+    if (status.configured) {
+      providerStatus.dataset.state = "ok";
+      const transport = `${status.provider || "openclaw-gateway"} · ${status.model || "main session"}`;
+      const hintProvider = String(status.llmProviderHint || "").trim();
+      const hintModel = String(status.llmModelHint || "").trim();
+      if (hintProvider || hintModel) {
+        providerStatus.textContent = `Active: ${transport} (LLM: ${hintProvider || "unknown"}${hintModel ? `/${hintModel}` : ""})`;
+      } else {
+        providerStatus.textContent = `Active: ${transport}`;
+      }
+      return;
+    }
+    providerStatus.dataset.state = "warn";
+    providerStatus.textContent = "Gateway not ready yet. Save env and run: openclaw gateway start";
+  }
+
+  async function refreshProviderChip() {
+    if (!providerStatus) return;
+    providerStatus.dataset.state = "loading";
+    providerStatus.textContent = "Checking active provider...";
+    const status = await fetchJSON("/api/forge/status", {}, { retries: 1, timeoutMs: 8000 });
+    renderProviderChip(status);
+  }
+
+  function buildEnvRow({ key, value, sensitive = false, isCustom = false }) {
+    const row = document.createElement("div");
+    row.className = "forge-env-row";
+    const keyEl = document.createElement("div");
+    keyEl.className = "forge-env-key";
+    keyEl.textContent = key;
+    const valueWrap = document.createElement("div");
+    valueWrap.className = "forge-env-value-wrap";
+    const input = document.createElement("input");
+    input.className = "forge-env-input";
+    input.type = sensitive ? "password" : "text";
+    input.autocomplete = "off";
+    input.spellcheck = false;
+    input.value = String(value || "");
+    input.placeholder = sensitive ? "Enter key (leave empty to disable)" : "Optional";
+    if (isCustom) input.dataset.customEnvKey = key;
+    else input.dataset.envKey = key;
+    valueWrap.appendChild(input);
+    if (isCustom) {
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "forge-env-remove";
+      removeBtn.textContent = "Remove";
+      removeBtn.addEventListener("click", () => {
+        removedCustomKeys.add(key);
+        row.remove();
+      });
+      valueWrap.appendChild(removeBtn);
+    }
+    row.append(keyEl, valueWrap);
+    return row;
+  }
+
+  function buildAddCustomRow() {
+    const row = document.createElement("div");
+    row.className = "forge-env-add-row";
+    row.innerHTML = `
+      <input class="forge-env-input" id="forgeEnvNewKey" type="text" placeholder="CUSTOM_API_KEY" autocomplete="off" spellcheck="false" />
+      <input class="forge-env-input" id="forgeEnvNewValue" type="text" placeholder="Value" autocomplete="off" spellcheck="false" />
+      <button class="forge-btn forge-btn-secondary" id="forgeEnvAddCustom" type="button">Add</button>
+    `;
+    row.querySelector("#forgeEnvAddCustom")?.addEventListener("click", () => {
+      const keyEl = row.querySelector("#forgeEnvNewKey");
+      const valEl = row.querySelector("#forgeEnvNewValue");
+      const rawKey = String(keyEl?.value || "").trim();
+      if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(rawKey)) {
+        toast("Invalid env key format", "error");
+        return;
+      }
+      const key = rawKey;
+      if (OPENCLAW_ENV_FIELDS.some((f) => f.key === key) || form.querySelector(`[data-custom-env-key="${key}"]`)) {
+        toast("Env key already exists in editor", "info");
+        return;
+      }
+      const rowNode = buildEnvRow({ key, value: String(valEl?.value || ""), isCustom: true });
+      row.before(rowNode);
+      if (keyEl) keyEl.value = "";
+      if (valEl) valEl.value = "";
+      removedCustomKeys.delete(key);
+    });
+    return row;
+  }
+
+  function renderForm(values = {}) {
+    form.replaceChildren();
+    for (const field of OPENCLAW_ENV_FIELDS) {
+      form.appendChild(buildEnvRow({
+        key: field.key,
+        value: String(values[field.key] || ""),
+        sensitive: field.sensitive,
+      }));
+    }
+    const sub = document.createElement("div");
+    sub.className = "forge-env-subtitle";
+    sub.textContent = "Additional .env keys";
+    form.appendChild(sub);
+    const customKeys = Object.keys(customEnvValues).sort((a, b) => a.localeCompare(b));
+    for (const key of customKeys) {
+      form.appendChild(buildEnvRow({ key, value: customEnvValues[key], isCustom: true }));
+    }
+    form.appendChild(buildAddCustomRow());
+  }
+
+  async function loadEnv() {
+    note.textContent = "Loading OpenClaw env from local machine...";
+    try {
+      const data = await fetchJSON("/api/openclaw/env", {}, { retries: 1, timeoutMs: 7000 });
+      if (!data?.ok) {
+        note.textContent = "Could not load OpenClaw env. This endpoint is local-only.";
+        if (providerStatus) {
+          providerStatus.dataset.state = "warn";
+          providerStatus.textContent = "Env editor unavailable in this browser context";
+        }
+        toast("Unable to load OpenClaw env from this browser context", "error");
+        return;
+      }
+      envValues = data.values || {};
+      customEnvValues = data.customValues || {};
+      removedCustomKeys.clear();
+      renderForm(envValues);
+      note.textContent = `Editing ${data.envPath}. Changes apply to Forge/OpenClaw provider detection.`;
+    } finally {
+      // Always refresh gateway/provider chip, even if env endpoint is unavailable.
+      await refreshProviderChip();
+    }
+  }
+
+  async function saveEnv() {
+    const updates = {};
+    form.querySelectorAll("[data-env-key]").forEach((input) => {
+      const key = input.dataset.envKey;
+      const value = String(input.value || "").trim();
+      if (envValues[key] !== value) updates[key] = value;
+    });
+    form.querySelectorAll("[data-custom-env-key]").forEach((input) => {
+      const key = input.dataset.customEnvKey;
+      const value = String(input.value || "").trim();
+      if ((customEnvValues[key] || "") !== value) updates[key] = value;
+    });
+    for (const key of removedCustomKeys) updates[key] = "";
+    if (Object.keys(updates).length === 0) {
+      toast("No env changes to save", "info");
+      return;
+    }
+    if (saveBtn) saveBtn.disabled = true;
+    try {
+      const res = await fetch("/api/openclaw/env", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ updates }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || `HTTP ${res.status}`);
+      }
+      toast("OpenClaw env saved. Forge will use new values immediately.", "success");
+      await loadEnv();
+      const status = await fetchJSON("/api/forge/status", {}, { retries: 1, timeoutMs: 10000 });
+      forgeAgentOnline = !!(status?.configured);
+      renderProviderChip(status);
+      updateHeader();
+    } catch (err) {
+      toast(`Env save failed: ${err.message}`, "error", 5000);
+    } finally {
+      if (saveBtn) saveBtn.disabled = false;
+    }
+  }
+
+  openBtn.addEventListener("click", async () => {
+    setOpen(true);
+    await loadEnv();
+    form.querySelector(".forge-env-input")?.focus();
+  });
+  closeBtn?.addEventListener("click", () => setOpen(false));
+  backdrop?.addEventListener("click", () => setOpen(false));
+  reloadBtn?.addEventListener("click", async () => { await loadEnv(); });
+  saveBtn?.addEventListener("click", saveEnv);
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.getAttribute("data-open") === "1") setOpen(false);
+  });
 }
 
 async function searchSkills() {
@@ -661,6 +942,18 @@ function renderSearchResults(results) {
   }).join("");
 
   container.querySelectorAll("[data-install-slug]").forEach(btn => {
+    const card = btn.closest(".forge-skill-card");
+    if (card) {
+      card.draggable = true;
+      card.addEventListener("dragstart", (e) => {
+        e.dataTransfer?.setData("text/forge-skill-slug", btn.getAttribute("data-install-slug") || "");
+        if (e.dataTransfer) e.dataTransfer.effectAllowed = "copy";
+        toast("Drop this skill onto the bot viewport to install", "info", 1200);
+      });
+      card.addEventListener("dragend", () => {
+        document.getElementById("forgeViewport")?.classList.remove("forge-drop-active");
+      });
+    }
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
       const slug = btn.getAttribute("data-install-slug");
@@ -785,6 +1078,7 @@ async function init() {
     updateHeader();
     initShareToX();
     initSkillBrowser();
+    initOpenClawEnvEditor();
 
     if (!loaded || loaded.length === 0) {
       updateProgress(0, 0);

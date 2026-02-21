@@ -3,12 +3,71 @@
  */
 
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { ROOT as PROJECT_ROOT } from "../../lib/paths.mjs";
+import { openClawSkillsDirCandidates as resolveOpenClawSkillsDirCandidates } from "../../lib/openclaw-paths.mjs";
 import { getStorage } from "../storage/index.mjs";
 import { requireSkillWriteAuth } from "../middleware/auth.mjs";
 import { collectBody } from "../middleware/body-limit.mjs";
+
+function openClawSkillsDirCandidates() {
+  return resolveOpenClawSkillsDirCandidates();
+}
+
+function getOpenClawSkillsDirForRead() {
+  const candidates = openClawSkillsDirCandidates();
+  const existing = candidates.find((p) => fs.existsSync(p));
+  return existing || candidates[0];
+}
+
+function getOpenClawSkillsDirForWrite() {
+  const candidates = openClawSkillsDirCandidates();
+  return candidates.find((p) => fs.existsSync(p)) || candidates[0];
+}
+
+function parseFrontmatter(content) {
+  const match = String(content || "").match(/^---\n([\s\S]*?)\n---\s*/);
+  if (!match) return { meta: {}, body: String(content || "") };
+  const meta = {};
+  for (const line of match[1].split("\n")) {
+    const idx = line.indexOf(":");
+    if (idx <= 0) continue;
+    const key = line.slice(0, idx).trim();
+    let val = line.slice(idx + 1).trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+    if (key) meta[key] = val;
+  }
+  return { meta, body: String(content || "").slice(match[0].length) };
+}
+
+function listOpenClawInstalledSkills(limit = 2000) {
+  const skillsDir = getOpenClawSkillsDirForRead();
+  const out = [];
+  if (!skillsDir || !fs.existsSync(skillsDir)) return { skillsDir, skills: out };
+  let names = [];
+  try { names = fs.readdirSync(skillsDir); } catch { return { skillsDir, skills: out }; }
+  for (const name of names) {
+    if (out.length >= limit) break;
+    const skillMd = path.join(skillsDir, name, "SKILL.md");
+    if (!fs.existsSync(skillMd)) continue;
+    try {
+      const raw = fs.readFileSync(skillMd, "utf8");
+      const { meta, body } = parseFrontmatter(raw);
+      const desc = String(meta.description || body.split(/\r?\n/).find((l) => l.trim()) || "").trim().slice(0, 300);
+      out.push({
+        slug: toSlug(name || meta.name || ""),
+        name: String(meta.name || name).trim() || name,
+        version: safeVersion(meta.version || "") || "",
+        description: desc,
+        source: "openclaw-installed",
+        path: path.join(skillsDir, name),
+      });
+    } catch {}
+  }
+  return { skillsDir, skills: out };
+}
 
 function toSlug(input) {
   return String(input || "").toLowerCase().trim()
@@ -113,7 +172,8 @@ function upsertUserSkill(store, auth, skillcard, sourceUrl, createdAt) {
 function installOpenClawSkillCard(skillcard, fallbackSlug = "") {
   const slugValue = toSlug(skillcard?.slug || fallbackSlug || skillcard?.name || "");
   if (!slugValue) throw new Error("invalid slug for OpenClaw install");
-  const skillDir = path.join(os.homedir(), ".openclaw", "skills", slugValue);
+  const root = getOpenClawSkillsDirForWrite();
+  const skillDir = path.join(root, slugValue);
   fs.mkdirSync(skillDir, { recursive: true });
   const doc = String(skillcard?.documentation_md || "").trim();
   const name = String(skillcard?.name || slugValue).trim();
@@ -135,7 +195,7 @@ function installOpenClawSkillCard(skillcard, fallbackSlug = "") {
 function uninstallOpenClawSkillBySlug(slug) {
   const s = toSlug(slug || "");
   if (!s) return { removed: null, missing: null };
-  const skillDir = path.join(os.homedir(), ".openclaw", "skills", s);
+  const skillDir = path.join(getOpenClawSkillsDirForWrite(), s);
   const skillMd = path.join(skillDir, "SKILL.md");
   if (!fs.existsSync(skillMd)) {
     return { removed: null, missing: { slug: s, reason: "SKILL.md not found" } };
@@ -146,6 +206,23 @@ function uninstallOpenClawSkillBySlug(slug) {
     if (leftover.length === 0) fs.rmdirSync(skillDir);
   } catch {}
   return { removed: { slug: s, skillDir }, missing: null };
+}
+
+export function handleOpenClawInstalledSkills(req, res, reqUrl) {
+  try {
+    const limit = Math.min(5000, Math.max(1, Number(reqUrl.searchParams.get("limit") || 2000)));
+    const result = listOpenClawInstalledSkills(limit);
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+    return res.end(JSON.stringify({
+      ok: true,
+      skillsDir: result.skillsDir || null,
+      total: result.skills.length,
+      skills: result.skills,
+    }));
+  } catch (err) {
+    res.writeHead(500, { "content-type": "application/json; charset=utf-8" });
+    return res.end(JSON.stringify({ ok: false, error: err.message || "openclaw installed scan failed" }));
+  }
 }
 
 export function handleSkillsSearch(req, res, reqUrl) {

@@ -18,6 +18,7 @@ import { handleHealth } from "./routes/health.mjs";
 import { handleEventsSse, handleEventsBacklog, handlePostEvent } from "./routes/events.mjs";
 import {
   handleSkillsSearch, handleSkillsGet, handleSkillsStats,
+  handleOpenClawInstalledSkills,
   handleSkillcardsUserGet, handleSkillcardsAuthCheck,
   handleSkillcardsUserAdd, handleSkillcardsUserDelete,
   handleSkillcardsUserMarkOnchain, handleSkillcardFile,
@@ -30,7 +31,8 @@ import {
   handleChatStream, handleChatGet, handleChatRooms,
   handleChatPost, handleChatReact,
 } from "./routes/chat.mjs";
-import { handleForgeChat, handleForgeStatus, initForgeAgent } from "./routes/forge-agent.mjs";
+import { handleForgeChat, handleForgeStatus, handleForgeGatewayControl, initForgeAgent } from "./routes/forge-agent.mjs";
+import { handleOpenClawEnvGet, handleOpenClawEnvSet } from "./routes/openclaw-env.mjs";
 import { handleV2ReceiptGet, handleV2Config } from "./routes/v2.mjs";
 import { handlePodStatus, handlePodStop, handlePodFiles, handleStarterPack } from "./routes/pod.mjs";
 import {
@@ -114,6 +116,7 @@ const server = http.createServer((req, res) => {
   if (pathname === "/api/skills/search" && req.method === "GET") return safeHandler(handleSkillsSearch)(req, res, reqUrl);
   if (pathname === "/api/skills/get" && req.method === "GET") return safeHandler(handleSkillsGet)(req, res, reqUrl);
   if (pathname === "/api/skills/stats" && req.method === "GET") return safeHandler(handleSkillsStats)(req, res);
+  if (pathname === "/api/skills/openclaw-installed" && req.method === "GET") return safeHandler(handleOpenClawInstalledSkills)(req, res, reqUrl);
   if (pathname === "/api/skillcards/user/auth-check" && req.method === "GET") return safeHandler(handleSkillcardsAuthCheck)(req, res);
   if (pathname === "/api/skillcards/user/add" && req.method === "POST") return safeHandler(handleSkillcardsUserAdd)(req, res);
   if (pathname === "/api/skillcards/user/delete" && req.method === "POST") return safeHandler(handleSkillcardsUserDelete)(req, res);
@@ -126,6 +129,9 @@ const server = http.createServer((req, res) => {
   if (pathname === "/api/events" && req.method === "POST") return safeHandler(handlePostEvent)(req, res);
   if (pathname === "/api/forge/status" && req.method === "GET") return safeHandler(handleForgeStatus)(req, res);
   if (pathname === "/api/forge/chat" && req.method === "POST") return safeHandler(handleForgeChat)(req, res);
+  if (pathname === "/api/forge/gateway/control" && req.method === "POST") return safeHandler(handleForgeGatewayControl)(req, res);
+  if (pathname === "/api/openclaw/env" && req.method === "GET") return safeHandler(handleOpenClawEnvGet)(req, res);
+  if (pathname === "/api/openclaw/env" && req.method === "POST") return safeHandler(handleOpenClawEnvSet)(req, res);
   if (pathname === "/api/chat/stream") return safeHandler(handleChatStream)(req, res, reqUrl);
   if (pathname === "/api/chat" && req.method === "GET") return safeHandler(handleChatGet)(req, res, reqUrl);
   if (pathname === "/api/chat/rooms" && req.method === "GET") return safeHandler(handleChatRooms)(req, res, reqUrl);

@@ -28,6 +28,7 @@ import time
 from voyager.vision.vlm_base import VisionBackend
 from voyager.vision.vlm_stub import StubVisionBackend
 from voyager.vision.vlm_claude_cli import ClaudeCliVisionBackend
+from voyager.vision.vlm_openai import OpenAIVisionBackend
 from voyager.agent.game_state import parse_game_state
 from voyager.agent.action_planner import plan_action, write_journal_entry
 from voyager.execution.macos_input_stub import MacOSInputStubExecutor
@@ -45,8 +46,11 @@ def parse_args():
   p = argparse.ArgumentParser()
   p.add_argument("--enabled", action="store_true", help="Strict opt-in. Must be set to run.")
   p.add_argument("--screenshot-dir", required=True, help="Rolling screenshot buffer directory.")
-  p.add_argument("--backend", default="stub", choices=["stub", "claude_cli"], help="Vision backend.")
+  p.add_argument("--backend", default="stub", choices=["stub", "claude_cli", "openai"], help="Vision backend.")
   p.add_argument("--claude-model", default="sonnet", help="Claude model name (claude_cli backend).")
+  p.add_argument("--openai-model", default="gpt-4o-mini", help="OpenAI model name (openai backend).")
+  p.add_argument("--openai-base-url", default="https://api.openai.com", help="OpenAI API base URL (openai backend).")
+  p.add_argument("--openai-api-key", default="", help="OpenAI API key override (defaults to OPENAI_API_KEY env var).")
   p.add_argument("--executor", default="macos_stub", choices=["macos_stub", "macos_cgevent"], help="Execution backend.")
   p.add_argument("--allow-system-input", action="store_true", help="Strict opt-in for real input injection (required for macos_cgevent).")
   p.add_argument("--focus-app", default="Google Chrome", help="App to focus before sending input (macos_cgevent).")
@@ -83,6 +87,12 @@ def make_backend(args) -> VisionBackend:
     return StubVisionBackend()
   if args.backend == "claude_cli":
     return ClaudeCliVisionBackend(model=args.claude_model)
+  if args.backend == "openai":
+    return OpenAIVisionBackend(
+      model=args.openai_model,
+      api_key=args.openai_api_key,
+      base_url=args.openai_base_url,
+    )
   raise ValueError("unknown backend")
 
 def make_executor(args, *, out_dir: str):

@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { readJson, writeJson, randomId } from "./lib/io.mjs";
 import {
   ROOT,
@@ -34,6 +34,11 @@ import { privateKeyToAccount } from "viem/accounts";
 import { SkillNFT_ABI, SkillRegistry_ABI, IntentRegistry_ABI, ReceiptRegistry_ABI, PodVault_ABI, AgentAccount_ABI } from "./lib/v2-onchain-abi.mjs";
 import { computeSkillcardContentHash, computeSkillVersionHash, readSkillcardJson, stableJsonStringify } from "./lib/v2-skillcard.mjs";
 import { initPodWorkspace } from "./lib/pod-init.mjs";
+import {
+  openClawControlUiIndexCandidates,
+  openClawSkillsDirCandidates,
+  openClawWorkspaceSkillsDirCandidates,
+} from "./lib/openclaw-paths.mjs";
 
 function parseArgs(argv) {
   const out = { _: [] };
@@ -152,7 +157,10 @@ function installApeClawSkill(args) {
     if (skillsRoot.includes("\0")) throw new Error("Invalid skills-dir path");
   }
   else if (scope === "local") skillsRoot = path.join(process.cwd(), ".cursor", "skills");
-  else skillsRoot = path.join(os.homedir(), ".openclaw", "skills");
+  else {
+    const candidates = openClawSkillsDirCandidates();
+    skillsRoot = candidates.find((p) => fs.existsSync(p)) || candidates[0];
+  }
 
   const targetSkillDir = path.join(skillsRoot, "ape-claw");
   const targetSkillPath = path.join(targetSkillDir, "SKILL.md");
@@ -250,12 +258,13 @@ function syncSkillToOpenClaw(cardObj, slug, skillsRoot) {
   fs.mkdirSync(skillDir, { recursive: true });
   fs.writeFileSync(path.join(skillDir, "SKILL.md"), content, "utf8");
 
-  const homeDir = process.env.OPENCLAW_HOME || os.homedir();
-  const openclawWorkspaceSkills = path.join(homeDir, ".openclaw", "workspace", "skills", s);
-  try {
-    fs.mkdirSync(openclawWorkspaceSkills, { recursive: true });
-    fs.writeFileSync(path.join(openclawWorkspaceSkills, "SKILL.md"), content, "utf8");
-  } catch {}
+  for (const workspaceRoot of openClawWorkspaceSkillsDirCandidates()) {
+    const openclawWorkspaceSkills = path.join(workspaceRoot, s);
+    try {
+      fs.mkdirSync(openclawWorkspaceSkills, { recursive: true });
+      fs.writeFileSync(path.join(openclawWorkspaceSkills, "SKILL.md"), content, "utf8");
+    } catch {}
+  }
 
   return { slug: s, skillDir };
 }
@@ -379,7 +388,12 @@ function safeSkillVersion(v) {
   return s;
 }
 
-const TRUSTED_SKILL_API_HOSTS = new Set(["apeclaw.ai", "www.apeclaw.ai", "api.apeclaw.ai"]);
+const TRUSTED_SKILL_API_HOSTS = new Set([
+  "apeclaw.ai", "www.apeclaw.ai", "api.apeclaw.ai",
+  "acceptable-cat-production.up.railway.app",
+]);
+
+const SKILL_API_FALLBACK = "https://acceptable-cat-production.up.railway.app";
 
 function resolveSkillApiBase(args = {}) {
   const explicit = String(args.api || "").trim();
@@ -460,36 +474,49 @@ function resolveBundledSkillFile(packageRoot, slug) {
   return "";
 }
 
+async function fetchSkillFromApiOnce(slug, apiBase) {
+  const url = `${apiBase}/api/skills/get?slug=${encodeURIComponent(slug)}`;
+  const res = await fetch(url, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(15000) });
+  if (!res.ok) return null;
+  const ct = String(res.headers.get("content-type") || "");
+  if (!ct.includes("json")) return null;
+  const json = await res.json();
+  if (!json?.ok) return null;
+
+  const skillMeta = json?.skill && typeof json.skill === "object" ? json.skill : null;
+  let card = json?.card && typeof json.card === "object" ? json.card : null;
+  if (!card && skillMeta) {
+    card = {
+      name: skillMeta.name || slug,
+      slug: skillMeta.slug || slug,
+      version: "1.0.0",
+      description: skillMeta.description || skillMeta.name || slug,
+      riskTier: skillMeta.riskTier ?? 2,
+      provenance: skillMeta.provenance || { publisher: "imported", signed: false },
+      constraints: { riskTier: skillMeta.riskTier ?? 2 },
+      documentation_md: skillMeta.description
+        ? `# ${skillMeta.name || slug}\n\n${skillMeta.description}`
+        : `# ${skillMeta.name || slug}\n`,
+    };
+  }
+  return { card, skillMeta, url, apiBase };
+}
+
 async function fetchSkillFromApi(slug, args = {}) {
   const apiBase = resolveSkillApiBase(args);
-  const url = `${apiBase}/api/skills/get?slug=${encodeURIComponent(slug)}`;
   try {
-    const res = await fetch(url, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(15000) });
-    if (!res.ok) return { card: null, skillMeta: null, url, apiBase };
-    const json = await res.json();
-    if (!json?.ok) return { card: null, skillMeta: null, url, apiBase };
+    const result = await fetchSkillFromApiOnce(slug, apiBase);
+    if (result) return result;
+  } catch { /* primary failed, try fallback */ }
 
-    const skillMeta = json?.skill && typeof json.skill === "object" ? json.skill : null;
-    // Prefer the full card JSON; fall back to synthesising a minimal card from index metadata
-    let card = json?.card && typeof json.card === "object" ? json.card : null;
-    if (!card && skillMeta) {
-      card = {
-        name: skillMeta.name || slug,
-        slug: skillMeta.slug || slug,
-        version: "1.0.0",
-        description: skillMeta.description || skillMeta.name || slug,
-        riskTier: skillMeta.riskTier ?? 2,
-        provenance: skillMeta.provenance || { publisher: "imported", signed: false },
-        constraints: { riskTier: skillMeta.riskTier ?? 2 },
-        documentation_md: skillMeta.description
-          ? `# ${skillMeta.name || slug}\n\n${skillMeta.description}`
-          : `# ${skillMeta.name || slug}\n`,
-      };
-    }
-    return { card, skillMeta, url, apiBase };
-  } catch {
-    return { card: null, skillMeta: null, url, apiBase };
+  if (apiBase !== SKILL_API_FALLBACK) {
+    try {
+      const fallbackResult = await fetchSkillFromApiOnce(slug, SKILL_API_FALLBACK);
+      if (fallbackResult) return fallbackResult;
+    } catch { /* fallback also failed */ }
   }
+
+  return { card: null, skillMeta: null, url: `${apiBase}/api/skills/get?slug=${encodeURIComponent(slug)}`, apiBase };
 }
 
 function resolveHumanizerDependencySlug(packageRoot) {
@@ -501,8 +528,8 @@ function resolveHumanizerDependencySlug(packageRoot) {
 }
 
 function installOpenClawSkillCard(cardObj, fallbackSlug = "") {
-  const homeDir = process.env.OPENCLAW_HOME || os.homedir();
-  const skillsRoot = path.join(homeDir, ".openclaw", "skills");
+  const candidates = openClawSkillsDirCandidates();
+  const skillsRoot = candidates.find((p) => fs.existsSync(p)) || candidates[0];
   return syncSkillToOpenClaw(cardObj, fallbackSlug, skillsRoot);
 }
 
@@ -629,6 +656,325 @@ function promptUser(question) {
   });
 }
 
+const FORGE_DASHBOARD_URL = "http://localhost:8787/forge";
+// Use 127.0.0.1 explicitly — on macOS, 'localhost' resolves to ::1 (IPv6)
+// but the server binds to 0.0.0.0 (IPv4), causing the health check to fail.
+const FORGE_HEALTH_URL = "http://127.0.0.1:8787/api/health";
+const FORGE_OVERWRITE_MARKER = "Redirecting to ApeClaw Forge";
+
+function hasOpenClawCli() {
+  const check = spawnSync("openclaw", ["--version"], { encoding: "utf8" });
+  return !check.error && typeof check.status === "number" && check.status === 0;
+}
+
+function dashboardUpgradeStorePath() {
+  return path.join(os.homedir(), ".ape-claw", "dashboard-upgrade.json");
+}
+
+function loadDashboardUpgradeStore() {
+  const p = dashboardUpgradeStorePath();
+  const data = readJson(p, {});
+  if (!data || typeof data !== "object") return {};
+  return data;
+}
+
+function writeDashboardUpgradeStore(data) {
+  const p = dashboardUpgradeStorePath();
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  fs.writeFileSync(p, JSON.stringify(data, null, 2), { mode: 0o600 });
+}
+
+function getOpenClawVersion() {
+  const out = spawnSync("openclaw", ["--version"], { encoding: "utf8" });
+  if (out.error || out.status !== 0) return "";
+  return String(out.stdout || out.stderr || "").trim();
+}
+
+function detectOpenClawBinaryPath() {
+  const cmd = process.platform === "win32" ? "where" : "which";
+  const out = spawnSync(cmd, ["openclaw"], { encoding: "utf8" });
+  if (out.error || out.status !== 0) return "";
+  const line = String(out.stdout || "").split(/\r?\n/).map((x) => x.trim()).find(Boolean);
+  if (!line) return "";
+  try { return fs.realpathSync(line); } catch { return line; }
+}
+
+function findOpenClawControlUiIndex() {
+  const seen = new Set();
+  const candidates = [];
+  const bin = detectOpenClawBinaryPath();
+  if (bin) {
+    const binDir = path.dirname(bin);
+    candidates.push(
+      path.resolve(binDir, "..", "lib", "node_modules", "openclaw", "dist", "control-ui", "index.html"),
+      path.resolve(binDir, "..", "node_modules", "openclaw", "dist", "control-ui", "index.html"),
+      path.resolve(binDir, "..", "dist", "control-ui", "index.html"),
+    );
+  }
+  candidates.push(...openClawControlUiIndexCandidates());
+
+  for (const p of candidates) {
+    if (!p || seen.has(p)) continue;
+    seen.add(p);
+    try {
+      if (fs.existsSync(p) && fs.statSync(p).isFile()) return p;
+    } catch {}
+  }
+  return "";
+}
+
+function buildForgeRedirectHtml(targetUrl) {
+  const target = String(targetUrl || FORGE_DASHBOARD_URL);
+  const safeTarget = JSON.stringify(target);
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="0;url=${target}">
+  <title>Redirecting to ApeClaw Forge</title>
+</head>
+<body>
+  <p>Redirecting to ApeClaw Forge dashboard...</p>
+  <p><a id="forgeLink" href="${target}">Open Forge</a></p>
+  <script>
+    (function () {
+      var target = ${safeTarget};
+      try { window.location.replace(target); } catch {}
+      setTimeout(function () {
+        var a = document.getElementById("forgeLink");
+        if (a) a.href = target;
+      }, 0);
+    })();
+  </script>
+</body>
+</html>
+`;
+}
+
+function isForgeOverwriteActive(indexPath) {
+  if (!indexPath) return false;
+  try {
+    const raw = fs.readFileSync(indexPath, "utf8");
+    return raw.includes(FORGE_OVERWRITE_MARKER);
+  } catch {
+    return false;
+  }
+}
+
+function attemptOpenClawDashboardHardOverwrite(targetUrl = FORGE_DASHBOARD_URL) {
+  const indexPath = findOpenClawControlUiIndex();
+  if (!indexPath) {
+    return { attempted: true, applied: false, reason: "control_ui_index_not_found", path: null };
+  }
+  try {
+    const current = fs.readFileSync(indexPath, "utf8");
+    if (current.includes(FORGE_OVERWRITE_MARKER)) {
+      return { attempted: true, applied: true, reason: "already_overridden", path: indexPath };
+    }
+    const backupPath = `${indexPath}.apeclaw.bak`;
+    if (!fs.existsSync(backupPath)) {
+      fs.copyFileSync(indexPath, backupPath);
+    }
+    fs.writeFileSync(indexPath, buildForgeRedirectHtml(targetUrl), "utf8");
+    return { attempted: true, applied: true, reason: "overwritten", path: indexPath, backupPath };
+  } catch (err) {
+    return { attempted: true, applied: false, reason: err?.message || "overwrite_failed", path: indexPath };
+  }
+}
+
+function restoreOpenClawDashboardFromBackup() {
+  const indexPath = findOpenClawControlUiIndex();
+  if (!indexPath) {
+    return { ok: false, restored: false, reason: "control_ui_index_not_found" };
+  }
+  const backupPath = `${indexPath}.apeclaw.bak`;
+  if (!fs.existsSync(backupPath)) {
+    return { ok: false, restored: false, reason: "backup_not_found", path: indexPath, backupPath };
+  }
+  try {
+    fs.copyFileSync(backupPath, indexPath);
+    return { ok: true, restored: true, path: indexPath, backupPath };
+  } catch (err) {
+    return { ok: false, restored: false, reason: err?.message || "restore_failed", path: indexPath, backupPath };
+  }
+}
+
+async function checkForgeServerReady(timeoutMs = 1200) {
+  const deadline = Date.now() + Math.max(200, timeoutMs);
+  while (Date.now() < deadline) {
+    try {
+      const res = await fetch(FORGE_HEALTH_URL, { signal: AbortSignal.timeout(900) });
+      if (res.ok) return true;
+    } catch {}
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  return false;
+}
+
+async function ensureForgeServerRunning(packageRoot) {
+  const serverEntry = path.join(packageRoot, "src", "server", "index.mjs");
+  const forgeUiEntry = path.join(packageRoot, "ui", "forge", "index.html");
+  if (!fs.existsSync(serverEntry) || !fs.existsSync(forgeUiEntry)) {
+    return {
+      running: false,
+      started: false,
+      reason: "package_files_missing",
+      missing: {
+        serverEntry: fs.existsSync(serverEntry) ? "" : serverEntry,
+        forgeUiEntry: fs.existsSync(forgeUiEntry) ? "" : forgeUiEntry,
+      },
+    };
+  }
+
+  if (await checkForgeServerReady(4000)) {
+    return { running: true, started: false };
+  }
+  try {
+    const child = spawn(process.execPath, [serverEntry], {
+      cwd: packageRoot,
+      detached: true,
+      stdio: "ignore",
+    });
+    child.unref();
+  } catch {}
+  const running = await checkForgeServerReady(14000);
+  return { running, started: true };
+}
+
+function openBrowserUrl(url) {
+  const target = String(url || "").trim();
+  if (!target) return false;
+  try {
+    if (process.platform === "darwin") {
+      const out = spawnSync("open", [target], { stdio: "ignore" });
+      return out.status === 0;
+    }
+    if (process.platform === "win32") {
+      const out = spawnSync("cmd", ["/c", "start", "", target], { stdio: "ignore" });
+      return out.status === 0;
+    }
+    const out = spawnSync("xdg-open", [target], { stdio: "ignore" });
+    return out.status === 0;
+  } catch {
+    return false;
+  }
+}
+
+function gatewayStatusLooksReady(out) {
+  const s = String(out || "").toLowerCase();
+  if (!s) return false;
+  return s.includes('"running":true') || s.includes('"ok":true') || s.includes("running");
+}
+
+function ensureOpenClawGatewayForForge() {
+  if (!hasOpenClawCli()) return { ok: false, action: "missing_cli" };
+  const status1 = spawnSync("openclaw", ["gateway", "status", "--json"], { encoding: "utf8", timeout: 12000 });
+  const status1Out = `${status1.stdout || ""}\n${status1.stderr || ""}`;
+  if (status1.status === 0 && gatewayStatusLooksReady(status1Out)) {
+    return { ok: true, action: "already_running" };
+  }
+  const start = spawnSync("openclaw", ["gateway", "start"], { encoding: "utf8", timeout: 18000 });
+  const status2 = spawnSync("openclaw", ["gateway", "status", "--json"], { encoding: "utf8", timeout: 12000 });
+  const status2Out = `${status2.stdout || ""}\n${status2.stderr || ""}`;
+  if (start.status === 0 && status2.status === 0 && gatewayStatusLooksReady(status2Out)) {
+    return { ok: true, action: "started" };
+  }
+  const install = spawnSync("openclaw", ["gateway", "install"], { encoding: "utf8", timeout: 25000 });
+  const start2 = spawnSync("openclaw", ["gateway", "start"], { encoding: "utf8", timeout: 18000 });
+  const status3 = spawnSync("openclaw", ["gateway", "status", "--json"], { encoding: "utf8", timeout: 12000 });
+  const status3Out = `${status3.stdout || ""}\n${status3.stderr || ""}`;
+  if (status3.status === 0 && gatewayStatusLooksReady(status3Out)) {
+    return { ok: true, action: "installed_and_started" };
+  }
+  return {
+    ok: false,
+    action: "failed",
+    details: String(status3.stderr || status3.stdout || start2.stderr || start2.stdout || install.stderr || install.stdout || "").trim(),
+  };
+}
+
+async function runForgeDashboardUpgrade({ packageRoot, attemptHardOverwrite = true }) {
+  if (!hasOpenClawCli()) {
+    return {
+      enabled: true,
+      ok: false,
+      reason: "openclaw_missing",
+      url: FORGE_DASHBOARD_URL,
+      next: [
+        "Install OpenClaw first: curl -fsSL https://openclaw.ai/install.sh | bash",
+        "Run: openclaw onboard --install-daemon",
+      ],
+    };
+  }
+
+  const settings = loadDashboardUpgradeStore();
+  const openclawVersion = getOpenClawVersion();
+  const openclawBinPath = detectOpenClawBinaryPath();
+  const overwritePath = findOpenClawControlUiIndex();
+  const overwriteActive = isForgeOverwriteActive(overwritePath);
+  const gateway = ensureOpenClawGatewayForForge();
+
+  const server = await ensureForgeServerRunning(packageRoot);
+  const optedIn = Boolean(settings?.openclawOverwriteOptIn);
+  const shouldAttemptOverwrite = Boolean(attemptHardOverwrite) || optedIn;
+
+  let hardOverwrite = { attempted: false, applied: false, reason: "skipped" };
+  if (server.running && shouldAttemptOverwrite) {
+    hardOverwrite = attemptOpenClawDashboardHardOverwrite(FORGE_DASHBOARD_URL);
+  } else if (!server.running && shouldAttemptOverwrite) {
+    hardOverwrite = { attempted: false, applied: false, reason: "forge_unhealthy_skip_overwrite" };
+  }
+
+  const now = new Date().toISOString();
+  const nextSettings = {
+    ...settings,
+    openclawOverwriteOptIn: Boolean(settings?.openclawOverwriteOptIn || attemptHardOverwrite),
+    lastSeen: {
+      openclawVersion,
+      openclawBinPath,
+      controlUiPath: overwritePath || "",
+      overwriteActiveAfterRun: Boolean(isForgeOverwriteActive(overwritePath)),
+      checkedAt: now,
+    },
+  };
+  if (hardOverwrite.applied) {
+    nextSettings.lastApplied = {
+      openclawVersion,
+      openclawBinPath,
+      controlUiPath: hardOverwrite.path || overwritePath || "",
+      appliedAt: now,
+    };
+  }
+  writeDashboardUpgradeStore(nextSettings);
+
+  let overwriteReappliedAfterUpdate = false;
+  const prevApplied = settings?.lastApplied || null;
+  if (hardOverwrite.applied && prevApplied) {
+    overwriteReappliedAfterUpdate = (
+      String(prevApplied.openclawVersion || "") !== String(openclawVersion || "") ||
+      String(prevApplied.openclawBinPath || "") !== String(openclawBinPath || "") ||
+      (!overwriteActive && isForgeOverwriteActive(overwritePath))
+    );
+  }
+
+  const browserOpened = server.running ? openBrowserUrl(FORGE_DASHBOARD_URL) : false;
+  return {
+    enabled: true,
+    ok: server.running,
+    mode: hardOverwrite.applied ? "hard-overwrite-temporary" : "fallback",
+    url: FORGE_DASHBOARD_URL,
+    hardOverwrite,
+    server,
+    browserOpened,
+    gateway,
+    warning: hardOverwrite.applied
+      ? "OpenClaw overwrite is temporary and may be reset by OpenClaw updates. Use 'ape-claw dashboard' as the stable entrypoint."
+      : "",
+    overwriteReappliedAfterUpdate,
+  };
+}
+
 function resolveRemoteApiBase(args = {}) {
   const explicit = String(args.api || "").trim();
   const fromEnv = String(process.env.APE_CLAW_API_BASE || process.env.APE_CLAW_TELEMETRY_URL || "").trim();
@@ -680,6 +1026,72 @@ async function main() {
   const asJson = Boolean(args.json);
   _asJson = asJson;
   const command = `ape-claw ${args._.join(" ")}`.trim();
+  const allowUnverifiedAgentForCommand = (
+    group === "dashboard" ||
+    group === "doctor" ||
+    group === "quickstart" ||
+    (group === "chain" && sub === "info") ||
+    (group === "market" && (sub === "collections" || sub === "listings")) ||
+    (group === "allowlist" && sub === "audit")
+  );
+
+  if (group === "dashboard") {
+    if (sub === "restore-openclaw") {
+      const restored = restoreOpenClawDashboardFromBackup();
+      if (asJson) return print(restored, true);
+      console.log();
+      if (restored.ok) {
+        console.log(`\x1b[32m  OpenClaw dashboard restored from backup.\x1b[0m`);
+        console.log(`  \x1b[2mPath:\x1b[0m ${restored.path}`);
+      } else {
+        console.log(`\x1b[33m  Could not restore OpenClaw dashboard: ${restored.reason}\x1b[0m`);
+        if (restored.backupPath) console.log(`  \x1b[2mExpected backup:\x1b[0m ${restored.backupPath}`);
+      }
+      console.log();
+      return;
+    }
+
+    const here = path.dirname(fileURLToPath(import.meta.url));
+    const packageRoot = path.resolve(here, "..");
+    const upgrade = await runForgeDashboardUpgrade({ packageRoot, attemptHardOverwrite: false });
+    if (asJson) return print(upgrade, true);
+    if (!upgrade.ok && upgrade.reason === "openclaw_missing") {
+      console.log();
+      console.log(`\x1b[31m  OpenClaw is required before using the Forge dashboard upgrade.\x1b[0m`);
+      for (const step of (upgrade.next || [])) console.log(`  \x1b[2m${step}\x1b[0m`);
+      console.log();
+      return;
+    }
+    console.log();
+    console.log(`\x1b[1m\x1b[33m  🦞  APE CLAW DASHBOARD\x1b[0m`);
+    console.log(`  \x1b[36mURL:\x1b[0m ${upgrade.url}`);
+    if (upgrade.server?.started) {
+      console.log(`  \x1b[36mLocal server:\x1b[0m started`);
+    } else if (upgrade.server?.running) {
+      console.log(`  \x1b[36mLocal server:\x1b[0m already running`);
+    } else {
+      if (upgrade.server?.reason === "package_files_missing") {
+        console.log(`  \x1b[33mLocal Forge files missing in this installation.\x1b[0m`);
+        console.log(`  \x1b[2mFix:\x1b[0m run \x1b[36mnpx ape-claw dashboard\x1b[0m (npm will fetch latest package),`);
+        console.log(`  \x1b[2mor reinstall:\x1b[0m \x1b[36mnpm i -g ape-claw@latest\x1b[0m`);
+        console.log(`  \x1b[2mOptional dev path:\x1b[0m clone GitHub repo and run \x1b[36mnpm run start:ui\x1b[0m`);
+      } else {
+        console.log(`  \x1b[33mLocal server check failed.\x1b[0m Run: \x1b[36mnpx ape-claw dashboard\x1b[0m`);
+      }
+    }
+    if (upgrade.warning) {
+      console.log(`  \x1b[33m${upgrade.warning}\x1b[0m`);
+    }
+    if (upgrade.overwriteReappliedAfterUpdate) {
+      console.log(`  \x1b[36mDetected OpenClaw update/layout change; reapplied dashboard overwrite (opt-in).\x1b[0m`);
+    }
+    if (!upgrade.browserOpened) {
+      if (upgrade.server?.running) console.log(`  \x1b[2mCould not auto-open browser. Open manually: ${upgrade.url}\x1b[0m`);
+      else console.log(`  \x1b[2mSkipped browser open because Forge health is not ready.\x1b[0m`);
+    }
+    console.log();
+    return;
+  }
 
   // Allow skill installation in any directory without local ape-claw config.
   if (group === "skill" && sub === "install") {
@@ -817,6 +1229,44 @@ async function main() {
       result.starterPack.skipped = true;
     }
 
+    // ── Forge dashboard upgrade (opt-in, safe portable default) ──
+    const skipForgeUpgrade = Boolean(args["no-forge-upgrade"]);
+    const forceForgeUpgrade = Boolean(args["forge-upgrade"]);
+    let enableForgeUpgrade = false;
+    if (skipForgeUpgrade) {
+      enableForgeUpgrade = false;
+    } else if (forceForgeUpgrade) {
+      enableForgeUpgrade = true;
+    } else if (asJson) {
+      enableForgeUpgrade = false;
+    } else {
+      console.log();
+      console.log(`\x1b[1m\x1b[33m  FORGE DASHBOARD UPGRADE\x1b[0m`);
+      console.log(`\x1b[2m  Replace the OpenClaw control dashboard with ApeClaw Forge locally\x1b[0m`);
+      console.log(`\x1b[2m  (safe fallback is used automatically when hard overwrite is unsupported).\x1b[0m`);
+      console.log();
+      const answer = await promptUser("  Upgrade to Forge dashboard now? [Y/n] ");
+      enableForgeUpgrade = answer === "" || answer === "y" || answer === "yes";
+    }
+
+    if (enableForgeUpgrade) {
+      result.forgeUpgrade = await runForgeDashboardUpgrade({
+        packageRoot: result.packageRoot,
+        attemptHardOverwrite: true,
+      });
+    } else {
+      const currentUpgradeSettings = loadDashboardUpgradeStore();
+      writeDashboardUpgradeStore({
+        ...currentUpgradeSettings,
+        openclawOverwriteOptIn: false,
+        lastSeen: {
+          ...(currentUpgradeSettings.lastSeen || {}),
+          checkedAt: new Date().toISOString(),
+        },
+      });
+      result.forgeUpgrade = { enabled: false, reason: "user_skipped", url: FORGE_DASHBOARD_URL };
+    }
+
     if (asJson) return print(result, true);
 
     const W = 64;
@@ -885,6 +1335,52 @@ async function main() {
       }
     }
 
+    const forge = result.forgeUpgrade || { enabled: false };
+    console.log();
+    console.log(`\x1b[1m  🧭  FORGE CONTROL DASHBOARD\x1b[0m`);
+    console.log(`  ${thinLine}`);
+    if (forge.enabled) {
+      if (forge.ok) {
+        if (forge.mode === "hard-overwrite-temporary") {
+          console.log(`  \x1b[32mOpenClaw dashboard route overwritten locally\x1b[0m`);
+          if (forge.hardOverwrite?.path) {
+            console.log(`  \x1b[2mPath:\x1b[0m ${forge.hardOverwrite.path}`);
+          }
+          console.log(`  \x1b[33mTemporary override:\x1b[0m OpenClaw updates may reset this route.`);
+          console.log(`  \x1b[2mStable entrypoint remains:\x1b[0m npx ape-claw dashboard`);
+        } else {
+          console.log(`  \x1b[33mHard overwrite unavailable; fallback route is active\x1b[0m`);
+        }
+        if (forge.server?.started) {
+          console.log(`  \x1b[36mForge server:\x1b[0m started`);
+        } else if (forge.server?.running) {
+          console.log(`  \x1b[36mForge server:\x1b[0m already running`);
+        }
+        console.log(`  \x1b[36mForge URL:\x1b[0m ${forge.url || FORGE_DASHBOARD_URL}`);
+        if (!forge.browserOpened) {
+          console.log(`  \x1b[2mBrowser did not auto-open. Open manually:\x1b[0m ${forge.url || FORGE_DASHBOARD_URL}`);
+        }
+        if (forge.overwriteReappliedAfterUpdate) {
+          console.log(`  \x1b[36mDetected OpenClaw update/layout change; reapplied overwrite (opt-in).\x1b[0m`);
+        }
+        if (forge.gateway?.ok && forge.gateway?.action && forge.gateway.action !== "already_running") {
+          console.log(`  \x1b[36mOpenClaw gateway:\x1b[0m ${forge.gateway.action.replace(/_/g, " ")}`);
+        }
+      } else if (forge.reason === "openclaw_missing") {
+        console.log(`  \x1b[31mOpenClaw not detected. Install OpenClaw first, then run:\x1b[0m`);
+        console.log(`  \x1b[32m  npx ape-claw dashboard\x1b[0m`);
+      } else if (forge.reason === "forge_unhealthy_skip_overwrite" || !forge.server?.running) {
+        console.log(`  \x1b[33mForge server is not healthy yet. OpenClaw overwrite skipped for safety.\x1b[0m`);
+        console.log(`  \x1b[2mRetry (no repo required):\x1b[0m npx ape-claw dashboard`);
+        console.log(`  \x1b[2mOptional dev path:\x1b[0m clone GitHub repo and run npm run start:ui`);
+      } else {
+        console.log(`  \x1b[33mForge upgrade attempted but did not complete.\x1b[0m`);
+        console.log(`  \x1b[2mRun manually:\x1b[0m npx ape-claw dashboard`);
+      }
+    } else {
+      console.log(`  \x1b[2mSkipped. Upgrade later with:\x1b[0m npx ape-claw dashboard`);
+    }
+
     console.log();
     console.log(`\x1b[1m  🤖  YOUR CLAWBOT CAN NOW:\x1b[0m`);
     console.log(`  ${thinLine}`);
@@ -907,17 +1403,19 @@ async function main() {
     console.log(`       \x1b[32m${runner} skill install <slug>\x1b[0m`);
     console.log(`    \x1b[36m2.\x1b[0m Browse all 10,000+ skills:`);
     console.log(`       \x1b[4mhttps://apeclaw.ai/skills\x1b[0m`);
-    console.log(`    \x1b[36m3.\x1b[0m Register your clawbot (optional — enables telemetry + dashboard):`);
+    console.log(`    \x1b[36m3.\x1b[0m Open your upgraded dashboard:`);
+    console.log(`       \x1b[32m${runner} dashboard\x1b[0m`);
+    console.log(`    \x1b[36m4.\x1b[0m Register your clawbot (optional — enables telemetry + shared backend):`);
     console.log(`       \x1b[32m${runner} clawbot register --agent-id my-bot --name "My ClawBot" --json\x1b[0m`);
-    console.log(`    \x1b[36m4.\x1b[0m Verify your setup:`);
+    console.log(`    \x1b[36m5.\x1b[0m Verify your setup:`);
     console.log(`       \x1b[32m${runner} doctor --json\x1b[0m`);
-    console.log(`    \x1b[36m5.\x1b[0m Optional — for onchain execute/bridge commands:`);
+    console.log(`    \x1b[36m6.\x1b[0m Optional — for onchain execute/bridge commands:`);
     console.log(`       \x1b[2mexport APE_CLAW_RPC_URL=https://rpc.apechain.com/http\x1b[0m`);
     console.log(`       \x1b[2mexport APE_CLAW_WALLET_KEY=0x...\x1b[0m`);
 
     console.log();
     console.log(`  \x1b[2mDocs:\x1b[0m  https://apeclaw.ai/docs`);
-    console.log(`  \x1b[2mDash:\x1b[0m  https://apeclaw.ai/dashboard`);
+    console.log(`  \x1b[2mDash:\x1b[0m  npx ape-claw dashboard`);
     console.log(`  \x1b[2mHelp:\x1b[0m  ${runner} --help`);
     console.log();
     console.log(`\x1b[1m\x1b[33m${dline}\x1b[0m`);
@@ -1058,6 +1556,10 @@ async function main() {
       verifiedBot = v.agent;
       sharedOpenseaKey = v.sharedOpenseaApiKey || "";
     } else {
+      if (allowUnverifiedAgentForCommand) {
+        verifiedBot = null;
+        sharedOpenseaKey = "";
+      } else
       // If this machine doesn't have clawbots.json (or it's out of date),
       // try to verify against the shared backend when configured.
       if (apiBaseForIdentity) {
@@ -2281,6 +2783,7 @@ async function main() {
     commands: {
       doctor: "ape-claw doctor --json",
       quickstart: "ape-claw quickstart --json",
+      dashboard: "ape-claw dashboard [restore-openclaw] [--json]",
       "clawbot register": "ape-claw clawbot register --agent-id <id> --name <name> [--api https://api.apeclaw.ai --invite <token>] [--registration-key <key>] --json",
       "clawbot list": "ape-claw clawbot list --json",
       "auth set": "ape-claw auth set [--agent-id <id>] [--agent-token <token>] [--opensea-api-key <key>] [--private-key <pk>] --json",
@@ -2300,7 +2803,7 @@ async function main() {
       "bridge execute (autonomous)": "ape-claw bridge execute --request <requestId> --execute --autonomous --json",
       "bridge status": "ape-claw bridge status --request <requestId> --json",
       "allowlist audit": "ape-claw allowlist audit --json",
-      "skill install": "ape-claw skill install [<slug>] [--scope local] [--starter-pack | --no-starter-pack] [--allow-unvetted] [--allow-high-risk] [--allow-custom-api] [--allow-insecure-api] --json",
+      "skill install": "ape-claw skill install [<slug>] [--scope local] [--starter-pack | --no-starter-pack] [--forge-upgrade | --no-forge-upgrade] [--allow-unvetted] [--allow-high-risk] [--allow-custom-api] [--allow-insecure-api] --json",
       "v2 skill mint": "ape-claw v2 skill mint --rpc <url> --privateKey 0x... --skillNft 0x... --registry 0x... [--parentId 0] [--royalty-receiver 0x... --royalty-bps 500] --json",
       "v2 skill publish": "ape-claw v2 skill publish --rpc <url> --privateKey 0x... --registry 0x... --skillId <id> --file <skillcard.json> [--uri ipfs://...] [--riskTier 1] --json",
       "v2 intent create": "ape-claw v2 intent create --rpc <url> --privateKey 0x... --intents 0x... --payload '{...}' [--expiresAt <unixSec>] --json",

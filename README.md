@@ -193,6 +193,7 @@ npx ape-claw skill install
 
 Installs the ApeClaw skill into `~/.openclaw/skills/ape-claw/` and bootstraps config files.
 Requires OpenClaw and Node.js `>=22.10.0`. Works on macOS, Linux, and Windows.
+During install, ApeClaw also prompts to enable the local Forge dashboard upgrade path.
 
 ### Fast path for new users (copy/paste)
 
@@ -203,6 +204,9 @@ openclaw skills list
 
 # 1) Install ApeClaw
 npx ape-claw skill install
+
+# 1b) Open local Forge dashboard (starts local server if needed)
+npx ape-claw dashboard
 
 # 2) Verify (always works, even if global PATH is not set yet)
 npx ape-claw doctor --json
@@ -272,6 +276,9 @@ npx ape-claw skill install --starter-pack --json
 # Install into current project only (instead of global ~/.openclaw/)
 npx ape-claw skill install --scope local
 ```
+
+The same install flow also prompts for the local Forge dashboard upgrade.  
+Use `npx ape-claw dashboard` anytime as the stable local Forge entrypoint.
 
 ### 3. Global CLI install (optional)
 
@@ -555,6 +562,15 @@ Then open `http://localhost:8787/` for the real-time dashboard showing:
 - NFT collection gallery
 - Bridge operation status
 - Connection health
+
+For local Forge/OpenClaw takeover dashboard (no repo clone required), run:
+
+```bash
+npx ape-claw dashboard
+```
+
+This starts the packaged local UI server from npm and opens Forge.  
+GitHub clone + `npm run start:ui` is optional for development workflows.
 
 ### Clawllector Chat API
 

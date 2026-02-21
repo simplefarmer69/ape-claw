@@ -55,6 +55,9 @@
         <button class="forge-hud-btn forge-share-btn" id="forgeShareBtn" type="button" data-ac-tip="Share to X">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
         </button>
+        <button class="forge-hud-btn forge-env-btn" id="forgeEnvBtn" type="button" data-ac-tip="OpenClaw env">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .17 1.7 1.7 0 0 0-.78 1.45V21a2 2 0 1 1-4 0v-.08a1.7 1.7 0 0 0-.78-1.45 1.7 1.7 0 0 0-1-.17 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.17-1 1.7 1.7 0 0 0-1.45-.78H3a2 2 0 1 1 0-4h.08a1.7 1.7 0 0 0 1.45-.78 1.7 1.7 0 0 0 .17-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.17 1.7 1.7 0 0 0 .78-1.45V3a2 2 0 1 1 4 0v.08a1.7 1.7 0 0 0 .78 1.45 1.7 1.7 0 0 0 1 .17 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 .17 1 1.7 1.7 0 0 0 1.45.78H21a2 2 0 1 1 0 4h-.08a1.7 1.7 0 0 0-1.45.78 1.7 1.7 0 0 0-.17 1z"/></svg>
+        </button>
       </div>
       <div class="forge-watermark" id="forgeWatermark">
         <span class="forge-watermark-logo">APECLAW</span>
@@ -94,8 +97,13 @@
         <div class="forge-chat-header">
           <span class="icon">&#x1F4AC;</span> Agent Chat
           <span class="badge" id="forgeChatBadge">0</span>
+          <span class="forge-gateway-chip" id="forgeGatewayChip" data-state="loading">Gateway: checking...</span>
+          <div class="forge-chat-actions">
+            <button class="forge-chat-action-btn" id="forgeGatewayRefresh" type="button">Refresh</button>
+            <button class="forge-chat-action-btn" id="forgeGatewayRestart" type="button">Restart</button>
+          </div>
         </div>
-        <div class="forge-chat-agent-indicator" id="forgeChatAgentIndicator" style="display:none;padding:4px 10px;font-size:11px;opacity:.7;font-family:'JetBrains Mono',monospace;">&#x1F99E; Talking to The Clawllector (OpenClaw agent)</div>
+        <div class="forge-chat-agent-indicator" id="forgeChatAgentIndicator" style="display:none;padding:4px 10px;font-size:11px;opacity:.7;font-family:'JetBrains Mono',monospace;">Connected via OpenClaw Gateway (main session)</div>
         <div class="forge-chat-messages" id="forgeChatMessages">
           <div class="chat-empty">
             <div class="chat-empty-icon">&#x1F4AC;</div>
@@ -105,6 +113,11 @@
         <div class="forge-chat-input-bar">
           <input type="text" id="forgeChatInput" placeholder="Message your agent..." maxlength="500">
           <button class="chat-send-btn" id="forgeChatSendBtn" type="button">Send</button>
+        </div>
+        <div class="forge-chat-quick" id="forgeChatQuick">
+          <button class="forge-chat-quick-btn" data-prompt="Show my installed skills and what each one can do.">Installed skills</button>
+          <button class="forge-chat-quick-btn" data-prompt="Check OpenClaw gateway health and summarize any issue.">Gateway health</button>
+          <button class="forge-chat-quick-btn" data-prompt="Recommend three high-impact skills I should install next.">Next skills</button>
         </div>
         <div class="chat-input-meta">
           <span class="chat-counter" id="forgeChatCounter">0/500</span>
@@ -124,7 +137,7 @@
           <input type="text" id="forgeAuthAgentId" placeholder="Agent ID" autocomplete="off">
           <input type="password" id="forgeAuthAgentToken" placeholder="Agent Token" autocomplete="off">
         </div>
-        <div class="forge-auth-hint">Required for install/uninstall. Get from <code>ape-claw clawbot list</code></div>
+        <div class="forge-auth-hint">Optional for local install/uninstall. Add credentials only if you want global dashboard/telemetry posting. Get from <code>ape-claw clawbot list</code></div>
       </div>
       <div class="forge-drawer-search">
         <input type="search" id="forgeSkillSearch" placeholder="Search Library of Alexandria skills..." autocomplete="off">
@@ -148,6 +161,26 @@
         <div class="forge-drawer-empty">Search skills above to browse the library</div>
       </div>
       <div class="forge-drawer-pagination" id="forgeDrawerPagination"></div>
+    </aside>
+
+    <!-- OpenClaw env modal -->
+    <div class="forge-env-backdrop" id="forgeEnvBackdrop"></div>
+    <aside class="forge-env-modal" id="forgeEnvModal" data-open="0">
+      <div class="forge-env-header">
+        <h2 class="forge-env-title">OpenClaw Gateway Env</h2>
+        <button class="forge-env-close" id="forgeEnvClose" type="button">&times;</button>
+      </div>
+      <div class="forge-env-note" id="forgeEnvNote">
+        Update model/provider env values used by OpenClaw and Forge takeover mode.
+      </div>
+      <div class="forge-env-status" id="forgeEnvProviderStatus" data-state="loading">
+        Checking active provider...
+      </div>
+      <div class="forge-env-form" id="forgeEnvForm"></div>
+      <div class="forge-env-footer">
+        <button class="forge-btn forge-btn-secondary" id="forgeEnvReload" type="button">Reload</button>
+        <button class="forge-btn forge-btn-accent" id="forgeEnvSave" type="button">Save & Apply</button>
+      </div>
     </aside>
 
     <!-- Toast notifications -->
@@ -193,8 +226,9 @@
         <div class="forge-offline-step">
           <span class="forge-offline-step-num">2</span>
           <div>
-            <strong>Clone the repo &amp; start the server</strong>
-            <code>git clone https://github.com/simplefarmer69/ape-claw.git && cd ape-claw && npm install && npm run start:ui</code>
+            <strong>Start local Forge (no repo required)</strong>
+            <code>npx ape-claw dashboard</code>
+            <span class="forge-offline-hint">This fetches/runs the packaged Forge UI server from npm and opens your local dashboard.</span>
           </div>
         </div>
         <div class="forge-offline-step">
@@ -202,14 +236,14 @@
           <div>
             <strong>Open the Forge</strong>
             <code>http://localhost:8787/forge</code>
-            <span class="forge-offline-hint">Your installed skills appear as 3D attachments on the robot automatically</span>
+            <span class="forge-offline-hint">Your installed skills appear as 3D attachments on the robot automatically. Optional dev setup: clone GitHub and run <code>npm run start:ui</code>.</span>
           </div>
         </div>
       </div>
       <div class="forge-offline-divider"></div>
       <p class="forge-offline-note">
         The Forge reads skills installed via <code>npx ape-claw skill install</code>.<br>
-        Skills are installed to <code>~/.openclaw/skills/</code> and synced to <code>~/.openclaw/workspace/skills/</code> automatically. <strong>Requires <a href="https://openclaw.ai" style="color:var(--accent)">OpenClaw</a>.</strong>
+        Skills are installed to your active OpenClaw profile (for example <code>~/.openclaw/skills/</code>) and synced to that profile workspace automatically. <strong>Requires <a href="https://openclaw.ai" style="color:var(--accent)">OpenClaw</a>.</strong>
       </p>
       <div class="forge-offline-links">
         <button class="forge-offline-btn forge-offline-btn-agent" id="forgeTryAgent" type="button">&#x1F99E; Try Our Agent</button>

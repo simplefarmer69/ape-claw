@@ -28,6 +28,12 @@ npx ape-claw skill install
 npx ape-claw doctor --json
 ```
 
+During `skill install`, ApeClaw prompts for:
+- Starter pack install
+- Forge dashboard upgrade (replaces the local OpenClaw dashboard route when supported, with automatic fallback)
+
+> Note: OpenClaw dashboard overwrite is best-effort and temporary. OpenClaw updates may restore the original dashboard files. Use `npx ape-claw dashboard` as the stable entrypoint.
+
 PowerShell (Windows):
 
 ```powershell
@@ -63,7 +69,20 @@ $env:APE_CLAW_AGENT_TOKEN="claw_..."
 
 ## Step 5: Open the Dashboard
 
-Visit [http://localhost:8787/ui](http://localhost:8787/ui) or [https://apeclaw.ai/ui](https://apeclaw.ai/ui) to see your bot in the live feed.
+Use:
+
+```bash
+npx ape-claw dashboard
+```
+
+This opens your local Forge dashboard (`http://localhost:8787/forge`) and starts the local server if needed.
+If OpenClaw is not installed yet, the command prints install steps first.
+
+To restore the original OpenClaw dashboard files:
+
+```bash
+npx ape-claw dashboard restore-openclaw
+```
 
 ## Step 6: Browse Skills
 
@@ -75,14 +94,14 @@ The Forge page at `/forge` includes an AI chat panel. On the live website (apecl
 
 ### What you need
 
-1. **Any LLM API key** — the forge agent auto-detects your provider. Pick one:
+1. **An OpenClaw Gateway LLM provider configured** — Forge inherits provider/model from your active OpenClaw profile.
+   You can configure this in OpenClaw or from Forge Settings (OpenClaw `.env` editor). Common keys:
    - **OpenAI** (`OPENAI_API_KEY`) — GPT-4o, GPT-4, etc.
    - **Anthropic** (`ANTHROPIC_API_KEY`) — Claude models
    - **Perplexity** (`PERPLEXITY_API_KEY`) — Sonar (web-grounded)
    - **Groq** (`GROQ_API_KEY`) — fast Llama inference (free tier available)
    - **Together AI** (`TOGETHER_API_KEY`) — open-source models
    - **Ollama** (`OLLAMA_HOST`) — run models locally, no API key needed
-   - **Any OpenAI-compatible endpoint** (`FORGE_LLM_API_URL` + `FORGE_LLM_API_KEY`)
 2. **OpenClaw + ape-claw skills** installed (you already have these from Step 1-2).
 
 ### Set environment variables
@@ -105,7 +124,6 @@ Optional overrides:
 ```bash
 export FORGE_AGENT_NAME="My Agent"       # Display name in chat (default: "The Clawllector")
 export FORGE_AGENT_ID=my-agent           # ClawBot ID (default: "the-clawllector")
-export FORGE_LLM_MODEL=gpt-4o-mini      # Override model (default: auto per provider)
 ```
 
 ### Start the server
@@ -114,7 +132,7 @@ export FORGE_LLM_MODEL=gpt-4o-mini      # Override model (default: auto per prov
 npm run start:ui
 ```
 
-Open [http://localhost:8787/forge](http://localhost:8787/forge). The chat panel will show an indicator confirming it's connected to your agent and which provider is in use. If no LLM key is set, the indicator shows a setup hint and chat falls back to the basic message relay (`/api/chat`).
+Open [http://localhost:8787/forge](http://localhost:8787/forge). The chat panel shows an indicator when connected to your OpenClaw gateway session. If no LLM provider is configured, Forge shows a setup hint and keeps chat on the gateway path (`/api/forge/chat`) until provider setup is completed.
 
 ### How it works
 
@@ -145,7 +163,7 @@ Expected output:
 }
 ```
 
-If `"configured": false`, your `PERPLEXITY_API_KEY` is missing or empty.
+If `"configured": false`, your OpenClaw gateway provider is not configured yet.
 
 ## Next Steps
 

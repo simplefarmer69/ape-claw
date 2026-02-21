@@ -238,7 +238,7 @@ export let robotGroup, attachmentGroup, energyNetworkGroup, platformGroup;
 export let coreMesh, visorMesh, spineSegments = [];
 let ambientParticles, energyStreams, bloomPass, ssaoPass, filmGrainPass;
 let autoRotateTimer = null;
-let bloomEnabled = true;
+let bloomEnabled = false;
 let selectedAttachment = null;
 let glowRings = [];
 let exhaustFlames = [];
@@ -251,9 +251,23 @@ let heatShimmerMeshes = [];
 let robotPowered = false;
 let powerLevel = 0;
 let powerDownTimer = null;
+let robotEmissiveMaterials = [];
 const POWER_UP_SPEED = 2.5;
 const POWER_DOWN_SPEED = 1.2;
 const POWER_DOWN_DELAY = 4000;
+const MOTION_BOUNDS_RADIUS = 2.0;
+const MOTION_REACH_EPSILON = 0.25;
+const MOTION_TURN_LERP = 1.2;
+const MOTION_SPEED_LERP = 1.0;
+const MOTION_WALK_SPEED = 0.3;
+const MOTION_REPICK_MS = 12_000;
+const motionState = {
+  speed: 0,
+  targetX: 0,
+  targetZ: 0,
+  activeUntil: 0,
+  lastPickAt: 0,
+};
 
 const viewportEl = () => document.getElementById("forgeViewport");
 const canvasEl = () => document.getElementById("forgeCanvas");
@@ -2330,6 +2344,132 @@ function schedulePowerDown() {
   }, POWER_DOWN_DELAY);
 }
 
+function pickAutonomousTarget() {
+  const r = 0.4 + Math.random() * (MOTION_BOUNDS_RADIUS - 0.4);
+  const a = Math.random() * Math.PI * 2;
+  motionState.targetX = Math.cos(a) * r;
+  motionState.targetZ = Math.sin(a) * r;
+  motionState.lastPickAt = Date.now();
+}
+
+function normalizeAngle(v) {
+  let a = v;
+  while (a > Math.PI) a -= Math.PI * 2;
+  while (a < -Math.PI) a += Math.PI * 2;
+  return a;
+}
+
+function updateAutonomousMotion(dt) {
+  if (!robotGroup) return;
+  const now = Date.now();
+  const active = now < motionState.activeUntil;
+  if (active && (motionState.lastPickAt === 0 || now - motionState.lastPickAt > MOTION_REPICK_MS)) {
+    pickAutonomousTarget();
+  }
+
+  const cx = robotGroup.position.x;
+  const cz = robotGroup.position.z;
+  const dx = motionState.targetX - cx;
+  const dz = motionState.targetZ - cz;
+  const dist = Math.hypot(dx, dz);
+  const hasTarget = active && dist > MOTION_REACH_EPSILON;
+  const desiredSpeed = hasTarget ? MOTION_WALK_SPEED : 0;
+  motionState.speed += (desiredSpeed - motionState.speed) * Math.min(1, dt * MOTION_SPEED_LERP);
+  if (motionState.speed < 0.002) motionState.speed = 0;
+
+  if (motionState.speed > 0.002 && dist > 0.001) {
+    const step = Math.min(dist, motionState.speed * dt);
+    const nx = cx + (dx / dist) * step;
+    const nz = cz + (dz / dist) * step;
+    const rr = Math.hypot(nx, nz);
+    if (rr > MOTION_BOUNDS_RADIUS) {
+      robotGroup.position.x = (nx / rr) * MOTION_BOUNDS_RADIUS;
+      robotGroup.position.z = (nz / rr) * MOTION_BOUNDS_RADIUS;
+    } else {
+      robotGroup.position.x = nx;
+      robotGroup.position.z = nz;
+    }
+    const desiredYaw = Math.atan2(dx, dz);
+    const delta = normalizeAngle(desiredYaw - robotGroup.rotation.y);
+    robotGroup.rotation.y += delta * Math.min(1, dt * MOTION_TURN_LERP);
+  } else if (hasTarget && dist <= MOTION_REACH_EPSILON) {
+    motionState.lastPickAt = now;
+  }
+}
+
+export function setMotionIntent(intent = {}) {
+  const type = String(intent?.type || "").toLowerCase();
+  if (!type) return;
+  if (type === "halt") {
+    motionState.activeUntil = 0;
+    motionState.speed = 0;
+    return;
+  }
+  if (type === "patrol" || type === "wander") {
+    const dur = Math.max(4000, Math.min(30_000, Number(intent.durationMs || 15000)));
+    motionState.activeUntil = Date.now() + dur;
+    pickAutonomousTarget();
+    powerOn();
+    schedulePowerDown();
+    return;
+  }
+  if (type === "goto") {
+    const x = Number(intent.x);
+    const z = Number(intent.z);
+    if (!Number.isFinite(x) || !Number.isFinite(z)) return;
+    const rr = Math.hypot(x, z);
+    if (rr > MOTION_BOUNDS_RADIUS) {
+      motionState.targetX = (x / rr) * MOTION_BOUNDS_RADIUS;
+      motionState.targetZ = (z / rr) * MOTION_BOUNDS_RADIUS;
+    } else {
+      motionState.targetX = x;
+      motionState.targetZ = z;
+    }
+    const dur = Math.max(3000, Math.min(30_000, Number(intent.durationMs || 12000)));
+    motionState.activeUntil = Date.now() + dur;
+    motionState.lastPickAt = Date.now();
+    powerOn();
+    schedulePowerDown();
+  }
+}
+
+function cacheRobotEmissiveMaterials() {
+  robotEmissiveMaterials = [];
+  if (!robotGroup) return;
+  robotGroup.traverse((node) => {
+    if (!node?.isMesh || !node.material) return;
+    const mats = Array.isArray(node.material) ? node.material : [node.material];
+    for (const mat of mats) {
+      if (typeof mat?.emissiveIntensity !== "number") continue;
+      if (mat.userData?._baseRobotEmissive === undefined) {
+        if (!mat.userData) mat.userData = {};
+        mat.userData._baseRobotEmissive = mat.emissiveIntensity;
+      }
+      robotEmissiveMaterials.push(mat);
+    }
+  });
+}
+
+function applyRobotPowerToStaticEmissive(power) {
+  for (const mat of robotEmissiveMaterials) {
+    const base = Number(mat?.userData?._baseRobotEmissive ?? 0);
+    mat.emissiveIntensity = base * power;
+    const isGlowMaterial = base >= 0.6;
+    if (isGlowMaterial && mat?.transparent) {
+      if (mat.userData._baseRobotOpacity === undefined) {
+        mat.userData._baseRobotOpacity = Number(mat.opacity ?? 1);
+      }
+      mat.opacity = Number(mat.userData._baseRobotOpacity || 1) * power;
+    }
+    if (isGlowMaterial && typeof mat?.transmission === "number") {
+      if (mat.userData._baseRobotTransmission === undefined) {
+        mat.userData._baseRobotTransmission = Number(mat.transmission ?? 0);
+      }
+      mat.transmission = Number(mat.userData._baseRobotTransmission || 0) * power;
+    }
+  }
+}
+
 export function toggleRobotPower() {
   if (robotPowered) {
     robotPowered = false;
@@ -2347,6 +2487,7 @@ function animate() {
   const dt = 1 / 60;
 
   controls.update();
+  updateAutonomousMotion(dt);
 
   // ── Power level ramp (smooth on/off transition) ──
   const targetPower = robotPowered ? 1.0 : 0.0;
@@ -2356,6 +2497,7 @@ function animate() {
     powerLevel = Math.max(powerLevel - dt * POWER_DOWN_SPEED, 0.0);
   }
   const pw = powerLevel;
+  applyRobotPowerToStaticEmissive(pw);
 
   // Core reactor pulse
   if (coreMesh) {
@@ -2378,10 +2520,17 @@ function animate() {
     const scanPulse = Math.exp(-30 * (scanPhase - 0.5) * (scanPhase - 0.5)) * 0.12;
     const speakBurst = agentSpeaking ? Math.sin(time * 8) * 0.04 + Math.random() * 0.03 : 0;
 
-    visorMesh.material.transmission = 0.4 + 0.42 * pw + (vBreath + vNoise + scanPulse * 0.3) * pw;
-    visorMesh.material.emissiveIntensity = ((2.0 + 0.4 * Math.sin(time * 2.5) + scanPulse * 2.0 + speakBurst) * sp) * pw;
-    visorMesh.material.opacity = 0.5 + 0.34 * pw + (vBreath * 0.5 + scanPulse * 0.1) * pw;
-    visorMesh.material.iridescence = (0.5 + 0.15 * Math.sin(time * 1.2)) * pw;
+    if (pw <= 0.0001) {
+      visorMesh.material.transmission = 0;
+      visorMesh.material.emissiveIntensity = 0;
+      visorMesh.material.opacity = 0.02;
+      visorMesh.material.iridescence = 0;
+    } else {
+      visorMesh.material.transmission = 0.02 + (0.4 + 0.42 * pw + (vBreath + vNoise + scanPulse * 0.3) * pw) * pw;
+      visorMesh.material.emissiveIntensity = ((2.0 + 0.4 * Math.sin(time * 2.5) + scanPulse * 2.0 + speakBurst) * sp) * pw;
+      visorMesh.material.opacity = (0.3 + 0.34 * pw + (vBreath * 0.5 + scanPulse * 0.1) * pw) * pw;
+      visorMesh.material.iridescence = (0.5 + 0.15 * Math.sin(time * 1.2)) * pw;
+    }
   }
 
   // Joint glow rings pulse
@@ -2430,25 +2579,33 @@ function animate() {
 
   if (idleAnimatorFn) idleAnimatorFn(time);
 
-  // ── Procedural idle motion ──
-  const sp = agentSpeaking ? 1.8 : 1.0;
+  // ── Procedural idle + walk motion ──
+  // sp: subtle emphasis when speaking (1.15x, not 1.8x — keep it grounded)
+  // gait: 0 = idle, 1 = full walk (normalized to MOTION_WALK_SPEED)
+  const sp = agentSpeaking ? 1.15 : 1.0;
+  const gait = Math.min(1, Math.max(0, motionState.speed / MOTION_WALK_SPEED));
+  const walkFreq = 2.8;
+
   if (robotGroup) {
-    robotGroup.position.y = Math.sin(time * 1.2) * 0.025 * sp;
-    robotGroup.rotation.x = Math.sin(time * 0.7) * 0.006 * sp;
-    robotGroup.position.x = Math.sin(time * 0.35) * 0.012 * sp;
+    // Idle: very subtle breathing bob. Walk: gentle step-bob.
+    robotGroup.position.y = Math.sin(time * (1.0 + gait * walkFreq)) * (0.015 + gait * 0.01) * sp;
+    // Body lean into walk direction
+    robotGroup.rotation.x = Math.sin(time * (0.6 + gait * walkFreq)) * (0.003 + gait * 0.006) * sp;
   }
   if (headPivotRef) {
-    headPivotRef.rotation.y = Math.sin(time * 0.3) * 0.12 * sp;
-    headPivotRef.rotation.x = Math.sin(time * 0.5 + 0.3) * 0.04 * sp;
-    headPivotRef.rotation.z = Math.sin(time * 0.22) * 0.018 * sp;
+    // Head look: slow idle scan; during walk, slight stabilization counter-sway
+    headPivotRef.rotation.y = Math.sin(time * (0.25 + gait * 0.6)) * (0.06 + gait * 0.015) * sp;
+    headPivotRef.rotation.x = Math.sin(time * (0.4 + gait * 0.5) + 0.3) * (0.02 + gait * 0.008) * sp;
+    headPivotRef.rotation.z = Math.sin(time * 0.18) * 0.01 * sp;
   }
   if (leftArmPivotRef) {
-    leftArmPivotRef.rotation.x = Math.sin(time * 0.8) * 0.04 * sp;
-    leftArmPivotRef.rotation.z = Math.sin(time * 0.55) * 0.025 * sp;
+    // Arms: very gentle idle sway; during walk, mild opposite-phase pendulum swing
+    leftArmPivotRef.rotation.x = Math.sin(time * (0.6 + gait * walkFreq)) * (0.015 + gait * 0.05) * sp;
+    leftArmPivotRef.rotation.z = Math.sin(time * (0.4 + gait * 1.2)) * (0.01 + gait * 0.018) * sp;
   }
   if (rightArmPivotRef) {
-    rightArmPivotRef.rotation.x = Math.sin(time * 0.8 + 1.5) * 0.04 * sp;
-    rightArmPivotRef.rotation.z = -Math.sin(time * 0.55 + 0.4) * 0.025 * sp;
+    rightArmPivotRef.rotation.x = Math.sin(time * (0.6 + gait * walkFreq) + Math.PI) * (0.015 + gait * 0.05) * sp;
+    rightArmPivotRef.rotation.z = -Math.sin(time * (0.4 + gait * 1.2) + 0.4) * (0.01 + gait * 0.018) * sp;
   }
 
   // Handheld camera sway (applied to scene root to avoid fighting OrbitControls)
@@ -2693,6 +2850,8 @@ export function initForgeScene() {
     requestAnimationFrame(() => {
       const t0 = performance.now();
       robotGroup.add(buildChassis());
+      cacheRobotEmissiveMaterials();
+      applyRobotPowerToStaticEmissive(0);
       console.log(`[forge] chassis built in ${(performance.now() - t0).toFixed(0)}ms, geo cache: ${_geoCache.size} entries`);
       resolve();
     });
@@ -2711,7 +2870,7 @@ export function initForgeScene() {
     composer.addPass(ssaoPass);
   } catch { /* SSAO unavailable — continue without it */ }
 
-  bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.7, 0.35, 0.85);
+  bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), bloomEnabled ? 0.55 : 0, 0.35, 0.85);
   composer.addPass(bloomPass);
 
   outlinePass = new OutlinePass(new THREE.Vector2(w, h), scene, camera);
@@ -2753,6 +2912,7 @@ export function initForgeScene() {
   animate();
 
   window.__forgeSetSpeaking = setAgentSpeaking;
+  window.__forgeSetMotionIntent = setMotionIntent;
 
   _chassisReady.then(() => {
     playCinematicIntro(() => {

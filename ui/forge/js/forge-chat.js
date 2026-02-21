@@ -1,10 +1,9 @@
 /**
  * forge-chat.js — Agent chat panel for ClawBot Forge.
  *
- * Three modes (auto-detected):
- * 1. Website (apeclaw.ai / vercel.app): always uses /api/forge/chat (The Clawllector)
- * 2. Local + PERPLEXITY_API_KEY set: uses /api/forge/chat (your own OpenClaw agent)
- * 3. Local without key: falls back to /api/chat (basic message relay)
+ * Gateway mode:
+ * - Forge always uses /api/forge/chat (OpenClaw gateway takeover path)
+ * - No fallback to legacy /api/chat relay
  */
 
 /* ══════════════════════════════════════════════════════════
@@ -15,12 +14,16 @@ const input = () => document.getElementById("forgeChatInput");
 const sendBtn = () => document.getElementById("forgeChatSendBtn");
 const counter = () => document.getElementById("forgeChatCounter");
 const badge = () => document.getElementById("forgeChatBadge");
+const gatewayChip = () => document.getElementById("forgeGatewayChip");
+const gatewayRefreshBtn = () => document.getElementById("forgeGatewayRefresh");
+const gatewayRestartBtn = () => document.getElementById("forgeGatewayRestart");
 
 let unread = 0;
 let streaming = false;
 let forgeAgentAvailable = null; // null = unknown, true/false after probe
 let localAgentName = "Agent";
-let localProvider = "";
+let gatewayPollTimer = null;
+let lastMotionIntentAt = 0;
 
 const conversationHistory = [];
 
@@ -35,6 +38,8 @@ function escapeHtml(s) {
 
 function renderChatText(raw) {
   let text = String(raw || "");
+  // Optional motion directives for Forge scene control (hidden from chat UI).
+  text = text.replace(/\[\[MOTION:[^\]]+\]\]/gi, "");
   // Strip common citation markers from provider answers (e.g. [1], [2]).
   text = text.replace(/\[(\d+)\]/g, "");
 
@@ -57,6 +62,50 @@ function renderChatText(raw) {
   return html;
 }
 
+function userAskedForMotion(prompt) {
+  const s = String(prompt || "").toLowerCase();
+  if (!s) return false;
+  return /\b(move|walk|patrol|wander|goto|go to|navigate|step|turn|come here|go there)\b/.test(s);
+}
+
+function applyMotionIntentsFromText(raw, opts = {}) {
+  const allowActiveMotion = Boolean(opts.allowActiveMotion);
+  const s = String(raw || "");
+  const intents = [];
+  const matches = s.match(/\[\[MOTION:[^\]]+\]\]/gi) || [];
+  for (const m of matches) {
+    const payload = m.replace(/^\[\[MOTION:/i, "").replace(/\]\]$/, "").trim();
+    const upper = payload.toUpperCase();
+    if (upper === "HALT") intents.push({ type: "halt" });
+    else if (upper === "PATROL") intents.push({ type: "patrol", durationMs: 20000 });
+    else if (upper === "WANDER") intents.push({ type: "wander", durationMs: 10000 });
+    else if (upper.startsWith("GOTO")) {
+      const nums = payload.match(/-?\d+(\.\d+)?/g) || [];
+      if (nums.length >= 2) {
+        intents.push({ type: "goto", x: Number(nums[0]), z: Number(nums[1]), durationMs: 15000 });
+      }
+    }
+  }
+  if (!intents.length) return;
+  const setMotion = window.__forgeSetMotionIntent;
+  if (typeof setMotion !== "function") return;
+  // Stability rule: apply only the final directive in the response.
+  // Some model outputs include multiple tags while "thinking", which causes jitter.
+  const intent = intents[intents.length - 1];
+
+  // Unless the user explicitly asked for movement, keep posture steady.
+  if (!allowActiveMotion && intent.type !== "halt") {
+    setMotion({ type: "halt" });
+    return;
+  }
+
+  // Throttle active motion changes to avoid rapid target resets.
+  const now = Date.now();
+  if (intent.type !== "halt" && now - lastMotionIntentAt < 5000) return;
+  if (intent.type !== "halt") lastMotionIntentAt = now;
+  setMotion(intent);
+}
+
 /* ══════════════════════════════════════════════════════════
    Environment detection
    ══════════════════════════════════════════════════════════ */
@@ -67,14 +116,71 @@ function isWebsiteMode() {
 
 async function probeForgeAgent() {
   try {
-    const res = await fetch("/api/forge/status", { signal: AbortSignal.timeout(3000) });
+    const res = await fetch("/api/forge/status", { signal: AbortSignal.timeout(10000) });
     if (!res.ok) return false;
     const data = await res.json();
     if (data.agentName) localAgentName = data.agentName;
-    if (data.provider) localProvider = data.provider;
     return data.configured === true;
   } catch {
     return false;
+  }
+}
+
+async function fetchGatewayStatus() {
+  try {
+    const res = await fetch("/api/forge/status", { signal: AbortSignal.timeout(9000) });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+function setGatewayChip(state, text) {
+  const chip = gatewayChip();
+  if (!chip) return;
+  chip.dataset.state = state;
+  chip.textContent = text;
+}
+
+async function refreshGatewayChip() {
+  const status = await fetchGatewayStatus();
+  if (!status) {
+    setGatewayChip("err", "Gateway: unreachable");
+    return null;
+  }
+  if (status.gatewayReady || status.configured) {
+    setGatewayChip("ok", "Gateway: online");
+  } else if (status.gatewayCli) {
+    setGatewayChip("warn", "Gateway: starting/idle");
+  } else {
+    setGatewayChip("err", "Gateway: OpenClaw CLI missing");
+  }
+  return status;
+}
+
+async function runGatewayAction(action) {
+  const restart = gatewayRestartBtn();
+  const refresh = gatewayRefreshBtn();
+  if (restart) restart.disabled = true;
+  if (refresh) refresh.disabled = true;
+  setGatewayChip("warn", action === "restart" ? "Gateway: restarting..." : "Gateway: updating...");
+  try {
+    const res = await fetch("/api/forge/gateway/control", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.error || `HTTP ${res.status}`);
+    }
+    await refreshGatewayChip();
+  } catch (err) {
+    setGatewayChip("err", `Gateway: ${err.message}`);
+  } finally {
+    if (restart) restart.disabled = false;
+    if (refresh) refresh.disabled = false;
   }
 }
 
@@ -149,11 +255,7 @@ async function sendMessage() {
   const btn = sendBtn();
   if (btn) btn.disabled = true;
 
-  if (isWebsiteMode() || forgeAgentAvailable) {
-    await sendToForgeAgent(text);
-  } else {
-    await sendToLocalChat(text);
-  }
+  await sendToForgeAgent(text);
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -163,6 +265,40 @@ async function sendToForgeAgent(text) {
   const btn = sendBtn();
   const bodyEl = appendMsg("agent", "");
   let buffer = "";
+  let firstChunkSeen = false;
+  let pendingTimer = null;
+  const pendingStartedAt = Date.now();
+
+  function renderPending() {
+    if (!bodyEl || firstChunkSeen) return;
+    const sec = Math.max(0, Math.floor((Date.now() - pendingStartedAt) / 1000));
+    const stage = sec < 5
+      ? "Analyzing request..."
+      : sec < 12
+        ? "Checking OpenClaw context..."
+        : "Waiting for gateway response...";
+    bodyEl.classList.add("chat-pending");
+    bodyEl.innerHTML = `
+      <span class="chat-pending-wrap">
+        <span class="chat-pending-label">OpenClaw agent is responding</span>
+        <span class="chat-pending-dots"><i></i><i></i><i></i></span>
+        <span class="chat-pending-stage">${stage}</span>
+        <span class="chat-pending-time">${sec}s</span>
+      </span>
+    `;
+  }
+
+  function stopPending() {
+    firstChunkSeen = true;
+    if (pendingTimer) {
+      clearInterval(pendingTimer);
+      pendingTimer = null;
+    }
+    if (bodyEl) bodyEl.classList.remove("chat-pending");
+  }
+
+  renderPending();
+  pendingTimer = setInterval(renderPending, 700);
 
   try {
     async function requestOnce() {
@@ -192,6 +328,7 @@ async function sendToForgeAgent(text) {
       if (errData.retryAfter) {
         errMsg += `, retry in ${errData.retryAfter}s`;
       }
+      stopPending();
       if (bodyEl) bodyEl.textContent = `Error: ${errMsg}`;
       finishStreaming();
       return;
@@ -200,9 +337,12 @@ async function sendToForgeAgent(text) {
     const contentType = res.headers.get("content-type") || "";
     if (!contentType.includes("text/event-stream")) {
       const data = await res.json().catch(() => ({}));
+      stopPending();
       if (bodyEl) bodyEl.innerHTML = renderChatText(data.reply || data.message || "No response");
       if (data.reply || data.message) {
-        conversationHistory.push({ role: "assistant", content: data.reply || data.message });
+        const replyText = data.reply || data.message;
+        applyMotionIntentsFromText(replyText, { allowActiveMotion: userAskedForMotion(text) });
+        conversationHistory.push({ role: "assistant", content: replyText });
       }
       finishStreaming();
       return;
@@ -228,6 +368,7 @@ async function sendToForgeAgent(text) {
           const chunk = JSON.parse(data);
           const t = chunk.text || chunk.content || "";
           if (t) {
+            if (!firstChunkSeen) stopPending();
             buffer += t;
             if (bodyEl) bodyEl.innerHTML = renderChatText(buffer);
             const box = msgBox();
@@ -238,52 +379,21 @@ async function sendToForgeAgent(text) {
     }
 
     if (buffer) {
+      applyMotionIntentsFromText(buffer, { allowActiveMotion: userAskedForMotion(text) });
       conversationHistory.push({ role: "assistant", content: buffer });
     } else if (bodyEl && !bodyEl.textContent) {
+      stopPending();
       bodyEl.textContent = "No response received";
     }
   } catch (err) {
+    stopPending();
     if (bodyEl) {
       const msg = buffer || `Connection error: ${err.message}`;
       bodyEl.innerHTML = renderChatText(msg);
     }
   }
 
-  finishStreaming();
-}
-
-/* ══════════════════════════════════════════════════════════
-   Local fallback: POST /api/chat (basic message relay)
-   ══════════════════════════════════════════════════════════ */
-async function sendToLocalChat(text) {
-  const btn = sendBtn();
-
-  try {
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ text, room: "forge" }),
-    });
-
-    if (!res.ok) {
-      appendMsg("agent", `Error: ${res.status} ${res.statusText}`);
-      finishStreaming();
-      return;
-    }
-
-    const data = await res.json();
-    if (data.reply) {
-      appendMsg("agent", data.reply);
-    } else if (data.streamId) {
-      streamResponse(data.streamId);
-      return;
-    } else {
-      appendMsg("agent", data.message?.text || "Message sent");
-    }
-  } catch (err) {
-    appendMsg("agent", `Connection error: ${err.message}`);
-  }
-
+  stopPending();
   finishStreaming();
 }
 
@@ -293,36 +403,6 @@ function finishStreaming() {
   const btn = sendBtn();
   if (btn) btn.disabled = false;
   input()?.focus();
-}
-
-/* ══════════════════════════════════════════════════════════
-   SSE streaming for local mode long responses
-   ══════════════════════════════════════════════════════════ */
-function streamResponse(streamId) {
-  const bodyEl = appendMsg("agent", "");
-  const evtSrc = new EventSource(`/api/chat/stream?id=${encodeURIComponent(streamId)}`);
-  let buffer = "";
-
-  evtSrc.onmessage = (e) => {
-    if (e.data === "[DONE]") {
-      evtSrc.close();
-      finishStreaming();
-      return;
-    }
-    try {
-      const chunk = JSON.parse(e.data);
-      buffer += chunk.text || chunk.content || "";
-      if (bodyEl) bodyEl.innerHTML = renderChatText(buffer);
-      const box = msgBox();
-      if (box) box.scrollTop = box.scrollHeight;
-    } catch { /* ignore parse errors */ }
-  };
-
-  evtSrc.onerror = () => {
-    evtSrc.close();
-    if (!buffer && bodyEl) bodyEl.textContent = "Stream interrupted";
-    finishStreaming();
-  };
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -341,41 +421,60 @@ async function init() {
   const inp = input();
   const btn = sendBtn();
   const indicator = document.getElementById("forgeChatAgentIndicator");
+  const refreshBtn = gatewayRefreshBtn();
+  const restartBtn = gatewayRestartBtn();
+
+  refreshBtn?.addEventListener("click", async () => { await refreshGatewayChip(); });
+  restartBtn?.addEventListener("click", async () => { await runGatewayAction("restart"); });
 
   if (isWebsiteMode()) {
+    refreshBtn?.setAttribute("style", "display:none");
+    restartBtn?.setAttribute("style", "display:none");
+    setGatewayChip("ok", "Gateway: main session");
     forgeAgentAvailable = true;
     if (inp) inp.disabled = false;
     if (btn) btn.disabled = false;
     if (inp) inp.placeholder = "Ask The Clawllector anything...";
     if (indicator) {
-      indicator.textContent = "\u{1F99E} Talking to The Clawllector (OpenClaw agent)";
+      indicator.textContent = "Connected via OpenClaw Gateway (main session)";
       indicator.style.display = "block";
     }
   } else {
-    forgeAgentAvailable = await probeForgeAgent();
+    const status = await fetchGatewayStatus();
+    let warmedStatus = status;
+    if (!status?.configured) {
+      // First-run recovery: auto-attempt gateway restart once before warning.
+      await runGatewayAction("restart");
+      warmedStatus = await fetchGatewayStatus();
+    }
+    forgeAgentAvailable = Boolean(warmedStatus?.configured || (await probeForgeAgent()));
+    if (warmedStatus?.agentName) localAgentName = warmedStatus.agentName;
 
     if (forgeAgentAvailable) {
       if (inp) { inp.disabled = false; inp.placeholder = `Ask ${localAgentName} anything...`; }
       if (btn) btn.disabled = false;
       if (indicator) {
-        const providerTag = localProvider ? ` via ${localProvider}` : "";
-        indicator.textContent = `\u{1F99E} Connected to ${localAgentName}${providerTag}`;
+        indicator.textContent = "Connected via OpenClaw Gateway (main session)";
         indicator.style.display = "block";
       }
     } else {
-      if (inp) inp.disabled = true;
-      if (btn) btn.disabled = true;
+      if (inp) inp.disabled = false;
+      if (btn) btn.disabled = false;
       if (indicator) {
         indicator.innerHTML =
-          '\u{1F512} Forge agent not configured. Set an LLM API key ' +
-          '(<code style="color:var(--neon-cyan,#63d7ff)">OPENAI_API_KEY</code>, ' +
-          '<code style="color:var(--neon-cyan,#63d7ff)">ANTHROPIC_API_KEY</code>, ' +
-          '<code style="color:var(--neon-cyan,#63d7ff)">PERPLEXITY_API_KEY</code>, ' +
-          'or <code style="color:var(--neon-cyan,#63d7ff)">OLLAMA_HOST</code>) to enable. ' +
-          '<a href="/docs" style="color:var(--accent,#cfff04)">Setup guide</a>';
+          '\u{26A0}\uFE0F OpenClaw Gateway not ready. Start/restart gateway, then retry. ' +
+          '<code style="color:var(--neon-cyan,#63d7ff)">openclaw gateway start</code>';
         indicator.style.display = "block";
       }
     }
+  }
+
+  if (!isWebsiteMode()) {
+    await refreshGatewayChip();
+    if (gatewayPollTimer) clearInterval(gatewayPollTimer);
+    gatewayPollTimer = setInterval(() => {
+      refreshGatewayChip().catch(() => {});
+    }, 20_000);
   }
 
   if (inp) {
@@ -391,6 +490,18 @@ async function init() {
   if (btn) {
     btn.addEventListener("click", sendMessage);
   }
+
+  document.querySelectorAll(".forge-chat-quick-btn").forEach((el) => {
+    el.addEventListener("click", () => {
+      const prompt = String(el.getAttribute("data-prompt") || "").trim();
+      if (!prompt) return;
+      const inp = input();
+      if (!inp) return;
+      inp.value = prompt;
+      updateCounter();
+      sendMessage();
+    });
+  });
 
   const box = msgBox();
   if (box) {

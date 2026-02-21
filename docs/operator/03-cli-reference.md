@@ -13,6 +13,16 @@ npx ape-claw skill install
 npx ape-claw doctor --json
 ```
 
+During core install (no slug), ApeClaw prompts for:
+- Starter pack install
+- Forge dashboard upgrade (best-effort OpenClaw local dashboard replacement with safe fallback)
+
+Open local Forge anytime with:
+
+```bash
+npx ape-claw dashboard
+```
+
 PowerShell (Windows):
 
 ```powershell
@@ -73,6 +83,29 @@ ape-claw quickstart --json
 ```
 
 **Output:** Returns status summary, recommended commands, and next steps based on current configuration.
+
+---
+
+#### `dashboard`
+
+Open the local ApeClaw Forge dashboard. Starts the local ApeClaw UI server if needed, then opens `http://localhost:8787/forge`.
+
+**Synopsis:**
+```bash
+ape-claw dashboard
+ape-claw dashboard --json
+ape-claw dashboard restore-openclaw
+```
+
+**Required arguments:** None
+
+**Optional arguments:**
+- `--json` — Return startup/open status details as JSON
+
+**Subcommands:**
+- `restore-openclaw` — Restore OpenClaw dashboard UI from `.apeclaw.bak` if present
+
+**Output:** Returns/prints dashboard URL, server startup status, browser open result, and overwrite/reapply status when applicable.
 
 ---
 
@@ -520,7 +553,7 @@ Install skills for Cursor/OpenClaw. Without a slug, installs the core `ape-claw`
 
 **Synopsis:**
 ```bash
-ape-claw skill install [<slug>] [--scope <local|global>] [--skills-dir <path>] [--starter-pack | --no-starter-pack] [--allow-unvetted] [--allow-high-risk] [--allow-custom-api] [--allow-insecure-api] --json
+ape-claw skill install [<slug>] [--scope <local|global>] [--skills-dir <path>] [--starter-pack | --no-starter-pack] [--forge-upgrade | --no-forge-upgrade] [--allow-unvetted] [--allow-high-risk] [--allow-custom-api] [--allow-insecure-api] --json
 ```
 
 **Required arguments:** None
@@ -530,6 +563,7 @@ ape-claw skill install [<slug>] [--scope <local|global>] [--skills-dir <path>] [
 - `--scope <local|global>` — Installation scope (default: `global` → `~/.openclaw/skills/`; `local` installs into the current project)
 - `--skills-dir <path>` — Explicit skills directory path
 - `--starter-pack` / `--no-starter-pack` — Install or skip the curated starter pack when running without a slug
+- `--forge-upgrade` / `--no-forge-upgrade` — Opt in/out of Forge dashboard upgrade during core install (without a slug)
 - `--allow-unvetted` — Permit API-fetched skills that are not marked vetted
 - `--allow-high-risk` — Permit API-fetched skills with risk tier 3
 - `--allow-custom-api` — Permit non-apeclaw.ai API hosts (advanced/dev use only)
