@@ -250,7 +250,8 @@ function syncSkillToOpenClaw(cardObj, slug, skillsRoot) {
   fs.mkdirSync(skillDir, { recursive: true });
   fs.writeFileSync(path.join(skillDir, "SKILL.md"), content, "utf8");
 
-  const openclawWorkspaceSkills = path.join(os.homedir(), ".openclaw", "workspace", "skills", s);
+  const homeDir = process.env.OPENCLAW_HOME || os.homedir();
+  const openclawWorkspaceSkills = path.join(homeDir, ".openclaw", "workspace", "skills", s);
   try {
     fs.mkdirSync(openclawWorkspaceSkills, { recursive: true });
     fs.writeFileSync(path.join(openclawWorkspaceSkills, "SKILL.md"), content, "utf8");
@@ -500,7 +501,8 @@ function resolveHumanizerDependencySlug(packageRoot) {
 }
 
 function installOpenClawSkillCard(cardObj, fallbackSlug = "") {
-  const skillsRoot = path.join(os.homedir(), ".openclaw", "skills");
+  const homeDir = process.env.OPENCLAW_HOME || os.homedir();
+  const skillsRoot = path.join(homeDir, ".openclaw", "skills");
   return syncSkillToOpenClaw(cardObj, fallbackSlug, skillsRoot);
 }
 

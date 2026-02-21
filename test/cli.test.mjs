@@ -301,6 +301,7 @@ test("skill install <slug> syncs bundled skills to OpenClaw", () => {
   const out = runWithEnv("node ./src/cli.mjs skill install lincoln-ai --json", {
     APE_CLAW_ROOT: fakeRoot,
     APE_CLAW_STATE_DIR: fakeState,
+    OPENCLAW_HOME: fakeRoot,
   });
   const data = JSON.parse(out);
   assert.equal(data.ok, true);
@@ -315,12 +316,12 @@ test("skill install <slug> syncs bundled skills to OpenClaw", () => {
   const installedSlugs = new Set(data.openclawInstalled.map((s) => s.slug));
   assert.ok(installedSlugs.has("lincoln-ai"), "lincoln-ai should be synced to OpenClaw");
 
-  const lincolnSkill = path.join(fakeRoot, ".cursor", "skills", "lincoln-ai", "SKILL.md");
+  const lincolnSkill = path.join(fakeRoot, ".openclaw", "skills", "lincoln-ai", "SKILL.md");
   assert.ok(fs.existsSync(lincolnSkill), "OpenClaw SKILL.md should exist for lincoln-ai");
 
   if (data.autoInstalled.length > 0) {
     for (const dep of data.autoInstalled) {
-      const depSkill = path.join(fakeRoot, ".cursor", "skills", dep.slug, "SKILL.md");
+      const depSkill = path.join(fakeRoot, ".openclaw", "skills", dep.slug, "SKILL.md");
       assert.ok(fs.existsSync(depSkill), `OpenClaw SKILL.md should exist for dependency ${dep.slug}`);
     }
   }
