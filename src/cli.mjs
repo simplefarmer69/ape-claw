@@ -461,13 +461,30 @@ function resolveBundledSkillFile(packageRoot, slug) {
 
 async function fetchSkillFromApi(slug, args = {}) {
   const apiBase = resolveSkillApiBase(args);
-  const url = `${apiBase}/api/skills/${encodeURIComponent(slug)}`;
+  const url = `${apiBase}/api/skills/get?slug=${encodeURIComponent(slug)}`;
   try {
     const res = await fetch(url, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(15000) });
     if (!res.ok) return { card: null, skillMeta: null, url, apiBase };
     const json = await res.json();
-    const card = json?.card || json?.skill || json || null;
+    if (!json?.ok) return { card: null, skillMeta: null, url, apiBase };
+
     const skillMeta = json?.skill && typeof json.skill === "object" ? json.skill : null;
+    // Prefer the full card JSON; fall back to synthesising a minimal card from index metadata
+    let card = json?.card && typeof json.card === "object" ? json.card : null;
+    if (!card && skillMeta) {
+      card = {
+        name: skillMeta.name || slug,
+        slug: skillMeta.slug || slug,
+        version: "1.0.0",
+        description: skillMeta.description || skillMeta.name || slug,
+        riskTier: skillMeta.riskTier ?? 2,
+        provenance: skillMeta.provenance || { publisher: "imported", signed: false },
+        constraints: { riskTier: skillMeta.riskTier ?? 2 },
+        documentation_md: skillMeta.description
+          ? `# ${skillMeta.name || slug}\n\n${skillMeta.description}`
+          : `# ${skillMeta.name || slug}\n`,
+      };
+    }
     return { card, skillMeta, url, apiBase };
   } catch {
     return { card: null, skillMeta: null, url, apiBase };
