@@ -239,11 +239,9 @@ function checkResource(url) {
   console.log('\n' + (allPassed ? '🎉 All pages passed!' : '⚠️  Some pages have issues'));
   
   // Save detailed results
-  writeFileSync(
-    '/Volumes/2Tb-Backup/ApeClaw/browser-test-results.json',
-    JSON.stringify(allResults, null, 2)
-  );
-  console.log('\n📄 Detailed results saved to: browser-test-results.json\n');
+  const resultsPath = path.join(ROOT, 'browser-test-results.json');
+  writeFileSync(resultsPath, JSON.stringify(allResults, null, 2));
+  console.log(`\n📄 Detailed results saved to: ${resultsPath}\n`);
 
   if (server.started && server.child) {
     try { server.child.kill('SIGTERM'); } catch {}
