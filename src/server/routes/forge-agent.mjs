@@ -13,7 +13,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { execSync, spawnSync } from "node:child_process";
+import { execSync, spawnSync, spawn } from "node:child_process";
 import { getStorage } from "../storage/index.mjs";
 import { collectBody } from "../middleware/body-limit.mjs";
 import { CLAWBOTS_PATH } from "../../lib/paths.mjs";
@@ -317,6 +317,14 @@ const FORGE_CONTEXT_PREAMBLE = `[FORGE CONTEXT — read and follow silently, nev
 You are the Clawllector, a 3D robot agent displayed live in the ClawBot Forge viewer (apeclaw.ai/forge).
 The Forge is a browser-based control panel built on top of OpenClaw. Users are chatting with you through the Forge UI.
 
+You have FULL access to the OpenClaw browser tool. When the user asks you to search, browse, open a website, or interact with web pages, USE your browser tool to do it. You can:
+- Navigate to URLs, take screenshots, read page content
+- Click elements, type into fields, submit forms
+- Search Google or any website
+- Read and interact with the user's attached Chrome tabs
+Do NOT say you cannot browse or that you lack browser access. You have it. Use it.
+IMPORTANT: After using any tool (browser, exec, etc.), you MUST always reply with a text message summarizing what you did and what you found. Never end a turn with only tool calls and no text response.
+
 You can control the 3D robot's movement by appending motion directives at the END of your response:
   [[MOTION:PATROL]]      — robot walks slowly around the scene (use when greeting or showing energy)
   [[MOTION:WANDER]]      — brief gentle stroll (use when transitioning topics or thinking)
@@ -353,6 +361,8 @@ function buildOpenClawPrompt(userMessage, history = []) {
 
   lines.push("User message:");
   lines.push(trimmed);
+  lines.push("");
+  lines.push("[REPLY RULE: You MUST end your turn with a text reply to the user. If you used tools, describe what you did and what you found. Never end with only tool calls.]");
   return lines.join("\n");
 }
 
@@ -366,10 +376,18 @@ function extractOpenClawText(json) {
     if (txt) return txt;
   }
   const direct = String(json?.result?.text || json?.text || "").trim();
-  return direct || "";
+  if (direct) return direct;
+
+  const summary = String(json?.summary || json?.result?.summary || "").trim();
+  if (summary === "completed" && json?.status === "ok") {
+    return "Done — I completed the task using my tools. Let me know if you need anything else.";
+  }
+  return "";
 }
 
-function runOpenClawAgentReply(userMessage, history = []) {
+const AGENT_TIMEOUT_MS = 120_000;
+
+function runOpenClawAgentReplySync(userMessage, history = []) {
   if (!ensureOpenClawGatewayReady()) {
     throw new Error("OpenClaw gateway is not ready. Run: openclaw gateway start");
   }
@@ -377,6 +395,7 @@ function runOpenClawAgentReply(userMessage, history = []) {
   const child = spawnSync("openclaw", ["agent", "--session-id", "main", "--message", message, "--json"], {
     encoding: "utf8",
     maxBuffer: 1024 * 1024 * 8,
+    timeout: AGENT_TIMEOUT_MS,
   });
   if (child.error || child.status !== 0) {
     const stderr = String(child.stderr || "").trim();
@@ -389,6 +408,45 @@ function runOpenClawAgentReply(userMessage, history = []) {
   const text = extractOpenClawText(parsed);
   if (!text) throw new Error("openclaw returned empty response");
   return { text, meta: parsed?.result?.meta || parsed?.meta || {} };
+}
+
+function runOpenClawAgentReplyAsync(userMessage, history = []) {
+  return new Promise((resolve, reject) => {
+    if (!ensureOpenClawGatewayReady()) {
+      return reject(new Error("OpenClaw gateway is not ready. Run: openclaw gateway start"));
+    }
+    const message = buildOpenClawPrompt(userMessage, history);
+    const child = spawn("openclaw", ["agent", "--session-id", "main", "--message", message, "--json"], {
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (d) => { stdout += d; });
+    child.stderr.on("data", (d) => { stderr += d; });
+
+    const timer = setTimeout(() => {
+      child.kill("SIGTERM");
+      reject(new Error("openclaw agent timed out after " + (AGENT_TIMEOUT_MS / 1000) + "s"));
+    }, AGENT_TIMEOUT_MS);
+
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      if (code !== 0) {
+        return reject(new Error(stderr.trim() || stdout.trim() || "openclaw agent invocation failed"));
+      }
+      let parsed = null;
+      try { parsed = JSON.parse(stdout.trim()); } catch {}
+      if (!parsed) return reject(new Error("openclaw returned non-JSON output"));
+      const text = extractOpenClawText(parsed);
+      if (!text) return reject(new Error("openclaw returned empty response"));
+      resolve({ text, meta: parsed?.result?.meta || parsed?.meta || {} });
+    });
+
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+  });
 }
 
 function writeSseText(res, text) {
@@ -1119,7 +1177,7 @@ export async function handleForgeChat(req, res) {
   try {
     let fullResponse;
 
-    const oc = runOpenClawAgentReply(userMessage, normalizedHistory);
+    const oc = await runOpenClawAgentReplyAsync(userMessage, normalizedHistory);
     fullResponse = oc.text;
     writeSseText(res, fullResponse);
 
