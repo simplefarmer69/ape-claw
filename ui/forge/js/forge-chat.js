@@ -309,6 +309,7 @@ async function sendToForgeAgent(text) {
           message: text,
           history: conversationHistory.slice(-20),
         }),
+        signal: AbortSignal.timeout(150000),
       });
     }
 
@@ -388,7 +389,14 @@ async function sendToForgeAgent(text) {
   } catch (err) {
     stopPending();
     if (bodyEl) {
-      const msg = buffer || `Connection error: ${err.message}`;
+      let msg = buffer;
+      if (!msg) {
+        if (err.name === "TimeoutError") {
+          msg = "The agent is still working (browser/tool operations can take up to 2 minutes). Try again or check the OpenClaw gateway dashboard for results.";
+        } else {
+          msg = `Connection error: ${err.message}`;
+        }
+      }
       bodyEl.innerHTML = renderChatText(msg);
     }
   }
