@@ -134,7 +134,11 @@ export function handleRewrite(req, res, pathname) {
   if (!fs.existsSync(p)) { res.writeHead(404); res.end(`missing: ${rewrite}`); return true; }
   const ext = path.extname(p).toLowerCase();
   const mime = ext === ".html" ? "text/html; charset=utf-8" : ext === ".png" ? "image/png" : "application/octet-stream";
-  res.writeHead(200, { "content-type": mime });
+  const headers = { "content-type": mime };
+  if (ext === ".html" || ext === ".js" || ext === ".css") {
+    headers["cache-control"] = "no-cache, no-store, must-revalidate";
+  }
+  res.writeHead(200, headers);
   fs.createReadStream(p).pipe(res);
   return true;
 }
@@ -158,7 +162,12 @@ export function handleStaticFile(req, res, pathname) {
   if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) return false;
   const ext = path.extname(filePath).toLowerCase();
   const mime = MIME_TYPES[ext] || "application/octet-stream";
-  res.writeHead(200, { "content-type": mime });
+  const headers = { "content-type": mime };
+  if (ext === ".js" || ext === ".css" || ext === ".html") {
+    headers["cache-control"] = "no-cache, no-store, must-revalidate";
+    headers["pragma"] = "no-cache";
+  }
+  res.writeHead(200, headers);
   fs.createReadStream(filePath).pipe(res);
   return true;
 }
