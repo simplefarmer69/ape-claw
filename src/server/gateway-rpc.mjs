@@ -10,9 +10,22 @@ import crypto, { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import logger from "./logger.mjs";
+import { fileURLToPath } from "node:url";
 
 const PROTOCOL_VERSION = 3;
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+let _pkgVersion;
+function getPackageVersion() {
+  if (_pkgVersion) return _pkgVersion;
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../../package.json"), "utf8"));
+    _pkgVersion = pkg.version || "0.0.0";
+  } catch {
+    _pkgVersion = "0.0.0";
+  }
+  return _pkgVersion;
+}
 
 function readOpenClawConfig() {
   const candidates = [
@@ -102,12 +115,17 @@ export async function gatewayRpc(method, params, opts = {}) {
 
   return new Promise((resolve, reject) => {
     let settled = false;
+    let connectStarted = false;
     let ws;
+
+    const pending = new Map();
 
     const finish = (err, value) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      for (const [, entry] of pending) entry.reject(err || new Error("connection closed"));
+      pending.clear();
       try { ws?.close(); } catch {}
       if (err) reject(err);
       else resolve(value);
@@ -123,97 +141,65 @@ export async function gatewayRpc(method, params, opts = {}) {
       return finish(new Error(`failed to create WebSocket: ${err.message}`));
     }
 
-    const pending = new Map();
-    let connectNonce = null;
-    let authenticated = false;
-
-    function sendFrame(frame) {
-      ws.send(JSON.stringify(frame));
-    }
-
     function sendRequest(reqMethod, reqParams, reqOpts = {}) {
       const id = randomUUID();
       const frame = { type: "req", id, method: reqMethod, params: reqParams };
       return new Promise((res, rej) => {
         pending.set(id, { resolve: res, reject: rej, expectFinal: reqOpts.expectFinal ?? false });
-        sendFrame(frame);
+        ws.send(JSON.stringify(frame));
       });
     }
 
     const CLIENT_ID = "cli";
     const CLIENT_MODE = "cli";
     const ROLE = "operator";
-    const SCOPES = ["operator.admin", "operator.approvals", "operator.pairing"];
+    const SCOPES = ["operator.admin", "operator.write", "operator.approvals", "operator.pairing"];
     const instanceId = randomUUID();
 
-    function sendConnect(nonce) {
+    async function doConnectAndRequest(nonce) {
+      if (connectStarted) return;
+      connectStarted = true;
+
       const auth = token ? { token } : undefined;
       const signedAtMs = Date.now();
       const identity = getCachedDeviceIdentity();
       const device = identity
         ? buildDeviceAuth(identity, {
-            clientId: CLIENT_ID,
-            clientMode: CLIENT_MODE,
-            role: ROLE,
-            scopes: SCOPES,
-            signedAtMs,
-            token: token || null,
-            nonce,
+            clientId: CLIENT_ID, clientMode: CLIENT_MODE, role: ROLE,
+            scopes: SCOPES, signedAtMs, token: token || null, nonce,
           })
         : undefined;
 
-      const connectParams = {
-        minProtocol: PROTOCOL_VERSION,
-        maxProtocol: PROTOCOL_VERSION,
-        client: {
-          id: CLIENT_ID,
-          displayName: "ApeClaw Forge",
-          version: "0.1.9",
-          platform: process.platform,
-          mode: CLIENT_MODE,
-          instanceId,
-        },
-        caps: [],
-        auth,
-        role: ROLE,
-        scopes: SCOPES,
-        device,
-      };
-      return sendRequest("connect", connectParams);
+      try {
+        await sendRequest("connect", {
+          minProtocol: PROTOCOL_VERSION, maxProtocol: PROTOCOL_VERSION,
+          client: {
+            id: CLIENT_ID, displayName: "ApeClaw Forge",
+            version: getPackageVersion(), platform: process.platform,
+            mode: CLIENT_MODE, instanceId,
+          },
+          caps: [], auth, role: ROLE, scopes: SCOPES, device,
+        });
+        const result = await sendRequest(method, params, { expectFinal });
+        finish(null, result);
+      } catch (err) {
+        finish(err);
+      }
     }
 
-    ws.onopen = async () => {
-      if (!connectNonce) {
-        try {
-          await sendConnect(null);
-          authenticated = true;
-          const result = await sendRequest(method, params, { expectFinal });
-          finish(null, result);
-        } catch (err) {
-          finish(err);
-        }
-      }
-    };
+    ws.onopen = () => { doConnectAndRequest(null); };
 
     ws.onmessage = (event) => {
       let parsed;
       try { parsed = JSON.parse(String(event.data)); } catch { return; }
 
-      if (parsed.type === "evt" && parsed.event === "connect.challenge") {
-        connectNonce = parsed.payload?.nonce ?? null;
-        sendConnect(connectNonce).then(async () => {
-          authenticated = true;
-          try {
-            const result = await sendRequest(method, params, { expectFinal });
-            finish(null, result);
-          } catch (err) {
-            finish(err);
-          }
-        }).catch((err) => finish(err));
+      if (parsed.type === "evt") {
+        if (parsed.event === "connect.challenge") {
+          connectStarted = false;
+          doConnectAndRequest(parsed.payload?.nonce ?? null);
+        }
         return;
       }
-
-      if (parsed.type === "evt") return;
 
       if (parsed.type === "res" || parsed.type === "err") {
         const entry = pending.get(parsed.id);
@@ -225,8 +211,7 @@ export async function gatewayRpc(method, params, opts = {}) {
           return;
         }
 
-        const status = parsed.payload?.status;
-        if (entry.expectFinal && status === "accepted") return;
+        if (entry.expectFinal && parsed.payload?.status === "accepted") return;
 
         pending.delete(parsed.id);
         if (parsed.ok === false) {

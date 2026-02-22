@@ -133,10 +133,11 @@ export function handleRewrite(req, res, pathname) {
   const p = path.join(PROJECT_ROOT, rewrite);
   if (!fs.existsSync(p)) { res.writeHead(404); res.end(`missing: ${rewrite}`); return true; }
   const ext = path.extname(p).toLowerCase();
-  const mime = ext === ".html" ? "text/html; charset=utf-8" : ext === ".png" ? "image/png" : "application/octet-stream";
+  const mime = MIME_TYPES[ext] || "application/octet-stream";
   const headers = { "content-type": mime };
   if (ext === ".html" || ext === ".js" || ext === ".css") {
     headers["cache-control"] = "no-cache, no-store, must-revalidate";
+    headers["pragma"] = "no-cache";
   }
   res.writeHead(200, headers);
   fs.createReadStream(p).pipe(res);
@@ -148,7 +149,10 @@ export function handleIndex(req, res) {
   const uiPath = path.join(PROJECT_ROOT, "ui", "index.html");
   const p = fs.existsSync(landingPath) ? landingPath : uiPath;
   if (!fs.existsSync(p)) { res.writeHead(404); return res.end("index.html not found"); }
-  res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+  res.writeHead(200, {
+    "content-type": "text/html; charset=utf-8",
+    "cache-control": "no-cache, no-store, must-revalidate",
+  });
   return fs.createReadStream(p).pipe(res);
 }
 

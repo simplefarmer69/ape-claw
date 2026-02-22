@@ -13,7 +13,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { execSync, spawnSync } from "node:child_process";
+import { execSync, spawnSync, spawn } from "node:child_process";
 import { getStorage } from "../storage/index.mjs";
 import { collectBody } from "../middleware/body-limit.mjs";
 import { CLAWBOTS_PATH } from "../../lib/paths.mjs";
@@ -853,171 +853,6 @@ setInterval(() => {
 }, 120_000).unref();
 
 /* ══════════════════════════════════════════════════════════
-   LLM Streaming — OpenAI-compatible (covers most providers)
-   ══════════════════════════════════════════════════════════ */
-
-async function streamOpenAICompatible(messages, res) {
-  const headers = { "content-type": "application/json" };
-  if (llmConfig.apiKey) headers["authorization"] = `Bearer ${llmConfig.apiKey}`;
-
-  async function requestOnce() {
-    return fetch(llmConfig.apiUrl, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ model: llmConfig.model, messages, stream: true }),
-    });
-  }
-  let upstream = await requestOnce();
-  if (!upstream.ok && (upstream.status === 429 || upstream.status >= 500)) {
-    const retryAfter = Number(upstream.headers.get("retry-after") || 0);
-    const waitMs = Number.isFinite(retryAfter) && retryAfter > 0 ? Math.min(retryAfter * 1000, 4000) : 500;
-    await new Promise((resolve) => setTimeout(resolve, waitMs));
-    upstream = await requestOnce();
-  }
-
-  if (!upstream.ok) {
-    const errText = await upstream.text().catch(() => "");
-    logger.error({ status: upstream.status, body: errText.slice(0, 500), provider: llmConfig.provider }, "LLM API error");
-    res.writeHead(502, { "content-type": "application/json" });
-    const retryAfter = Number(upstream.headers.get("retry-after") || 0) || undefined;
-    return res.end(JSON.stringify({
-      error: `upstream API error (${llmConfig.provider} ${upstream.status})`,
-      status: upstream.status,
-      provider: llmConfig.provider,
-      retryAfter,
-    }));
-  }
-
-  res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", "connection": "keep-alive" });
-
-  let fullResponse = "";
-  const reader = upstream.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() || "";
-
-    for (const line of lines) {
-      if (!line.startsWith("data: ")) continue;
-      const data = line.slice(6).trim();
-      if (data === "[DONE]") { res.write("data: [DONE]\n\n"); continue; }
-      try {
-        const chunk = JSON.parse(data);
-        const text = chunk.choices?.[0]?.delta?.content || "";
-        if (text) {
-          fullResponse += text;
-          res.write(`data: ${JSON.stringify({ text })}\n\n`);
-        }
-      } catch {}
-    }
-  }
-
-  if (buffer.trim()) {
-    const remaining = buffer.trim();
-    if (remaining.startsWith("data: ") && remaining.slice(6).trim() !== "[DONE]") {
-      try {
-        const chunk = JSON.parse(remaining.slice(6).trim());
-        const text = chunk.choices?.[0]?.delta?.content || "";
-        if (text) { fullResponse += text; res.write(`data: ${JSON.stringify({ text })}\n\n`); }
-      } catch {}
-    }
-  }
-
-  if (!res.writableEnded) { res.write("data: [DONE]\n\n"); res.end(); }
-  return fullResponse;
-}
-
-/* ══════════════════════════════════════════════════════════
-   LLM Streaming — Anthropic Messages API
-   ══════════════════════════════════════════════════════════ */
-
-async function streamAnthropic(systemPrompt, messages, res) {
-  const anthropicMessages = messages
-    .filter((m) => m.role !== "system")
-    .map((m) => ({ role: m.role, content: m.content }));
-
-  async function requestOnce() {
-    return fetch(llmConfig.apiUrl, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": llmConfig.apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: llmConfig.model,
-        max_tokens: 2048,
-        system: systemPrompt,
-        messages: anthropicMessages,
-        stream: true,
-      }),
-    });
-  }
-  let upstream = await requestOnce();
-  if (!upstream.ok && (upstream.status === 429 || upstream.status >= 500)) {
-    const retryAfter = Number(upstream.headers.get("retry-after") || 0);
-    const waitMs = Number.isFinite(retryAfter) && retryAfter > 0 ? Math.min(retryAfter * 1000, 4000) : 500;
-    await new Promise((resolve) => setTimeout(resolve, waitMs));
-    upstream = await requestOnce();
-  }
-
-  if (!upstream.ok) {
-    const errText = await upstream.text().catch(() => "");
-    logger.error({ status: upstream.status, body: errText.slice(0, 500), provider: "anthropic" }, "Anthropic API error");
-    res.writeHead(502, { "content-type": "application/json" });
-    const retryAfter = Number(upstream.headers.get("retry-after") || 0) || undefined;
-    return res.end(JSON.stringify({
-      error: `upstream API error (anthropic ${upstream.status})`,
-      status: upstream.status,
-      provider: "anthropic",
-      retryAfter,
-    }));
-  }
-
-  res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", "connection": "keep-alive" });
-
-  let fullResponse = "";
-  const reader = upstream.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() || "";
-
-    for (const line of lines) {
-      if (line.startsWith("event: ")) continue;
-      if (!line.startsWith("data: ")) continue;
-      const data = line.slice(6).trim();
-      if (!data) continue;
-      try {
-        const evt = JSON.parse(data);
-        if (evt.type === "content_block_delta" && evt.delta?.text) {
-          fullResponse += evt.delta.text;
-          res.write(`data: ${JSON.stringify({ text: evt.delta.text })}\n\n`);
-        }
-        if (evt.type === "message_stop") {
-          res.write("data: [DONE]\n\n");
-        }
-      } catch {}
-    }
-  }
-
-  if (!res.writableEnded) { res.write("data: [DONE]\n\n"); res.end(); }
-  return fullResponse;
-}
-
-/* ══════════════════════════════════════════════════════════
    Init — called at server startup
    ══════════════════════════════════════════════════════════ */
 
@@ -1180,15 +1015,7 @@ export async function handleForgeChat(req, res) {
 
   const history = Array.isArray(body.history) ? body.history.slice(-MAX_HISTORY_TURNS) : [];
 
-  const snapshot = getTelemetrySnapshot();
-  const systemPrompt = buildSystemPrompt(snapshot);
-
-  const messages = [{ role: "system", content: systemPrompt }];
   const normalizedHistory = normalizeConversationHistory(history);
-  for (const turn of normalizedHistory) {
-    messages.push(turn);
-  }
-  messages.push({ role: "user", content: userMessage });
 
   postToChat("forge", userMessage, "user");
 
@@ -1210,10 +1037,15 @@ export async function handleForgeChat(req, res) {
       emitTelemetryEvent(userMessage, fullResponse.length);
     }
   } catch (err) {
-    logger.error({ err, provider: "openclaw-gateway-ws" }, "Forge agent stream error");
+    const errMsg = err?.message || String(err);
+    logger.error({ err: errMsg, provider: "openclaw-gateway-ws" }, "Forge agent stream error");
     if (!res.headersSent) {
+      const isLocal = isLocalRequest(req);
       res.writeHead(500, { "content-type": "application/json" });
-      return res.end(JSON.stringify({ error: "internal error" }));
+      return res.end(JSON.stringify({
+        error: isLocal ? `gateway error: ${errMsg}` : "internal error",
+        provider: "openclaw-gateway-ws",
+      }));
     }
     if (!res.writableEnded) {
       res.write(`data: ${JSON.stringify({ text: "\n\n[Connection interrupted]" })}\n\n`);

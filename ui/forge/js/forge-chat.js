@@ -25,6 +25,13 @@ let localAgentName = "Agent";
 let gatewayPollTimer = null;
 let lastMotionIntentAt = 0;
 
+function safeAbortTimeout(ms) {
+  if (typeof AbortSignal.timeout === "function") return AbortSignal.timeout(ms);
+  const ctrl = new AbortController();
+  setTimeout(() => ctrl.abort(), ms);
+  return ctrl.signal;
+}
+
 const conversationHistory = [];
 
 function escapeHtml(s) {
@@ -116,7 +123,7 @@ function isWebsiteMode() {
 
 async function probeForgeAgent() {
   try {
-    const res = await fetch("/api/forge/status", { signal: AbortSignal.timeout(10000) });
+    const res = await fetch("/api/forge/status", { signal: safeAbortTimeout(10000) });
     if (!res.ok) return false;
     const data = await res.json();
     if (data.agentName) localAgentName = data.agentName;
@@ -128,7 +135,7 @@ async function probeForgeAgent() {
 
 async function fetchGatewayStatus() {
   try {
-    const res = await fetch("/api/forge/status", { signal: AbortSignal.timeout(9000) });
+    const res = await fetch("/api/forge/status", { signal: safeAbortTimeout(9000) });
     if (!res.ok) return null;
     return await res.json();
   } catch {
@@ -309,7 +316,7 @@ async function sendToForgeAgent(text) {
           message: text,
           history: conversationHistory.slice(-20),
         }),
-        signal: AbortSignal.timeout(150000),
+        signal: safeAbortTimeout(150000),
       });
     }
 
@@ -379,11 +386,11 @@ async function sendToForgeAgent(text) {
       }
     }
 
+    stopPending();
     if (buffer) {
       applyMotionIntentsFromText(buffer, { allowActiveMotion: userAskedForMotion(text) });
       conversationHistory.push({ role: "assistant", content: buffer });
     } else if (bodyEl && !bodyEl.textContent) {
-      stopPending();
       bodyEl.textContent = "No response received";
     }
   } catch (err) {
@@ -391,7 +398,7 @@ async function sendToForgeAgent(text) {
     if (bodyEl) {
       let msg = buffer;
       if (!msg) {
-        if (err.name === "TimeoutError") {
+        if (err.name === "TimeoutError" || err.name === "AbortError") {
           msg = "The agent is still working (browser/tool operations can take up to 2 minutes). Try again or check the OpenClaw gateway dashboard for results.";
         } else {
           msg = `Connection error: ${err.message}`;
@@ -401,7 +408,6 @@ async function sendToForgeAgent(text) {
     }
   }
 
-  stopPending();
   finishStreaming();
 }
 
