@@ -1,6 +1,6 @@
 {
   "name": "ape-claw",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "ApeChain bridge and NFT execution CLI with telemetry for OpenClaw agents",
   "license": "MIT",
   "repository": {
