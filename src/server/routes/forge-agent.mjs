@@ -13,7 +13,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { execSync, spawnSync, spawn } from "node:child_process";
+import { execSync, spawnSync } from "node:child_process";
 import { getStorage } from "../storage/index.mjs";
 import { collectBody } from "../middleware/body-limit.mjs";
 import { CLAWBOTS_PATH } from "../../lib/paths.mjs";
@@ -24,6 +24,7 @@ import {
 } from "../../lib/openclaw-paths.mjs";
 import { registerClawbot, verifyClawbot } from "../../lib/clawbots.mjs";
 import logger from "../logger.mjs";
+import { gatewayAgentTurn, extractAgentText as extractGatewayText, gatewayHealthCheck } from "../gateway-rpc.mjs";
 
 const SKILL_RESCAN_INTERVAL_MS = 5 * 60 * 1000;
 const MAX_HISTORY_TURNS = 10;
@@ -1027,7 +1028,7 @@ export function initForgeAgent() {
       "OpenClaw CLI/gateway unavailable — Forge chat will return 503 until OpenClaw is installed and running.",
     );
   } else {
-    logger.info("Forge chat configured to use OpenClaw gateway runtime");
+    logger.info("Forge chat configured for direct OpenClaw gateway WebSocket RPC");
   }
   ensureForgeAgentIdentity();
   refreshSkillCache();
@@ -1047,19 +1048,27 @@ export function initForgeAgent() {
    Status — GET /api/forge/status
    ══════════════════════════════════════════════════════════ */
 
-export function handleForgeStatus(req, res) {
+export async function handleForgeStatus(req, res) {
   const llm = refreshLlmConfig();
-  const gatewayReady = openclawAgentFallbackAvailable ? ensureOpenClawGatewayReady() : false;
+  let gatewayReady = false;
+  try {
+    const health = await gatewayHealthCheck();
+    gatewayReady = health.ok;
+  } catch {}
+  if (!gatewayReady && openclawAgentFallbackAvailable) {
+    gatewayReady = ensureOpenClawGatewayReady();
+  }
   res.writeHead(200, { "content-type": "application/json" });
   res.end(JSON.stringify({
     configured: gatewayReady,
-    provider: gatewayReady ? "openclaw-gateway" : null,
+    provider: gatewayReady ? "openclaw-gateway-ws" : null,
     agentId: FORGE_AGENT_ID,
     agentName: FORGE_AGENT_DISPLAY_NAME,
     verified: runtimeAgentVerified,
     model: gatewayReady ? "openclaw-session-main" : null,
     gatewayReady,
     gatewayCli: openclawAgentFallbackAvailable,
+    gatewayDirect: true,
     llmProviderHint: llm?.provider || null,
     llmModelHint: llm?.model || null,
     skills: cachedSkills.summaries.length + (cachedSkills.apeClawFull ? 1 : 0),
@@ -1132,7 +1141,16 @@ export async function handleForgeGatewayControl(req, res) {
 
 export async function handleForgeChat(req, res) {
   refreshLlmConfig();
-  if (!openclawAgentFallbackAvailable || !ensureOpenClawGatewayReady()) {
+
+  let gatewayReady = false;
+  try {
+    const health = await gatewayHealthCheck();
+    gatewayReady = health.ok;
+  } catch {}
+  if (!gatewayReady && openclawAgentFallbackAvailable) {
+    gatewayReady = ensureOpenClawGatewayReady();
+  }
+  if (!gatewayReady) {
     res.writeHead(503, { "content-type": "application/json" });
     return res.end(JSON.stringify({
       error: "OpenClaw gateway is not ready. Start it with: openclaw gateway start",
@@ -1177,8 +1195,14 @@ export async function handleForgeChat(req, res) {
   try {
     let fullResponse;
 
-    const oc = await runOpenClawAgentReplyAsync(userMessage, normalizedHistory);
-    fullResponse = oc.text;
+    const prompt = buildOpenClawPrompt(userMessage, normalizedHistory);
+    const gwResponse = await gatewayAgentTurn(prompt, { timeoutMs: 150_000 });
+    fullResponse = extractGatewayText(gwResponse);
+
+    if (!fullResponse) {
+      fullResponse = extractOpenClawText(gwResponse) || "No response from agent.";
+    }
+
     writeSseText(res, fullResponse);
 
     if (fullResponse) {
@@ -1186,7 +1210,7 @@ export async function handleForgeChat(req, res) {
       emitTelemetryEvent(userMessage, fullResponse.length);
     }
   } catch (err) {
-    logger.error({ err, provider: "openclaw-gateway" }, "Forge agent stream error");
+    logger.error({ err, provider: "openclaw-gateway-ws" }, "Forge agent stream error");
     if (!res.headersSent) {
       res.writeHead(500, { "content-type": "application/json" });
       return res.end(JSON.stringify({ error: "internal error" }));
