@@ -179,7 +179,7 @@ function shutdown(signal) {
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
 
-server.listen(PORT, BIND_HOST || undefined, () => {
+server.listen(PORT, BIND_HOST || "0.0.0.0", () => {
   logger.info({ port: PORT, bind: BIND_HOST || "0.0.0.0", corsOrigins: process.env.APE_CLAW_CORS_ORIGINS || "(default)" }, "Server listening");
   console.log(`ape-claw telemetry server listening on http://localhost:${PORT}`);
   console.log(`SSE stream: http://localhost:${PORT}/events`);

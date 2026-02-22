@@ -817,6 +817,138 @@ The CLI auto-retries "Order not found" errors up to 3 times by fetching fresh li
 
 ---
 
+## Troubleshooting
+
+### `openclaw: command not found` after install
+
+The OpenClaw installer may not update your shell PATH automatically. Fix:
+
+```bash
+mkdir -p "$HOME/.npm-global"
+npm config set prefix "$HOME/.npm-global"
+npm install -g openclaw@latest
+export PATH="$HOME/.npm-global/bin:$PATH"
+rehash   # zsh only
+```
+
+Add the `export PATH` line to `~/.zshrc` (or `~/.bashrc`) to make it permanent.
+
+### `Unknown command: dashboard`
+
+You are running a stale cached version of `ape-claw`. Force the latest:
+
+```bash
+rm -rf ~/.npm/_npx
+npm cache verify
+npx --yes ape-claw@latest dashboard
+```
+
+Always use `npx --yes ape-claw@latest` (not just `npx ape-claw`) for fresh installs.
+
+### OpenClaw gateway not starting / `openclaw.json` missing
+
+If `openclaw gateway start` fails silently after a fresh install, generate the config first:
+
+```bash
+openclaw onboard --non-interactive --accept-risk --auth-choice skip --install-daemon --skip-channels --skip-skills --skip-ui --json
+openclaw gateway start
+```
+
+The `dashboard` command does this automatically, but running it manually helps if the gateway service is stuck.
+
+### `Disconnected from gateway: device token mismatch` or `pairing required`
+
+After reinstalling or regenerating OpenClaw config, the CLI may have a stale device token. Approve the pending pairing request:
+
+```bash
+# List pending requests
+openclaw devices list
+
+# Approve the pending request (copy the Request ID from the Pending table)
+openclaw devices approve <request-id>
+```
+
+The `ape-claw dashboard` command auto-detects and approves pending pairings, but if you see this on the native OpenClaw dashboard, approve manually as shown above.
+
+### Forge chat returns `Error: internal error`
+
+This usually means the OpenClaw gateway cannot reach its configured LLM. Common causes:
+
+1. **Wrong model for your API key**: OpenClaw defaults to `anthropic/claude-opus-4-6`. If you only have an OpenAI key:
+   ```bash
+   openclaw config set agents.defaults.model.primary "openai/gpt-4o"
+   openclaw gateway restart
+   ```
+
+2. **Invalid API key saved**: Check `~/.openclaw/.env` — the `OPENAI_API_KEY` value should start with `sk-`. If it looks like garbage, re-enter it.
+
+3. **Gateway pairing issue**: The Forge backend calls `openclaw agent` which needs a paired device:
+   ```bash
+   openclaw devices pair --auto-approve
+   ```
+
+### Forge page loads but chat says `Forge agent not configured`
+
+The Forge reads LLM keys from OpenClaw's config, not its own env. Make sure you have a key in `~/.openclaw/.env`:
+
+```bash
+echo 'OPENAI_API_KEY=sk-your-key-here' >> ~/.openclaw/.env
+```
+
+Then set the matching model:
+
+```bash
+openclaw config set agents.defaults.model.primary "openai/gpt-4o"
+openclaw gateway restart
+```
+
+### `localhost:8787` not loading (Forge server)
+
+On macOS, `localhost` may resolve to IPv6 (`::1`) while the server binds to IPv4. Use `http://127.0.0.1:8787/forge` instead. The latest version binds to `0.0.0.0` by default, fixing this.
+
+### `.zshrc` parse error on shell startup
+
+If you see `parse error near 'fi'` or similar, the OpenClaw installer may have left a stale snippet. Edit `~/.zshrc`, remove the broken block, and make the OpenClaw completion line conditional:
+
+```bash
+if [ -f "$HOME/.openclaw/completions/openclaw.zsh" ]; then
+  source "$HOME/.openclaw/completions/openclaw.zsh"
+fi
+```
+
+### Fresh install checklist (zero to working Forge)
+
+```bash
+# 1. Install OpenClaw
+curl -fsSL https://openclaw.ai/install.sh | bash
+export PATH="$HOME/.npm-global/bin:$PATH"
+rehash   # zsh only
+
+# 2. Onboard + start gateway
+openclaw onboard --non-interactive --accept-risk \
+  --auth-choice skip --install-daemon \
+  --skip-channels --skip-skills --skip-ui --json
+openclaw gateway install
+# Wait a few seconds for the gateway service to start, then approve pairing:
+sleep 5
+openclaw devices list
+# Copy the Request ID from the Pending table, then:
+openclaw devices approve <request-id>
+
+# 3. Set your LLM key
+echo 'OPENAI_API_KEY=sk-your-key-here' >> ~/.openclaw/.env
+openclaw config set agents.defaults.model.primary "openai/gpt-4o"
+openclaw gateway restart
+
+# 4. Install ApeClaw + open Forge
+npx --yes ape-claw@latest skill install
+npx --yes ape-claw@latest dashboard
+```
+
+The `ape-claw dashboard` command automates steps 2-3 when possible (auto-onboard, auto-approve pending devices, auto-set model to match your API key). If something still fails, running the manual steps above resolves it.
+
+---
+
 ## Development
 
 ```bash

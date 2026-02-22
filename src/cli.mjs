@@ -869,15 +869,27 @@ function gatewayStatusLooksReady(out) {
 
 function ensureOpenClawGatewayForForge() {
   if (!hasOpenClawCli()) return { ok: false, action: "missing_cli" };
+
+  const configPath = path.join(process.env.HOME || "", ".openclaw", "openclaw.json");
+  if (!fs.existsSync(configPath)) {
+    spawnSync("openclaw", [
+      "onboard", "--non-interactive", "--accept-risk",
+      "--auth-choice", "skip", "--install-daemon",
+      "--skip-channels", "--skip-skills", "--skip-ui", "--json",
+    ], { encoding: "utf8", timeout: 30000 });
+  }
+
   const status1 = spawnSync("openclaw", ["gateway", "status", "--json"], { encoding: "utf8", timeout: 12000 });
   const status1Out = `${status1.stdout || ""}\n${status1.stderr || ""}`;
   if (status1.status === 0 && gatewayStatusLooksReady(status1Out)) {
+    ensureDevicePairedIfNeeded(status1Out);
     return { ok: true, action: "already_running" };
   }
   const start = spawnSync("openclaw", ["gateway", "start"], { encoding: "utf8", timeout: 18000 });
   const status2 = spawnSync("openclaw", ["gateway", "status", "--json"], { encoding: "utf8", timeout: 12000 });
   const status2Out = `${status2.stdout || ""}\n${status2.stderr || ""}`;
   if (start.status === 0 && status2.status === 0 && gatewayStatusLooksReady(status2Out)) {
+    ensureDevicePairedIfNeeded(status2Out);
     return { ok: true, action: "started" };
   }
   const install = spawnSync("openclaw", ["gateway", "install"], { encoding: "utf8", timeout: 25000 });
@@ -885,6 +897,7 @@ function ensureOpenClawGatewayForForge() {
   const status3 = spawnSync("openclaw", ["gateway", "status", "--json"], { encoding: "utf8", timeout: 12000 });
   const status3Out = `${status3.stdout || ""}\n${status3.stderr || ""}`;
   if (status3.status === 0 && gatewayStatusLooksReady(status3Out)) {
+    ensureDevicePairedIfNeeded(status3Out);
     return { ok: true, action: "installed_and_started" };
   }
   return {
@@ -892,6 +905,43 @@ function ensureOpenClawGatewayForForge() {
     action: "failed",
     details: String(status3.stderr || status3.stdout || start2.stderr || start2.stdout || install.stderr || install.stdout || "").trim(),
   };
+}
+
+function ensureDevicePairedIfNeeded(statusOutput) {
+  const out = String(statusOutput || "");
+  if (!out.includes("pairing required") && !out.includes("device token mismatch") && !out.includes("unauthorized")) return;
+  try {
+    const listResult = spawnSync("openclaw", ["devices", "list", "--json"], { encoding: "utf8", timeout: 12000 });
+    const listOut = String(listResult.stdout || "");
+    const listJson = JSON.parse(listOut);
+    const pending = listJson?.pending || [];
+    for (const req of pending) {
+      const reqId = req?.requestId || req?.id || "";
+      if (!reqId) continue;
+      spawnSync("openclaw", ["devices", "approve", reqId], { encoding: "utf8", timeout: 10000 });
+    }
+  } catch {}
+}
+
+function ensureModelMatchesApiKey() {
+  try {
+    const envPath = path.join(process.env.HOME || "", ".openclaw", ".env");
+    if (!fs.existsSync(envPath)) return;
+    const raw = fs.readFileSync(envPath, "utf8");
+    const hasOpenAI = /^OPENAI_API_KEY\s*=\s*sk-/m.test(raw);
+    const hasAnthropic = /^ANTHROPIC_API_KEY\s*=\s*sk-ant-/m.test(raw);
+    if (!hasOpenAI || hasAnthropic) return;
+
+    const configPath = path.join(process.env.HOME || "", ".openclaw", "openclaw.json");
+    if (!fs.existsSync(configPath)) return;
+    const cfg = JSON.parse(fs.readFileSync(configPath, "utf8"));
+    const currentModel = cfg?.agents?.defaults?.model?.primary || "";
+    if (currentModel && currentModel.startsWith("openai/")) return;
+
+    spawnSync("openclaw", ["config", "set", "agents.defaults.model.primary", "openai/gpt-4o"], {
+      encoding: "utf8", timeout: 10000,
+    });
+  } catch {}
 }
 
 async function runForgeDashboardUpgrade({ packageRoot, attemptHardOverwrite = true }) {
@@ -914,6 +964,7 @@ async function runForgeDashboardUpgrade({ packageRoot, attemptHardOverwrite = tr
   const overwritePath = findOpenClawControlUiIndex();
   const overwriteActive = isForgeOverwriteActive(overwritePath);
   const gateway = ensureOpenClawGatewayForForge();
+  ensureModelMatchesApiKey();
 
   const server = await ensureForgeServerRunning(packageRoot);
   const optedIn = Boolean(settings?.openclawOverwriteOptIn);

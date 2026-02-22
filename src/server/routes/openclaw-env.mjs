@@ -153,6 +153,31 @@ export async function handleOpenClawEnvSet(req, res) {
     return res.end(JSON.stringify({ ok: false, error: "updates object required" }));
   }
 
+  const warnings = [];
+  for (const [k, v] of Object.entries(updates)) {
+    const val = String(v ?? "").trim();
+    if (!val) continue;
+    if (k === "OPENAI_API_KEY" && !val.startsWith("sk-")) {
+      warnings.push(`${k} should start with "sk-". The value you provided doesn't look like a valid OpenAI API key.`);
+    }
+    if (k === "ANTHROPIC_API_KEY" && !val.startsWith("sk-ant-")) {
+      warnings.push(`${k} should start with "sk-ant-". The value you provided doesn't look like a valid Anthropic key.`);
+    }
+    if (k === "GROQ_API_KEY" && !val.startsWith("gsk_")) {
+      warnings.push(`${k} should start with "gsk_". The value you provided doesn't look like a valid Groq key.`);
+    }
+    if (k === "PERPLEXITY_API_KEY" && !val.startsWith("pplx-")) {
+      warnings.push(`${k} should start with "pplx-". The value you provided doesn't look like a valid Perplexity key.`);
+    }
+    if (/API_KEY$/i.test(k) && val.length < 20) {
+      warnings.push(`${k} looks too short to be a real API key (${val.length} chars).`);
+    }
+  }
+  if (warnings.length) {
+    res.writeHead(400, { "content-type": "application/json" });
+    return res.end(JSON.stringify({ ok: false, error: "Invalid API key format", warnings }));
+  }
+
   const envPath = resolveEnvPath();
   const currentRaw = fs.existsSync(envPath) ? fs.readFileSync(envPath, "utf8") : "";
   const current = parseEnv(currentRaw);

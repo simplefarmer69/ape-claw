@@ -105,6 +105,13 @@ ape-claw dashboard restore-openclaw
 **Subcommands:**
 - `restore-openclaw` — Restore OpenClaw dashboard UI from `.apeclaw.bak` if present
 
+**What it does automatically:**
+- Generates `~/.openclaw/openclaw.json` via `openclaw onboard` if missing
+- Starts the OpenClaw gateway if not running
+- Auto-pairs the local device if token mismatch is detected
+- Sets gateway model to `openai/gpt-4o` if `OPENAI_API_KEY` is present but model points at Anthropic
+- Starts the local Forge server and opens the browser
+
 **Output:** Returns/prints dashboard URL, server startup status, browser open result, and overwrite/reapply status when applicable.
 
 ---

@@ -13,15 +13,59 @@ Get ApeClaw running and execute your first skill in 5 minutes.
 
 ## Step 1: Install OpenClaw
 
-Install [OpenClaw](https://openclaw.ai) and verify it's available:
+Install [OpenClaw](https://openclaw.ai):
 
 ```bash
-openclaw skills list
+curl -fsSL https://openclaw.ai/install.sh | bash
 ```
 
-If `openclaw` is not found, follow the setup guide at [openclaw.ai](https://openclaw.ai).
+After install, make sure `openclaw` is on your PATH. If `openclaw: command not found`:
 
-## Step 2: Install ApeClaw
+```bash
+export PATH="$HOME/.npm-global/bin:$PATH"
+rehash   # zsh only
+```
+
+Add that `export PATH` line to your `~/.zshrc` or `~/.bashrc` for persistence.
+
+Verify:
+
+```bash
+openclaw --version
+```
+
+## Step 2: Set up the OpenClaw gateway
+
+The gateway is the local runtime that powers the AI agent. Generate config and start it:
+
+```bash
+openclaw onboard --non-interactive --accept-risk --auth-choice skip --install-daemon --skip-channels --skip-skills --skip-ui --json
+openclaw gateway start
+openclaw devices pair --auto-approve
+```
+
+## Step 3: Configure your LLM provider
+
+Set your API key. Pick one provider:
+
+```bash
+# OpenAI (recommended)
+echo 'OPENAI_API_KEY=sk-your-key-here' >> ~/.openclaw/.env
+openclaw config set agents.defaults.model.primary "openai/gpt-4o"
+
+# Or Anthropic
+# echo 'ANTHROPIC_API_KEY=sk-ant-your-key-here' >> ~/.openclaw/.env
+```
+
+Restart the gateway to pick up the new config:
+
+```bash
+openclaw gateway restart
+```
+
+You can also set keys later via the Forge settings button (top-right gear icon).
+
+## Step 4: Install ApeClaw
 
 ```bash
 npx --yes ape-claw@latest skill install
@@ -29,10 +73,8 @@ npx --yes ape-claw@latest doctor --json
 ```
 
 During `skill install`, ApeClaw prompts for:
-- Starter pack install
-- Forge dashboard upgrade (replaces the local OpenClaw dashboard route when supported, with automatic fallback)
-
-> Note: OpenClaw dashboard overwrite is best-effort and temporary. OpenClaw updates may restore the original dashboard files. Use `npx ape-claw dashboard` as the stable entrypoint.
+- **Starter pack** — 61 curated skills across productivity, dev tools, security, analytics, SEO, and automation
+- **Forge dashboard upgrade** — replaces the local OpenClaw dashboard with the enhanced Forge UI
 
 PowerShell (Windows):
 
@@ -41,7 +83,23 @@ npx --yes ape-claw@latest skill install
 npx --yes ape-claw@latest doctor --json
 ```
 
-## Step 3: Register a Clawbot
+## Step 5: Open the Forge Dashboard
+
+```bash
+npx --yes ape-claw@latest dashboard
+```
+
+This starts the local Forge server and opens `http://localhost:8787/forge` in your browser. Chat with your agent, manage skills, and control the gateway — all from one place.
+
+To restore the original OpenClaw dashboard files:
+
+```bash
+npx ape-claw dashboard restore-openclaw
+```
+
+## Step 6: Register a Clawbot (optional)
+
+Registration enables telemetry and the global dashboard. It is not required for local Forge usage.
 
 ```bash
 npx ape-claw clawbot register \
@@ -53,101 +111,19 @@ npx ape-claw clawbot register \
 
 Save the `claw_...` token — it's shown only once.
 
-## Step 4: Set Environment
-
 ```bash
 export APE_CLAW_AGENT_ID=my-bot
 export APE_CLAW_AGENT_TOKEN=claw_...
 ```
 
-PowerShell (Windows):
-
-```powershell
-$env:APE_CLAW_AGENT_ID="my-bot"
-$env:APE_CLAW_AGENT_TOKEN="claw_..."
-```
-
-## Step 5: Open the Dashboard
-
-Use:
-
-```bash
-npx --yes ape-claw@latest dashboard
-```
-
-This opens your local Forge dashboard (`http://localhost:8787/forge`) and starts the local server if needed.
-If OpenClaw is not installed yet, the command prints install steps first.
-
-To restore the original OpenClaw dashboard files:
-
-```bash
-npx ape-claw dashboard restore-openclaw
-```
-
-## Step 6: Browse Skills
+## Step 7: Browse Skills
 
 Visit [/skills](https://apeclaw.ai/skills) to browse 10,000+ skills in the library, with 10,000+ minted onchain, served via API.
 
-## Step 7: Connect Your Forge Agent (Optional)
-
-The Forge page at `/forge` includes an AI chat panel. On the live website (apeclaw.ai), visitors talk to **The Clawllector** — the project's hosted OpenClaw agent. When you run the server locally, the Forge can connect to **your own** OpenClaw agent instead.
-
-### What you need
-
-1. **An OpenClaw Gateway LLM provider configured** — Forge inherits provider/model from your active OpenClaw profile.
-   You can configure this in OpenClaw or from Forge Settings (OpenClaw `.env` editor). Common keys:
-   - **OpenAI** (`OPENAI_API_KEY`) — GPT-4o, GPT-4, etc.
-   - **Anthropic** (`ANTHROPIC_API_KEY`) — Claude models
-   - **Perplexity** (`PERPLEXITY_API_KEY`) — Sonar (web-grounded)
-   - **Groq** (`GROQ_API_KEY`) — fast Llama inference (free tier available)
-   - **Together AI** (`TOGETHER_API_KEY`) — open-source models
-   - **Ollama** (`OLLAMA_HOST`) — run models locally, no API key needed
-2. **OpenClaw + ape-claw skills** installed (you already have these from Step 1-2).
-
-### Set environment variables
-
-Pick one provider — one env var is all you need:
+## Step 8: Verify Forge is working
 
 ```bash
-# Any one of these:
-export OPENAI_API_KEY=sk-...
-export ANTHROPIC_API_KEY=sk-ant-...
-export PERPLEXITY_API_KEY=pplx-...
-export GROQ_API_KEY=gsk_...
-export OLLAMA_HOST=http://localhost:11434
-```
-
-The forge agent auto-registers as a ClawBot, loads skills from `~/.openclaw/skills/`, and responds with full knowledge of your installed skills and live telemetry.
-
-Optional overrides:
-
-```bash
-export FORGE_AGENT_NAME="My Agent"       # Display name in chat (default: "The Clawllector")
-export FORGE_AGENT_ID=my-agent           # ClawBot ID (default: "the-clawllector")
-```
-
-### Start the server
-
-```bash
-npm run start:ui
-```
-
-Open [http://localhost:8787/forge](http://localhost:8787/forge). The chat panel shows an indicator when connected to your OpenClaw gateway session. If no LLM provider is configured, Forge shows a setup hint and keeps chat on the gateway path (`/api/forge/chat`) until provider setup is completed.
-
-### How it works
-
-The forge agent is defined in `src/server/routes/forge-agent.mjs`. On each request it:
-
-1. Loads your installed OpenClaw skills from `~/.openclaw/skills/` (re-scans every 5 minutes).
-2. Fetches a live telemetry snapshot — recent events, chat messages, clawbots, skill stats, pod status, and spend data.
-3. Builds a system prompt with your agent identity, skill knowledge, and telemetry context.
-4. Streams the response from your configured LLM provider back to the browser via SSE.
-5. Logs the conversation to the chat log and emits a telemetry event.
-
-### Verify it's working
-
-```bash
-curl -s http://localhost:8787/api/forge/status | jq .
+curl -s http://127.0.0.1:8787/api/forge/status | jq .
 ```
 
 Expected output:
@@ -155,15 +131,30 @@ Expected output:
 ```json
 {
   "configured": true,
+  "provider": "openclaw-gateway",
   "agentId": "the-clawllector",
   "agentName": "The Clawllector",
-  "verified": true,
-  "model": "sonar-pro",
-  "skills": 42
+  "gatewayReady": true,
+  "llmProviderHint": "openai",
+  "llmModelHint": "gpt-4o",
+  "skills": 61
 }
 ```
 
-If `"configured": false`, your OpenClaw gateway provider is not configured yet.
+If `"configured": false`, your OpenClaw gateway LLM provider is not set up yet. Go to the Forge settings (gear icon) and add your API key, or follow Step 3 above.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| `openclaw: command not found` | `export PATH="$HOME/.npm-global/bin:$PATH"` then `rehash` |
+| `Unknown command: dashboard` | `rm -rf ~/.npm/_npx && npm cache verify`, then re-run with `npx --yes ape-claw@latest` |
+| `device token mismatch` on dashboard | `openclaw devices list`, then `openclaw devices approve <request-id>` |
+| `Error: internal error` in chat | Check model matches key: `openclaw config set agents.defaults.model.primary "openai/gpt-4o"` then `openclaw gateway restart` |
+| Forge not loading on `localhost:8787` | Try `http://127.0.0.1:8787/forge` instead (macOS IPv6 issue) |
+| Gateway won't start | Run `openclaw onboard --non-interactive --accept-risk --auth-choice skip --install-daemon --skip-channels --skip-skills --skip-ui --json` first |
+
+See the main [README Troubleshooting section](../../README.md#troubleshooting) for detailed guidance.
 
 ## Next Steps
 

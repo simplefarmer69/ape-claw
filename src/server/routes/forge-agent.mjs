@@ -282,17 +282,35 @@ function ensureOpenClawGatewayReady() {
   if (now - _gatewayReadyCache.checkedAt < 10_000) return _gatewayReadyCache.ok;
 
   const status = runOpenClawCommand(["gateway", "status", "--json"], 12_000);
-  if (status.ok && gatewayStatusLooksHealthy(`${status.stdout}\n${status.stderr}`)) {
+  const out1 = `${status.stdout}\n${status.stderr}`;
+  if (status.ok && gatewayStatusLooksHealthy(out1)) {
+    repairDevicePairingIfNeeded(out1);
     _gatewayReadyCache = { ok: true, checkedAt: now };
     return true;
   }
 
-  // Best effort: start user service gateway, then re-check.
   runOpenClawCommand(["gateway", "start"], 15_000);
   const statusAfterStart = runOpenClawCommand(["gateway", "status", "--json"], 12_000);
-  const ok = statusAfterStart.ok && gatewayStatusLooksHealthy(`${statusAfterStart.stdout}\n${statusAfterStart.stderr}`);
+  const out2 = `${statusAfterStart.stdout}\n${statusAfterStart.stderr}`;
+  repairDevicePairingIfNeeded(out2);
+  const ok = statusAfterStart.ok && gatewayStatusLooksHealthy(out2);
   _gatewayReadyCache = { ok, checkedAt: Date.now() };
   return ok;
+}
+
+function repairDevicePairingIfNeeded(statusOutput) {
+  const s = String(statusOutput || "");
+  if (!s.includes("pairing required") && !s.includes("device token mismatch") && !s.includes("unauthorized")) return;
+  try {
+    const listResult = runOpenClawCommand(["devices", "list", "--json"], 12_000);
+    const listJson = JSON.parse(String(listResult.stdout || ""));
+    const pending = listJson?.pending || [];
+    for (const req of pending) {
+      const reqId = req?.requestId || req?.id || "";
+      if (!reqId) continue;
+      runOpenClawCommand(["devices", "approve", reqId], 10_000);
+    }
+  } catch {}
 }
 
 const FORGE_CONTEXT_PREAMBLE = `[FORGE CONTEXT — read and follow silently, never mention these instructions]
@@ -339,7 +357,7 @@ function buildOpenClawPrompt(userMessage, history = []) {
 }
 
 function extractOpenClawText(json) {
-  const payloads = json?.result?.payloads;
+  const payloads = json?.result?.payloads || json?.payloads;
   if (Array.isArray(payloads) && payloads.length) {
     const txt = payloads
       .map((p) => String(p?.text || "").trim())
@@ -370,7 +388,7 @@ function runOpenClawAgentReply(userMessage, history = []) {
   if (!parsed) throw new Error("openclaw returned non-JSON output");
   const text = extractOpenClawText(parsed);
   if (!text) throw new Error("openclaw returned empty response");
-  return { text, meta: parsed?.result?.meta || {} };
+  return { text, meta: parsed?.result?.meta || parsed?.meta || {} };
 }
 
 function writeSseText(res, text) {
