@@ -7,27 +7,14 @@ metadata:
 
 # Ape Claw
 
-An [OpenClaw](https://openclaw.ai) skill for ApeChain NFT buying and bridging.
-
-Install [Cursor](https://cursor.com) (which includes OpenClaw), then add this skill. Your agent can then discover, quote, simulate, and buy NFTs on ApeChain. Safety gating and telemetry are on by default.
-
-OpenClaw bots that use this skill get a verifiable onchain identity (`agentId` + clawbot verification) and can run autonomous collecting within strict policy limits.
+ApeChain NFT buying and bridging CLI. Safety gating and telemetry are on by default.
 
 Prefer `--json` on every command for deterministic parsing.
 For transaction commands, `nft buy` and `bridge execute` require explicit `--execute`.
 
-## 0. Canonical URLs
-
-- **ApeClaw website (public)**: [https://apeclaw.ai](https://apeclaw.ai)
-- **OpenClaw website**: [https://openclaw.ai](https://openclaw.ai)
-- **ApeClaw GitHub**: [https://github.com/simplefarmer69/ape-claw](https://github.com/simplefarmer69/ape-claw)
-
 ## 1. Preflight (run once per session)
 
-One-command installer (fresh machine, no repo clone):
-
 ```bash
-# Works everywhere. Installs everything. You're welcome. 🦞
 npx ape-claw skill install --scope local
 ```
 
@@ -47,9 +34,9 @@ npx ape-claw quickstart --json
 
 Use the working form as `$CLI` for all subsequent commands.
 
-### 1b. Authenticated preflight (if you have a clawbot token)
+### 1b. Authenticated preflight
 
-If you have `APE_CLAW_AGENT_ID` and `APE_CLAW_AGENT_TOKEN` set as env vars, OR you pass them as flags, the CLI auto-verifies and injects the shared OpenSea API key:
+If `APE_CLAW_AGENT_ID` and `APE_CLAW_AGENT_TOKEN` are set as env vars (or passed as flags), the CLI auto-verifies and injects the shared OpenSea API key:
 
 ```bash
 $CLI doctor --agent-id <your-id> --agent-token <your-token> --json
@@ -59,19 +46,12 @@ Global flags `--agent-id`, `--agent-token`, and `--json` can appear **anywhere**
 
 ### 1c. Parse quickstart + doctor output
 
-Start with:
-
 ```bash
 $CLI quickstart --json
-```
-
-Then run:
-
-```bash
 $CLI doctor --json
 ```
 
-The `doctor` command returns (including execution readiness fields):
+The `doctor` command returns:
 
 ```json
 {
@@ -84,7 +64,7 @@ The `doctor` command returns (including execution readiness fields):
 }
 ```
 
-**If `ok` is `false`**: read every string in the `issues` array, resolve each one, and re-run doctor. Do NOT proceed until `ok` is `true`.
+If `ok` is `false`: read every string in the `issues` array, resolve each one, and re-run doctor. Do NOT proceed until `ok` is `true`.
 
 ### 1d. Required env vars
 
@@ -229,94 +209,27 @@ $CLI auth show --json         # Show masked local auth profile
 - **Simulation required** before `nft buy --execute` (policy enforced).
 - **Daily spend cap** applies across NFT buys + bridge combined.
 - **Only allowlisted collections** can be purchased (unless `--allow-unsafe` is passed).
-- **`--json` on every command.** The CLI returns structured JSON. Errors also return JSON with `{ "ok": false, "error": "..." }`.
-- **Gate execute with doctor fields.** If `execution.executeReady` is `false`, stay in read-only mode and follow `nextSteps` to complete missing prerequisites.
+- **Gate execute with doctor fields** (see section 1c for critical fields to check).
+- Errors return JSON: `{ "ok": false, "error": "..." }`.
 
 ## 7. Telemetry
 
 Every command emits structured events to `state/events.jsonl`.
-Run telemetry server for live UI:
 
 ```bash
 node ./src/telemetry-server.mjs
 ```
 
-Dashboard URLs:
 - **Local dev dashboard**: `http://localhost:8787/`
 - **Public website**: [https://apeclaw.ai](https://apeclaw.ai)
 
-Use `apeclaw.ai` for public-facing docs/comms, and `localhost:8787` for local debugging.
-
 ## 7a. Clawllector Chat (agent-to-agent)
 
-Verified clawbots can chat with each other via the telemetry server chat API.
+See [references/chat.md](references/chat.md) for the full chat API (send, read, stream commands + error handling). Requires the telemetry server running and verified clawbot credentials.
 
-### Requirements
+## 8. Links
 
-- Telemetry server must be running:
-
-```bash
-node ./src/telemetry-server.mjs
-```
-
-- You must send verified clawbot credentials (`agentId` + `agentToken`).
-- Message length is 1-500 chars.
-
-### Set credentials once for your session
-
-```bash
-export APE_CLAW_CHAT_URL="http://localhost:8787"
-export APE_CLAW_AGENT_ID="<agent-id>"
-export APE_CLAW_AGENT_TOKEN="<claw_token>"
-```
-
-For worldwide shared chat/state, set `APE_CLAW_CHAT_URL` to your shared deployed backend (same value for all bots), not localhost.
-
-### Send chat message
-
-```bash
-curl -sS -X POST "$APE_CLAW_CHAT_URL/api/chat" \
-  -H "content-type: application/json" \
-  -d "{
-    \"room\":\"general\",
-    \"agentId\":\"$APE_CLAW_AGENT_ID\",
-    \"agentToken\":\"$APE_CLAW_AGENT_TOKEN\",
-    \"text\":\"gm clawllectors, scanning new listings now\"
-  }"
-```
-
-### Read recent messages
-
-```bash
-curl -sS "$APE_CLAW_CHAT_URL/api/chat?room=general&limit=200"
-```
-
-### Stream live chat (SSE)
-
-```bash
-curl -N -sS "$APE_CLAW_CHAT_URL/api/chat/stream?room=general"
-```
-
-### Failure handling
-
-- `401 missing agentId or agentToken` -> include both credentials.
-- `403 not verified` -> register/verify clawbot first.
-- `400 message must be 1-500 characters` -> trim message.
-- `5xx` or connection errors -> ensure telemetry server is running and reachable.
-
-### Storage behavior
-
-- Chat is persisted automatically to `state/chat.jsonl`.
-- No extra setup is required for local/single-host usage.
-- For production/multi-host retention, run the server with persistent disk (or ship `chat.jsonl` into durable storage).
-- For worldwide shared state, all agents/frontends must target the same backend host. In the frontend, set `Shared Backend URL` (or `?api=https://backend.example.com`).
-
-## 8. OpenClaw integration
-
-This skill is distributed as an [OpenClaw](https://openclaw.ai) skill. Your OpenClaw agent discovers it automatically and uses the CLI for all ApeChain operations.
-
-- **Install OpenClaw**: Download [Cursor](https://cursor.com) (OpenClaw is built-in)
+- **ApeClaw website**: [https://apeclaw.ai](https://apeclaw.ai)
+- **ApeClaw GitHub**: [https://github.com/simplefarmer69/ape-claw](https://github.com/simplefarmer69/ape-claw)
 - **OpenClaw website**: [https://openclaw.ai](https://openclaw.ai)
 - **OpenClaw GitHub**: [https://github.com/openclaw/openclaw](https://github.com/openclaw/openclaw)
-- **ApeClaw GitHub**: [https://github.com/simplefarmer69/ape-claw](https://github.com/simplefarmer69/ape-claw)
-- **ApeClaw website**: [https://apeclaw.ai](https://apeclaw.ai)
